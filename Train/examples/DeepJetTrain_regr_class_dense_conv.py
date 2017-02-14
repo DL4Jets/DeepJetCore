@@ -48,10 +48,10 @@ def Incept_model(inputs,dropoutRate=0.1):
     This NN adds two inputs, one for a conv net and a seceond for a dense net, both nets get combined. The last layer is split into regression and classification activations (softmax, linear)
     """
     
-    x =   Convolution2D(50, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(inputs[0])
+    x =   Convolution2D(20, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(inputs[0])
     # add more layers to get deeper
-    x =   Convolution2D(50, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(x)
     x =   Convolution2D(10, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(x)
+    x =   Convolution2D(5, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(x)
     x = Flatten()(x)
     #  Here add e.g. the normal dense stuff from DeepCSV
     y = Dense(1, activation='relu',init='lecun_uniform',input_shape=(1,))(inputs[1])
@@ -63,11 +63,11 @@ def Incept_model(inputs,dropoutRate=0.1):
     x = merge( [x,y ] , mode='concat')
 
     # linear activation for regression and softmax for classification
-    x = Dense(100, activation='relu',init='normal')(x)
+    x = Dense(100, activation='relu',init='lecun_uniform')(x)
     #x = Dropout(dropoutRate)(x)
-    x=  Dense(100, activation='relu',init='normal')(x)
+    x=  Dense(100, activation='relu',init='lecun_uniform')(x)
 #    x = Dropout(dropoutRate)(x)
-    x=  Dense(100, activation='relu',init='normal')(x)
+    x=  Dense(100, activation='relu',init='lecun_uniform')(x)
 #    x = Dropout(dropoutRate)(x)
     # add more layers to get deeper
 
@@ -75,12 +75,12 @@ def Incept_model(inputs,dropoutRate=0.1):
     model = Model(input=inputs, output=predictions)
     return model
 
-inputs = [Input(shape=(6,5,122)),Input(shape=(4,))]
+inputs = [Input(shape=(6,5,122)),Input(shape=(5,))]
 model = Incept_model(inputs)
 
 sgd = SGD()
 from keras.optimizers import Adam
-adam = Adam(lr=0.03)
+adam = Adam(lr=0.005)
 model.compile(loss=['mean_squared_error','categorical_crossentropy'], optimizer=adam,loss_weights=[.01, 10.])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
@@ -96,7 +96,7 @@ history = History()
 
 # the actual training
 print (x_local.shape,' ', x_global.shape)
-model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=100, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
+model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=20, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
 
 #The below plots the loss curve for the batches, this is higher granularity than the history (per epoch)
 #plt.plot(nBatchLogger.losses)
