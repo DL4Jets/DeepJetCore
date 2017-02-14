@@ -195,7 +195,7 @@ def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
         if keepZeros:
             print ('Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently')
         Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
-
+    print (Tuple.dtype)
     return Tuple
  
 
