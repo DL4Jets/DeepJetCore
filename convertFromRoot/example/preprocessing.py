@@ -83,10 +83,9 @@ def meanNormProd(Tuple):
     mean = ()
     stddev = ()
     for name in iter (BranchList):
-        #print (name)
-       # check if scalat or array
-       # TO DO: We need a better way to check which fields are iterables 
-        if Tuple[name][0].size>1 or 'SV_' in name :
+       # check if scalat or array, arrays are stored as object
+        if Tuple[[name]].dtype[0]=='object':
+ #        if Tuple[name][0].size>1 or 'sv_' in name :
             # makeov it a simple standard array
             chain = numpy.concatenate(Tuple[name])
             # check for crazy entries
@@ -98,7 +97,7 @@ def meanNormProd(Tuple):
             stddev = stddev+(chain.std(),)
             dTypeList.append((name, float ))
         else:
-            #print mean, Tuple[name][0].size
+            #print (mean, Tuple[name][0].size)
             mean =  mean +  (Tuple[name][:].mean(),)
             stddev = stddev+(Tuple[name][:].std(),)
             dTypeList.append((name, float ))
@@ -189,10 +188,10 @@ def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
     """
     for field in iter(Tuple.dtype.names):
         if len(Tuple[field])!=1:
-            print 'WARNING: This is means subtraction is not for vectors! The filed is and array!' 
+            print ('WARNING: This is means subtraction is not for vectors! The filed is and array!' )
         Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
         if keepZeros:
-            print 'Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently'
+            print ('Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently')
         Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
 
     return Tuple
