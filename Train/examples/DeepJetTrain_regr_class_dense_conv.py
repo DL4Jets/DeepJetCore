@@ -32,6 +32,8 @@ shutil.copyfile("DeepJetTrain_regr_class_dense_conv.py",outputDir+"DeepJetTrain_
 reg_truth = np.load(inputDataDir+'regres_truth.npy')
 x_local = np.load(inputDataDir+'local_X.npy')
 x_global = np.load(inputDataDir+'global_X.npy')
+x_global = np.array( x_global.tolist() )
+print('what is g;obal ',x_global.shape)
 class_truth = np.load(inputDataDir+'class_truth.npy')
 # using view would be quicker but longer syntax
 class_truth = np.array(class_truth.tolist())
@@ -73,7 +75,7 @@ def Incept_model(inputs,dropoutRate=0.1):
     model = Model(input=inputs, output=predictions)
     return model
 
-inputs = [Input(shape=(6,5,332)),Input(shape=(1,))]
+inputs = [Input(shape=(6,5,122)),Input(shape=(4,))]
 model = Incept_model(inputs)
 
 sgd = SGD()
@@ -93,7 +95,8 @@ history = History()
 #TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
 
 # the actual training
-model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=500, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
+print (x_local.shape,' ', x_global.shape)
+model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=100, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
 
 #The below plots the loss curve for the batches, this is higher granularity than the history (per epoch)
 #plt.plot(nBatchLogger.losses)
