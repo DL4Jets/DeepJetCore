@@ -28,7 +28,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     # if classes present, loop ober them and make 2d histogram for each class
     else:
         for label in classes:
-            #print 'the labe is ', label 
+            #print 'the labe is ', label
             nameXvec = Tuple[nameX]
             nameYvec = Tuple[nameY]
             valid = Tuple[label] > 0.
@@ -63,7 +63,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
                 # less verbose
                 countMissedJets+=1
                 weight.append(0)
-    if countMissedJets != len(weight):
+    if countMissedJets>0:
         print ('WARNING from weight calculator: ', countMissedJets,'/', len(weight), ' had no valid label and got weight 0 (i.e. are ignore, but eat up space and time')
     weight =  numpy.asarray(weight)
     # to get on average weight one
@@ -149,7 +149,7 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
     BoxList = []
     # How long to make the array
     nMax = nMaxObj*nInput+1
-    
+    cutCounter = 0
     # basically a loop over all jets
     for jet in iter(Tuple):
 
@@ -176,8 +176,10 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
                    
                 # fisrt in array is the number of objects
                 array[binx][biny][0] += 1
-        
+            else:
+                    cutCounter +=1
         BoxList.append(array)
+    print(cutCounter, ' times vector was longer than maximum of: ',  nMaxObj)
     return numpy.asarray(BoxList)
 
 
@@ -187,8 +189,8 @@ def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
     It is not intended for fields that are arrays. Flexiable array length features are delt with in makeBox. They are automatically zerpatched and mean subtracted
     """
     for field in iter(Tuple.dtype.names):
-        if len(Tuple[field])!=1:
-            print ('WARNING: This is means subtraction is not for vectors! The filed is and array!' )
+        if Tuple[field].dtype=='O':
+            print ('WARNING: This is means subtraction is not for vectors! The filed is and array. Use MeanNormZeroPad!' )
         Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
         if keepZeros:
             print ('Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently')

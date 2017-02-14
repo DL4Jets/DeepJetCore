@@ -64,36 +64,40 @@ PfBranchList = []
 Nname_ = 'Npfcan_'
 NPfBranchList = []
 # loop files (branch) names and select the PF candidates
-for index , name in enumerate(BranchList):
-        if name_ in name:
-            if 'n_'+name_ in name:
-                pass
-            else:
-                PfBranchList.append(name)
-        if Nname_ in name:
-            if 'n_'+Nname_ in name:
-                pass
-            else:
-                NPfBranchList.append(name)
+#for index , name in enumerate(BranchList):
+#        print (name)
+#        if name_ in name:
+#            if 'n_'+name_ in name:
+#                pass
+#            else:
+#                PfBranchList.append(name)
+#        if Nname_ in name:
+#            if 'n_'+Nname_ in name:
+#                pass
+#            else:
+#                NPfBranchList.append(name)
+
+## No loop, handpicked
+PfBranchList =['Cpfcan_etarel','Cpfcan_phirel','Cpfcan_pt','Cpfcan_isMu','Cpfcan_isEl','Cpfcan_VTX_ass','Cpfcan_puppiw']
+NPfBranchList = ['Npfcan_etarel','Npfcan_phirel','Npfcan_pt','Npfcan_HadFrac','Npfcan_isGamma']
 
 # No we define the bins for our convolutional network
 binX = numpy.array([-.5,-.3,-.1,.1,.3,.5,7],dtype=float)
 binY = numpy.array([-.5,-.3,-.1,.1,.3,.5],dtype=float)
 # these are the branch names which define the 2D axis
-nameX = 'Cpfcan_etarel'
-nameY = 'Cpfcan_phirel'
-CPFcands = MakeBox([Tuple[PfBranchList], TupleMeanStd],nameX,nameY,binX,binY,20)
+CPFcands = MakeBox([Tuple[PfBranchList], TupleMeanStd],'Cpfcan_etarel','Cpfcan_phirel',binX,binY,10)
 NPFCands = MakeBox([Tuple[NPfBranchList] , TupleMeanStd],'Npfcan_etarel','Npfcan_phirel',binX,binY,10)
 
 # Add cgarged and neutral PF candidates
 PFCands = numpy.concatenate((NPFCands,CPFcands),axis=3)
 
 #Get MC truth
-truth = Tuple[['gen_pt']]
+truth = Tuple[['Delta_gen_pt_WithNu']]
 Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
 
 # Now we collect the global variables (here only PT
-PTjets =  Tuple[['jet_pt',]]
+PTjets =  Tuple[['jet_pt','jet_eta','QG_ptD','QG_axis2','QG_mult']]
+print('final')
 PTjets =  MeanNormApply(PTjets,TupleMeanStd)
 # now we save it, the combined covolutional/dense/regression/multiclassification network needs 5 input files
 numpy.save(outputDir+"/weights.npy",weights)
