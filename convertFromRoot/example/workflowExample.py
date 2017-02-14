@@ -92,11 +92,13 @@ NPFCands = MakeBox([Tuple[NPfBranchList] , TupleMeanStd],'Npfcan_etarel','Npfcan
 PFCands = numpy.concatenate((NPFCands,CPFcands),axis=3)
 
 #Get MC truth
-truth = Tuple[['gen_pt_WithNu']]
+truth = Tuple[['Delta_gen_pt_WithNu']]
+alternative_truth = Tuple[['gen_pt']]
+
 Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
 
 # Now we collect the global variables (here only PT
-PTjets =  Tuple[['jet_pt','jet_eta','QG_ptD','QG_axis2']]
+PTjets =  Tuple[['jet_pt','jet_eta','QG_ptD','QG_axis2','QG_mult']]
 print('final ',PTjets.dtype)
 
 PTjets =  MeanNormApply(PTjets,TupleMeanStd)
@@ -109,6 +111,7 @@ print('final ',PTjets.shape)
 # now we save it, the combined covolutional/dense/regression/multiclassification network needs 5 input files
 numpy.save(outputDir+"/weights.npy",weights)
 numpy.save(outputDir+"/regres_truth.npy",truth)
+numpy.save(outputDir+"/regres_alt_truth.npy",alternative_truth)
 numpy.save(outputDir+"/local_X.npy",PFCands)
 numpy.save(outputDir+"/global_X.npy",PTjets)
 numpy.save(outputDir+"/class_truth.npy",Flavour_truth)
