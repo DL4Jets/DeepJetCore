@@ -6,7 +6,7 @@ from __future__ import print_function
 
 import matplotlib
 #if no X11 use below
-#matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from keras import backend as K 
@@ -17,16 +17,28 @@ from keras.layers import Dense, Dropout, Activation, Flatten, Convolution2D, mer
 #from keras.layers.convolutional import Cropping1D, ZeroPadding1D
 from keras.optimizers import SGD
 
-reg_truth = np.load('regres_truth.npy')
-x_local = np.load('local_X.npy')
-x_global = np.load('global_X.npy')
-class_truth = np.load('class_truth.npy')
+## to call it from cammand lines
+import sys
+import os
+inputDataDir = sys.argv[1]
+if inputDataDir[-1] != "/":
+    inputDataDir+="/"
+outputFilesTag = sys.argv[2]
+outputDir = inputDataDir+outputFilesTag+"/"
+os.mkdir(outputDir)
+import shutil
+shutil.copyfile("DeepJetTrain_regr_class_dense_conv.py",outputDir+"DeepJetTrain_regr_class_dense_conv.py")
+
+reg_truth = np.load(inputDataDir+'regres_truth.npy')
+x_local = np.load(inputDataDir+'local_X.npy')
+x_global = np.load(inputDataDir+'global_X.npy')
+class_truth = np.load(inputDataDir+'class_truth.npy')
 # using view would be quicker but longer syntax
 class_truth = np.array(class_truth.tolist())
-weights = np.load('weights.npy')
+weights = np.load(inputDataDir+'weights.npy')
 
-print('shapes ' , reg_truth.shape, ' ' , x_local.shape , '  x_global ' , x_global.shape,' class_truth ',class_truth.shape)
-print(class_truth[0][2])
+#print('shapes ' , reg_truth.shape, ' ' , x_local.shape , '  x_global ' , x_global.shape,' class_truth ',class_truth.shape)
+#print(class_truth[0][2])
 from keras.models import Model
 
 def Incept_model(inputs,dropoutRate=0.1):
@@ -34,7 +46,7 @@ def Incept_model(inputs,dropoutRate=0.1):
     This NN adds two inputs, one for a conv net and a seceond for a dense net, both nets get combined. The last layer is split into regression and classification activations (softmax, linear)
     """
     
-    x =   Convolution2D(50, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform',input_shape=(10,30,2))(inputs[0])
+    x =   Convolution2D(50, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(inputs[0])
     # add more layers to get deeper
     x =   Convolution2D(50, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(x)
     x =   Convolution2D(10, 1 , 1, border_mode='same', activation='relu',init='lecun_uniform')(x)
@@ -61,13 +73,13 @@ def Incept_model(inputs,dropoutRate=0.1):
     model = Model(input=inputs, output=predictions)
     return model
 
-inputs = [Input(shape=(4,4,332)),Input(shape=(1,))]
+inputs = [Input(shape=(6,5,332)),Input(shape=(1,))]
 model = Incept_model(inputs)
 
 sgd = SGD()
 from keras.optimizers import Adam
 adam = Adam(lr=0.03)
-model.compile(loss=['mean_squared_error','categorical_crossentropy'], optimizer=adam)
+model.compile(loss=['mean_squared_error','categorical_crossentropy'], optimizer=adam,loss_weights=[.01, 10.])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 from keras.callbacks import History # , TensorBoard
@@ -81,7 +93,7 @@ history = History()
 #TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
 
 # the actual training
-model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=100, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
+model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, nb_epoch=500, batch_size=1000, callbacks=[history], sample_weight=[weights,weights])
 
 #The below plots the loss curve for the batches, this is higher granularity than the history (per epoch)
 #plt.plot(nBatchLogger.losses)
@@ -94,12 +106,14 @@ model.fit([x_local, x_global], [reg_truth,class_truth] ,validation_split=0.99, n
 
 # summarize history for loss for trainin and test sample
 plt.plot(history.history['loss'])
-print(history.history['val_loss'],history.history['loss'])
+#print(history.history['val_loss'],history.history['loss'])
 plt.plot(history.history['val_loss'])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
-##plt.savefig('dense10.pdf') 
-plt.show()
+plt.savefig(outputDir+'learningcurve.pdf') 
+#plt.show()
 
+from keras.models import load_model
+model.save(outputDir+"KERAS_model.h5")
