@@ -4,12 +4,28 @@ from root_numpy import tree2array
 # below DeepJet modules
 from preprocessing import produceWeigths, meanNormProd, MakeBox, MeanNormApply
 
+import sys
+import os
+
+"""
+This is an example calling all functiond of preprocessing
+"""
+
+inputDataDir = sys.argv[1]
+if inputDataDir[-1] != "/":
+    inputDataDir+="/"
+inputDataName =  sys.argv[2]
+inputMeansStd  =  sys.argv[3]
+outputFilesTag = sys.argv[4]
+outputDir = inputDataDir+outputFilesTag
+os.mkdir(outputDir)
+
 # The roofile from DeepNtupler
-rfile = ROOT.TFile("output.root")
+rfile = ROOT.TFile(inputDataDir+inputDataName)
 tree = rfile.Get("tree")
 Tuple = tree2array(tree)
 # Do not trust that the initial *.root is random! Do not do this if you want a validation sample where you recovert the output to root. 
-#numpy.random.shuffle(Tuple)
+numpy.random.shuffle(Tuple)
 
 
 # The below filter jets where you genjet troth has Pt < 0 (i.e. PU jets)
@@ -23,9 +39,9 @@ if Njets != Tuple.shape[0]:
     print ' Please check, jets without genjets conterparts found! This is bad for PT regression !!'
 
 ## No we make a files to get the means and std.
-TupleMeanStd =  meanNormProd(Tuple) 
+#TupleMeanStd =  meanNormProd(Tuple) 
 ## Typically one would store that, here we make it on the fly
-
+TupleMeanStd =  numpy.load(inputMeansStd)
 
 # sanity checks, would brake easily if wrong means and std are used (dimension check)
 BranchList = Tuple.dtype.names
@@ -73,15 +89,15 @@ NPFCands = MakeBox([Tuple[NPfBranchList] , TupleMeanStd],'Npfcan_etarel','Npfcan
 PFCands = numpy.concatenate((NPFCands,CPFcands),axis=3)
 
 #Get MC truth
-truth = Tuple['gen_pt']
+truth = Tuple[['gen_pt']]
 Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
 
 # Now we collect the global variables (here only PT
 PTjets =  Tuple[['jet_pt',]]
 PTjets =  MeanNormApply(PTjets,TupleMeanStd)
 # now we save it, the combined covolutional/dense/regression/multiclassification network needs 5 input files
-numpy.save("weights.npy",weights)
-numpy.save("regres_truth.npy",truth)
-numpy.save("local_X.npy",PFCands)
-numpy.save("global_X.npy",PTjets)
-numpy.save("class_truth",Flavour_truth)
+numpy.save(outputDir+"/weights.npy",weights)
+numpy.save(outputDir+"/regres_truth.npy",truth)
+numpy.save(outputDir+"/local_X.npy",PFCands)
+numpy.save(outputDir+"/global_X.npy",PTjets)
+numpy.save(outputDir+"/class_truth.npy",Flavour_truth)

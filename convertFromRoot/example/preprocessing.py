@@ -4,7 +4,7 @@ import numpy
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
 
-def produceWeigths(Tuple,nameX,nameY,bins,classes=[]):
+def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     """
     provides a weight vector to flatten (typically)  PT and eta
     
@@ -35,7 +35,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[]):
             # print  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True) 
             # lease check out numpy.histogram2d for more info
          #   hists += numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True)
-            w_,_,_ =  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True)
+            w_,_,_ =  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=normed)
             hists.append( w_ )
             
     # collect only the fileds we actually need
@@ -56,7 +56,6 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[]):
             for index, classs in enumerate(classes):
                 if 1 == jet[classs]:
                     weight.append(1./hists[index][binX][binY])
-                   # print 1./hists[index][2][binX][binY]
                     didappend=1
             if  didappend == 0:
                 #print ' WARNING, event found that had no TRUE label '
@@ -170,7 +169,7 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
                     elif(varname==nameY):
                         array[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = jet[nameY][index]-binY[binx]
                     else:
-                        stdDev =  TuplesMeanDev[varname][1]
+                        stdDev = TuplesMeanDev[varname][1]
                         if stdDev < 0.00001:
                              #print TO DO: PLEASE FIX THIS UPSTREAM, Units of cm^2 are too big for covariance!!!
                              stdDev = 0.00001
@@ -197,3 +196,36 @@ def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
         Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
 
     return Tuple
+ 
+
+def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
+
+    """
+    The function subtracts the mean and divides by the std. deviation.
+    It is intended for fields that are arrays. They are automatically zerpatched and mean subtracted up to nMax.
+    """
+
+    BranchList = Tuple.dtype.names
+    nInput = len(BranchList)
+    # How long to make the array
+    nMax = nMax*nInput
+
+  # loop over jets
+    ZeroPadded = []
+    for jet in iter(Tuple):
+        # per jet one array with all information on the zero padded list of variables, i.e. trackinformations
+        array = numpy.zeros(nMax , dtype=float32)
+        # loop over the non zeros entries, caution all elements in th list need same length, i.e. a list of track informations per travk
+        for index in range ( jet[BranchList[0]].size ):
+            # Now for each "track" or alike we look over all the filds (branches) we want to zero pad
+            for varIdx , varname in enumerate(BranchList):
+                jet[varname][index]
+                # overwrite the zeros with the entries, as intialized with zero, the non overwritten reman
+                array [index] = numpy.subtract(jet[varIdx][index],MeanNormTuple[name][0])
+                array [index] = numpy.divide(array [index],MeanNormTuple[name][1])
+                ZeroPadded.append(array)
+    # return the list as ndarray
+    return numpy.asarray(ZeroPadded)
+
+
+
