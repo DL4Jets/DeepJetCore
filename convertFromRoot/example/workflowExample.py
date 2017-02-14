@@ -22,7 +22,7 @@ os.mkdir(outputDir)
 
 # The roofile from DeepNtupler
 rfile = ROOT.TFile(inputDataDir+inputDataName)
-tree = rfile.Get("deepntupelizer/tree")
+tree = rfile.Get("deepntuplizer/tree")
 Tuple = tree2array(tree)
 # Do not trust that the initial *.root is random! Do not do this if you want a validation sample where you recovert the output to root. 
 numpy.random.shuffle(Tuple)
@@ -36,7 +36,7 @@ validTruth = truth_check > 0.
 # filter by boolian vector
 Tuple = Tuple[validTruth]
 if Njets != Tuple.shape[0]:
-    print ' Please check, jets without genjets conterparts found! This is bad for PT regression !!'
+    print (' Please check, jets without genjets conterparts found! This is bad for PT regression !!')
 
 ## No we make a files to get the means and std.
 #TupleMeanStd =  meanNormProd(Tuple) 
