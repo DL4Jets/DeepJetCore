@@ -22,7 +22,7 @@ os.mkdir(outputDir)
 
 # The roofile from DeepNtupler
 rfile = ROOT.TFile(inputDataDir+inputDataName)
-tree = rfile.Get("tree")
+tree = rfile.Get("deepntupelizer/tree")
 Tuple = tree2array(tree)
 # Do not trust that the initial *.root is random! Do not do this if you want a validation sample where you recovert the output to root. 
 numpy.random.shuffle(Tuple)
