@@ -1,5 +1,6 @@
 import numpy
-
+#import scipy
+#from scipy.sparse import csc_matrix
 """
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
@@ -8,7 +9,9 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     """
     provides a weight vector to flatten (typically)  PT and eta
     
-    Tuple: are the features that need to be reweighted, it needs to be a recarray that had the fields nameX, nameY and classes. The returned weight vector will flatten the Tuple in a 2D plane nameX,nameY for each class (e.g. is B-quark)
+    Tuple: are the features that need to be reweighted, it needs to be a recarray that had the fields nameX, 
+    nameY and classes. The returned weight vector will flatten the Tuple in a 2D plane nameX,nameY for each 
+    class (e.g. is B-quark)
 
     nameX,nameY: names of the fiels that containt the variables to flattedn (usually eta/Pt)
 
@@ -97,7 +100,6 @@ def meanNormProd(Tuple):
             stddev = stddev+(chain.std(),)
             dTypeList.append((name, float ))
         else:
-            #print (mean, Tuple[name][0].size)
             mean =  mean +  (Tuple[name][:].mean(),)
             stddev = stddev+(Tuple[name][:].std(),)
             dTypeList.append((name, float ))
@@ -123,7 +125,7 @@ def getBin(value, bins):
     print (' overflow ! ', value , ' out of range ' , bins)
     return bins.size-2
 
-def MakeSparseBax(Tuples,nameX,nameY,binX,binY,nMaxObj):
+def MakeSparseBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
     """
     To be coded
     """
@@ -134,7 +136,8 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
     """ 
     function to build from a set of continuously located variables a binned version, e.g. all elements within phi and eta are gathered into one bin. The methods return a 3D ndarray with to direction (e.g. eta, phi) and as 3D (channels) a zero padded constant length vector with the variables
     
-    Tuples: list of tupels (recarray) containg only the set of variables that need to be zero padded. First Tuple is the one to be zero padded, that latter should store for mean substraction and scaling as first element. The alttaer can be made with meanNormProd(Tuple)
+    Tuples: list of tupels (recarray) containg only the set of variables that need to be zero padded. First Tuple is the one to be zero padded, that latter should store for mean substraction and scaling as first
+        element. The alttaer can be made with meanNormProd(Tuple)
 
     nameX, nameY: String with the names on which to apply the cuts
     binX,binY ndarray with the bin boudaries
@@ -147,15 +150,17 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
     BranchList = Tuple.dtype.names
     nInput = len(BranchList)
     BoxList = []
+    #BoxSparseList = []
     # How long to make the array
     nMax = nMaxObj*nInput+1
     cutCounter = 0
     # basically a loop over all jets
     for jet in iter(Tuple):
-
+        #   print (binX.size-1, ' ', binY.size-1)
+        #ListSpare = [[ csc_matrix((1, nMax)) ]*(binX.size-1)]*(binY.size-1)
+        #print (ListSpare)
 #        print jet["Cpfcan_etarel"]
         array = numpy.zeros( (binX.size-1,binY.size-1,nMax) ,dtype=float)
-
         for index in range ( jet[nameX].size ):
             binx = getBin(jet[nameX][index],binX)
             biny = getBin(jet[nameY][index],binY)
@@ -164,20 +169,28 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
                     if(varname==nameX):
                     	# this removes the bin boundary
                         array[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = jet[nameX][index]-binX[binx]
+                        #   ListSpare[binx][biny][0][int(array[binx][biny][0]*nInput)+PFindex+1] = jet[nameX][index]-binX[binx]
+                        
+                        #          print (binx,' ', biny, ' ', int(array[binx][biny][0]*nInput)+PFindex+1)
+                        #          print (' th scipy ' , type(ListSpare[binx][0]), ' ', ListSpare[binx][0][0][0])
+                    
                	        # this removes the bin boundary
                     elif(varname==nameY):
                         array[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = jet[nameY][index]-binY[binx]
+                    #ListSpare[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = jet[nameY][index]-binY[binx]
                     else:
                         stdDev = TuplesMeanDev[varname][1]
                         if stdDev < 0.00001:
                              #print TO DO: PLEASE FIX THIS UPSTREAM, Units of cm^2 are too big for covariance!!!
                              stdDev = 0.00001
-                        array[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = ( jet[varname][index] - TuplesMeanDev[varname][0] ) / stdDev  
-                   
+                        array[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = ( jet[varname][index] - TuplesMeanDev[varname][0] ) / stdDev
+            #   ListSpare[binx][biny][int(array[binx][biny][0]*nInput)+PFindex+1] = ( jet[varname][index] - TuplesMeanDev[varname][0] ) / stdDev
                 # fisrt in array is the number of objects
                 array[binx][biny][0] += 1
+            #ListSpare[binx][biny][0][0] += 1
             else:
                     cutCounter +=1
+    #BoxSparseList.append(ListSpare)
         BoxList.append(array)
     print(cutCounter, ' times vector was longer than maximum of: ',  nMaxObj)
     return numpy.asarray(BoxList)
@@ -190,12 +203,11 @@ def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
     """
     for field in iter(Tuple.dtype.names):
         if Tuple[field].dtype=='O':
-            print ('WARNING: This is means subtraction is not for vectors! The filed is and array. Use MeanNormZeroPad!' )
+            print ('WARNING: This is means subtraction is not for vectors! The filed is and array. Use MeanNormZeroPad!', field)
         Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
         if keepZeros:
             print ('Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently')
         Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
-    print (Tuple.dtype)
     return Tuple
  
 
@@ -215,18 +227,18 @@ def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
     ZeroPadded = []
     for jet in iter(Tuple):
         # per jet one array with all information on the zero padded list of variables, i.e. trackinformations
-        array = numpy.zeros(nMax , dtype=float32)
+        array = numpy.zeros(nMax , dtype=float)
         # loop over the non zeros entries, caution all elements in th list need same length, i.e. a list of track informations per travk
         for index in range ( jet[BranchList[0]].size ):
+            if(index==nMax):
+                break
             # Now for each "track" or alike we look over all the filds (branches) we want to zero pad
             for varIdx , varname in enumerate(BranchList):
                 jet[varname][index]
                 # overwrite the zeros with the entries, as intialized with zero, the non overwritten reman
-                array [index] = numpy.subtract(jet[varIdx][index],MeanNormTuple[name][0])
-                array [index] = numpy.divide(array [index],MeanNormTuple[name][1])
-                ZeroPadded.append(array)
+                array [index] = numpy.subtract(jet[varIdx][index],MeanNormTuple[varname][0])
+                array [index] = numpy.divide(array [index],MeanNormTuple[varname][1])
+        ZeroPadded.append(array)
     # return the list as ndarray
     return numpy.asarray(ZeroPadded)
-
-
 
