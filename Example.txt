@@ -1,0 +1,21 @@
+cd convertFromRoot/example/
+
+# now get the means and studded DO THSI ONLY ONCE and forever. The files is at testdata/ntuple_ttbar_100.root and the output of DeepNtupler
+
+python makeMeansStd.py testdata/ntuple_ttbar_100
+
+# Having the file for mean subtract act you can now convert the root file and preprocess it
+# just to see what you do:
+python
+>> import preprocessing
+>> help(preprocessing)
+CTRL d
+
+# so than make the conversion
+python retrain_dense.py test 
+
+# Now train it
+cd ../../Train/examples/
+python DeepJetTrain_dense.py /Users/mstoye/work/DeepJet/mygit/DeepJet/convertFromRoot/example/testdata/test/ test
+cd /Users/mstoye/work/DeepJet/mygit/DeepJet/convertFromRoot/example/testdata/test/test
+ls
