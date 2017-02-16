@@ -54,6 +54,10 @@ if weights.shape[0] != Tuple.shape[0]:
     print ('Weigts for subtraction and training should match, please check')
     print  (weights.shape[0],' ', Tuple.shape[0])
 
+numpy.save(outputDir+"/weights.npy",weights)
+assg = kkl
+
+
 #print (BranchList)
 
 flatBranches = ['jet_pt', 'jet_eta','TagVarCSV_jetNSecondaryVertices', 'TagVarCSV_trackSumJetEtRatio', 'TagVarCSV_trackSumJetDeltaR', 'TagVarCSV_vertexCategory', 'TagVarCSV_trackSip2dValAboveCharm', 'TagVarCSV_trackSip2dSigAboveCharm', 'TagVarCSV_trackSip3dValAboveCharm', 'TagVarCSV_trackSip3dSigAboveCharm', 'TagVarCSV_jetNSelectedTracks', 'TagVarCSV_jetNTracksEtaRel']
