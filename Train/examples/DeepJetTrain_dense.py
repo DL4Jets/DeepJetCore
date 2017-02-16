@@ -36,7 +36,7 @@ labels = np.load(inputDataDir+'class_truth.npy')
 # using view would be quicker but longer syntax
 labels = np.array(labels.tolist())
 weights = np.load(inputDataDir+'weights.npy')
-inputs = Input(shape=(5,))
+inputs = Input(shape=(66,))
 
 #from from keras.models import Sequential
 from DeepJet_models import Dense_model
