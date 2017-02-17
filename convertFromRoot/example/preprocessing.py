@@ -85,6 +85,8 @@ def meanNormProd(Tuple):
     dTypeList = []
     mean = ()
     stddev = ()
+    formats = ' '
+    names = ' '
     for name in iter (BranchList):
        # check if scalat or array, arrays are stored as object
         if Tuple[[name]].dtype[0]=='object':
@@ -102,8 +104,14 @@ def meanNormProd(Tuple):
         else:
             mean =  mean +  (Tuple[name][:].mean(),)
             stddev = stddev+(Tuple[name][:].std(),)
+            formats +='float32,'
+            names += name+','
             dTypeList.append((name, float ))
-    x = numpy.array([mean, stddev], dtype=dTypeList )
+    xrec = numpy.array([mean, stddev])
+    print (xrec.shape)
+    print (formats, names)
+    array = numpy.core.records.fromarrays(narray,formats=formats, names = names)
+    # x = numpy.array([mean, stddev], dtype=dTypeList )
     return x
 
 
