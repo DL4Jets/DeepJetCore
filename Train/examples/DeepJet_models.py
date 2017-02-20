@@ -30,23 +30,23 @@ def Incept_model(inputs,dropoutRate=0.25):
     #x = Dropout(dropoutRate)(x)
     # add more layers to get deeper
     
-    predictions = [Dense(1, activation='linear',init='normal')(x),Dense(4, activation='softmax',init='lecun_uniform')(x)]
+    predictions = [Dense(1, activation='linear',init='normal')(x),Dense(5, activation='softmax',init='lecun_uniform')(x)]
     model = Model(input=inputs, output=predictions)
     return model
 
-def Dense_model(inputs,dropoutRate=0.25):
+def Dense_model(inputs,dropoutRate=0.1):
     """
     Dense matrix, defaults similat to 2016 training
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
-    x = Dense(100, activation='relu',init='lecun_uniform',input_shape=(5,))(inputs)
+    x = Dense(100, activation='relu',init='lecun_uniform',input_shape=(66,))(inputs)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
+    # x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
+    # x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x=  Dense(100, activation='relu',init='lecun_uniform')(x)
-    predictions = Dense(4, activation='softmax',init='lecun_uniform')(x)
+    # x = Dropout(dropoutRate)(x)
+    # x=  Dense(100, activation='relu',init='lecun_uniform')(x)
+    predictions = Dense(3, activation='softmax',init='lecun_uniform')(x)
     model = Model(input=inputs, output=predictions)
     return model
