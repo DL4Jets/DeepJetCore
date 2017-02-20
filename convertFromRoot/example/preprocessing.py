@@ -108,11 +108,17 @@ def meanNormProd(Tuple):
             names += name+','
             dTypeList.append((name, float ))
     xrec = numpy.array([mean, stddev])
-    print (xrec.shape)
-    print (formats, names)
-    array = numpy.core.records.fromarrays(narray,formats=formats, names = names)
-    # x = numpy.array([mean, stddev], dtype=dTypeList )
-    return x
+    #   formats = formats[0:-1]
+    # names = names[0:-1]
+    # print (xrec.shape)
+    #   print (mean,' ', stddev)
+#  array = numpy.core.records.fromarrays(xrec.transpose(),formats=formats, names = names)
+# print (xrec.shape, ' ' , len(dTypeList))
+    y = numpy.array([mean, stddev],dtype=dTypeList )
+    #    x = numpy.core.records.fromarrays(y.transpose(), dtype=y.dtype )
+    # print (y.shape)
+# x =    numpy.core.records.fromarrays([mean, stddev], dtype=dTypeList )
+    return y
 
 
 
