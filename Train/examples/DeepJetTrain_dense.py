@@ -30,12 +30,27 @@ shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
 shutil.copyfile('DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 # here we read the data
-features = np.load(inputDataDir+'global_X.npy')
-features = np.array( features.tolist() )
-labels = np.load(inputDataDir+'class_truth.npy')
+#features = np.load(inputDataDir+'MIX_X.npy',mmap_mode='r')
+#features = np.load(inputDataDir+'global_X_2016.npy',mmap_mode='r')
+
+# this is the old sample
+#features = np.memmap('old/global_X_2016.npy', dtype='float32', mode='r',shape=(38156556, 66))
+
+# The new sample is
+features = np.memmap('old/global_X_2016.npy', dtype='float32', mode='r',shape=(4786067, 66))
+#features = np.delete(features, [2,3,4,5], 1)
+#labels = np.load(inputDataDir+'MIX_Y.npy')
 # using view would be quicker but longer syntax
-labels = np.array(labels.tolist())
-weights = np.load(inputDataDir+'weights.npy')
+
+# this is the old 2016 sample
+#labels = np.load(inputDataDir+'classtruth_2016.npy',mmap_mode='r')
+# The new sample is
+labels = np.load(inputDataDir+'class_truth3.npy',mmap_mode='r')
+labels =labels.transpose()
+
+
+#labels = np.array(labels.tolist())
+#weights = np.load(inputDataDir+'weights.npy')
 inputs = Input(shape=(66,))
 
 #from from keras.models import Sequential
@@ -43,8 +58,8 @@ from DeepJet_models import Dense_model
 model = Dense_model(inputs)
 
 from keras.optimizers import Adam
-adam = Adam(lr=0.005)
-model.compile(loss='categorical_crossentropy', optimizer=adam)
+adam = Adam(lr=0.0003)
+model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 from keras.callbacks import History # , TensorBoard
@@ -55,7 +70,11 @@ history = History()
 #TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
 
 # the actual training
-model.fit(features, labels,validation_split=0.90, nb_epoch=20, batch_size=1000, callbacks=[history], sample_weight=weights)
+model.fit(features, labels,validation_split=0.1, nb_epoch=10, batch_size=50000, callbacks=[history])#, sample_weight=weights)
+#model.fit_generator(datagen.flow(features, labels,batch_size=50000),
+# samples_per_epoch=features.shape[0],
+#                    nb_epoch=10)
+
 
 # summarize history for loss for trainin and test sample
 plt.plot(history.history['loss'])
