@@ -50,7 +50,7 @@ labels = np.load(inputDataDir+'class_truth3.npy',mmap_mode='r')
 #labels =labels.transpose()
 
 #labels = np.array(labels.tolist())
-#weights = np.load(inputDataDir+'weights.npy')
+weights = np.load(inputDataDir+'weights.npy')
 inputs = Input(shape=(66,))
 
 #from from keras.models import Sequential
@@ -70,7 +70,7 @@ history = History()
 #TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
 
 # the actual training
-model.fit(features, labels,validation_split=0.1, nb_epoch=10, batch_size=50000, callbacks=[history])#, sample_weight=weights)
+model.fit(features, labels,validation_split=0.1, nb_epoch=10, batch_size=50000, callbacks=[history], sample_weight=weights)
 #model.fit_generator(datagen.flow(features, labels,batch_size=50000),
 # samples_per_epoch=features.shape[0],
 #                    nb_epoch=10)
