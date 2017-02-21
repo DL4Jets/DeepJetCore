@@ -1,8 +1,8 @@
 cd convertFromRoot/example/
 
-# now get the means and studded DO THSI ONLY ONCE and forever. The files is at testdata/ntuple_ttbar_100.root and the output of DeepNtupler
+# now get the means and studded DO THSI ONLY ONCE and forever.
 
-python makeMeansStd.py testdata/ntuple_ttbar_100
+python makeMeansStd.py /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_test
 
 # Having the file for mean subtract act you can now convert the root file and preprocess it
 # just to see what you do:
@@ -12,10 +12,9 @@ python
 CTRL d
 
 # so than make the conversion
-python retrain_dense.py test 
+python retrain_dense.py /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_0.root /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_testMeansStd.npy /eos/cms/store/cmst3/group/dehep/DeepJet/DeepCSVlike2016/ntuple_ttbar_2016_0/
 
 # Now train it
 cd ../../Train/examples/
-python DeepJetTrain_dense.py /Users/mstoye/work/DeepJet/mygit/DeepJet/convertFromRoot/example/testdata/test/ test
-cd /Users/mstoye/work/DeepJet/mygit/DeepJet/convertFromRoot/example/testdata/test/test
-ls
+python DeepJetTrain_dense.py python DeepJetTrain_dense.py /eos/cms/store/cmst3/group/dehep/DeepJet/DeepCSVlike2016/ntuple_ttbar_2016_0/ killme
+
