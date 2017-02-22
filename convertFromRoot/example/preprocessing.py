@@ -56,9 +56,14 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
         else:
             # count if a class was true (should be in one-hot-encoding, but better not trust anyone!
             didappend =0 
+        
             for index, classs in enumerate(classes):
+ #               print ('ha ',classs , ' ' , 'jet[classs] is ', jet[classs])
                 if 1 == jet[classs]:
+#                    print ('is one')
                     weight.append(1./hists[index][binX][binY])
+                    if 1./hists[index][binX][binY] > 10.*0.0002646:
+                        print (classs, ' ' , jet[nameX], ' ' , jet[nameY], ' weight ',  1./hists[index][binX][binY]/0.0002646)
                     didappend=1
             if  didappend == 0:
                 #print ' WARNING, event found that had no TRUE label '
@@ -70,6 +75,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
         print ('WARNING from weight calculator: ', countMissedJets,'/', len(weight), ' had no valid label and got weight 0 (i.e. are ignore, but eat up space and time')
     weight =  numpy.asarray(weight)
     # to get on average weight one
+    print ('weight average: ',weight.mean())
     weight = weight / weight.mean()
     return weight
 
