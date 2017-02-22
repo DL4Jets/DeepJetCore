@@ -37,8 +37,8 @@ if BranchList != TupleMeanStd.dtype.names:
 
 # now we calculate weights to have flat PT eta distributions
 # entries per bin (not x-section, i.e. entries/density) will be flattened
-weight_binXPt = numpy.array([0,5,10,15,20,25,30,35,40,45,50,60,70,80,90,110,120,130,140,150,175 ,200,2000],dtype=float)
-weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4,5],dtype=float)
+weight_binXPt = numpy.array([10,20,25,30,35,40,45,50,60,70,80,90,110,120,130,140,150,175, 2000],dtype=float)
+weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
 weights = produceWeigths(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
 # dimension check, weight vector must have tuple length
 if weights.shape[0] != Tuple.shape[0]:
@@ -51,21 +51,27 @@ flatBranches = ['jet_pt', 'jet_eta','TagVarCSV_jetNSecondaryVertices', 'TagVarCS
 tracksBranches = ['TagVarCSVTrk_trackJetDistVal','TagVarCSVTrk_trackPtRel', 'TagVarCSVTrk_trackDeltaR', 'TagVarCSVTrk_trackPtRatio', 'TagVarCSVTrk_trackSip3dSig', 'TagVarCSVTrk_trackSip2dSig', 'TagVarCSVTrk_trackDecayLenVal']
 tracksEtaRel = ['TagVarCSV_trackEtaRel']
 sv = ['TagVarCSV_vertexMass', 'TagVarCSV_vertexNTracks', 'TagVarCSV_vertexEnergyRatio','TagVarCSV_vertexJetDeltaR','TagVarCSV_flightDistance2dVal', 'TagVarCSV_flightDistance2dSig', 'TagVarCSV_flightDistance3dVal', 'TagVarCSV_flightDistance3dSig']
+CMVA_gluon = ['QG_ptD','QG_axis2','QG_mult']
 
 x_global_flat = MeanNormApply(Tuple[flatBranches],TupleMeanStd)
 x_tracks = MeanNormZeroPad(Tuple[tracksBranches],TupleMeanStd,6)
 x_tracksEtaRel = MeanNormZeroPad(Tuple[tracksEtaRel],TupleMeanStd,4)
 x_sv = MeanNormZeroPad(Tuple[sv],TupleMeanStd,1)
+x_CMVA_gluon  = MeanNormApply(Tuple[CMVA_gluon],TupleMeanStd)
+
 #print(x_global_flat.shape , x_tracks.shape,' ' , x_tracksEtaRel.shape, ' ', x_sv.shape)
 # make to an narray
-x_global_flat = numpy.array(x_global_flat.tolist())
+#x_global_flat = numpy.array(x_global_flat.tolist())
+#print (x_global_flat.shape,' ' , x_tracks.shape, x_tracksEtaRel.shape , x_sv.shape)
+
 x_all = numpy.concatenate( (x_global_flat,x_tracks,x_tracksEtaRel,x_sv) , axis=1)
 print('This is the shape of the training sample', x_all.shape)
 Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
 numpy.save(outputDir+"/global_X.npy",x_all)
 numpy.save(outputDir+"/class_truth.npy",Flavour_truth)
-
-
+numpy.save(outputDir+"/global_gluon_X.npy",numpy.array(x_CMVA_gluon.tolist()))
+Pt_truth = Tuple['Delta_gen_pt_WithNu']
+numpy.save(outputDir+"/reg_truth.npy",Pt_truth)
 
 
 
