@@ -37,7 +37,7 @@ if BranchList != TupleMeanStd.dtype.names:
 
 # now we calculate weights to have flat PT eta distributions
 # entries per bin (not x-section, i.e. entries/density) will be flattened
-weight_binXPt = numpy.array([10,20,25,30,35,40,45,50,60,70,80,90,110,120,130,140,150,175, 2000],dtype=float)
+weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,2000],dtype=float)
 weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
 weights = produceWeigths(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
 # dimension check, weight vector must have tuple length
