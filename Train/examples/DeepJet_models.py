@@ -47,6 +47,6 @@ def Dense_model(inputs,dropoutRate=0.1):
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
     # x = Dropout(dropoutRate)(x)
     # x=  Dense(100, activation='relu',init='lecun_uniform')(x)
-    predictions = Dense(3, activation='softmax',init='lecun_uniform')(x)
+    predictions = Dense(4, activation='softmax',init='lecun_uniform')(x)
     model = Model(input=inputs, output=predictions)
     return model

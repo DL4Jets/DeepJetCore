@@ -5,7 +5,7 @@ Created on 20 Feb 2017
 '''
 
 
-import numpy
+
 
 class TrainData(object):
     '''
@@ -15,17 +15,20 @@ class TrainData(object):
         '''
         Constructor
         '''
-        import numpy as np
         
-        self.x=np.array([])
-        self.y=np.array([])
-        self.w=np.array([])
+        self.x=[[]]
+        self.y=[[]]
+        self.w=[[]]
+        
+        self.nsamples=0
         
     def clear(self):
-        import numpy as np
-        self.x=np.array([])
-        self.y=np.array([])
-        self.w=np.array([])
+
+        self.x=[[]]
+        self.y=[[]]
+        self.w=[[]]
+        
+        self.nsamples=0
         
     def addFromRootFile(self,fileName):
         '''
@@ -35,24 +38,36 @@ class TrainData(object):
         #just call read from root (virtual in python??), and mix with existing x,y,weight
 
     def writeOut(self,fileprefix):
-        
-        numpy.save(fileprefix+"_w0.npy",self.w[0])
-        numpy.save(fileprefix+"_w1.npy",self.w[1])
-        numpy.save(fileprefix+"_x0.npy",self.x[0])
-        numpy.save(fileprefix+"_x1.npy",self.x[1])
-        numpy.save(fileprefix+"_y0.npy",self.y[0])
-        numpy.save(fileprefix+"_y1.npy",self.y[1])
+        import pickle
+        import gzip
+        fd=gzip.open(fileprefix,'wb')
+        pickle.dump(self.w, fd,protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(self.x, fd,protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(self.y, fd,protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(self.nsamples, fd,protocol=pickle.HIGHEST_PROTOCOL)
+        fd.close()
         
     def readIn(self,fileprefix):
-        #probably not necessary
-        self.w=[[],[]]
-        self.x=[[],[]]
-        self.y=[[],[]]
-        self.w[0] = numpy.load(fileprefix+"_w0.npy")
-        self.w[1] = numpy.load(fileprefix+"_w1.npy")
-        self.x[0] = numpy.load(fileprefix+"_x0.npy")
-        self.x[1] = numpy.load(fileprefix+"_x1.npy")
-        self.y[0] = numpy.load(fileprefix+"_y0.npy")
-        self.y[1] = numpy.load(fileprefix+"_y1.npy")
+        import pickle
+        import gzip
+        fd=gzip.open(fileprefix,'rb')
+        self.w=pickle.load(fd)
+        self.x=pickle.load(fd)
+        self.y=pickle.load(fd)
+        self.nsamples=pickle.load(fd)
+        fd.close()
+        
+    def readTreeFromRootToTuple(self,filename):
+        '''
+        To be used to get the initial tupel for further processing in inherting classes
+        Makes sure the number of entries is properly set
+        '''
+        import ROOT
+        from root_numpy import tree2array
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        Tuple = tree2array(tree)
+        return Tuple
         
         

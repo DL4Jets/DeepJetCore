@@ -54,20 +54,20 @@ from keras.callbacks import History # , TensorBoard
 history = History()
 
 
-dc=DataCollection()
-dc.readFromFile('/Users/jkiesele/Cernbox/batchtest/file.txt')
-dtrain=dc.splitToTrainAndTest(0.8)[0]
-dtest=dc.splitToTrainAndTest(0.8)[1]
+traind=DataCollection()
+traind.readFromFile(inputDataDir+'/dataCollection.dc')
+traind.setBatchSize(5000)
+testd=traind.split(0.8)
 
 #
 # things to add:
 # maxqueues= system.memory / dc.getMemoryPerUnit will read one file and make an estimate
 
 
-model.fit_generator(dtrain.generator(TrainData_veryDeepJet()) ,
-        samples_per_epoch=1, nb_epoch=3,max_q_size=1,callbacks=[history],
-        validation_data=dtest.generator(TrainData_veryDeepJet()),
-        nb_val_samples=1)
+model.fit_generator(traind.generator(TrainData_veryDeepJet()) ,
+        samples_per_epoch=traind.getNBatchesPerEpoch(), nb_epoch=1,max_q_size=5,callbacks=[history],
+        validation_data=testd.generator(TrainData_veryDeepJet()),
+        nb_val_samples=testd.getNBatchesPerEpoch())
 
 
 # the actual training

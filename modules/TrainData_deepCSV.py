@@ -27,9 +27,7 @@ class TrainData_deepCSV(TrainData):
         # may want to split this to a more generic function to allow shuffeling later
         # maybe something like "addfromRootFile" -> should go to base class
         
-        rfile = ROOT.TFile(filename)
-        tree = rfile.Get("deepntuplizer/tree")
-        Tuple = tree2array(tree)
+        Tuple = self.readTreeFromRootToTuple(filename)
 
         TupleMeanStd =  meanNormProd(Tuple) 
         
@@ -67,7 +65,10 @@ class TrainData_deepCSV(TrainData):
 
         Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
         
-        self.w=weights
-        self.x=x_all
-        self.y=Flavour_truth
-
+        #####needs to be filled in any implementation
+        
+        self.w=[weights]
+        self.x=[x_all]
+        self.y=[numpy.array(Flavour_truth.tolist())]
+        
+       
