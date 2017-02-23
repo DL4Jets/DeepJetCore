@@ -2,10 +2,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 # some private extra plots
-#from  NBatchLogger import NBatchLogger
-
-
-
 
 import numpy as np
 from keras import backend as K
@@ -36,11 +32,11 @@ shutil.copyfile('DeepJet_models.py',outputDir+'DeepJet_models.py')
 # this is the old sample
 
 # The new sample is
-#features= np.load(inputDataDir+'global_X_2016.npy')
-features= np.load(inputDataDir+'global_X.npy')
-features_val   = np.load(inputDataDirVal+'global_X.npy')
-#features_val     = np.load('/afs/cern.ch/work/m/mstoye/root_numpy/debugTrack/JetTaggingVariables_ttbar_prepro_X.npy')
-#features_val =  np.delete(features_val, [2,3,4,5], 1)
+features= np.load(inputDataDir+'global_X_2016.npy')
+#features= np.load(inputDataDir+'global_X.npy')
+#features_val   = np.load(inputDataDirVal+'global_X.npy')
+features_val     = np.load('/afs/cern.ch/work/m/mstoye/root_numpy/debugTrack/JetTaggingVariables_ttbar_prepro_X.npy')
+features_val =  np.delete(features_val, [2,3,4,5], 1)
 #features = np.memmap(inputDataDir+'global_X_2016.npy', dtype='float32', mode='r',shape=(38156556, 66))
 #features = np.delete(features, [2,3,4,5], 1)
 #labels = np.load(inputDataDir+'MIX_Y.npy')
@@ -50,21 +46,22 @@ features_val   = np.load(inputDataDirVal+'global_X.npy')
 #labels = np.load('/afs/cern.ch/work/m/mstoye/root_numpy/debugTrack/MIX_Y.npy')
 #labels = np.load(inputDataDir+'classtruth_2016.npy',mmap_mode='r')
 # The new sample is
-#labels = np.load(inputDataDir+'classtruth_2016.npy')
-labels = np.load(inputDataDir+'class_truth3.npy')
-labels_val = np.load(inputDataDirVal+'class_truth3.npy')
+labels = np.load(inputDataDir+'classtruth_2016.npy')
+#labels = np.load(inputDataDir+'class_truth3.npy')
+#labels_val = np.load(inputDataDirVal+'class_truth3.npy')
 
 # this gives the true 2016 sample
-#labels_val   = np.load('/afs/cern.ch/work/m/mstoye/root_numpy/debugTrack/JetTaggingVariables_ttbar_clean_Y3.npy')
-#labels_val =labels_val.transpose()
+labels_val   = np.load('/afs/cern.ch/work/m/mstoye/root_numpy/debugTrack/JetTaggingVariables_ttbar_clean_Y3.npy')
+labels_val =labels_val.transpose()
 
 #labels = np.array(labels.tolist())
 weights = np.load(inputDataDir+'weights.npy')
-inputs = Input(shape=(66,))
+nclasses = labels.shape[1]
+inputs = Input(shape=(features.shape[1],))
 
 #from from keras.models import Sequential
 from DeepJet_models import Dense_model
-model = Dense_model(inputs)
+model = Dense_model(inputs,nclasses)
 
 from keras.optimizers import Adam
 adam = Adam(lr=0.0003)
@@ -81,7 +78,7 @@ history = History()
 #TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
 
 # the actual training
-model.fit(features, labels,validation_data=(features_val,labels_val), nb_epoch=25, batch_size=10000, callbacks=[history])#, sample_weight=weights)
+model.fit(features, labels,validation_data=(features_val,labels_val), nb_epoch=50, batch_size=10000, callbacks=[history])#, sample_weight=weights)
 #model.fit_generator(datagen.flow(features, labels,batch_size=50000),
 # samples_per_epoch=features.shape[0],
 #                    nb_epoch=10)
@@ -121,6 +118,8 @@ predict_write = np.core.records.fromarrays(  predict_test.transpose(),
 
 # this makes you some ROC curves
 from sklearn.metrics import roc_curve
+
+# ROC one against all
 plt.figure(3)
 for i in range(labels_val.shape[1]):
 #    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
@@ -132,6 +131,29 @@ print (predict_write.dtype.names)
 plt.semilogy()
 plt.legend(predict_write.dtype.names, loc='upper left')
 plt.savefig(outputDir+'ROCs.pdf')
+
+# ROC one against som others
+plt.figure(4)
+# b vs light (assumes truth C is at index 1 and b truth at 0
+labels_val_noC = (labels_val[:,1] == 1)
+labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
+predict_test_killedC = predict_test[np.invert(labels_val_noC)]
+fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
+BvsL, = plt.plot(tprC, fprC, label='b vs. light')
+# b vs c (assumes truth light is at index 2
+labels_val_noL = (labels_val[:,2] ==1)
+
+labels_val_killedL = labels_val[np.invert(labels_val_noL)]
+predict_test_killedL = predict_test[np.invert(labels_val_noL)]
+fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
+BvsC, = plt.plot(tpr, fpr, label='b vs. c')
+plt.semilogy()
+#plt.legend([BvsL,BvsC],loc='upper left')
+plt.ylabel('BKG efficiency')
+plt.xlabel('b efficiency')
+plt.ylim((0.001,1))
+plt.grid(True)
+plt.savefig(outputDir+'ROCs_multi.pdf')
 
 from root_numpy import array2root
 array2root(predict_write,outputDir+"KERAS_result_val.root",mode="recreate")

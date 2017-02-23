@@ -34,7 +34,7 @@ def Incept_model(inputs,dropoutRate=0.25):
     model = Model(input=inputs, output=predictions)
     return model
 
-def Dense_model(inputs,dropoutRate=0.1):
+def Dense_model(inputs,nclasses,dropoutRate=0.1):
     """
     Dense matrix, defaults similat to 2016 training
     """
@@ -47,6 +47,6 @@ def Dense_model(inputs,dropoutRate=0.1):
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
     # x = Dropout(dropoutRate)(x)
     # x=  Dense(100, activation='relu',init='lecun_uniform')(x)
-    predictions = Dense(4, activation='softmax',init='lecun_uniform')(x)
+    predictions = Dense(nclasses, activation='softmax',init='lecun_uniform')(x)
     model = Model(input=inputs, output=predictions)
     return model
