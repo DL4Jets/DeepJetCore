@@ -27,11 +27,9 @@ class TrainData_deepCSV(TrainData):
         # may want to split this to a more generic function to allow shuffeling later
         # maybe something like "addfromRootFile" -> should go to base class
         
-        rfile = ROOT.TFile(filename)
-        tree = rfile.Get("deepntuplizer/tree")
-        Tuple = tree2array(tree)
+        Tuple = self.readTreeFromRootToTuple(filename)
 
-        TupleMeanStd =  meanNormProd(Tuple) 
+        TupleMeanStd =  meanNormProd(Tuple) #only for first then apply to all
         
         # sanity checks, would brake easily if wrong means and std are used (dimension check)
         BranchList = Tuple.dtype.names
@@ -42,8 +40,8 @@ class TrainData_deepCSV(TrainData):
         
         # now we calculate weights to have flat PT eta distributions
         # entries per bin (not x-section, i.e. entries/density) will be flattened
-        weight_binXPt = numpy.array([0,5,10,15,20,25,30,35,40,45,50,60,70,80,90,110,120,130,140,150,175 ,200,2000],dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4,5],dtype=float)
+        weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,2000],dtype=float)
+        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
         weights = produceWeigths(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
         # dimension check, weight vector must have tuple length
         if weights.shape[0] != Tuple.shape[0]:
@@ -67,7 +65,14 @@ class TrainData_deepCSV(TrainData):
 
         Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
         
-        self.w=weights
-        self.x=x_all
-        self.y=Flavour_truth
-
+        #merge UDS G
+        
+        
+        
+        #####needs to be filled in any implementation
+        
+        self.w=[weights]
+        self.x=[x_all]
+        self.y=[numpy.array(Flavour_truth.tolist())]
+        
+       

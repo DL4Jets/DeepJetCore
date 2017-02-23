@@ -102,8 +102,14 @@ def meanNormProd(Tuple):
             stddev = stddev+(chain.std(),)
             dTypeList.append((name, float ))
         else:
-            mean =  mean +  (Tuple[name][:].mean(),)
-            stddev = stddev+(Tuple[name][:].std(),)
+            array = Tuple[name].view(numpy.ndarray)
+          #  array[:][array[:] == -999] = 0
+            array_defaults = (array != -999)
+            array = array[array_defaults]
+            print ('name: ', name, ' ' , array.shape)
+            mean =  mean +  (array.mean(),)
+            stddev = stddev+(array.std(),)
+            print (array.mean(), ' ' ,array.std())
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
@@ -210,19 +216,34 @@ def MakeBox(Tuples,nameX,nameY,binX,binY,nMaxObj):
     return numpy.asarray(BoxList)
 
 
-def MeanNormApply(Tuple,MeanNormTuple,keepZeros=False):
+def MeanNormApply(Tuple,MeanNormTuple):
     """
     The function subtracts the mean and divedes by the std. deviation.
-    It is not intended for fields that are arrays. Flexiable array length features are delt with in makeBox. They are automatically zerpatched and mean subtracted
+    It is not intended for fields that are arrays. Flexiable array length features are delt with in makeBox. They are automatically zerpatched and mean subtracted. 
+    Tuple: numpy.recarray that contains the features
+    MeanNormTuple: numpy.recarray that contains the means and norm
+    
+    The function retuen a numpy.ndarray! That is mean subtracted and normalized AND all values og -999 are patched to 0 as well!
     """
+    arrayList = []
     for field in iter(Tuple.dtype.names):
         if Tuple[field].dtype=='O':
             print ('WARNING: This is means subtraction is not for vectors! The filed is and array. Use MeanNormZeroPad!', field)
-        Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
-        if keepZeros:
-            print ('Need to put in code to add mean back if 0 should be conserved. Actually I am not sure there is a usecase as we do not zero patch like this currently')
-        Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
-    return Tuple
+        array = Tuple[field].copy().view(numpy.ndarray)
+      #  Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
+       
+       # Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
+ #       array = Tuple[field].view(numpy.ndarray)
+
+       # arrayDefault = array !=-999
+        #print (field, ' mean ' , array.mean(), ' std ' , array.std()) 
+        array[array ==-999] = 0.
+        array =  numpy.subtract(array,MeanNormTuple[field][0])
+        array =  numpy.divide(array,MeanNormTuple[field][1])
+        #print ('and now mean ' , array.mean(), ' std ' , array.std()) 
+        arrayList.append(array)
+    return numpy.asarray(arrayList).transpose()
+ #   return Tuple
  
 
 def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
