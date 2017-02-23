@@ -175,6 +175,22 @@ class DataCollection(object):
         self.createDataFromRoot(dataclass, outputDir)
         self.writeToFile(outputDir+'/dataCollection.dc')
         
+    def getOneFileLabels(self, dataclass):
+        td=dataclass
+        td.readIn(self.samples[0])
+        return td.y
+        
+    def getOneFileFeatures(self, dataclass):
+        td=dataclass
+        td.readIn(self.samples[0])
+        return td.x
+        
+    def getOneFileWeights(self, dataclass):
+        td=dataclass
+        td.readIn(self.samples[0])
+        return td.w
+        
+        
     def generator(self, dataclass):
         # the output of one call defines the batch size
         # we can use this! -> count the number of calls internally, and realise changing batch sizes

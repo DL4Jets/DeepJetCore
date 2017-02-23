@@ -64,7 +64,7 @@ print(nvalepoch)
 
 # get sample size from split files and use for the fit_generator function
 
-from TrainData_deepCSV import TrainData_deepCSV
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
 # Tensorbord file (illustrated NN structure)
@@ -73,9 +73,9 @@ from TrainData_deepCSV import TrainData_deepCSV
 print('training')
 
 # the actual training
-model.fit_generator(traind.generator(TrainData_deepCSV()) ,
+model.fit_generator(traind.generator(TrainData_deepCSV_ST()) ,
         samples_per_epoch=ntrainepoch, nb_epoch=1,max_q_size=5,callbacks=[history],
-        validation_data=testd.generator(TrainData_deepCSV()),
+        validation_data=testd.generator(TrainData_deepCSV_ST()),
         nb_val_samples=nvalepoch)#, sample_weight=weights)
 #model.fit_generator(datagen.flow(features, labels,batch_size=50000),
 # samples_per_epoch=features.shape[0],
@@ -103,10 +103,9 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accurencycurve.pdf')
 
-testbatch=testd.generator(TrainData_deepCSV())[0]
 
-features_val=testbatch[0]
-labels_val=testbatch[1]
+features_val=testd.getOneFileFeatures(TrainData_deepCSV_ST())
+labels_val=testd.getOneFileLabels(TrainData_deepCSV_ST())
 
 
 predict_test = model.predict(features_val)
