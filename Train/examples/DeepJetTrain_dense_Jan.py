@@ -58,7 +58,7 @@ traind.useweights=True
 #test
 traind.split(0.02)
 
-print(traind.nsamples)
+print(traind.sampleentries)
 
 testd=traind.split(0.95)
 

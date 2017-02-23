@@ -124,14 +124,19 @@ class DataCollection(object):
                 out.nsamples+=self.sampleentries[i]
            
         
-        itself.useweights=self.useweights
         out.useweights=self.useweights
         
         
         itself.setBatchSize(self.__batchsize)
         out.setBatchSize(self.__batchsize)
         
-        self=itself
+        self.samples=itself.samples
+        self.sampleentries=itself.sampleentries
+        self.originRoots=itself.originRoots
+        self.nsamples=itself.nsamples
+        #self.useweights=True
+        self.setBatchSize(self.__batchsize) #check if still ok
+        
         return out
     
     def createDataFromRoot(self,dataclass, outputDir):
