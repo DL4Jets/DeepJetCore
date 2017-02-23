@@ -4,6 +4,7 @@ Created on 21 Feb 2017
 @author: jkiesele
 '''
 #from tensorflow.contrib.labeled_tensor import batch
+from builtins import list
 
 #for convenience
 
@@ -175,21 +176,42 @@ class DataCollection(object):
         self.createDataFromRoot(dataclass, outputDir)
         self.writeToFile(outputDir+'/dataCollection.dc')
         
-    def getOneFileLabels(self, dataclass):
-        td=dataclass
-        td.readIn(self.samples[0])
-        return td.y
+    def getOneAllLabels(self, dataclass):
+        return self.__stackData(dataclass,'y')
+    
+    def getOneAllFeatures(self, dataclass):
+        return self.__stackData(dataclass,'x')
         
-    def getOneFileFeatures(self, dataclass):
+    def getOneAllWeights(self, dataclass):
+        return self.__stackData(dataclass,'w')
+    
+    def __stackData(self, dataclass, selector):
+        import numpy
         td=dataclass
-        td.readIn(self.samples[0])
-        return td.x
-        
-    def getOneFileWeights(self, dataclass):
-        td=dataclass
-        td.readIn(self.samples[0])
-        return td.w
-        
+        out=[]
+        firstcall=True
+        for sample in self.samples:
+            td.readIn(sample)
+            #make this generic
+            thislist=[]
+            if selector == 'x':
+                thislist=td.x
+            if selector == 'y':
+                thislist=td.y
+            if selector == 'w':
+                thislist=td.w
+               
+            if firstcall:
+                out=list
+            else:
+                for i in range(0,len(list)):
+                    if selector == 'w':
+                        out[i] = numpy.append(out[i],thislist[i])
+                    else:
+                        out[i] = numpy.vstack((out[i],thislist[i]))
+                
+        return out
+    
         
     def generator(self, dataclass):
         # the output of one call defines the batch size

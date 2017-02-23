@@ -55,6 +55,11 @@ traind.readFromFile(inputDataDir+'/dataCollection.dc')
 traind.setBatchSize(10000)
 traind.useweights=True
 
+#test
+traind.split(0.02)
+
+print(traind.nsamples)
+
 testd=traind.split(0.95)
 
 ntrainepoch=traind.getSamplesPerEpoch()
@@ -104,8 +109,8 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accurencycurve.pdf')
 
 
-features_val=testd.getOneFileFeatures(TrainData_deepCSV_ST())
-labels_val=testd.getOneFileLabels(TrainData_deepCSV_ST())
+features_val=testd.getOneFileFeatures(TrainData_deepCSV_ST())[0]
+labels_val=testd.getOneFileLabels(TrainData_deepCSV_ST())[0]
 
 
 predict_test = model.predict(features_val)
@@ -124,7 +129,7 @@ for i in range(labels_val.shape[1]):
 #    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
     
     fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
- #   print (fpr, ' ', tpr, ' ', _)
+#   print (fpr, ' ', tpr, ' ', _)
     plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
 print (predict_write.dtype.names)
 plt.semilogy()
