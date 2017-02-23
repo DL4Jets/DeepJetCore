@@ -207,7 +207,7 @@ class DataCollection(object):
                 thislist=td.w
                
             if firstcall:
-                out=list
+                out=thislist
                 firstcall=False
             else:
                 for i in range(0,len(list)):
