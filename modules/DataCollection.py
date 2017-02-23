@@ -3,7 +3,7 @@ Created on 21 Feb 2017
 
 @author: jkiesele
 '''
-from tensorflow.contrib.labeled_tensor import batch
+#from tensorflow.contrib.labeled_tensor import batch
 
 #for convenience
 

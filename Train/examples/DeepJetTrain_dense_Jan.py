@@ -95,3 +95,7 @@ plt.savefig(outputDir+'learningcurve.pdf')
 
 #from keras.models import load_model
 model.save(outputDir+"KERAS_model.h5")
+traind.writeToFile(outputDir+'trainsamples.dc')
+testd.writeToFile(outputDir+'testsamples.dc')
+
+

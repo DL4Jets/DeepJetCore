@@ -37,7 +37,7 @@ outputDir = inputDataDir+outputFilesTag+"/"
 
 
 from keras.layers import Input
-inputs = [Input(shape=(6,5,122)),Input(shape=(5,))]
+inputs = [Input(shape=(6,5,244)),Input(shape=(4,))]
 
 
 from DeepJet_models import Incept_model
