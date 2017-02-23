@@ -71,3 +71,8 @@ class TrainData(object):
         return Tuple
         
         
+    def produceMeansFromRootFile(self,filename):
+        from preprocessing import meanNormProd
+        Tuple=self.readTreeFromRootToTuple(filename)
+        return meanNormProd(Tuple)
+        

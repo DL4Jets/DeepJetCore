@@ -5,10 +5,8 @@ Created on 21 Feb 2017
 '''
 from TrainData import TrainData
 
-import ROOT
 import numpy
-from root_numpy import tree2array
-from preprocessing import produceWeigths, meanNormProd, MakeBox, MeanNormApply, MeanNormZeroPad
+from preprocessing import produceWeigths, MakeBox, MeanNormApply
 
 class TrainData_veryDeepJet(TrainData):
     '''
@@ -22,7 +20,7 @@ class TrainData_veryDeepJet(TrainData):
         '''
         TrainData.__init__(self)
     
-    def readFromRootFile(self,filename):
+    def readFromRootFile(self,filename,means):
         
         # may want to split this to a more generic function to allow shuffeling later
         # maybe something like "addfromRootFile" -> should go to base class
@@ -30,8 +28,7 @@ class TrainData_veryDeepJet(TrainData):
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
-        print ('producing mean')
-        TupleMeanStd =  meanNormProd(Tuple) 
+        TupleMeanStd =  means
         truth_check = Tuple['gen_pt']
         Njets = truth_check.shape[0]
         validTruth = truth_check > 0.
