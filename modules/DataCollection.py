@@ -208,6 +208,7 @@ class DataCollection(object):
                
             if firstcall:
                 out=list
+                firstcall=False
             else:
                 for i in range(0,len(list)):
                     if selector == 'w':
