@@ -33,7 +33,7 @@ inputs = Input(shape=(66,))
 
 #from from keras.models import Sequential
 from DeepJet_models import Dense_model
-model = Dense_model(inputs)
+model = Dense_model(inputs,3)
 
 print('compiling')
 
@@ -52,7 +52,7 @@ print('splitting')
 from DataCollection import DataCollection
 traind=DataCollection()
 traind.readFromFile(inputDataDir+'/dataCollection.dc')
-traind.setBatchSize(1000)
+traind.setBatchSize(10000)
 traind.useweights=True
 
 testd=traind.split(0.95)
@@ -92,6 +92,72 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'learningcurve.pdf') 
 #plt.show()
+
+plt.figure(2)
+plt.plot(history.history['acc'])
+#print(history.history['val_loss'],history.history['loss'])
+plt.plot(history.history['val_acc'])
+plt.title('model accurency')
+plt.ylabel('acc')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.savefig(outputDir+'accurencycurve.pdf')
+
+testbatch=testd.generator(TrainData_deepCSV())[0]
+
+features_val=testbatch[0]
+labels_val=testbatch[1]
+
+
+predict_test = model.predict(features_val)
+
+# to add back to raw root for more detaiel ROCS and debugging
+predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
+                                             names='probB, probC, probUDSG',
+                                             formats = 'float32,float32,float32')
+
+# this makes you some ROC curves
+from sklearn.metrics import roc_curve
+
+# ROC one against all
+plt.figure(3)
+for i in range(labels_val.shape[1]):
+#    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
+    
+    fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
+ #   print (fpr, ' ', tpr, ' ', _)
+    plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
+print (predict_write.dtype.names)
+plt.semilogy()
+plt.legend(predict_write.dtype.names, loc='upper left')
+plt.savefig(outputDir+'ROCs.pdf')
+
+# ROC one against som others
+plt.figure(4)
+# b vs light (assumes truth C is at index 1 and b truth at 0
+labels_val_noC = (labels_val[:,1] == 1)
+labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
+predict_test_killedC = predict_test[np.invert(labels_val_noC)]
+fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
+BvsL, = plt.plot(tprC, fprC, label='b vs. light')
+# b vs c (assumes truth light is at index 2
+labels_val_noL = (labels_val[:,2] ==1)
+
+labels_val_killedL = labels_val[np.invert(labels_val_noL)]
+predict_test_killedL = predict_test[np.invert(labels_val_noL)]
+fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
+BvsC, = plt.plot(tpr, fpr, label='b vs. c')
+plt.semilogy()
+#plt.legend([BvsL,BvsC],loc='upper left')
+plt.ylabel('BKG efficiency')
+plt.xlabel('b efficiency')
+plt.ylim((0.001,1))
+plt.grid(True)
+plt.savefig(outputDir+'ROCs_multi.pdf')
+
+from root_numpy import array2root
+array2root(predict_write,outputDir+"KERAS_result_val.root",mode="recreate")
+
 
 #from keras.models import load_model
 model.save(outputDir+"KERAS_model.h5")
