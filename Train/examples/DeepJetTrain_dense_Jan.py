@@ -56,16 +56,14 @@ traind.setBatchSize(10000)
 traind.useweights=True
 
 #test
-traind.split(0.02)
+#traind.split(0.02)
 
-print(traind.sampleentries)
+nepochs=50
 
-testd=traind.split(0.95)
+testd=traind.split(0.98)
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
-
-print(nvalepoch)
 
 # get sample size from split files and use for the fit_generator function
 
@@ -79,7 +77,7 @@ print('training')
 
 # the actual training
 model.fit_generator(traind.generator(TrainData_deepCSV_ST()) ,
-        samples_per_epoch=ntrainepoch, nb_epoch=1,max_q_size=5,callbacks=[history],
+        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=5,callbacks=[history],
         validation_data=testd.generator(TrainData_deepCSV_ST()),
         nb_val_samples=nvalepoch)#, sample_weight=weights)
 #model.fit_generator(datagen.flow(features, labels,batch_size=50000),
