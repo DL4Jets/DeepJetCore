@@ -70,14 +70,12 @@ class TrainData_deepCSV_ST(TrainData):
         uds = Flavour_truth['isUDS'].view(numpy.ndarray)
         g = Flavour_truth['isG'].view(numpy.ndarray)
         l = g + uds
-        all = numpy.vstack((b,c,l)).transpose()
+        allflavs = numpy.vstack((b,c,l)).transpose()
         
-        print(all.shape)
-                
         #####needs to be filled in any implementation
         
         self.w=[weights]
         self.x=[x_all]
-        self.y=[all]
+        self.y=[allflavs]
         
        
