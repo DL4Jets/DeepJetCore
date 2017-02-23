@@ -6,9 +6,7 @@ Created on 21 Feb 2017
 from TrainData import TrainData
 
 import numpy
-import ROOT
-from root_numpy import tree2array
-from preprocessing import produceWeigths, meanNormProd, MakeBox, MeanNormApply, MeanNormZeroPad
+from preprocessing import produceWeigths, MeanNormApply, MeanNormZeroPad
 
 class TrainData_deepCSV(TrainData):
     '''
@@ -22,14 +20,14 @@ class TrainData_deepCSV(TrainData):
         '''
         TrainData.__init__(self)
     
-    def readFromRootFile(self,filename):
+    def readFromRootFile(self,filename,means):
         
         # may want to split this to a more generic function to allow shuffeling later
         # maybe something like "addfromRootFile" -> should go to base class
         
         Tuple = self.readTreeFromRootToTuple(filename)
 
-        TupleMeanStd =  meanNormProd(Tuple) #only for first then apply to all
+        TupleMeanStd =  means #only for first then apply to all
         
         # sanity checks, would brake easily if wrong means and std are used (dimension check)
         BranchList = Tuple.dtype.names
@@ -64,8 +62,6 @@ class TrainData_deepCSV(TrainData):
         x_all = numpy.concatenate( (x_global_flat,x_tracks,x_tracksEtaRel,x_sv) , axis=1)
 
         Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
-        
-        #merge UDS G
         
         
         

@@ -140,6 +140,7 @@ class DataCollection(object):
         files (not root files)
         '''
         import os
+        import numpy
         outputDir+='/'
         if os.path.isdir(outputDir):
             raise Exception('output dir must not exist')
@@ -147,11 +148,19 @@ class DataCollection(object):
         self.nsamples=0
         self.samples=[]
         self.sampleentries=[]
+        means=numpy.array([])
+        firstSample=True
         for sample in self.originRoots:
             td=dataclass
             print ('creating '+ str(type(dataclass)) +' data from '+sample)
             os.path.abspath(sample)
-            td.readFromRootFile(sample) 
+            
+            if firstSample:
+                print('producting means')
+                means=td.produceMeansFromRootFile(sample)
+                firstSample=False
+                
+            td.readFromRootFile(sample,means) 
             newname=os.path.basename(sample).rsplit('.', 1)[0]
             newpath=os.path.abspath(outputDir+newname+'.z')
             td.writeOut(newpath)

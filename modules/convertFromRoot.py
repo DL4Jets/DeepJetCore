@@ -44,7 +44,7 @@ def main(argv=None):
     parser = OptionParser(version=program_version_string, epilog=program_longdesc, description=program_license)
     parser.add_option("-i", "--in", dest="infile", help="set input sample description (output from the check.py script)", metavar="FILE")
     parser.add_option("-o", "--out", dest="outPath", help="set output path", metavar="PATH")
-    parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
    
     
     # process options
@@ -61,13 +61,17 @@ def main(argv=None):
     from DataCollection import DataCollection
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
+    from TrainData_deepCSV_ST import TrainData_deepCSV_ST
     
     dc=DataCollection()
     #dc.convertListOfRootFiles('/Users/jkiesele/Cernbox/batchtest/samples.txt', TrainData_deepCSV(), '/Users/jkiesele/Cernbox/batchtest/deepCSV')
     if opts.Class == 'TrainData_deepCSV':
         dc.convertListOfRootFiles(opts.infile, TrainData_deepCSV(), opts.outPath)
     elif opts.Class == 'TrainData_veryDeepJet':
-        dc.convertListOfRootFiles(opts.infile, TrainData_veryDeepJet(), opts.outPath)
+        dc.convertListOfRootFiles(opts.infile, TrainData_veryDeepJet(), opts.outPath)   
+    elif opts.Class ==  'TrainData_deepCSV_ST':
+        dc.convertListOfRootFiles(opts.infile, TrainData_deepCSV_ST(), opts.outPath)   
+        
     else:
         raise Exception('wrong class selecton')
 
