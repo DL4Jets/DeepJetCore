@@ -181,13 +181,13 @@ class DataCollection(object):
         self.createDataFromRoot(dataclass, outputDir)
         self.writeToFile(outputDir+'/dataCollection.dc')
         
-    def getOneAllLabels(self, dataclass):
+    def getAllLabels(self, dataclass):
         return self.__stackData(dataclass,'y')
     
-    def getOneAllFeatures(self, dataclass):
+    def getAllFeatures(self, dataclass):
         return self.__stackData(dataclass,'x')
         
-    def getOneAllWeights(self, dataclass):
+    def getAllWeights(self, dataclass):
         return self.__stackData(dataclass,'w')
     
     def __stackData(self, dataclass, selector):

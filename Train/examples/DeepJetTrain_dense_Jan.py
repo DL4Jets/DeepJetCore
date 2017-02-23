@@ -109,8 +109,8 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accurencycurve.pdf')
 
 
-features_val=testd.getOneFileFeatures(TrainData_deepCSV_ST())[0]
-labels_val=testd.getOneFileLabels(TrainData_deepCSV_ST())[0]
+features_val=testd.getAllFeatures(TrainData_deepCSV_ST())[0]
+labels_val=testd.getAllLabels(TrainData_deepCSV_ST())[0]
 
 
 predict_test = model.predict(features_val)
