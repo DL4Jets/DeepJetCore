@@ -210,7 +210,7 @@ class DataCollection(object):
                 out=thislist
                 firstcall=False
             else:
-                for i in range(0,len(list)):
+                for i in range(0,len(thislist)):
                     if selector == 'w':
                         out[i] = numpy.append(out[i],thislist[i])
                     else:
