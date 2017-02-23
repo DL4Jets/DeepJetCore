@@ -8,9 +8,9 @@ from TrainData import TrainData
 import numpy
 from preprocessing import produceWeigths, MeanNormApply, MeanNormZeroPad
 
-class TrainData_deepCSV(TrainData):
+class TrainData_deepCSV_ST(TrainData):
     '''
-    classdocs
+    same as TrainData_deepCSV but with 3 truth labels: UDSG C B
     '''
 
 
@@ -62,13 +62,20 @@ class TrainData_deepCSV(TrainData):
         x_all = numpy.concatenate( (x_global_flat,x_tracks,x_tracksEtaRel,x_sv) , axis=1)
 
         Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
+        print(Flavour_truth.shape)
         
-        
+        ##merge UDS and G
+        b = Flavour_truth['isB'].view(numpy.ndarray)
+        c = Flavour_truth['isC'].view(numpy.ndarray)
+        uds = Flavour_truth['isUDS'].view(numpy.ndarray)
+        g = Flavour_truth['isG'].view(numpy.ndarray)
+        l = g + uds
+        allflavs = numpy.vstack((b,c,l)).transpose()
         
         #####needs to be filled in any implementation
         
         self.w=[weights]
         self.x=[x_all]
-        self.y=[numpy.array(Flavour_truth.tolist())]
+        self.y=[allflavs]
         
        
