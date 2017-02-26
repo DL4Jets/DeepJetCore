@@ -5,7 +5,7 @@ Created on 20 Feb 2017
 '''
 
 
-
+from Weighter import Weighter
 
 class TrainData(object):
     '''
@@ -37,9 +37,34 @@ class TrainData(object):
         raise Exception('to be implemented')
         #just call read from root (virtual in python??), and mix with existing x,y,weight
 
+
+
+    def fileTimeOut(self,fileName, timeOut):
+        '''
+        simple wait function in case the file system has a glitch.
+        waits until the dir, the file should be stored in/read from, is accessible
+        again, or the the timeout
+        '''
+        import os
+        filepath=os.path.dirname(fileName)
+        if len(filepath) < 1:
+            filepath = '.'
+        if os.path.isdir(filepath):
+            return
+        import time
+        counter=0
+        print('file I/O problems... waiting for filesystem to become available')
+        while not os.path.isdir(filepath):
+            if counter > timeOut:
+                print('...file could not be opened within '+str(timeOut)+ ' seconds')
+            counter+=1
+            time.sleep(1)
+
+
     def writeOut(self,fileprefix):
         import pickle
         import gzip
+        self.fileTimeOut(fileprefix,120) #give eos a minute to recover
         fd=gzip.open(fileprefix,'wb')
         pickle.dump(self.w, fd,protocol=pickle.HIGHEST_PROTOCOL)
         pickle.dump(self.x, fd,protocol=pickle.HIGHEST_PROTOCOL)
@@ -50,6 +75,7 @@ class TrainData(object):
     def readIn(self,fileprefix):
         import pickle
         import gzip
+        self.fileTimeOut(fileprefix,120) #give eos a minute to recover
         fd=gzip.open(fileprefix,'rb')
         self.w=pickle.load(fd)
         self.x=pickle.load(fd)
@@ -64,6 +90,7 @@ class TrainData(object):
         '''
         import ROOT
         from root_numpy import tree2array
+        self.fileTimeOut(filename,120) #give eos a minute to recover
         rfile = ROOT.TFile(filename)
         tree = rfile.Get("deepntuplizer/tree")
         self.nsamples=tree.GetEntries()
@@ -75,4 +102,8 @@ class TrainData(object):
         from preprocessing import meanNormProd
         Tuple=self.readTreeFromRootToTuple(filename)
         return meanNormProd(Tuple)
+    
+    def produceBinWeighter(self,filename):
+        return Weighter() #overload in derived classes
+        
         

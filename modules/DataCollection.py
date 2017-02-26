@@ -4,8 +4,8 @@ Created on 21 Feb 2017
 @author: jkiesele
 '''
 #from tensorflow.contrib.labeled_tensor import batch
-from builtins import list
-
+#from builtins import list
+from Weighter import Weighter
 #for convenience
 
 
@@ -76,6 +76,7 @@ class DataCollection(object):
         import os
         #check if files exist
         for f in self.originRoots:
+            if not f.endswith(".root"): continue
             if not os.path.isfile(f):
                 print('not found: '+f)
                 raise Exception('original root file not found')
@@ -93,6 +94,7 @@ class DataCollection(object):
         fdir=os.path.abspath(fdir)
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
+            if len(line) < 1: continue
             self.originRoots.append(fdir+'/'+line)
     
         if len(self.originRoots)<1:
@@ -139,11 +141,32 @@ class DataCollection(object):
         
         return out
     
+    
+    def recoverCreateDataFromRootFromSnapshot(self, snapshotfile, dataclass):
+        import os
+        snapshotfile=os.path.abspath(snapshotfile)
+        self.readFromFile(snapshotfile)
+        td=dataclass
+        if len(self.originRoots) < 1:
+            return
+        means=td.produceMeansFromRootFile(self.originRoots[0])
+        weighter=td.produceBinWeighter(self.originRoots[0])
+        outputDir=os.path.dirname(snapshotfile)+'/'
+        finishedsamples=len(self.samples)
+        for i in range(finishedsamples-1, len(self.originRoots)):
+            if not self.originRoots[i].endswith('.root'): continue
+            print(self.originRoots[i])
+            self.__writeData(self.originRoots[i], means, weighter, outputDir, td)
+            
+        self.writeToFile(outputDir+'/dataCollection.dc')
+    
     def createDataFromRoot(self,dataclass, outputDir):
         '''
         Also creates a file list of the output files
         After the operation, the object will point to the already processed
         files (not root files)
+        Writes out a snapshot of itself after every successfully written output file
+        to recover the data until a possible error occurred
         '''
         import os
         import numpy
@@ -155,6 +178,7 @@ class DataCollection(object):
         self.samples=[]
         self.sampleentries=[]
         means=numpy.array([])
+        weighter=Weighter()
         firstSample=True
         for sample in self.originRoots:
             td=dataclass
@@ -162,19 +186,27 @@ class DataCollection(object):
             os.path.abspath(sample)
             
             if firstSample:
-                print('producting means')
+                print('producing means')
                 means=td.produceMeansFromRootFile(sample)
+                print('producing bin weights')
+                weighter=td.produceBinWeighter(sample)
                 firstSample=False
                 
-            td.readFromRootFile(sample,means) 
-            newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newpath=os.path.abspath(outputDir+newname+'.z')
-            td.writeOut(newpath)
-            self.samples.append(newpath)
-            self.nsamples+=td.nsamples
-            self.sampleentries.append(td.nsamples)
-            td.clear()
+            self.__writeData(sample, means, weighter,outputDir, td)
+            
         
+    def __writeData(self,sample,means, weighter,outputDir,td):
+        import os
+        td.readFromRootFile(sample,means, weighter) 
+        newname=os.path.basename(sample).rsplit('.', 1)[0]
+        newpath=os.path.abspath(outputDir+newname+'.z')
+        print('writing '+newname+'.z')
+        td.writeOut(newpath)
+        self.samples.append(newpath)
+        self.nsamples+=td.nsamples
+        self.sampleentries.append(td.nsamples)
+        td.clear()
+        self.writeToFile(outputDir+'/snapshot.dc')
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
         self.readRootListFromFile(inputfile)
@@ -217,6 +249,8 @@ class DataCollection(object):
                         out[i] = numpy.vstack((out[i],thislist[i]))
                 
         return out
+    
+        
     
         
     def generator(self, dataclass):
@@ -275,7 +309,7 @@ class DataCollection(object):
                 readsample=self.samples[nextfiletoread]
                 td.readIn(readsample)
                 #get the format right in the first read
-                if nextfiletoread == 0:
+                if nextfiletoread == 0 or xstored[0].shape[0] ==0: #either first file or nothing left, so no need to append
                     
                     xstored=td.x
                     
@@ -356,6 +390,13 @@ class DataCollection(object):
                     
                 
             processedbatches+=1
+            
+            #print('\n')
+            #print(wout[0])
+            idxs=numpy.where(yout[0][:,2] == 1)
+            wout[0][idxs] *= 0.5
+            #print(wout[0])
+            
             if self.useweights:
                 yield (xout,yout,wout)
             else:

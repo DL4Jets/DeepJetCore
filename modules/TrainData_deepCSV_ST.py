@@ -7,6 +7,7 @@ from TrainData import TrainData
 
 import numpy
 from preprocessing import produceWeigths, MeanNormApply, MeanNormZeroPad
+from Weighter import Weighter
 
 class TrainData_deepCSV_ST(TrainData):
     '''
@@ -19,14 +20,24 @@ class TrainData_deepCSV_ST(TrainData):
         Constructor
         '''
         TrainData.__init__(self)
+        
+        
+    def produceBinWeighter(self,filename):
+        weighter=Weighter() 
+        Tuple = self.readTreeFromRootToTuple(filename)
+        weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,2000],dtype=float)
+        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
+        weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
+        print('weights produced')
+        return weighter
     
-    def readFromRootFile(self,filename,means):
+    def readFromRootFile(self,filename,means, weighter):
         
         # may want to split this to a more generic function to allow shuffeling later
         # maybe something like "addfromRootFile" -> should go to base class
         
         Tuple = self.readTreeFromRootToTuple(filename)
-
+        
         TupleMeanStd =  means #only for first then apply to all
         
         # sanity checks, would brake easily if wrong means and std are used (dimension check)
@@ -38,9 +49,8 @@ class TrainData_deepCSV_ST(TrainData):
         
         # now we calculate weights to have flat PT eta distributions
         # entries per bin (not x-section, i.e. entries/density) will be flattened
-        weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,2000],dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
-        weights = produceWeigths(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
+        weights=weighter.getJetWeights(Tuple)
+        
         # dimension check, weight vector must have tuple length
         if weights.shape[0] != Tuple.shape[0]:
             print ('Weigts for subtraction and training should match, please check')

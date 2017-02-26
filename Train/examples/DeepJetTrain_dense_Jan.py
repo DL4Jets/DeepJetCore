@@ -1,3 +1,5 @@
+
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -18,28 +20,63 @@ from keras.optimizers import SGD
 ## to call it from cammand lines
 import sys
 import os
+from argparse import ArgumentParser
 
-inputDataDir = sys.argv[1]
-if inputDataDir[-1] != "/":
-    inputDataDir+="/"
-outputFilesTag = sys.argv[2]
-outputDir = inputDataDir+outputFilesTag+"/"
+parser = ArgumentParser('Run the training')
+parser.add_argument('inputDataDir')
+parser.add_argument('outputDir')
+args = parser.parse_args()
+
+inputDataDir = os.path.abspath(args.inputDataDir)
+inputDataDir+='/'
+outputDir=args.outputDir
+
+# create output dir
+
+if os.path.isdir(outputDir):
+    print('output directory must not exists yet')
+    raise Exception('output directory must not exists yet')
+
 os.mkdir(outputDir)
+outputDir = os.path.abspath(outputDir)
+outputDir+='/'
+
+#copy configuration to output dir
+
 import shutil
 shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
 shutil.copyfile('DeepJet_models.py',outputDir+'DeepJet_models.py')
 
-inputs = Input(shape=(66,))
+
+######################### KERAS PART ######################
+
+# configure the in/out/split etc
+
+testrun=True
+
+nepochs=10
+batchsize=10000
+learnrate=0.0003#/4
+useweights=True
+splittrainandtest=0.95
+maxqsize=5
+
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+useDataClass=TrainData_deepCSV_ST
+
+
+
 
 #from from keras.models import Sequential
 from DeepJet_models import Dense_model
+
+inputs = Input(shape=(66,))
 model = Dense_model(inputs,3)
 
 print('compiling')
 
-
 from keras.optimizers import Adam
-adam = Adam(lr=0.0003)
+adam = Adam(lr=learnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
@@ -47,38 +84,30 @@ from keras.callbacks import History # , TensorBoard
 # loss per epoch
 history = History()
 
-print('splitting')
 
 from DataCollection import DataCollection
 traind=DataCollection()
 traind.readFromFile(inputDataDir+'/dataCollection.dc')
-traind.setBatchSize(10000)
-traind.useweights=True
+traind.setBatchSize(batchsize)
+traind.useweights=useweights
 
-#test
-#traind.split(0.02)
+if testrun:
+    traind.split(0.02)
+    nepochs=2
 
-nepochs=50
-
-testd=traind.split(0.98)
+testd=traind.split(splittrainandtest)
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
 
-# get sample size from split files and use for the fit_generator function
-
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
-
-
-# Tensorbord file (illustrated NN structure)
-#TBcallback = TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=True)
+print('splitted to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
 
 print('training')
 
 # the actual training
-model.fit_generator(traind.generator(TrainData_deepCSV_ST()) ,
-        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=5,callbacks=[history],
-        validation_data=testd.generator(TrainData_deepCSV_ST()),
+model.fit_generator(traind.generator(useDataClass()) ,
+        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history],
+        validation_data=testd.generator(useDataClass()),
         nb_val_samples=nvalepoch)#, sample_weight=weights)
 #model.fit_generator(datagen.flow(features, labels,batch_size=50000),
 # samples_per_epoch=features.shape[0],
@@ -100,11 +129,11 @@ plt.figure(2)
 plt.plot(history.history['acc'])
 #print(history.history['val_loss'],history.history['loss'])
 plt.plot(history.history['val_acc'])
-plt.title('model accurency')
+plt.title('model accuracy')
 plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
-plt.savefig(outputDir+'accurencycurve.pdf')
+plt.savefig(outputDir+'accuracycurve.pdf')
 
 
 features_val=testd.getAllFeatures(TrainData_deepCSV_ST())[0]
@@ -113,7 +142,6 @@ labels_val=testd.getAllLabels(TrainData_deepCSV_ST())[0]
 
 predict_test = model.predict(features_val)
 
-# to add back to raw root for more detaiel ROCS and debugging
 predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
                                              names='probB, probC, probUDSG',
                                              formats = 'float32,float32,float32')
@@ -157,8 +185,33 @@ plt.ylim((0.001,1))
 plt.grid(True)
 plt.savefig(outputDir+'ROCs_multi.pdf')
 
+plt.figure(5)
+
+labels_val_isB= (labels_val[:,0]==1)
+# make boolean array for bs, can be used as filter by using it as index (advanced indexing)
+predict_test_Bs= predict_test[labels_val_isB]
+plt.plot(predict_test_Bs)
+
+
+labels_val_isL=(labels_val[:,2]==1)
+ # assuming 3 classes!, i.e index 2 = used
+# make boolean array for bs, can be used as filter by using it as index (advanced indexing)
+predict_test_Ls= predict_test[labels_val_isL]
+plt.plot(predict_test_Ls)
+
+
+plt.savefig(outputDir+'name.pdf')
+
 from root_numpy import array2root
-array2root(predict_write,outputDir+"KERAS_result_val.root",mode="recreate")
+
+# to add back to raw root for more detaiel ROCS and debugging
+all_write = np.core.records.fromarrays(  np.hstack((predict_test,labels_val)).transpose(), 
+                                             names='probB, probC, probUDSG, isB, isC, isUDSG',
+                                             formats = 'float32,float32,float32,float32,float32,float32')
+#labels_val
+print(all_write.shape)
+
+array2root(all_write,outputDir+"KERAS_result_val.root",mode="recreate")
 
 
 #from keras.models import load_model

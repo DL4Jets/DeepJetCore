@@ -5,6 +5,11 @@ import numpy
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
 
+
+def setDefaultsZero(inarray):
+    inarray[inarray == -999] = 0
+    return inarray
+
 def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     """
     provides a weight vector to flatten (typically)  PT and eta
@@ -109,13 +114,16 @@ def meanNormProd(Tuple):
             dTypeList.append((name, float ))
         else:
             array = Tuple[name].view(numpy.ndarray)
-          #  array[:][array[:] == -999] = 0
-            array_defaults = (array != -999)
-            array = array[array_defaults]
+            #array[:][array[:] == -999] = 0
+            array=setDefaultsZero(array)
             print ('name: ', name, ' ' , array.shape)
+            print (array.mean(), ' ' ,array.std())
+            #array_defaults = (array != -999)
+            #array = array[array_defaults]
             mean =  mean +  (array.mean(),)
             stddev = stddev+(array.std(),)
-            print (array.mean(), ' ' ,array.std())
+            print ('name: ', name, ' ' , array.shape)
+            print (array.mean(), ' ' ,array.std(),'\n')
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
@@ -243,7 +251,7 @@ def MeanNormApply(Tuple,MeanNormTuple):
 
        # arrayDefault = array !=-999
         #print (field, ' mean ' , array.mean(), ' std ' , array.std()) 
-        array[array ==-999] = 0.
+        array=setDefaultsZero(array)
         array =  numpy.subtract(array,MeanNormTuple[field][0])
         array =  numpy.divide(array,MeanNormTuple[field][1])
         #print ('and now mean ' , array.mean(), ' std ' , array.std()) 
@@ -282,4 +290,6 @@ def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
         ZeroPadded.append(array)
     # return the list as ndarray
     return numpy.asarray(ZeroPadded)
+
+
 

@@ -34,18 +34,18 @@ def Incept_model(inputs,dropoutRate=0.25):
     model = Model(input=inputs, output=predictions)
     return model
 
-def Dense_model(inputs,nclasses,dropoutRate=0.1):
+def Dense_model(inputs,nclasses,dropoutRate=0.5):
     """
     Dense matrix, defaults similat to 2016 training
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
     x = Dense(100, activation='relu',init='lecun_uniform',input_shape=(66,))(inputs)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    # x = Dropout(dropoutRate)(x)
+    #x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    # x = Dropout(dropoutRate)(x)
+    #x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',init='lecun_uniform')(x)
-    # x = Dropout(dropoutRate)(x)
+    #x = Dropout(dropoutRate)(x)
     # x=  Dense(100, activation='relu',init='lecun_uniform')(x)
     predictions = Dense(nclasses, activation='softmax',init='lecun_uniform')(x)
     model = Model(input=inputs, output=predictions)
