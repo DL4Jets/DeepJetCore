@@ -127,6 +127,11 @@ class DataCollection(object):
         out=DataCollection()
         
         nsamples=len(self.samples)
+        
+        if nsamples < 2:
+            out=self
+            print('DataCollection.split: warning: only one file, split will just return a copy of this')
+            return out
     
         for i in range(0, nsamples):
             if i/nsamples < ratio and i < nsamples-1:

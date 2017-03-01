@@ -15,12 +15,7 @@ class TrainData(object):
         '''
         Constructor
         '''
-        self.samplename=''
-        self.x=[[]]
-        self.y=[[]]
-        self.w=[[]]
-        
-        self.nsamples=0
+        self.clear()
         
     def clear(self):
 
@@ -31,6 +26,17 @@ class TrainData(object):
         
         self.nsamples=0
         
+        self.truthclasses=[]
+        self.regressionclasses=[]
+        
+        self.flatbranches=[]
+        self.deepbranches=[]
+        self.deepcutoffs=[]
+        
+    def addDeepBranches(self, blist, cutoff):
+        self.deepbranches.append(blist)
+        self.deepcutoffs.append(cutoff)
+        
     def addFromRootFile(self,fileName):
         '''
         Adds from a root file and randomly shuffles the input
@@ -39,6 +45,9 @@ class TrainData(object):
         #just call read from root (virtual in python??), and mix with existing x,y,weight
 
 
+    def __reduceTruth(self,tuple_in):
+        import numpy
+        return numpy.array(tuple_in.tolist())
 
     def fileTimeOut(self,fileName, timeOut):
         '''
@@ -109,4 +118,60 @@ class TrainData(object):
     def produceBinWeighter(self,filename):
         return Weighter() #overload in derived classes
         
+        
+        
+        
+        
+        
+        
+
+from Weighter import Weighter
+from preprocessing import MeanNormApply, MeanNormZeroPad
+import numpy
+
+class TrainData_Flavour(TrainData):
+    '''
+    same as TrainData_deepCSV but with 3 truth labels: UDSG C B
+    '''
+
+
+    def __init__(self):
+        TrainData.__init__(self)
+        
+        
+    def produceBinWeighter(self,filename):
+        weighter=Weighter() 
+        Tuple = self.readTreeFromRootToTuple(filename)
+        weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,2000],dtype=float)
+        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
+        weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
+        print('weights produced')
+        return weighter
+    
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        
+        Tuple = self.readTreeFromRootToTuple(filename)
+        weights=weighter.getJetWeights(Tuple)
+        
+        x_global_flat = MeanNormApply(Tuple[self.flatbranches],TupleMeanStd)
+        x_global_flat = numpy.array(x_global_flat.tolist())
+        
+        x_all=x_global_flat
+        
+        for i in range(0,len(self.deepbranches)):
+            x_all=numpy.concatenate( (x_all, 
+                                      MeanNormZeroPad(Tuple[self.deepbranches[i]],TupleMeanStd, self.deepcutoffs[i])
+                                     ),axis=1)  
+        
+       
+        truthtuple =  Tuple[self.truthclasses]
+        alltruth=self.reduceTruth(truthtuple)
+        
+        #####needs to be filled in any implementation
+        
+        self.w=[weights]
+        self.x=[x_all]
+        self.y=[alltruth]
+        
+     
         

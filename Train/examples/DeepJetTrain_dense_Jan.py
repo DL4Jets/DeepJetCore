@@ -114,7 +114,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 nepochs=5
-batchsize=10000
+batchsize=100
 learnrate=0.0003#/4
 useweights=False
 splittrainandtest=0.9
@@ -154,9 +154,12 @@ traind.useweights=useweights
 if testrun:
     traind.split(0.02)
     nepochs=2
-
-
+    
 testd=traind.split(splittrainandtest)
+
+print(traind.samples)
+print(testd.samples)
+
 
 #tmp=traind
 #traind=testd
