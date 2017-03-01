@@ -157,8 +157,6 @@ if testrun:
     
 testd=traind.split(splittrainandtest)
 
-print(traind.samples)
-print(testd.samples)
 
 
 #tmp=traind
