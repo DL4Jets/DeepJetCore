@@ -113,8 +113,8 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=5
-batchsize=100
+nepochs=10
+batchsize=10000
 learnrate=0.0003#/4
 useweights=False
 splittrainandtest=0.9
@@ -168,7 +168,7 @@ testd.isTrain=False
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
 
-print('splitted to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
+print('split to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
 
 print('training')
 

@@ -7,6 +7,7 @@ Created on 21 Feb 2017
 #from builtins import list
 from Weighter import Weighter
 from TrainData import TrainData
+from matplotlib.cbook import tofloat
 #for convenience
 
 
@@ -126,15 +127,20 @@ class DataCollection(object):
         itself=DataCollection()
         out=DataCollection()
         
-        nsamples=len(self.samples)
+        nsamplefiles=len(self.samples)
         
-        if nsamples < 2:
+        print(nsamplefiles)
+        
+        
+        if nsamplefiles < 2:
             out=self
             print('DataCollection.split: warning: only one file, split will just return a copy of this')
             return out
     
-        for i in range(0, nsamples):
-            if i/nsamples < ratio and i < nsamples-1:
+        for i in range(0, nsamplefiles):
+            frac=(float(i))/(float(nsamplefiles))
+            print(frac)
+            if frac < ratio and i < nsamplefiles-1:
                 itself.samples.append(self.samples[i])
                 itself.sampleentries.append(self.sampleentries[i])
                 itself.originRoots.append(self.originRoots[i])
@@ -148,6 +154,7 @@ class DataCollection(object):
         
         out.useweights=self.useweights
         
+        print(out.samples)
         
         itself.setBatchSize(self.__batchsize)
         out.dataDir=self.dataDir
