@@ -57,6 +57,6 @@ class TrainData_deepCSV(TrainData_Flavour):
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
         l = g + uds
-        self.truthclasses=['isB','isC','isUDSG']
+        self.reducedtruthclasses=['isB','isC','isUDSG']
         return numpy.vstack((b,c,l)).transpose()
        
