@@ -15,7 +15,7 @@ class TrainData(object):
         '''
         Constructor
         '''
-        
+        self.samplename=''
         self.x=[[]]
         self.y=[[]]
         self.w=[[]]
@@ -24,6 +24,7 @@ class TrainData(object):
         
     def clear(self):
 
+        self.samplename=''
         self.x=[[]]
         self.y=[[]]
         self.w=[[]]
@@ -53,7 +54,7 @@ class TrainData(object):
             return
         import time
         counter=0
-        print('file I/O problems... waiting for filesystem to become available')
+        print('file I/O problems... waiting for filesystem to become available for '+fileName)
         while not os.path.isdir(filepath):
             if counter > timeOut:
                 print('...file could not be opened within '+str(timeOut)+ ' seconds')
@@ -66,15 +67,17 @@ class TrainData(object):
         import gzip
         self.fileTimeOut(fileprefix,120) #give eos a minute to recover
         fd=gzip.open(fileprefix,'wb')
-        pickle.dump(self.w, fd,protocol=pickle.HIGHEST_PROTOCOL)
-        pickle.dump(self.x, fd,protocol=pickle.HIGHEST_PROTOCOL)
-        pickle.dump(self.y, fd,protocol=pickle.HIGHEST_PROTOCOL)
-        pickle.dump(self.nsamples, fd,protocol=pickle.HIGHEST_PROTOCOL)
+        pprot=2 #compatibility to python 2
+        pickle.dump(self.w, fd,protocol=pprot)
+        pickle.dump(self.x, fd,protocol=pprot)
+        pickle.dump(self.y, fd,protocol=pprot)
+        pickle.dump(self.nsamples, fd,protocol=pprot)
         fd.close()
         
     def readIn(self,fileprefix):
         import pickle
         import gzip
+        self.samplename=fileprefix
         self.fileTimeOut(fileprefix,120) #give eos a minute to recover
         fd=gzip.open(fileprefix,'rb')
         self.w=pickle.load(fd)

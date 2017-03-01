@@ -21,16 +21,76 @@ from keras.optimizers import SGD
 import sys
 import os
 from argparse import ArgumentParser
+import shutil
+from DeepJet_models import Dense_model
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+
+
+def predictAndMakeRoc(features_val, labels_val, nameprefix, names,formats, model):
+
+
+
+    predict_test = model.predict(features_val)
+    metric=model.evaluate(features_val, labels_val, batch_size=10000)
+    
+    print(metric)
+    
+    predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
+                                                 names=names,
+                                                 formats = formats)
+    
+    # this makes you some ROC curves
+    from sklearn.metrics import roc_curve
+    
+    # ROC one against all
+    plt.figure(3)
+    for i in range(labels_val.shape[1]):
+    #    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
+        
+        fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
+    #   print (fpr, ' ', tpr, ' ', _)
+        plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
+    print (predict_write.dtype.names)
+    plt.semilogy()
+    plt.legend(predict_write.dtype.names, loc='upper left')
+    plt.savefig(nameprefix+'ROCs.pdf')
+    plt.close(3)
+    
+    # ROC one against som others
+    plt.figure(4)
+    # b vs light (assumes truth C is at index 1 and b truth at 0
+    labels_val_noC = (labels_val[:,1] == 1)
+    labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
+    predict_test_killedC = predict_test[np.invert(labels_val_noC)]
+    fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
+    BvsL, = plt.plot(tprC, fprC, label='b vs. light')
+    # b vs c (assumes truth light is at index 2
+    labels_val_noL = (labels_val[:,2] ==1)
+    
+    labels_val_killedL = labels_val[np.invert(labels_val_noL)]
+    predict_test_killedL = predict_test[np.invert(labels_val_noL)]
+    fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
+    BvsC, = plt.plot(tpr, fpr, label='b vs. c')
+    plt.semilogy()
+    #plt.legend([BvsL,BvsC],loc='upper left')
+    plt.ylabel('BKG efficiency')
+    plt.xlabel('b efficiency')
+    plt.ylim((0.001,1))
+    plt.grid(True)
+    plt.savefig(nameprefix+'ROCs_multi.pdf')
+    plt.close(4)
+    
+    return metric
+    
+# argument parsing and bookkeeping
 
 parser = ArgumentParser('Run the training')
-parser.add_argument('inputDataDir')
+parser.add_argument('inputDataCollection')
 parser.add_argument('outputDir')
 args = parser.parse_args()
 
-inputDataDir = os.path.abspath(args.inputDataDir)
-inputDataDir+='/'
+inputData = os.path.abspath(args.inputDataCollection)
 outputDir=args.outputDir
-
 # create output dir
 
 if os.path.isdir(outputDir):
@@ -43,32 +103,29 @@ outputDir+='/'
 
 #copy configuration to output dir
 
-import shutil
 shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
-shutil.copyfile('DeepJet_models.py',outputDir+'DeepJet_models.py')
+shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 
 ######################### KERAS PART ######################
 
 # configure the in/out/split etc
 
-testrun=True
+testrun=False
 
-nepochs=10
+nepochs=5
 batchsize=10000
 learnrate=0.0003#/4
-useweights=True
-splittrainandtest=0.95
-maxqsize=5
+useweights=False
+splittrainandtest=0.9
+maxqsize=1 #sufficient
 
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 useDataClass=TrainData_deepCSV_ST
 
 
 
 
 #from from keras.models import Sequential
-from DeepJet_models import Dense_model
 
 inputs = Input(shape=(66,))
 model = Dense_model(inputs,3)
@@ -87,15 +144,25 @@ history = History()
 
 from DataCollection import DataCollection
 traind=DataCollection()
-traind.readFromFile(inputDataDir+'/dataCollection.dc')
+traind.readFromFile(inputData)
 traind.setBatchSize(batchsize)
 traind.useweights=useweights
+
+#does this cause the weird behaviour?
+#traind.removeLast()
 
 if testrun:
     traind.split(0.02)
     nepochs=2
 
+
 testd=traind.split(splittrainandtest)
+
+#tmp=traind
+#traind=testd
+#testd=tmp
+
+testd.isTrain=False
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
@@ -135,75 +202,16 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
 
-
 features_val=testd.getAllFeatures(TrainData_deepCSV_ST())[0]
 labels_val=testd.getAllLabels(TrainData_deepCSV_ST())[0]
+names='probB, probC, probUDSG'
+formats='float32,float32,float32'
+predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
 
-
-predict_test = model.predict(features_val)
-
-predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
-                                             names='probB, probC, probUDSG',
-                                             formats = 'float32,float32,float32')
-
-# this makes you some ROC curves
-from sklearn.metrics import roc_curve
-
-# ROC one against all
-plt.figure(3)
-for i in range(labels_val.shape[1]):
-#    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
-    
-    fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
-#   print (fpr, ' ', tpr, ' ', _)
-    plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
-print (predict_write.dtype.names)
-plt.semilogy()
-plt.legend(predict_write.dtype.names, loc='upper left')
-plt.savefig(outputDir+'ROCs.pdf')
-
-# ROC one against som others
-plt.figure(4)
-# b vs light (assumes truth C is at index 1 and b truth at 0
-labels_val_noC = (labels_val[:,1] == 1)
-labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
-predict_test_killedC = predict_test[np.invert(labels_val_noC)]
-fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
-BvsL, = plt.plot(tprC, fprC, label='b vs. light')
-# b vs c (assumes truth light is at index 2
-labels_val_noL = (labels_val[:,2] ==1)
-
-labels_val_killedL = labels_val[np.invert(labels_val_noL)]
-predict_test_killedL = predict_test[np.invert(labels_val_noL)]
-fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
-BvsC, = plt.plot(tpr, fpr, label='b vs. c')
-plt.semilogy()
-#plt.legend([BvsL,BvsC],loc='upper left')
-plt.ylabel('BKG efficiency')
-plt.xlabel('b efficiency')
-plt.ylim((0.001,1))
-plt.grid(True)
-plt.savefig(outputDir+'ROCs_multi.pdf')
-
-plt.figure(5)
-
-labels_val_isB= (labels_val[:,0]==1)
-# make boolean array for bs, can be used as filter by using it as index (advanced indexing)
-predict_test_Bs= predict_test[labels_val_isB]
-plt.plot(predict_test_Bs)
-
-
-labels_val_isL=(labels_val[:,2]==1)
- # assuming 3 classes!, i.e index 2 = used
-# make boolean array for bs, can be used as filter by using it as index (advanced indexing)
-predict_test_Ls= predict_test[labels_val_isL]
-plt.plot(predict_test_Ls)
-
-
-plt.savefig(outputDir+'name.pdf')
 
 from root_numpy import array2root
 
+predict_test = model.predict(features_val)
 # to add back to raw root for more detaiel ROCS and debugging
 all_write = np.core.records.fromarrays(  np.hstack((predict_test,labels_val)).transpose(), 
                                              names='probB, probC, probUDSG, isB, isC, isUDSG',
@@ -218,5 +226,44 @@ array2root(all_write,outputDir+"KERAS_result_val.root",mode="recreate")
 model.save(outputDir+"KERAS_model.h5")
 traind.writeToFile(outputDir+'trainsamples.dc')
 testd.writeToFile(outputDir+'testsamples.dc')
+
+
+# per file plots. Take lot of time
+exit()
+
+metrics=[]
+print('making individual ROCs for test data')
+for samplefile in testd.samples:
+    tdt=useDataClass()
+    tdt.readIn(testd.getSamplePath(samplefile))
+    print(samplefile)
+    metrics.append(predictAndMakeRoc(tdt.x[0],tdt.y[0],outputDir+samplefile+"_val",names,formats,model))
+    
+
+print('making individual ROCs for train data')
+for samplefile in traind.samples:
+    tdt=useDataClass()
+    tdt.readIn(traind.getSamplePath(samplefile))
+    print(samplefile)
+    metrics.append(predictAndMakeRoc(tdt.x[0],tdt.y[0],outputDir+samplefile+"_train",names,formats,model))
+    
+metricsloss=[]
+metricsacc=[]
+count=range(0,len(metrics))
+for m in metrics:
+    metricsloss.append(m[0])
+    metricsacc.append(m[1])
+    
+    
+
+plt.figure(6)
+plt.plot(count,metricsloss)
+plt.grid(True)
+plt.savefig(outputDir+'lossperfile.pdf')
+plt.figure(7)
+plt.plot(count,metricsacc)
+plt.grid(True)
+plt.savefig(outputDir+'accperfile.pdf')
+    
 
 

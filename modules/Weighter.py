@@ -95,6 +95,8 @@ class Weighter(object):
         # to get on average weight one
         print ('weight average: ',weight.mean())
         weight = weight / weight.mean()
+        print ('rescaled weight average: ',weight.mean())
+        print ('rescaled weight stddev: ',weight.std())
         return weight
         
         

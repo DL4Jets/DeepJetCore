@@ -6,6 +6,7 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from Weighter import Weighter
+from TrainData import TrainData
 #for convenience
 
 
@@ -24,11 +25,22 @@ class DataCollection(object):
         
     def clear(self):
         self.samples=[]
+        self.dataDir=""
         self.sampleentries=[]
         self.originRoots=[]
         self.nsamples=0
         self.useweights=True
         self.__batchsize=1
+        self.filesPreRead=2
+        self.isTrain=True
+        #self.dataclass=TrainData #for future implementations
+        
+    def removeLast(self):
+        self.samples.pop()
+        self.nsamples-=self.sampleentries[-1]
+        self.sampleentries.pop()
+        self.originRoots.pop()
+        
         
     def setBatchSize(self,bsize):
         if bsize > self.nsamples:
@@ -74,6 +86,8 @@ class DataCollection(object):
         self.__batchsize=pickle.load(fd)
         fd.close()
         import os
+        self.dataDir=os.path.dirname(os.path.abspath(filename))
+        self.dataDir+='/'
         #check if files exist
         for f in self.originRoots:
             if not f.endswith(".root"): continue
@@ -81,8 +95,9 @@ class DataCollection(object):
                 print('not found: '+f)
                 raise Exception('original root file not found')
         for f in self.samples:
-            if not os.path.isfile(f):
-                print('not found: '+f)
+            fpath=self.getSamplePath(f)
+            if not os.path.isfile(fpath):
+                print('not found: '+fpath)
                 raise Exception('sample file not found')
         
         
@@ -130,6 +145,7 @@ class DataCollection(object):
         
         
         itself.setBatchSize(self.__batchsize)
+        out.dataDir=self.dataDir
         out.setBatchSize(self.__batchsize)
         
         self.samples=itself.samples
@@ -152,10 +168,11 @@ class DataCollection(object):
         means=td.produceMeansFromRootFile(self.originRoots[0])
         weighter=td.produceBinWeighter(self.originRoots[0])
         outputDir=os.path.dirname(snapshotfile)+'/'
+        self.dataDir=outputDir
         finishedsamples=len(self.samples)
-        for i in range(finishedsamples-1, len(self.originRoots)):
+        for i in range(finishedsamples, len(self.originRoots)):
             if not self.originRoots[i].endswith('.root'): continue
-            print(self.originRoots[i])
+            print ('creating '+ str(type(dataclass)) +' data from '+self.originRoots[i])
             self.__writeData(self.originRoots[i], means, weighter, outputDir, td)
             
         self.writeToFile(outputDir+'/dataCollection.dc')
@@ -174,6 +191,7 @@ class DataCollection(object):
         if os.path.isdir(outputDir):
             raise Exception('output dir must not exist')
         os.mkdir(outputDir)
+        self.dataDir=outputDir
         self.nsamples=0
         self.samples=[]
         self.sampleentries=[]
@@ -202,7 +220,7 @@ class DataCollection(object):
         newpath=os.path.abspath(outputDir+newname+'.z')
         print('writing '+newname+'.z')
         td.writeOut(newpath)
-        self.samples.append(newpath)
+        self.samples.append(newname+'.z')
         self.nsamples+=td.nsamples
         self.sampleentries.append(td.nsamples)
         td.clear()
@@ -222,13 +240,20 @@ class DataCollection(object):
     def getAllWeights(self, dataclass):
         return self.__stackData(dataclass,'w')
     
+    
+    def getSamplePath(self,samplefile):
+        #for backward compatibility
+        if samplefile[0] == '/':
+            return samplefile
+        return self.dataDir+'/'+samplefile
+    
     def __stackData(self, dataclass, selector):
         import numpy
         td=dataclass
         out=[]
         firstcall=True
         for sample in self.samples:
-            td.readIn(sample)
+            td.readIn(self.getSamplePath(sample))
             #make this generic
             thislist=[]
             if selector == 'x':
@@ -266,8 +291,7 @@ class DataCollection(object):
         # ... try to throw aways the rest as soon as possible
         import numpy
         td=dataclass
-        
-        
+
         
         totalbatches=self.getNBatchesPerEpoch()
         processedbatches=0
@@ -284,6 +308,15 @@ class DataCollection(object):
         yout=[]
         wout=[]
         
+        #read the next sample in advance
+        from threading import Thread
+        def readTDThread(ttd,samplefile):
+            ttd.readIn(samplefile)
+        
+        readsample=self.getSamplePath(self.samples[0])
+        #readthread=Thread(target=readTDThread, args=(td,readsample)) #read first directly
+        #readthread.start()
+        
         while 1:
             
             if processedbatches == totalbatches:
@@ -297,17 +330,23 @@ class DataCollection(object):
                 dimy=0
                 wstored=[]
                 dimw=0
+                
             
             batchcomplete=False
             doSplit=True
             
             lastbatchrest=xstored[0].shape[0]
-            if lastbatchrest > self.__batchsize:
+            if lastbatchrest >= self.__batchsize:
                 batchcomplete = True
                 
             while not batchcomplete:
-                readsample=self.samples[nextfiletoread]
-                td.readIn(readsample)
+               
+                if nextfiletoread ==0:
+                    readthread=Thread(target=readTDThread, args=(td,readsample)) #read first directly
+                    readthread.start()
+                
+                readthread.join()
+                #td.readIn(readsample)
                 #get the format right in the first read
                 if nextfiletoread == 0 or xstored[0].shape[0] ==0: #either first file or nothing left, so no need to append
                     
@@ -365,14 +404,18 @@ class DataCollection(object):
                         for i in range(0,dimw):
                             wstored[i]=numpy.append(wstored[i],td.w[i])
                     
-                if xstored[0].shape[0] > self.__batchsize:
+                if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
-                        
+                     
                 td.clear()
-                
                 nextfiletoread+=1
                 if nextfiletoread >= len(self.samples):
                     nextfiletoread=0
+                
+                readsample=self.getSamplePath(self.samples[nextfiletoread])
+                if nextfiletoread > 0:
+                    readthread=Thread(target=readTDThread, args=(td,readsample)) #read first directly
+                    readthread.start()
                 
             if batchcomplete and doSplit:
                 for i in range(0,dimx):
@@ -393,8 +436,9 @@ class DataCollection(object):
             
             #print('\n')
             #print(wout[0])
-            idxs=numpy.where(yout[0][:,2] == 1)
-            wout[0][idxs] *= 0.5
+            if False and self.useweights:
+                idxs=numpy.where(yout[0][:,2] == 1)
+                wout[0][idxs] *= 0.5
             #print(wout[0])
             
             if self.useweights:
