@@ -1,20 +1,28 @@
-cd convertFromRoot/example/
 
-# now get the means and studded DO THSI ONLY ONCE and forever.
 
-python makeMeansStd.py /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_test
+The training has 2 steps outside CMSSW
 
-# Having the file for mean subtract act you can now convert the root file and preprocess it
-# just to see what you do:
-python
->> import preprocessing
->> help(preprocessing)
-CTRL d
+0) Set up the environment. For details, please see environment/README
 
-# so than make the conversion
-python retrain_dense.py /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_0.root /eos/cms/store/cmst3/group/dehep/DeepJet/ntuple_ttbar_2016_testMeansStd.npy /eos/cms/store/cmst3/group/dehep/DeepJet/DeepCSVlike2016/ntuple_ttbar_2016_0/
+1) Convert the root tuples to the correct data format:
 
-# Now train it
-cd ../../Train/examples/
-python DeepJetTrain_dense.py python DeepJetTrain_dense.py /eos/cms/store/cmst3/group/dehep/DeepJet/DeepCSVlike2016/ntuple_ttbar_2016_0/ killme
-
+   cd convertFromRoot
+   ./convertFromRoot.py -i /path/to/your/root/ntuples/samples.txt -o /directory/to/store/output/must/not/yet/exist -c data_format
+   
+   To store the output, it is recommended to use eos. The data format is defined by the classes TrainData_XX.py in the modules directory.
+   For a first example, please use: TrainData_deepCSV_ST
+   
+   The conversion will run for a while. Get yourself a coffee or two.
+   If the conversion is interrupted, you can pick up where you left by:
+   ./convertFromRoot.py -r /directory/you/stored/the/output/in/snapshot.dc -c TrainData_deepCSV_ST
+   
+   Ntuples can be found in: /eos/cms/store/cmst3/group/dehep/DeepJet/NTuples
+   
+   
+3) Train the DNN:
+   
+   cd Train
+   python DeepJetTrain_dense.py /directory/you/stored/the/output/in/dataCollection.dc /output/directory/must/not/exist/yet
+   
+   This will take a while. The output will not be big, so the output directory can be on the afs or somewhere else with low space
+   

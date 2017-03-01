@@ -45,6 +45,7 @@ def main(argv=None):
     parser.add_option("-i", "--in", dest="infile", help="set input sample description (output from the check.py script)", metavar="FILE")
     parser.add_option("-o", "--out", dest="outPath", help="set output path", metavar="PATH")
     parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_option("-r", "--recover", dest="Recover", help="set path to snapshot that got interrupted", metavar="FILE", default='')
    
     
     # process options
@@ -59,21 +60,27 @@ def main(argv=None):
     
     
     from DataCollection import DataCollection
+    from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
     from TrainData_deepCSV_ST import TrainData_deepCSV_ST
     
     dc=DataCollection()
-    #dc.convertListOfRootFiles('/Users/jkiesele/Cernbox/batchtest/samples.txt', TrainData_deepCSV(), '/Users/jkiesele/Cernbox/batchtest/deepCSV')
+    traind=TrainData
     if opts.Class == 'TrainData_deepCSV':
-        dc.convertListOfRootFiles(opts.infile, TrainData_deepCSV(), opts.outPath)
+        traind=TrainData_deepCSV
     elif opts.Class == 'TrainData_veryDeepJet':
-        dc.convertListOfRootFiles(opts.infile, TrainData_veryDeepJet(), opts.outPath)   
+        traind=TrainData_veryDeepJet
     elif opts.Class ==  'TrainData_deepCSV_ST':
-        dc.convertListOfRootFiles(opts.infile, TrainData_deepCSV_ST(), opts.outPath)   
-        
+        traind=TrainData_deepCSV_ST
     else:
         raise Exception('wrong class selecton')
+    
+    if len(opts.Recover)>0:
+        dc.recoverCreateDataFromRootFromSnapshot(opts.Recover, traind())
+    else:
+        dc.convertListOfRootFiles(opts.infile, traind(), opts.outPath)
+   
 
     #except:
     #    print('exception')

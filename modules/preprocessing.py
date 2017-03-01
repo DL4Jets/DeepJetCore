@@ -5,6 +5,11 @@ import numpy
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
 
+
+def setDefaultsZero(inarray):
+    inarray[inarray == -999] = 0
+    return inarray
+
 def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     """
     provides a weight vector to flatten (typically)  PT and eta
@@ -56,9 +61,14 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
         else:
             # count if a class was true (should be in one-hot-encoding, but better not trust anyone!
             didappend =0 
+        
             for index, classs in enumerate(classes):
+ #               print ('ha ',classs , ' ' , 'jet[classs] is ', jet[classs])
                 if 1 == jet[classs]:
+#                    print ('is one')
                     weight.append(1./hists[index][binX][binY])
+                    if 1./hists[index][binX][binY] > 10.*0.0002646:
+                        print (classs, ' ' , jet[nameX], ' ' , jet[nameY], ' weight ',  1./hists[index][binX][binY]/0.0002646)
                     didappend=1
             if  didappend == 0:
                 #print ' WARNING, event found that had no TRUE label '
@@ -70,6 +80,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
         print ('WARNING from weight calculator: ', countMissedJets,'/', len(weight), ' had no valid label and got weight 0 (i.e. are ignore, but eat up space and time')
     weight =  numpy.asarray(weight)
     # to get on average weight one
+    print ('weight average: ',weight.mean())
     weight = weight / weight.mean()
     return weight
 
@@ -103,13 +114,16 @@ def meanNormProd(Tuple):
             dTypeList.append((name, float ))
         else:
             array = Tuple[name].view(numpy.ndarray)
-          #  array[:][array[:] == -999] = 0
-            array_defaults = (array != -999)
-            array = array[array_defaults]
+            #array[:][array[:] == -999] = 0
+            array=setDefaultsZero(array)
             print ('name: ', name, ' ' , array.shape)
+            print (array.mean(), ' ' ,array.std())
+            #array_defaults = (array != -999)
+            #array = array[array_defaults]
             mean =  mean +  (array.mean(),)
             stddev = stddev+(array.std(),)
-            print (array.mean(), ' ' ,array.std())
+            print ('name: ', name, ' ' , array.shape)
+            print (array.mean(), ' ' ,array.std(),'\n')
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
@@ -237,7 +251,7 @@ def MeanNormApply(Tuple,MeanNormTuple):
 
        # arrayDefault = array !=-999
         #print (field, ' mean ' , array.mean(), ' std ' , array.std()) 
-        array[array ==-999] = 0.
+        array=setDefaultsZero(array)
         array =  numpy.subtract(array,MeanNormTuple[field][0])
         array =  numpy.divide(array,MeanNormTuple[field][1])
         #print ('and now mean ' , array.mean(), ' std ' , array.std()) 
@@ -276,4 +290,6 @@ def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
         ZeroPadded.append(array)
     # return the list as ndarray
     return numpy.asarray(ZeroPadded)
+
+
 
