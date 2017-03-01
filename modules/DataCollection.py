@@ -139,7 +139,6 @@ class DataCollection(object):
     
         for i in range(0, nsamplefiles):
             frac=(float(i))/(float(nsamplefiles))
-            print(frac)
             if frac < ratio and i < nsamplefiles-1:
                 itself.samples.append(self.samples[i])
                 itself.sampleentries.append(self.sampleentries[i])
@@ -154,7 +153,6 @@ class DataCollection(object):
         
         out.useweights=self.useweights
         
-        print(out.samples)
         
         itself.setBatchSize(self.__batchsize)
         out.dataDir=self.dataDir

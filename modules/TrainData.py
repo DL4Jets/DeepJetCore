@@ -17,6 +17,14 @@ class TrainData(object):
         '''
         self.clear()
         
+        self.truthclasses=[]
+        self.reducedtruthclasses=[]
+        self.regressionclasses=[]
+        
+        self.flatbranches=[]
+        self.deepbranches=[]
+        self.deepcutoffs=[]
+        
     def clear(self):
 
         self.samplename=''
@@ -26,17 +34,16 @@ class TrainData(object):
         
         self.nsamples=0
         
-        self.truthclasses=[]
-        self.regressionclasses=[]
-        
-        self.flatbranches=[]
-        self.deepbranches=[]
-        self.deepcutoffs=[]
         
     def addDeepBranches(self, blist, cutoff):
         self.deepbranches.append(blist)
         self.deepcutoffs.append(cutoff)
         
+    def getUsedTruth(self):
+        if len(self.reducedtruthclasses) > 0:
+            return self.reducedtruthclasses
+        return self.truthclasses
+    
     def addFromRootFile(self,fileName):
         '''
         Adds from a root file and randomly shuffles the input
@@ -152,6 +159,8 @@ class TrainData_Flavour(TrainData):
         
         Tuple = self.readTreeFromRootToTuple(filename)
         weights=weighter.getJetWeights(Tuple)
+        
+        
         
         x_global_flat = MeanNormApply(Tuple[self.flatbranches],TupleMeanStd)
         x_global_flat = numpy.array(x_global_flat.tolist())

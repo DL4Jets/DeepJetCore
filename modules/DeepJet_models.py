@@ -2,6 +2,12 @@
 from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge
 from keras.models import Model
 
+#fix for dropout on gpus
+import tensorflow
+from tensorflow.python.ops import control_flow_ops 
+tensorflow.python.control_flow_ops = control_flow_ops
+
+
 def Incept_model(Inputs,dropoutRate=0.25):
     """
         This NN adds two inputs, one for a conv net and a seceond for a dense net, both nets get combined. The last layer is split into regression and classification activations (softmax, linear)
