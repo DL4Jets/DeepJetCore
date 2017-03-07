@@ -9,16 +9,140 @@ class Weighter(object):
     contains the histograms/input to calculate jet-wise weights
     '''
     def __init__(self):
+
         self.Axixandlabel=[]
         self.axisX=[]
         self.axisY=[]
         self.hists =[]
+        self.removeProbabilties=[]
+        self.classes=[]
+        self.refclassidx=0
+    
+    def createRemoveProbabilities(self,Tuple,nameX,nameY,bins,classes,referenceclass='isB'):
+        import numpy
+        
+        referenceidx=0
+        try:
+            referenceidx=classes.index(referenceclass)
+        except:
+            print('createRemoveProbabilities: reference index not found in class list')
+            raise Exception('createRemoveProbabilities: reference index not found in class list')
+               
+        
+        self.axisX= bins[0]
+        self.axisY= bins[1]
+        self.nameX=nameX
+        self.nameY=nameY
+        if len(classes) > 0:
+            self.Axixandlabel = [nameX, nameY]+ classes
+        else:
+            self.Axixandlabel = [nameX, nameY]
+        self.bins=bins
+        self.classes=classes
+        self.refclassidx=referenceidx
+        
+        
+        def getScaler(histo,refhisto):
+            scaler=0
+            for indexx,binx in enumerate(self.axisX):
+                if not indexx:  continue
+                for indexy,biny in enumerate(self.axisY):
+                    if not indexy:  continue
+                    refval=refhisto[indexx-1][indexy-1]
+                    thisval=histo[indexx-1][indexy-1]
+                    ratio=refval/thisval
+                    if ratio>scaler: scaler=ratio
+            return scaler
+        
+        def getProbHisto(scaledhisto,refhisto):
+            out=numpy.copy(refhisto)
+            for indexx,binx in enumerate(self.axisX):
+                if not indexx:
+                    continue
+                for indexy,biny in enumerate(self.axisY):
+                    if not indexy:
+                        continue
+                    refval=refhisto[indexx-1][indexy-1]
+                    thisval=scaledhisto[indexx-1][indexy-1]
+                    prob=(thisval-refval)/(thisval+refval)
+                    out[indexx-1][indexy-1]=prob
+            return out
         
 
+        labeltuple=Tuple[classes]
+        ytuple=Tuple[nameY]
+        xtuple=Tuple[nameX]
+        
+        selidxs=[]
+        for c in classes:
+            selidxs.append(labeltuple[c]>0)
+        
+    
+        refx=xtuple[selidxs[referenceidx]]
+        refy=ytuple[selidxs[referenceidx]]
+       
+        refhist,_,_=numpy.histogram2d(refx,refy,bins)
+       
+        probhists=[]
+        
+    
+        for i in range(len(classes)):
+            tmphist,_,_=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],bins)
+            scaler=getScaler(tmphist,refhist)
+            tmphist*=scaler
+            probhist=getProbHisto(tmphist,refhist)
+            probhists.append(probhist)
+        
+        self.removeProbabilties=probhists
+        
+        
+        
+        
+    def createNotRemoveIndices(self,Tuple):
+        import numpy
+        if len(self.removeProbabilties) <1:
+            print('removeProbabilties bins not initialised. Cannot create indices per jet')
+            raise Exception('removeProbabilties bins not initialised. Cannot create indices per jet')
+        
+        notremove=[]
+        xaverage=[]
+        norm=[]
+        yaverage=[]
+        for c in self.classes:
+            xaverage.append(0)
+            norm.append(0)
+            yaverage.append(0)
+
+        for jet in iter(Tuple[self.Axixandlabel]):
+            binX =  self.getBin(jet[self.nameX], self.axisX)
+            binY =  self.getBin(jet[self.nameY], self.axisY)
+            
+            for index, classs in enumerate(self.classes):
+                if 1 == jet[classs]:
+                    rand=numpy.random.ranf()
+                    prob = self.removeProbabilties[index][binX][binY]
+
+                    if rand < prob and index != self.refclassidx:
+                        #print('rm  ',index,self.refclassidx,jet[classs],classs)
+                        notremove.append(0)
+                    else:
+                        #print('keep',index,self.refclassidx,jet[classs],classs)
+                        notremove.append(1)
+                        xaverage[index]+=jet[self.nameX]
+                        yaverage[index]+=jet[self.nameY]
+                        norm[index]+=1
+                        
+                    
+        for c in range(len(xaverage)):
+            print('xav ', c, xaverage[c]/norm[c])
+            
+        for c in range(len(yaverage)):
+            print('yav ', c, yaverage[c]/norm[c])
+            
+        return numpy.array(notremove)
+
     def createBinWeights(self,Tuple,nameX,nameY,bins,classes=[],normed=False):
-        '''
-        Constructor
-        '''
+        
         import numpy
         self.Axixandlabel=[]
         self.axisX=[]
@@ -29,6 +153,19 @@ class Weighter(object):
         self.bins=[]
         self.classes=[]
         self.normed=True
+        self.hists=[]
+        
+        if len(classes) > 0:
+            self.Axixandlabel = [nameX, nameY]+ classes
+        else:
+            self.Axixandlabel = [nameX, nameY]
+        self.axisX= bins[0]
+        self.axisY= bins[1]
+        self.nameX=nameX
+        self.nameY=nameY
+        self.bins=bins
+        self.classes=classes
+        self.normed=normed
         
     # if no classes are present just flatten everthing 
         if classes == []:
@@ -47,14 +184,7 @@ class Weighter(object):
                 self.hists.append( w_ )
                 
         # collect only the fileds we actually need
-        self.Axixandlabel = [nameX, nameY]+ classes
-        self.axisX= bins[0]
-        self.axisY= bins[1]
-        self.nameX=nameX
-        self.nameY=nameY
-        self.bins=bins
-        self.classes=classes
-        self.normed=normed
+        
         
         
     def getJetWeights(self,Tuple):

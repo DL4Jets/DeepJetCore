@@ -4,6 +4,7 @@ import numpy
 """
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
+from array import array
 
 
 def setDefaultsZero(inarray):
@@ -99,9 +100,9 @@ def meanNormProd(Tuple):
     formats = ' '
     names = ' '
     for name in iter (BranchList):
-       # check if scalat or array, arrays are stored as object
+        # check if scalat or array, arrays are stored as object
         if Tuple[[name]].dtype[0]=='object':
- #        if Tuple[name][0].size>1 or 'sv_' in name :
+            #        if Tuple[name][0].size>1 or 'sv_' in name :
             # makeov it a simple standard array
             chain = numpy.concatenate(Tuple[name])
             # check for crazy entries
@@ -110,24 +111,30 @@ def meanNormProd(Tuple):
             if chainsize != chain.size:
                 print (' There are Inf in the tuple !!! Removed infinities to keep going, but PLEASE CHECK where the fuck they are comming from ')
             mean = mean + (chain.mean(),)
-            stddev = stddev+(chain.std(),)
+            addstddev=chain.std()
+            if not addstddev:
+                addstddev=1
+            stddev = stddev+(addstddev,)
+            print ('name: ', name, ' ' , chain.shape)
+            print (chain.mean(), ' ' ,chain.std(),'\n')
             dTypeList.append((name, float ))
         else:
             array = Tuple[name].view(numpy.ndarray)
             #array[:][array[:] == -999] = 0
             array=setDefaultsZero(array)
-            print ('name: ', name, ' ' , array.shape)
-            print (array.mean(), ' ' ,array.std())
             #array_defaults = (array != -999)
             #array = array[array_defaults]
             mean =  mean +  (array.mean(),)
-            stddev = stddev+(array.std(),)
+            addstddev=array.std()
+            if not addstddev:
+                addstddev=1
+            stddev = stddev+(addstddev,)
             print ('name: ', name, ' ' , array.shape)
             print (array.mean(), ' ' ,array.std(),'\n')
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
-    xrec = numpy.array([mean, stddev])
+    #xrec = numpy.array([mean, stddev])
     #   formats = formats[0:-1]
     # names = names[0:-1]
     # print (xrec.shape)
@@ -244,12 +251,12 @@ def MeanNormApply(Tuple,MeanNormTuple):
         if Tuple[field].dtype=='O':
             print ('WARNING: This is means subtraction is not for vectors! The filed is and array. Use MeanNormZeroPad!', field)
         array = Tuple[field].copy().view(numpy.ndarray)
-      #  Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
+        #  Tuple[field] = numpy.subtract(Tuple[field],MeanNormTuple[field][0])
        
-       # Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
- #       array = Tuple[field].view(numpy.ndarray)
+        # Tuple[field] = numpy.divide(Tuple[field],MeanNormTuple[field][1])
+        #       array = Tuple[field].view(numpy.ndarray)
 
-       # arrayDefault = array !=-999
+        # arrayDefault = array !=-999
         #print (field, ' mean ' , array.mean(), ' std ' , array.std()) 
         array=setDefaultsZero(array)
         array =  numpy.subtract(array,MeanNormTuple[field][0])
@@ -257,39 +264,63 @@ def MeanNormApply(Tuple,MeanNormTuple):
         #print ('and now mean ' , array.mean(), ' std ' , array.std()) 
         arrayList.append(array)
     return numpy.asarray(arrayList).transpose()
- #   return Tuple
+ 
  
 
-def MeanNormZeroPad(Tuple,MeanNormTuple,nMax):
+
+def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,nevents):
 
     """
     The function subtracts the mean and divides by the std. deviation.
     It is intended for fields that are arrays. They are automatically zerpatched and mean subtracted up to nMax.
+    New (Jan): due to performance reasons this part has been put in a compiled C++ module that is called here
     """
-
-    BranchList = Tuple.dtype.names
-    nInput = len(BranchList)
-    # How long to make the array
-    nMax = nMax*nInput
-
-  # loop over jets
-    ZeroPadded = []
-    for jet in iter(Tuple):
-        # per jet one array with all information on the zero padded list of variables, i.e. trackinformations
-        array = numpy.zeros(nMax , dtype=float)
-        # loop over the non zeros entries, caution all elements in th list need same length, i.e. a list of track informations per travk
-        for index in range ( jet[BranchList[0]].size ):
-            if(index==nMax):
-                break
-            # Now for each "track" or alike we look over all the filds (branches) we want to zero pad
-            for varIdx , varname in enumerate(BranchList):
-                jet[varname][index]
-                # overwrite the zeros with the entries, as intialized with zero, the non overwritten reman
-                array [index] = numpy.subtract(jet[varIdx][index],MeanNormTuple[varname][0])
-                array [index] = numpy.divide(array [index],MeanNormTuple[varname][1])
-        ZeroPadded.append(array)
-    # return the list as ndarray
-    return numpy.asarray(ZeroPadded)
+    import copy
+    import c_meanNormZeroPad #pre-compiled module
+    
+    inbranches_listlist=copy.deepcopy(inbranches_listlist)
+    nMaxslist=copy.deepcopy(nMaxslist)
+    
+    #some predefining
+    totallengthperjet = 0
+    for i in range(len(nMaxslist)):
+        if nMaxslist[i]>=0:
+            totallengthperjet+=len(inbranches_listlist[i])*nMaxslist[i]
+        else:
+            totallengthperjet+=len(inbranches_listlist[i]) #flat branch
+    
+    
+    
+    numpy.set_printoptions(threshold=10000)
+    
+    #shape could be more generic here... but must be passed to c module then
+    array = numpy.zeros((nevents,totallengthperjet) , dtype='float32')
+    
+    print('created array with shape ',array.shape)
+    
+    normslist=[]
+    meanslist=[]
+    for inbranches in inbranches_listlist:
+        means=[]
+        norms=[]
+        for b in inbranches:
+            means.append(MeanNormTuple[b][0])
+            norms.append(MeanNormTuple[b][1])
+        meanslist.append(means)
+        normslist.append(norms)
+    
+    #print('means list\n',meanslist,'\n')
+    #print('norms list\n',normslist,'\n')
+    #print('inbranches_lst list\n',inbranches_listlist,'\n')
+    #print('nMaxslist \n',nMaxslist,'\n')
+    
+    c_meanNormZeroPad.process(array,normslist,meanslist,inbranches_listlist,nMaxslist,Filename_in)
+    #import numpy as np
+    
+    
+    
+    #print(array)
+    return array
 
 
 

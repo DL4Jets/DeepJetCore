@@ -1,7 +1,7 @@
 name: deepjetLinux
 channels:
-- NLeSC
 - conda-forge
+- NLeSC
 - defaults
 - https://conda.anaconda.org/NLeSC
 dependencies:
@@ -9,6 +9,10 @@ dependencies:
 - gsl=1.16=2
 - root=6.04=py3.4_gcc4.8.2
 - root-numpy=4.4.0=root6.04_py3.4
+- boost=1.63.0=py34_5
+- boost-cpp=1.63.0=2
+- bzip2=1.0.6=0
+- icu=58.1=1
 - mock=2.0.0=py34_0
 - pbr=1.10.0=py34_0
 - protobuf=3.1.0=py34_0
@@ -28,7 +32,6 @@ dependencies:
 - h5py=2.6.0=np111py34_2
 - harfbuzz=0.9.39=2
 - hdf5=1.8.17=1
-- icu=54.1=0
 - isl=0.12.2=0
 - jbig=2.1=0
 - jpeg=9b=0
@@ -53,7 +56,7 @@ dependencies:
 - pixman=0.34.0=0
 - pytables=3.3.0=np111py34_0
 - python=3.4.5=0
-- qt=5.6.2=3
+- qt=4.8.7=4
 - readline=6.2=2
 - scikit-learn=0.18.1=np111py34_1
 - scipy=0.18.1=np111py34_1
@@ -74,5 +77,4 @@ dependencies:
   - pyyaml==3.12
   - tables==3.3.0
   - theano==0.8.2
-
 
