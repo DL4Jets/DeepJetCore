@@ -63,7 +63,8 @@ def main(argv=None):
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
-    from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCSV_ST_broad
+    from TrainData_deepCSV_PF import  TrainData_deepCSV_PF
     
     dc=DataCollection()
     traind=TrainData
@@ -73,11 +74,15 @@ def main(argv=None):
         traind=TrainData_veryDeepJet
     elif opts.Class ==  'TrainData_deepCSV_ST':
         traind=TrainData_deepCSV_ST
+    elif opts.Class ==  'TrainData_deepCSV_PF':
+        traind=TrainData_deepCSV_PF
+    elif opts.Class == 'TrainData_deepCSV_ST_broad':
+        traind=TrainData_deepCSV_ST_broad
     else:
         raise Exception('wrong class selecton')
     
     if len(opts.Recover)>0:
-        dc.recoverCreateDataFromRootFromSnapshot(opts.Recover, traind())
+        dc.recoverCreateDataFromRootFromSnapshot(opts.Recover)
     else:
         dc.convertListOfRootFiles(opts.infile, traind(), opts.outPath)
    

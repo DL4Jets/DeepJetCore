@@ -11,12 +11,13 @@ The training has 2 steps outside CMSSW
    
    To store the output, it is recommended to use eos. The data format is defined by the classes TrainData_XX.py in the modules directory.
    For a first example, please use: TrainData_deepCSV_ST
+   Ntuples to start with can be found at: /eos/cms/store/cmst3/group/dehep/DeepJet/NTuples
    
    The conversion will run for a while. Get yourself a coffee or two.
    If the conversion is interrupted, you can pick up where you left by:
    ./convertFromRoot.py -r /directory/you/stored/the/output/in/snapshot.dc -c TrainData_deepCSV_ST
    
-   Ntuples can be found in: /eos/cms/store/cmst3/group/dehep/DeepJet/NTuples
+   
    
    
 3) Train the DNN:

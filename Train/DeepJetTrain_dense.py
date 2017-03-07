@@ -22,7 +22,7 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DeepJet_models import Dense_model
+from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
@@ -113,43 +113,26 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=10
-batchsize=10000
-learnrate=0.0003#/4
+nepochs=60
+batchsize=15000
+startlearnrate=0.0005
+lrdecrease=0.000025
+lreeveryep=1
+lrthresh=0.000025
 useweights=False
-splittrainandtest=0.9
-maxqsize=1 #sufficient
+splittrainandtest=0.85
+maxqsize=10 #sufficient
 
-useDataClass=TrainData_deepCSV_ST
-
-
-
-
-#from from keras.models import Sequential
-
-inputs = Input(shape=(66,))
-model = Dense_model(inputs,3)
-
-print('compiling')
-
-from keras.optimizers import Adam
-adam = Adam(lr=learnrate)
-model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
-
-# This stores the history of the training to e.g. allow to plot the learning curve
-from keras.callbacks import History # , TensorBoard
-# loss per epoch
-history = History()
 
 
 from DataCollection import DataCollection
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+from TrainData_deepCSV import TrainData_deepCSV
+
 traind=DataCollection()
 traind.readFromFile(inputData)
 traind.setBatchSize(batchsize)
 traind.useweights=useweights
-
-#does this cause the weird behaviour?
-#traind.removeLast()
 
 if testrun:
     traind.split(0.02)
@@ -157,29 +140,59 @@ if testrun:
     
 testd=traind.split(splittrainandtest)
 
+#from from keras.models import Sequential
 
+inputs = Input(shape=(traind.getInputShapes()[0],))
+model = Dense_model(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+#model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+print('compiling')
 
-#tmp=traind
-#traind=testd
-#testd=tmp
+from keras.optimizers import Adam
+adam = Adam(lr=startlearnrate)
+model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
-testd.isTrain=False
+# This stores the history of the training to e.g. allow to plot the learning curve
+from keras.callbacks import History, LearningRateScheduler # , TensorBoard
+# loss per epoch
+history = History()
+
+from learningRateCallback import learningRateDecrease
+lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
+
+LearningRateScheduler(lrdecr_cb.reducelearnrate)
+
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
+
+testd.isTrain=False
+traind.isTrain=True
 
 print('split to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
 
 print('training')
 
+
+
 # the actual training
-model.fit_generator(traind.generator(useDataClass()) ,
+model.fit_generator(traind.generator() ,
         samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history],
-        validation_data=testd.generator(useDataClass()),
-        nb_val_samples=nvalepoch)#, sample_weight=weights)
-#model.fit_generator(datagen.flow(features, labels,batch_size=50000),
-# samples_per_epoch=features.shape[0],
-#                    nb_epoch=10)
+        validation_data=testd.generator(),
+        nb_val_samples=nvalepoch, #)#,
+        #class_weight = classweights)#,
+        class_weight = 'auto')
+
+
+
+#######this part should be generarlised!
+
+#options to use are:
+print(traind.getUsedTruth())
+print(history.history.keys())
+
+model.save(outputDir+"KERAS_model.h5")
+traind.writeToFile(outputDir+'trainsamples.dc')
+testd.writeToFile(outputDir+'testsamples.dc')
 
 
 # summarize history for loss for trainin and test sample
@@ -203,20 +216,24 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
 
-features_val=testd.getAllFeatures(TrainData_deepCSV_ST())[0]
-labels_val=testd.getAllLabels(TrainData_deepCSV_ST())[0]
+features_val=testd.getAllFeatures()[0]
+labels_val=testd.getAllLabels()[0]
+weights_val=testd.getAllWeights()[0]
+weights_val=np.array([weights_val])
+
+
 names='probB, probC, probUDSG'
 formats='float32,float32,float32'
 predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
-
+labelsandweights = np.concatenate((labels_val,weights_val.T),axis=1)
 
 from root_numpy import array2root
 
 predict_test = model.predict(features_val)
 # to add back to raw root for more detaiel ROCS and debugging
-all_write = np.core.records.fromarrays(  np.hstack((predict_test,labels_val)).transpose(), 
-                                             names='probB, probC, probUDSG, isB, isC, isUDSG',
-                                             formats = 'float32,float32,float32,float32,float32,float32')
+all_write = np.core.records.fromarrays(  np.hstack((predict_test,labelsandweights)).transpose(), 
+                                             names='probB, probC, probUDSG, isB, isC, isUDSG,weights',
+                                             formats = 'float32,float32,float32,float32,float32,float32,float32')
 #labels_val
 print(all_write.shape)
 
@@ -224,9 +241,6 @@ array2root(all_write,outputDir+"KERAS_result_val.root",mode="recreate")
 
 
 #from keras.models import load_model
-model.save(outputDir+"KERAS_model.h5")
-traind.writeToFile(outputDir+'trainsamples.dc')
-testd.writeToFile(outputDir+'testsamples.dc')
 
 
 # per file plots. Take lot of time
