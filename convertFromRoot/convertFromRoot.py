@@ -78,13 +78,20 @@ def main(argv=None):
         traind=TrainData_deepCSV_PF
     elif opts.Class == 'TrainData_deepCSV_ST_broad':
         traind=TrainData_deepCSV_ST_broad
-    else:
+    elif len(opts.Recover)<1:
         raise Exception('wrong class selecton')
     
     if len(opts.Recover)>0:
         dc.recoverCreateDataFromRootFromSnapshot(opts.Recover)
     else:
-        dc.convertListOfRootFiles(opts.infile, traind(), opts.outPath)
+        notdone=True
+        while notdone:
+            try:
+                dc.convertListOfRootFiles(opts.infile, traind(), opts.outPath)
+                notdone=False
+            except Exception as e:
+                print('for recovering run: convertFromRoot.py -r '+opts.outPath+'/snapshot.dc')
+                raise e
    
 
     #except:
