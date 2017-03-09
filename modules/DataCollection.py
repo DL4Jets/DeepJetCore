@@ -37,7 +37,7 @@ class DataCollection(object):
         self.weighter=Weighter()
         self.weightsfraction=0.05
         self.maxConvertThreads=2
-        self.maxFilesOpen=1
+        self.maxFilesOpen=3
         
         self.classweights={}
         
@@ -285,7 +285,14 @@ class DataCollection(object):
         td=copy.deepcopy(dataclass)
         
         td.fileTimeOut(sample,120) #once available copy to ram
-        ramdisksample= '/dev/shm/'+os.path.basename(sample)
+        ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
+        
+        def removefile():
+            os.system('rm -f '+ramdisksample)
+        
+        import atexit
+        atexit.register(removefile)
+        
         os.system('cp '+sample+' '+ramdisksample)
         try:
             td.readFromRootFile(ramdisksample,means, weighter) 
@@ -301,7 +308,7 @@ class DataCollection(object):
         except Exception as e:
             os.system('rm -f '+ramdisksample)
             raise e
-        os.system('rm -f '+ramdisksample)
+        removefile()
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
         self.readRootListFromFile(inputfile)

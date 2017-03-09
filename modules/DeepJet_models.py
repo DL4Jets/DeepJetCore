@@ -82,19 +82,19 @@ def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     the inputs are really not working as they are. need a reshaping well before
     """
    
-    gl = Dense(20, activation='relu',init='lecun_uniform',input_shape=Inputshapes[0])(Inputs[0])
-    gl = Dense(20, activation='relu',init='lecun_uniform')(gl)
-    gl = Dense(20, activation='relu',init='lecun_uniform')(gl)
+    gl = Dense(64, activation='relu',init='lecun_uniform',input_shape=Inputshapes[0])(Inputs[0])
+    gl = Dense(64, activation='relu',init='lecun_uniform')(gl)
+    gl = Dense(64, activation='relu',init='lecun_uniform')(gl)
     
     
-    cpf  = Convolution1D(64, 1, init='lecun_uniform',  activation='relu')(Inputs[1])
+    cpf  = Convolution1D(128, 1, init='lecun_uniform',  activation='relu')(Inputs[1])
+    cpf  = Convolution1D(64, 1, init='lecun_uniform',  activation='relu')(cpf)
     cpf  = Convolution1D(32, 1, init='lecun_uniform',  activation='relu')(cpf)
-    cpf  = Convolution1D(24, 1, init='lecun_uniform',  activation='relu')(cpf)
     cpf = Flatten()(cpf)
     
     
-    npf = Convolution1D(64, 1, init='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
-    npf = Convolution1D(32, 1, init='lecun_uniform',  activation='relu')(npf)
+    npf = Convolution1D(32, 1, init='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
+    npf = Convolution1D(16, 1, init='lecun_uniform',  activation='relu')(npf)
     npf = Flatten()(npf)
     
     vtx = Convolution1D(64, 1, init='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(Inputs[3])

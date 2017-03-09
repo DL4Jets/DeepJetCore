@@ -114,7 +114,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 nepochs=10
-batchsize=150
+batchsize=15000
 startlearnrate=0.003
 lrdecrease=0.00025
 lreeveryep=1

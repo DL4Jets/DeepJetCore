@@ -155,14 +155,15 @@ class TrainData(object):
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
             self.readIn_join()
             
+        #print('read')
         import h5py
         import numpy
         import multiprocessing
         
-        print('\ninit async read\n')
+        #print('\ninit async read\n')
         
         self.fileTimeOut(fileprefix,120)
-        print('\nfile access ok\n')
+        #print('\nfile access ok\n')
         self.samplename=fileprefix
         
         self.h5f = h5py.File(fileprefix,'r')
@@ -213,20 +214,20 @@ class TrainData(object):
         self.readthread=multiprocessing.Process(target=_read_arrs, args=(self.w_list,self.x_list,self.y_list,self.readdone))
         self.readthread.start()
         
-        print('\nstarted async thread\n')
+        #print('\nstarted async thread\n')
      
     def readIn_join(self):
-        print('joining async read')
+        #print('joining async read')
         while not self.readdone.value: 
             #needs to be done - it can come to deadlocks because of wrong locking in python..
             #use the shared self.readthread as soft lock
             self.readthread.join(1)
-        print('joined async read')
+        #print('joined async read')
         
-        import copy
-        self.w=copy.deepcopy(self.w_list)#get all arrays back form the shared memory
-        self.x=copy.deepcopy(self.x_list)
-        self.y=copy.deepcopy(self.y_list)
+        #import copy
+        self.w=(self.w_list)#get all arrays back form the shared memory
+        self.x=(self.x_list)
+        self.y=(self.y_list)
         self.h5f.close()
         self.w_list=None
         self.x_list=None
