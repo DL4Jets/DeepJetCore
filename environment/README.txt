@@ -14,6 +14,7 @@ source env.sh (Mac)
 source lxplus_env.sh (Lxplus)
 
 In addition, the compiled modules need to be compiled. 
+This cannot be done directly on the GPU machines. please compile on lxplus and use the compiled libraries on the GPU
 After sourcing the environment scripts, run 'make' in the 'modules' directory.
 
 

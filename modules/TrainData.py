@@ -49,8 +49,16 @@ class TrainData(object):
         outl=[]
         for x in self.x:
             outl.append(x.shape)
+        shapes=[]
+        for s in outl:
+            _sl=[]
+            for i in range(len(s)):
+                if i:
+                    _sl.append(s[i])
+            s=(_sl)
+            shapes.append(s)
 
-        return outl
+        return shapes
         
     def getTruthShapes(self):
         outl=[len(self.getUsedTruth())]

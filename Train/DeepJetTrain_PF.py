@@ -113,12 +113,12 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=10
-batchsize=15000
+nepochs=100
+batchsize=10000
 startlearnrate=0.003
-lrdecrease=0.00025
+lrdecrease=0.000029
 lreeveryep=1
-lrthresh=0.000025
+lrthresh=0.00001
 useweights=False
 splittrainandtest=0.85
 maxqsize=10 #sufficient
@@ -139,17 +139,19 @@ if testrun:
     nepochs=2
     
 testd=traind.split(splittrainandtest)
-shapesin=traind.getInputShapes()
-shapes=[]
-for s in shapesin:
-    _sl=[]
-    for i in range(len(s)):
-        if i:
-            _sl.append(s[i])
-    s=(_sl)
-    shapes.append(s)
-    print(s)
-        
+shapes=traind.getInputShapes()
+#shapes=[]
+#for s in shapesin:
+#    _sl=[]
+#    for i in range(len(s)):
+#        if i:
+#            _sl.append(s[i])
+#    s=(_sl)
+#    shapes.append(s)
+#    print(s)
+#        
+
+print(shapes)
 
 print(traind.getTruthShape()[0])
 

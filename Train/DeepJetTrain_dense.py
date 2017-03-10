@@ -113,9 +113,9 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=60
+nepochs=10
 batchsize=15000
-startlearnrate=0.0005
+startlearnrate=0.0003
 lrdecrease=0.000025
 lreeveryep=1
 lrthresh=0.000025
@@ -142,8 +142,8 @@ testd=traind.split(splittrainandtest)
 
 #from from keras.models import Sequential
 
-inputs = Input(shape=(traind.getInputShapes()[0],))
-model = Dense_model(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+inputs = Input(shape=traind.getInputShapes()[0])
+model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0])
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 print('compiling')
 
