@@ -148,7 +148,9 @@ class TrainData(object):
         import multiprocessing
         fulldim=1
         for d in shapeinfo:
-            fulldim*=d
+            fulldim*=d 
+        if fulldim < 0: #catch some weird things that happen when there is a file IO error
+            fulldim=0 
         # reserve memory for array
         shared_array_base = multiprocessing.RawArray(ctypes.c_float, int(fulldim))
         shared_array = numpy.ctypeslib.as_array(shared_array_base)#.get_obj())

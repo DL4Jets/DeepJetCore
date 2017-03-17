@@ -22,7 +22,8 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
+
+from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad,Dense_model_broad_flat
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
@@ -113,14 +114,11 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=100
+nepochs=500
 batchsize=10000
 startlearnrate=0.003
-lrdecrease=0.000029
-lreeveryep=1
-lrthresh=0.00001
 useweights=False
-splittrainandtest=0.85
+splittrainandtest=0.75
 maxqsize=10 #sufficient
 
 
@@ -136,7 +134,7 @@ traind.useweights=useweights
 
 if testrun:
     traind.split(0.02)
-    nepochs=2
+    nepochs=10
     
 testd=traind.split(splittrainandtest)
 shapes=traind.getInputShapes()
@@ -166,7 +164,7 @@ inputs = [Input(shape=shapes[0]),
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes)
+model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.2)
 print('compiling')
 
 from keras.optimizers import Adam
@@ -174,14 +172,19 @@ adam = Adam(lr=startlearnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
-from keras.callbacks import History, LearningRateScheduler # , TensorBoard
+from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 history = History()
 
-from learningRateCallback import learningRateDecrease
-lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
+#stop when val loss does not decrease anymore
+stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, mode='min')
 
-LearningRateScheduler(lrdecr_cb.reducelearnrate)
+from ReduceLROnPlateau import ReduceLROnPlateau
+
+
+LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, 
+                                mode='auto', verbose=1, epsilon=0.001, cooldown=0, min_lr=0.00001)
+
 
 
 ntrainepoch=traind.getSamplesPerEpoch()
@@ -198,7 +201,7 @@ print('training')
 
 # the actual training
 model.fit_generator(traind.generator() ,
-        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history],
+        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history,stopping,LR_onplatCB],
         validation_data=testd.generator(),
         nb_val_samples=nvalepoch, #)#,
         #class_weight = classweights)#,

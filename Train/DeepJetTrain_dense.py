@@ -113,7 +113,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=10
+nepochs=100
 batchsize=15000
 startlearnrate=0.0003
 lrdecrease=0.000025
@@ -143,7 +143,7 @@ testd=traind.split(splittrainandtest)
 #from from keras.models import Sequential
 
 inputs = Input(shape=traind.getInputShapes()[0])
-model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0])
+model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.3)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 print('compiling')
 
@@ -152,9 +152,21 @@ adam = Adam(lr=startlearnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
-from keras.callbacks import History, LearningRateScheduler # , TensorBoard
+
+from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 history = History()
+
+#stop when val loss does not decrease anymore
+stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, mode='min')
+
+from ReduceLROnPlateau import ReduceLROnPlateau
+
+
+LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, 
+                                mode='auto', verbose=1, epsilon=0.001, cooldown=0, min_lr=0.00001)
+
+
 
 from learningRateCallback import learningRateDecrease
 lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
@@ -176,7 +188,7 @@ print('training')
 
 # the actual training
 model.fit_generator(traind.generator() ,
-        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history],
+        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history,stopping,LR_onplatCB],
         validation_data=testd.generator(),
         nb_val_samples=nvalepoch, #)#,
         #class_weight = classweights)#,
