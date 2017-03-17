@@ -41,8 +41,8 @@ Each time before running, the environment should be activated and the PYTHONPATH
 This can be easily done for zsh/bash/sh shells with 
 
 ```
-source env.sh (Mac)
-source lxplus_env (Linux)
+source lxplus_env (lxplus)
+source gpu_env (GPU)
 ```
 
 The script needs to be called from this directory
