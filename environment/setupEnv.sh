@@ -40,3 +40,4 @@ then
 fi
 
 echo "environment set up. Please activate it with \"source activate ${envname}\""
+
