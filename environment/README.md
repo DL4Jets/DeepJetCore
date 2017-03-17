@@ -51,7 +51,7 @@ The first time this package is checked out or if compiled modules changed, pleas
 ```
 make
 ```
-in the ```modules``` directory
+in the ```modules``` directory on lxplus7
 
 If the lxplus installation fails
 ================================
