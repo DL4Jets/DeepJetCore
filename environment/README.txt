@@ -19,20 +19,18 @@ After sourcing the environment scripts, run 'make' in the 'modules' directory.
 
 
 
-
 [1]
-The code is test and run using package management with anaconda or miniconda:
+The code is tested and run using package management with anaconda or miniconda:
 https://www.continuum.io/anaconda-overview
 On lxplus, miniconda is recommended, since it needs less disk space!
 Please make sure, conda is added to your path (you will be prompted). Answer with "yes" or take care yourself
 that the command 'which conda' returns the path of your conda installation before you use the package.
 
-If you installed anaconda/miniconda, you can use the .yml file to install the version we used. 
+If you installed anaconda/miniconda, you can use the .conda file to install the version we used. 
 The setupEnv.sh is a small macro that does the installation and environment definition.
 Please call:
 
- ./setupEnv.sh conda_deepjet.yml (on Mac)
- ./setupEnv.sh conda_deepjetLinux.yml (on lxplus)
+ ./setupEnv.sh deepjetLinux3.conda 
 
 Each time before running, the environment should be activated and the PYTHONPATH needs to be adapted.
 This can be easily done for zsh/bash/sh shells with 

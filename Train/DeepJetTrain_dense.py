@@ -174,13 +174,10 @@ lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh
 LearningRateScheduler(lrdecr_cb.reducelearnrate)
 
 
-ntrainepoch=traind.getSamplesPerEpoch()
-nvalepoch=testd.getSamplesPerEpoch()
-
 testd.isTrain=False
 traind.isTrain=True
 
-print('split to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
+print('split to '+str(traind.getNBatchesPerEpoch())+' train batches and '+str(testd.getNBatchesPerEpoch())+' test batches')
 
 print('training')
 
@@ -188,9 +185,12 @@ print('training')
 
 # the actual training
 model.fit_generator(traind.generator() ,
-        samples_per_epoch=ntrainepoch, nb_epoch=nepochs,max_q_size=maxqsize,callbacks=[history,stopping,LR_onplatCB],
+        steps_per_epoch=traind.getNBatchesPerEpoch(), 
+        epochs=nepochs,
+        callbacks=[history,stopping,LR_onplatCB],
         validation_data=testd.generator(),
-        nb_val_samples=nvalepoch, #)#,
+        validation_steps=testd.getNBatchesPerEpoch(), #)#,
+        max_q_size=maxqsize,
         #class_weight = classweights)#,
         class_weight = 'auto')
 
