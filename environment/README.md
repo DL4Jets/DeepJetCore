@@ -47,6 +47,12 @@ source gpu_env (GPU)
 
 The script needs to be called from this directory
 
+The first time this package is checked out or if compiled modules changed, please run 
+```
+make
+```
+in the ```modules``` directory
+
 If the lxplus installation fails
 ================================
 (the following should not be necessary anymore, but it is left for reference)
