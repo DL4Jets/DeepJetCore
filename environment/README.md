@@ -49,6 +49,7 @@ The script needs to be called from this directory
 
 If the lxplus installation fails
 ================================
+(the following should not be necessary anymore, but it is left for reference)
 
 For unknown reasons the lxplus environment installation may fail with the following error:
 
@@ -62,10 +63,11 @@ ImportError: No module named 'pip'
 To overcome this you can try to adapt and run the following commands, **they have only been tested to work on lxplus7**:
 ```
 #remove the env that was created
-rm -rf /afs/cern.ch/work/m/$USER/miniconda3/envs/deepjetLinux
-conda create --name deepjetLinux
-source activate deepjetLinux
+rm -rf /afs/cern.ch/work/<first letter of USER>/$USER/miniconda3/envs/deepjetLinux3
+conda create --name deepjetLinux3
+source activate deepjetLinux3
 conda install pip
-source deactivate deepjetLinux
-conda install --name deepjetLinux --file spec-file.txt 
+source deactivate deepjetLinux3
+conda install --name deepjetLinux --file deepjetLinux3.conda
+pip install -r deepjetLinux3.pip
 ```
