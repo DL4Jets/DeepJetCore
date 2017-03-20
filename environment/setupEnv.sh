@@ -25,7 +25,7 @@ envfile=$1
 envname="${envfile%.*}${addstring}"
 pipfile="${envfile%.*}.pip"
 
-conda create --copy --name $envname
+conda create --copy --name $envname python=2.7.5 
 conda install --name $envname --file $envfile
 
 
