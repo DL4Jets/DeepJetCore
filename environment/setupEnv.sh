@@ -13,7 +13,7 @@ fi
 
 addstring=""
 
-if [ $2 == "gpu" ]
+if [[ $2 == "gpu" ]]
 then
 	echo "setting up for gpu usage"
 	addstring="_${2}"
