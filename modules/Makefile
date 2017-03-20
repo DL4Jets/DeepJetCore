@@ -1,7 +1,7 @@
 # location of the Python header files
  
-PYTHON_VERSION = 3.4
-PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python3.4m
+PYTHON_VERSION = 2.7
+PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python2.7
  
 # location of the Boost Python include files and library
  
@@ -25,14 +25,14 @@ all: $(SHARED_LIBS)
 
 
 %.so: %.o libdeepjethelpers.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python3 -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config-3.4m -lpython3.4m  $< -o $(@) 
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
 %.o: src/%.C
 	g++ -D__USE_XOPEN2K8  $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
     
 libdeepjethelpers.so: helpers.o
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF)  -L$(BOOST_LIB)  -lboost_python3 -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config-3.4m -lpython3.4m  $< -o $(@) 
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF)  -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 helpers.o: $(HELPER_CPP_FILES)
 	g++ -D__USE_XOPEN2K8  $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
