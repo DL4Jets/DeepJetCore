@@ -266,7 +266,25 @@ def MeanNormApply(Tuple,MeanNormTuple):
     return numpy.asarray(arrayList).transpose()
  
  
-
+def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
+  
+    import c_meanNormZeroPad
+    
+    array = numpy.zeros((nevents,nMax,len(inbranches)) , dtype='float32')
+    
+    
+    means=[]
+    norms=[]
+    for b in inbranches:
+        means.append(MeanNormTuple[b][0])
+        norms.append(MeanNormTuple[b][1])
+    
+    
+    c_meanNormZeroPad.particlecluster(array,[norms],[means],[inbranches],[nMax],Filename_in)
+   
+    
+   
+    return array
 
 def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,nevents):
 
@@ -291,7 +309,7 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     
     
     
-    numpy.set_printoptions(threshold=10000)
+    #numpy.set_printoptions(threshold=10000)
     
     #shape could be more generic here... but must be passed to c module then
     array = numpy.zeros((nevents,totallengthperjet) , dtype='float32')

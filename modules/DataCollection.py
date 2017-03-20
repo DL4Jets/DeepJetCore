@@ -37,7 +37,7 @@ class DataCollection(object):
         self.weighter=Weighter()
         self.weightsfraction=0.05
         self.maxConvertThreads=2
-        self.maxFilesOpen=2
+        self.maxFilesOpen=3
         
         self.classweights={}
         
@@ -58,8 +58,15 @@ class DataCollection(object):
         '''
         gets the input shapes from the data class description
         '''
-        td=self.dataclass
-        return td.getInputShapes()
+        import copy
+        if len(self.samples)<1:
+            return []
+        self.dataclass.filelock=None
+        td=copy.deepcopy(self.dataclass)
+        td.readIn(self.getSamplePath(self.samples[0]))
+        shapes=td.getInputShapes()
+        td.clear()
+        return shapes
     
     def getTruthShape(self):
         td=self.dataclass
@@ -255,6 +262,7 @@ class DataCollection(object):
         self.dataclass=dataclass
         td=dataclass
         ##produce weighter from a larger dataset as one file
+        
         print('producing bin weights')
         weighter=td.produceBinWeighter(self.originRoots[0])
         self.weighter=weighter
@@ -268,22 +276,39 @@ class DataCollection(object):
             self.__writeData(sample, means, weighter,outputDir, td)
             
         
+    
     def __writeData(self,sample,means, weighter,outputDir,dataclass):
         import os
         import copy
         from stopwatch import stopwatch
         sw=stopwatch()
         td=copy.deepcopy(dataclass)
-        td.readFromRootFile(sample,means, weighter) 
-        newname=os.path.basename(sample).rsplit('.', 1)[0]
-        newpath=os.path.abspath(outputDir+newname+'.z')
-        td.writeOut(newpath)
-        print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
-        self.samples.append(newname+'.z')
-        self.nsamples+=td.nsamples
-        self.sampleentries.append(td.nsamples)
-        td.clear()
-        self.writeToFile(outputDir+'/snapshot.dc')
+        
+        td.fileTimeOut(sample,120) #once available copy to ram
+        ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
+        
+        def removefile():
+            os.system('rm -f '+ramdisksample)
+        
+        import atexit
+        atexit.register(removefile)
+        
+        os.system('cp '+sample+' '+ramdisksample)
+        try:
+            td.readFromRootFile(ramdisksample,means, weighter) 
+            newname=os.path.basename(sample).rsplit('.', 1)[0]
+            newpath=os.path.abspath(outputDir+newname+'.z')
+            td.writeOut(newpath)
+            print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
+            self.samples.append(newname+'.z')
+            self.nsamples+=td.nsamples
+            self.sampleentries.append(td.nsamples)
+            td.clear()
+            self.writeToFile(outputDir+'/snapshot.dc')
+        except Exception as e:
+            os.system('rm -f '+ramdisksample)
+            raise e
+        removefile()
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
         self.readRootListFromFile(inputfile)
@@ -365,13 +390,22 @@ class DataCollection(object):
         for s in self.samples:
             ttdl.append(copy.deepcopy(td))
         
-        #read the next sample in advance
-        from threading import Thread
-        def readTDThread(idx,TD):
-            TD.readIn(self.getSamplePath(self.samples[idx]))
+        
+        #locks=[]
+        #from threading import Lock
+        #for i in range(len(self.samples)):
+        #    locks.append(Lock())
+        ##read the next sample in advance
+        #from threading import Thread
+        #def readTDThread(idx,TD):
+        #    locks[idx].acquire()
+        #    print('read',idx)
+        #    TD.readIn(self.getSamplePath(self.samples[idx]))
+        #    locks[idx].release()
             #the reading itself uses multiple cores
             #the threads spawned here will sleep on this core until
             #the reading has finished
+            #prevent access to same file at the same time
             
 
         while 1:
@@ -391,9 +425,9 @@ class DataCollection(object):
                 dimw=0
                 lastbatchrest=0
                 nsamplesinqueue=0
-                readthreads=[]
-                for idx in range(len(self.samples)):
-                    readthreads.append(Thread(target=readTDThread, args=(idx,ttdl[idx])))
+                #readthreads=[]
+                #for idx in range(len(self.samples)):
+                #    readthreads.append(Thread(target=readTDThread, args=(idx,ttdl[idx])))
                 
             else:
                 lastbatchrest=xstored[0].shape[0]
@@ -409,14 +443,16 @@ class DataCollection(object):
                
                 while nsamplesinqueue < self.maxFilesOpen and nextfiletoread < len(self.samples):
                     #print('start',nextfiletoread)
-                    readthreads[nextfiletoread].start()
+                    #readthreads[nextfiletoread].start()
+                    ttdl[nextfiletoread].readIn_async(self.getSamplePath(
+                        self.samples[nextfiletoread]))
                     nextfiletoread+=1
                     nsamplesinqueue+=1
                 
                 
                 #print('\njoin:',readsample,nextfiletoread,len(self.samples),self.isTrain,'\n')
                 
-                readthreads[samplefilecounter].join()
+                ttdl[samplefilecounter].readIn_join()
                 td=ttdl[samplefilecounter]
                 #print('joined',samplefilecounter)
                 
@@ -445,6 +481,7 @@ class DataCollection(object):
                     wout=[]
                     for i in range(0,dimx):
                         xout.append([])
+                    for i in range(0,dimy):
                         yout.append([])
                     for i in range(0,dimw):
                         wout.append([])
@@ -503,8 +540,6 @@ class DataCollection(object):
                     
                 
             processedbatches+=1
-            
-            #print('\ndone with batch',processedbatches," of ",totalbatches)
             
             
             if self.useweights:

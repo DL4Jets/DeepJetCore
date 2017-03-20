@@ -22,13 +22,14 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
+
+from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad,Dense_model_broad_flat
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
 def predictAndMakeRoc(features_val, labels_val, nameprefix, names,formats, model):
 
-
+    import numpy
 
     predict_test = model.predict(features_val)
     metric=model.evaluate(features_val, labels_val, batch_size=10000)
@@ -41,7 +42,7 @@ def predictAndMakeRoc(features_val, labels_val, nameprefix, names,formats, model
     
     # this makes you some ROC curves
     from sklearn.metrics import roc_curve
-    
+    labels_val = numpy.array(labels_val[0])
     # ROC one against all
     plt.figure(3)
     for i in range(labels_val.shape[1]):
@@ -113,14 +114,11 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=100
-batchsize=15000
-startlearnrate=0.0003
-lrdecrease=0.000025
-lreeveryep=1
-lrthresh=0.000025
+nepochs=500
+batchsize=10000
+startlearnrate=0.003
 useweights=False
-splittrainandtest=0.85
+splittrainandtest=0.75
 maxqsize=10 #sufficient
 
 
@@ -136,15 +134,37 @@ traind.useweights=useweights
 
 if testrun:
     traind.split(0.02)
-    nepochs=2
+    nepochs=10
     
 testd=traind.split(splittrainandtest)
+shapes=traind.getInputShapes()
+#shapes=[]
+#for s in shapesin:
+#    _sl=[]
+#    for i in range(len(s)):
+#        if i:
+#            _sl.append(s[i])
+#    s=(_sl)
+#    shapes.append(s)
+#    print(s)
+#        
+
+print(shapes)
+
+print(traind.getTruthShape()[0])
 
 #from from keras.models import Sequential
 
-inputs = Input(shape=traind.getInputShapes()[0])
-model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.3)
-#model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+from keras.layers import Input
+inputs = [Input(shape=shapes[0]),
+          Input(shape=shapes[1]),
+          Input(shape=shapes[2]),
+          Input(shape=shapes[3])]
+
+#model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+
+print(traind.getTruthShape()[0])
+model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.2)
 print('compiling')
 
 from keras.optimizers import Adam
@@ -152,7 +172,6 @@ adam = Adam(lr=startlearnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
-
 from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 history = History()
@@ -168,16 +187,13 @@ LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2,
 
 
 
-from learningRateCallback import learningRateDecrease
-lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
-
-LearningRateScheduler(lrdecr_cb.reducelearnrate)
-
+ntrainepoch=traind.getSamplesPerEpoch()
+nvalepoch=testd.getSamplesPerEpoch()
 
 testd.isTrain=False
 traind.isTrain=True
 
-print('split to '+str(traind.getNBatchesPerEpoch())+' train batches and '+str(testd.getNBatchesPerEpoch())+' test batches')
+print('split to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test samples')
 
 print('training')
 
@@ -193,6 +209,7 @@ model.fit_generator(traind.generator() ,
         max_q_size=maxqsize,
         #class_weight = classweights)#,
         class_weight = 'auto')
+
 
 
 
@@ -228,24 +245,26 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
 
-features_val=testd.getAllFeatures()[0]
-labels_val=testd.getAllLabels()[0]
+features_val=testd.getAllFeatures()
+labels_val=testd.getAllLabels()
+
+print('making rocs',len(labels_val))
+
 weights_val=testd.getAllWeights()[0]
-weights_val=np.array([weights_val])
 
 
 names='probB, probC, probUDSG'
 formats='float32,float32,float32'
 predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
-labelsandweights = np.concatenate((labels_val,weights_val.T),axis=1)
+labelsandweights = labels_val[0] #np.concatenate((labels_val,weights_val.T),axis=1)
 
 from root_numpy import array2root
 
 predict_test = model.predict(features_val)
 # to add back to raw root for more detaiel ROCS and debugging
 all_write = np.core.records.fromarrays(  np.hstack((predict_test,labelsandweights)).transpose(), 
-                                             names='probB, probC, probUDSG, isB, isC, isUDSG,weights',
-                                             formats = 'float32,float32,float32,float32,float32,float32,float32')
+                                             names='probB, probC, probUDSG, isB, isC',# isUDSG,weights',
+                                             formats = 'float32,float32,float32,float32,float32,float32')#,float32')
 #labels_val
 print(all_write.shape)
 
