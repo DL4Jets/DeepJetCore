@@ -12,6 +12,10 @@ class TrainData(object):
     '''
     Base class for batch-wise training of the DNN
     '''
+    
+    remove=True    
+    weight=False
+    
     def __init__(self):
         '''
         Constructor
@@ -31,6 +35,7 @@ class TrainData(object):
         self.readthread=None
         self.readdone=None
         
+        
 
     def clear(self):
         import numpy
@@ -38,6 +43,7 @@ class TrainData(object):
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
         self.w=[numpy.array([])]
+        
         
         self.nsamples=0
     
@@ -293,8 +299,9 @@ class TrainData(object):
         weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,2000],dtype=float)
         weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
         
-        weighter.createRemoveProbabilities(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],
-                                           classes=self.truthclasses)
+        if self.remove:
+            weighter.createRemoveProbabilities(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],
+                                               classes=self.truthclasses)
        
         weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
     
@@ -318,18 +325,28 @@ class TrainData(object):
         
         print('took ', sw.getAndReset(), ' seconds for getting tree entries')
         
-        x_all = MeanNormZeroPad(filename,TupleMeanStd,self.branches,self.branchcutoffs,self.nsamples)
         
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
-        notremoves=weighter.createNotRemoveIndices(Tuple)
         
-        print('took ', sw.getAndReset(), ' to create remove indices')
+        x_all = MeanNormZeroPad(filename,TupleMeanStd,self.branches,self.branchcutoffs,self.nsamples)
         
-        weights=notremoves
+        notremoves=numpy.array([])
+        weights=numpy.array([])
+        if self.remove:
+            notremoves=weighter.createNotRemoveIndices(Tuple)
+            weights=notremoves
+            print('took ', sw.getAndReset(), ' to create remove indices')
+        elif self.weight:
+            print('creating weights')
+            weights= weighter.getJetWeights(Tuple)
+        else:
+            print('neither remove nor weight')
+            weights=numpy.empty(self.nsamples)
+            weights.fill(1.)
         
         
         truthtuple =  Tuple[self.truthclasses]
@@ -337,11 +354,11 @@ class TrainData(object):
         alltruth=self.reduceTruth(truthtuple)
         
         #print(alltruth.shape)
-        
-        print('remove')
-        weights=weights[notremoves > 0]
-        x_all=x_all[notremoves > 0]
-        alltruth=alltruth[notremoves > 0]
+        if self.remove:
+            print('remove')
+            weights=weights[notremoves > 0]
+            x_all=x_all[notremoves > 0]
+            alltruth=alltruth[notremoves > 0]
        
         newnsamp=x_all.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
@@ -374,12 +391,5 @@ class TrainData_Flavour(TrainData):
         self.x=[x_all]
         self.y=[alltruth]
         
-    def reduceTruth(self, tuple_in):
-        
-        b = tuple_in['isB'].view(numpy.ndarray)
-        c = tuple_in['isC'].view(numpy.ndarray)
-        uds = tuple_in['isUDS'].view(numpy.ndarray)
-        g = tuple_in['isG'].view(numpy.ndarray)
-        return numpy.vstack((b,c,uds,g)).transpose()
      
         
