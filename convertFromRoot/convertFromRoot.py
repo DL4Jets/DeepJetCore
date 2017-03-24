@@ -44,7 +44,7 @@ def main(argv=None):
     parser = OptionParser(version=program_version_string, epilog=program_longdesc, description=program_license)
     parser.add_option("-i", "--in", dest="infile", help="set input sample description (output from the check.py script)", metavar="FILE")
     parser.add_option("-o", "--out", dest="outPath", help="set output path", metavar="PATH")
-    parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_deepCMVA_ST, TrainData_deepCSV_ST_broad, TrainData_deepCSV_PF, TrainData_veryDeepJet]", metavar="Class")
     parser.add_option("-r", "--recover", dest="Recover", help="set path to snapshot that got interrupted", metavar="FILE", default='')
    
     
@@ -63,7 +63,7 @@ def main(argv=None):
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
-    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCSV_ST_broad
+    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCMVA_ST,TrainData_deepCSV_ST_broad
     from TrainData_deepCSV_PF import  TrainData_deepCSV_PF
     
     dc=DataCollection()
@@ -76,6 +76,8 @@ def main(argv=None):
         traind=TrainData_deepCSV_ST
     elif opts.Class ==  'TrainData_deepCSV_PF':
         traind=TrainData_deepCSV_PF
+    elif opts.Class == 'TrainData_deepCMVA_ST':
+        traind=TrainData_deepCMVA_ST
     elif opts.Class == 'TrainData_deepCSV_ST_broad':
         traind=TrainData_deepCSV_ST_broad
     else:
