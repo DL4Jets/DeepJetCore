@@ -19,7 +19,7 @@ class TrainData_deepCSV_ST(TrainData_Flavour):
         Constructor
         '''
         TrainData_Flavour.__init__(self)
-        self.truthclasses=['isB','isC','isUDS','isG']
+        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUDS','isG']
         
         self.addBranches(['jet_pt', 'jet_eta',
                            'TagVarCSV_jetNSecondaryVertices', 
@@ -56,12 +56,17 @@ class TrainData_deepCSV_ST(TrainData_Flavour):
         
     def reduceTruth(self, tuple_in):
         b = tuple_in['isB'].view(numpy.ndarray)
+        bb = tuple_in['isBB'].view(numpy.ndarray)
+        bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+        blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+        
         c = tuple_in['isC'].view(numpy.ndarray)
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
+        allb = b+bb+bl+blc
         l = g + uds
         self.reducedtruthclasses=['isB','isC','isUDSG']
-        return numpy.vstack((b,c,l)).transpose()
+        return numpy.vstack((allb,c,l)).transpose()
         
         
 class TrainData_deepCMVA_ST(TrainData_Flavour):
@@ -136,7 +141,7 @@ class TrainData_deepCSV_ST_broad(TrainData_Flavour):
         Constructor
         '''
         TrainData_Flavour.__init__(self)
-        self.truthclasses=['isB','isC','isUDS','isG']
+        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUDS','isG']
         
         self.addBranches(['jet_pt', 'jet_eta',
                            'TagVarCSV_jetNSecondaryVertices', 
@@ -173,12 +178,17 @@ class TrainData_deepCSV_ST_broad(TrainData_Flavour):
         
     def reduceTruth(self, tuple_in):
         b = tuple_in['isB'].view(numpy.ndarray)
+        bb = tuple_in['isBB'].view(numpy.ndarray)
+        bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+        blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+        
         c = tuple_in['isC'].view(numpy.ndarray)
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
+        allb = b+bb+bl+blc
         l = g + uds
         self.reducedtruthclasses=['isB','isC','isUDSG']
-        return numpy.vstack((b,c,l)).transpose()
+        return numpy.vstack((allb,c,l)).transpose()
         
         
       

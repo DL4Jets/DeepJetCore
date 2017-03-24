@@ -26,62 +26,6 @@ from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
-def predictAndMakeRoc(features_val, labels_val, nameprefix, names,formats, model):
-
-
-
-    predict_test = model.predict(features_val)
-    metric=model.evaluate(features_val, labels_val, batch_size=10000)
-    
-    print(metric)
-    
-    predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
-                                                 names=names,
-                                                 formats = formats)
-    
-    # this makes you some ROC curves
-    from sklearn.metrics import roc_curve
-    
-    # ROC one against all
-    plt.figure(3)
-    for i in range(labels_val.shape[1]):
-    #    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
-        
-        fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
-    #   print (fpr, ' ', tpr, ' ', _)
-        plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
-    print (predict_write.dtype.names)
-    plt.semilogy()
-    plt.legend(predict_write.dtype.names, loc='upper left')
-    plt.savefig(nameprefix+'ROCs.pdf')
-    plt.close(3)
-    
-    # ROC one against som others
-    plt.figure(4)
-    # b vs light (assumes truth C is at index 1 and b truth at 0
-    labels_val_noC = (labels_val[:,1] == 1)
-    labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
-    predict_test_killedC = predict_test[np.invert(labels_val_noC)]
-    fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
-    BvsL, = plt.plot(tprC, fprC, label='b vs. light')
-    # b vs c (assumes truth light is at index 2
-    labels_val_noL = (labels_val[:,2] ==1)
-    
-    labels_val_killedL = labels_val[np.invert(labels_val_noL)]
-    predict_test_killedL = predict_test[np.invert(labels_val_noL)]
-    fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
-    BvsC, = plt.plot(tpr, fpr, label='b vs. c')
-    plt.semilogy()
-    #plt.legend([BvsL,BvsC],loc='upper left')
-    plt.ylabel('BKG efficiency')
-    plt.xlabel('b efficiency')
-    plt.ylim((0.001,1))
-    plt.grid(True)
-    plt.savefig(nameprefix+'ROCs_multi.pdf')
-    plt.close(4)
-    
-    return metric
-    
 # argument parsing and bookkeeping
 
 parser = ArgumentParser('Run the training')
@@ -115,12 +59,12 @@ testrun=False
 
 nepochs=100
 batchsize=15000
-startlearnrate=0.0003
+startlearnrate=0.0001
 lrdecrease=0.000025
 lreeveryep=1
 lrthresh=0.000025
 useweights=False
-splittrainandtest=0.85
+splittrainandtest=0.8
 maxqsize=10 #sufficient
 
 
@@ -158,7 +102,7 @@ from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, Red
 history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, mode='min')
+stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
 
 from ReduceLROnPlateau import ReduceLROnPlateau
 
@@ -233,6 +177,8 @@ labels_val=testd.getAllLabels()[0]
 weights_val=testd.getAllWeights()[0]
 weights_val=np.array([weights_val])
 
+
+from ROCs import predictAndMakeRoc
 
 names='probB, probC, probUDSG'
 formats='float32,float32,float32'

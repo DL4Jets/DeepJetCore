@@ -32,6 +32,8 @@ conda install --name $envname --file $envfile
 source activate $envname
 pip install -r $pipfile
 
+conda install scikit-learn
+
 cp activateROOT.sh  $CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh 
 
 if [ $addstring ]

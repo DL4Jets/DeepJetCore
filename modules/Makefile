@@ -10,34 +10,37 @@ PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python2.7
 BOOST_INC = ${CONDA_PREFIX}/include
 BOOST_LIB = ${CONDA_PREFIX}/lib
 LINUXADD=-Wl,--export-dynamic
-ROOTSTUFF=`root-config --cflags --libs` -g
+ROOTSTUFF=`root-config --cflags --libs --glibs` -g
 
-CPP_FILES := $(wildcard src/*.C)
-HELPER_CPP_FILES := $(wildcard src/*.cpp)
-OBJ_FILES := $(addprefix ./,$(notdir $(CPP_FILES:.C=.o)))
-SHARED_LIBS := $(addprefix ./,$(notdir $(CPP_FILES:.C=.so)))
+CPP_FILES := $(wildcard src/*.cpp)
+OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
-# compile mesh classes
-# all: $(patsubst %.C, %, $(wildcard *.C))
-# all: $(patsubst ./%.C, %, $(wildcard ./*.C))
+MODULES := $(wildcard src/*.C)
+MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
+MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
-all: $(SHARED_LIBS)
 
+all: $(MODULES_SHARED_LIBS)
+
+#helpers
+
+obj/%.o: src/%.cpp
+	g++ $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
+    
+#pack helpers in lib
+libdeepjethelpers.so: $(OBJ_FILES)
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) obj/*.o -o $@ 
+  
 
 %.so: %.o libdeepjethelpers.so
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
-%.o: src/%.C
-	g++ -D__USE_XOPEN2K8  $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
-    
-libdeepjethelpers.so: helpers.o
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF)  -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+%.o: src/%.C 
+	g++   $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
 
-helpers.o: $(HELPER_CPP_FILES)
-	g++ -D__USE_XOPEN2K8  $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
-    
+
  
    
 clean: 
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) helpers.o libdeepjethelpers.so
+	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjethelpers.so
