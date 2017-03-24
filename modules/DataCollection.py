@@ -262,10 +262,11 @@ class DataCollection(object):
         self.dataclass=dataclass
         td=dataclass
         ##produce weighter from a larger dataset as one file
-        
+        weighter=Weighter()
         print('producing bin weights')
-        weighter=td.produceBinWeighter(self.originRoots[0])
-        self.weighter=weighter
+        if td.remove or td.weight:
+            weighter=td.produceBinWeighter(self.originRoots[0])
+            self.weighter=weighter
         print('producing means')
         means=td.produceMeansFromRootFile(self.originRoots[0])
         

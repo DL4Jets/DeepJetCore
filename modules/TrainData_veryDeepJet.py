@@ -19,97 +19,174 @@ class TrainData_veryDeepJet(TrainData):
         Constructor
         '''
         TrainData.__init__(self)
+        
+        self.truthclasses=['isB','isC','isUDS','isG']
+        
+        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nsv'])
+       
+        self.addBranches(['Cpfcan_pt',
+                              'Cpfcan_phirel',
+                              'Cpfcan_etarel', 
+                              'Cpfcan_dxy', 
+                              'Cpfcan_dxyerr', 
+                              'Cpfcan_dxysig', 
+                              'Cpfcan_dz', 
+                              'Cpfcan_VTX_ass', 
+                              'Cpfcan_dptdpt', 
+                              'Cpfcan_detadeta',
+                              'Cpfcan_dphidphi',
+                              'Cpfcan_dxydxy',
+                              'Cpfcan_dzdz',
+                              'Cpfcan_dxydz',
+                              'Cpfcan_dphidxy',
+                              'Cpfcan_dlambdadz',
+                              #'Cpfcan_isMu',
+                              #'Cpfcan_isEl',
+                              'Cpfcan_chi2',
+                              'Cpfcan_quality'
+                              ],
+                             20)
+        
+        
+        self.addBranches(['Npfcan_pt',
+                          'Npfcan_phirel',
+                              'Npfcan_etarel',
+                              'Npfcan_isGamma',
+                              'Npfcan_HadFrac',
+                              ],
+                             15)
+        
+        
+        self.addBranches(['sv_pt',
+                              'sv_mass',
+                              'sv_ntracks',
+                              'sv_chi2',
+                              'sv_ndf',
+                              'sv_dxy',
+                              'sv_dxyerr',
+                              'sv_dxysig',
+                              'sv_d3d',
+                              'sv_d3derr',
+                              'sv_d3dsig',
+                              'sv_costhetasvpv',
+                              ],
+                             4)
+        
+        
+        self.addBranches(['jet_pt', 'jet_eta',
+                           'TagVarCSV_jetNSecondaryVertices', 
+                           'TagVarCSV_trackSumJetEtRatio', 'TagVarCSV_trackSumJetDeltaR', 
+                           'TagVarCSV_vertexCategory', 'TagVarCSV_trackSip2dValAboveCharm', 
+                           'TagVarCSV_trackSip2dSigAboveCharm', 'TagVarCSV_trackSip3dValAboveCharm', 
+                           'TagVarCSV_trackSip3dSigAboveCharm', 'TagVarCSV_jetNSelectedTracks', 
+                           'TagVarCSV_jetNTracksEtaRel'])
+       
+        self.addBranches(['TagVarCSVTrk_trackJetDistVal',
+                              'TagVarCSVTrk_trackPtRel', 
+                              'TagVarCSVTrk_trackDeltaR', 
+                              'TagVarCSVTrk_trackPtRatio', 
+                              'TagVarCSVTrk_trackSip3dSig', 
+                              'TagVarCSVTrk_trackSip2dSig', 
+                              'TagVarCSVTrk_trackDecayLenVal'],
+                             10)
+        
+        
+        self.addBranches(['TagVarCSV_trackEtaRel'],8)
+
+        self.addBranches(['TagVarCSV_vertexMass', 
+                              'TagVarCSV_vertexNTracks', 
+                              'TagVarCSV_vertexEnergyRatio',
+                              'TagVarCSV_vertexJetDeltaR',
+                              'TagVarCSV_flightDistance2dVal', 
+                              'TagVarCSV_flightDistance2dSig', 
+                              'TagVarCSV_flightDistance3dVal', 
+                              'TagVarCSV_flightDistance3dSig'],
+                             5)
+
+        self.reducedtruthclasses=['isB','isC','isUDSG']
     
-    def readFromRootFile(self,filename,means):
+    def reduceTruth(self, tuple_in):
+        b = tuple_in['isB'].view(numpy.ndarray)
+        c = tuple_in['isC'].view(numpy.ndarray)
+        uds = tuple_in['isUDS'].view(numpy.ndarray)
+        g = tuple_in['isG'].view(numpy.ndarray)
+        l = g + uds
+        self.reducedtruthclasses=['isB','isC','isUDSG']
+        return numpy.vstack((b,c,l)).transpose()
+       
+       
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
+        import numpy
+        from stopwatch import stopwatch
         
-        # may want to split this to a more generic function to allow shuffeling later
-        # maybe something like "addfromRootFile" -> should go to base class
+        sw=stopwatch()
+        swall=stopwatch()
         
+        import ROOT
+        
+        self.fileTimeOut(filename,120) #give eos a minute to recover
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        
+        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        
+        
+        # split for convolutional network
+        
+        x_global = MeanNormZeroPad(filename,TupleMeanStd,
+                                   [self.branches[0]],
+                                   [self.branchcutoffs[0]],self.nsamples)
+        
+        x_cpf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+                                   self.branches[1],
+                                   self.branchcutoffs[1],self.nsamples)
+        
+        x_npf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+                                   self.branches[2],
+                                   self.branchcutoffs[2],self.nsamples)
+        
+        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
+                                   self.branches[3],
+                                   self.branchcutoffs[3],self.nsamples)
+        
+        
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
-        TupleMeanStd =  means
-        truth_check = Tuple['gen_pt']
-        Njets = truth_check.shape[0]
-        validTruth = truth_check > 0.
-        # filter by boolian vector
-        Tuple = Tuple[validTruth]
-        
-        if Njets != Tuple.shape[0]:
-            print (' Please check, jets without genjets conterparts found! This is bad for PT regression !!')
-        
-        BranchList = Tuple.dtype.names
-        if BranchList != TupleMeanStd.dtype.names:
-            print ('Tuple for subtraction and training should match, please check')
-            print (len(BranchList), ' ' , len(BranchList))
-        
-        # now we calculate weights to have flat PT eta distributions
-        weight_binXPt = numpy.array([0,5,10,15,20,25,30,35,40,45,50,60,70,80,90,110,120,130,140,150,175 ,200,2000],dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4,5],dtype=float)
-        
-        print ('producing weights')
-        
-        weights = produceWeigths(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=['isB','isC','isUDS','isG'])
-        # dimension check, weight vector must have tuple length
-        if weights.shape[0] != Tuple.shape[0]:
-            print ('Weigts for subtraction and training should match, please check')
-            print  (weights.shape[0],' ', Tuple.shape[0])
-        
-        self.w=[weights,weights]
-        weights=numpy.array([])
-        
-        PfBranchList =['Cpfcan_etarel','Cpfcan_phirel','Cpfcan_pt','Cpfcan_isMu','Cpfcan_isEl','Cpfcan_VTX_ass','Cpfcan_puppiw']
-        NPfBranchList = ['Npfcan_etarel','Npfcan_phirel','Npfcan_pt','Npfcan_HadFrac','Npfcan_isGamma']
-        
-        # No we define the bins for our convolutional network
-        binX = numpy.array([-.5,-.3,-.1,.1,.3,.5,7],dtype=float)
-        binY = numpy.array([-.5,-.3,-.1,.1,.3,.5],dtype=float)
-        
-        print ('making boxes')
-        
-        # these are the branch names which define the 2D axis
-        CPFcands = MakeBox([Tuple[PfBranchList], TupleMeanStd],'Cpfcan_etarel','Cpfcan_phirel',binX,binY,10)
-        NPFCands = MakeBox([Tuple[NPfBranchList] , TupleMeanStd],'Npfcan_etarel','Npfcan_phirel',binX,binY,10)
-        
-        
-        print ('concatenate')
-        # Add cgarged and neutral PF candidates
-        PFCands = numpy.concatenate((NPFCands,CPFcands),axis=3)
-        
-        #Get MC truth
-        truth = Tuple[['Delta_gen_pt_WithNu']]
-        # alternative_truth = Tuple[['gen_pt']]
-        
-        Flavour_truth =  Tuple[['isB','isC','isUDS','isG']]
-        
-        print ('apply mean to pts')
-        # Now we collect the global variables (here only PT
-        PTjets =  Tuple[['jet_pt','jet_eta','QG_ptD','QG_axis2','QG_mult']]
-        PTjets =  MeanNormApply(PTjets,TupleMeanStd)
-        
-        #don't copy to not exhaust the memory
-        # here, the memory explodes. try to find a smarter solution
-        print ('convert to numpy arrays: pfcands')
-        #PFCands = numpy.array(PFCands.tolist())
-        PFCands = PFCands.view('float32') #numpy.array(PFCands.tolist())
-        print ('convert to numpy arrays: ptjets')
-        PTjets = numpy.array(PTjets.tolist())
-        
-        self.x=[PFCands, PTjets]
-        PTjets=numpy.array([])
-        PFCands =numpy.array([])
-        # using view would be quicker but longer syntax
-        print ('convert to numpy arrays: flavtruth')
-        Flavour_truth = numpy.array(Flavour_truth.tolist())
-        print ('convert to numpy arrays: truth')
-        truth = numpy.array(truth.tolist())
-        self.y=[truth,Flavour_truth]
-        
-        
-        #this is where the actual input to keras is defined. This part should be common for all scenarios
+        notremoves=weighter.createNotRemoveIndices(Tuple)
         
         
         
-        print('conversion done')
+        print('took ', sw.getAndReset(), ' to create remove indices')
+        
+        weights=notremoves
+        
+        
+        truthtuple =  Tuple[self.truthclasses]
+        #print(self.truthclasses)
+        alltruth=self.reduceTruth(truthtuple)
+        
+        #print(alltruth.shape)
+        
+        print('remove')
+        weights=weights[notremoves > 0]
+        x_global=x_global[notremoves > 0]
+        x_cpf=x_cpf[notremoves > 0]
+        x_npf=x_npf[notremoves > 0]
+        x_sv=x_sv[notremoves > 0]
+        alltruth=alltruth[notremoves > 0]
+       
+        newnsamp=x_global.shape[0]
+        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
+        self.nsamples = newnsamp
+        
+
+        self.w=[weights]
+        self.x=[x_global,x_cpf,x_npf,x_sv]
+        self.y=[alltruth]
         
         

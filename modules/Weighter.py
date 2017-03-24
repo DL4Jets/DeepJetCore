@@ -43,14 +43,17 @@ class Weighter(object):
         
         
         def getScaler(histo,refhisto):
-            scaler=0
+            scaler=0.
             for indexx,binx in enumerate(self.axisX):
                 if not indexx:  continue
                 for indexy,biny in enumerate(self.axisY):
                     if not indexy:  continue
+                    #print(indexx,indexy)
                     refval=refhisto[indexx-1][indexy-1]
                     thisval=histo[indexx-1][indexy-1]
-                    ratio=refval/thisval
+                    ratio=1.
+                    if thisval:
+                        ratio=float(refval)/float(thisval)
                     if ratio>scaler: scaler=ratio
             return scaler
         
@@ -64,7 +67,9 @@ class Weighter(object):
                         continue
                     refval=refhisto[indexx-1][indexy-1]
                     thisval=scaledhisto[indexx-1][indexy-1]
-                    prob=(thisval-refval)/(thisval+refval)
+                    prob=0
+                    if thisval+refval:
+                        prob=float(thisval-refval)/float(thisval+refval)
                     out[indexx-1][indexy-1]=prob
             return out
         

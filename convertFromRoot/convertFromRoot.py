@@ -13,7 +13,7 @@ convertFromRoot is a small program that converts the root files produced with th
 import sys
 import os
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 __all__ = []
 __version__ = 0.1
@@ -37,24 +37,28 @@ def main(argv=None):
     program_license = "Copyright 2017 user_name (organization_name)                                            \
                 Licensed under the Apache License 2.0\nhttp://www.apache.org/licenses/LICENSE-2.0"
 
-    if argv is None:
-        argv = sys.argv[1:]
+    
     #try:
         # setup option parser
-    parser = OptionParser(version=program_version_string, epilog=program_longdesc, description=program_license)
-    parser.add_option("-i", "--in", dest="infile", help="set input sample description (output from the check.py script)", metavar="FILE")
-    parser.add_option("-o", "--out", dest="outPath", help="set output path", metavar="PATH")
-    parser.add_option("-c", "--class", dest="Class", help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
-    parser.add_option("-r", "--recover", dest="Recover", help="set path to snapshot that got interrupted", metavar="FILE", default='')
-   
+    parser = ArgumentParser('program to convert root tuples to traindata format')
+    parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
+    parser.add_argument("-o",  help="set output path", metavar="PATH")
+    parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
+    parser.add_argument("--testdata", default=False, type=bool)
     
     # process options
-    (opts, args) = parser.parse_args(argv)
+    args=parser.parse_args()
+    infile=args.i
+    outPath=args.o
+    Class=args.c
+    Recover=args.r
+    isTestData=args.testdata
 
-    if opts.infile:
-        print("infile = %s" % opts.infile)
-    if opts.outPath:
-        print("outPath = %s" % opts.outPath)
+    if infile:
+        print("infile = %s" % infile)
+    if outPath:
+        print("outPath = %s" % outPath)
 
     # MAIN BODY #
     
@@ -68,30 +72,36 @@ def main(argv=None):
     
     dc=DataCollection()
     traind=TrainData
-    if opts.Class == 'TrainData_deepCSV':
+    if Class == 'TrainData_deepCSV':
         traind=TrainData_deepCSV
-    elif opts.Class == 'TrainData_veryDeepJet':
+    elif Class == 'TrainData_veryDeepJet':
         traind=TrainData_veryDeepJet
-    elif opts.Class ==  'TrainData_deepCSV_ST':
+    elif Class ==  'TrainData_deepCSV_ST':
         traind=TrainData_deepCSV_ST
-    elif opts.Class ==  'TrainData_deepCSV_PF':
+    elif Class ==  'TrainData_deepCSV_PF':
         traind=TrainData_deepCSV_PF
-    elif opts.Class == 'TrainData_deepCSV_ST_broad':
+    elif Class == 'TrainData_deepCSV_ST_broad':
         traind=TrainData_deepCSV_ST_broad
-    elif len(opts.Recover)<1:
+    elif len(Recover)<1:
         raise Exception('wrong class selecton')
     
-    if len(opts.Recover)>0:
-        dc.recoverCreateDataFromRootFromSnapshot(opts.Recover)
+    if isTestData:
+        print('converting test data, no weights applied')
+        #that doesn't work, it is not an instance of the class
+        traind.remove=False
+        traind.weight=False
+    
+    if len(Recover)>0:
+        dc.recoverCreateDataFromRootFromSnapshot(Recover)
     else:
         notdone=True
         while notdone:
-            try:
-                dc.convertListOfRootFiles(opts.infile, traind(), opts.outPath)
-                notdone=False
-            except Exception as e:
-                print('for recovering run: convertFromRoot.py -r '+opts.outPath+'/snapshot.dc')
-                raise e
+            #try:
+            dc.convertListOfRootFiles(infile, traind(), outPath)
+            notdone=False
+            #except Exception as e:
+            #    print('for recovering run: convertFromRoot.py -r '+outPath+'/snapshot.dc')
+            #    raise e
    
 
     #except:
