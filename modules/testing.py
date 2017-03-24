@@ -82,7 +82,17 @@ class testDescriptor(object):
         
         
         
-        
+#just a wrapper
+def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
+    import c_makeROCs
+    c_makeROCs.makeROCs(intextfile,name_list,
+                        probabilities_list,
+                        truths_list,
+                        vetos_list,
+                        colors_list,
+                        outpdffile,cuts)
+    
+    
 ######### old part - keep for reference, might be useful some day 
 
 #just a collection of what will be helpful

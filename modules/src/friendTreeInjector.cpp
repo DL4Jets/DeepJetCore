@@ -28,7 +28,6 @@ void friendTreeInjector::addFromFile(const TString& filename){
 	while (file >> a >> b)
 	{
 		originroots.push_back(a);
-		std::cout << a << ' ' << b <<std::endl;
 		toinject.push_back(b);
 	}
 
