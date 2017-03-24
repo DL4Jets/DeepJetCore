@@ -40,12 +40,14 @@ def main(argv=None):
     
     #try:
         # setup option parser
+
     parser = ArgumentParser('program to convert root tuples to traindata format')
     parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
     parser.add_argument("-o",  help="set output path", metavar="PATH")
-    parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCMVA_ST, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
     parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
     parser.add_argument("--testdata", default=False, type=bool)
+
     
     # process options
     args=parser.parse_args()
@@ -67,7 +69,7 @@ def main(argv=None):
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
-    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCSV_ST_broad
+    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCMVA_ST,TrainData_deepCSV_ST_broad
     from TrainData_deepCSV_PF import  TrainData_deepCSV_PF
     
     dc=DataCollection()
@@ -80,6 +82,8 @@ def main(argv=None):
         traind=TrainData_deepCSV_ST
     elif Class ==  'TrainData_deepCSV_PF':
         traind=TrainData_deepCSV_PF
+    elif Class == 'TrainData_deepCMVA_ST':
+        traind=TrainData_deepCMVA_ST
     elif Class == 'TrainData_deepCSV_ST_broad':
         traind=TrainData_deepCSV_ST_broad
     elif len(Recover)<1:
@@ -104,8 +108,6 @@ def main(argv=None):
             #    raise e
    
 
-    #except:
-    #    print('exception')
     
 
 
