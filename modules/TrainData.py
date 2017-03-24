@@ -19,6 +19,7 @@ class TrainData(object):
         '''
         self.clear()
         
+        
         self.truthclasses=[]
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
@@ -27,7 +28,10 @@ class TrainData(object):
         self.branches=[]
         self.branchcutoffs=[]
         
+        self.readthread=None
+        self.readdone=None
         
+
     def clear(self):
         import numpy
         self.samplename=''
@@ -36,17 +40,25 @@ class TrainData(object):
         self.w=[numpy.array([])]
         
         self.nsamples=0
+    
         
     def getInputShapes(self):
         '''
         returns a list for each input shape. In most cases only one entry
         '''
-        outl=[0]
-        count=0
-        for c in range(len(self.branches)):
-            count+=  self.branchcutoffs[c]*len(self.branches[c])
-        outl[0]=count
-        return outl
+        outl=[]
+        for x in self.x:
+            outl.append(x.shape)
+        shapes=[]
+        for s in outl:
+            _sl=[]
+            for i in range(len(s)):
+                if i:
+                    _sl.append(s[i])
+            s=(_sl)
+            shapes.append(s)
+
+        return shapes
         
     def getTruthShapes(self):
         outl=[len(self.getUsedTruth())]
@@ -103,113 +115,142 @@ class TrainData(object):
         h5f = h5py.File(fileprefix, 'w')
         
         # try "lzf", too, faster, but less compression
-        def _writeout(data,idstr,h5F):
-            arr=numpy.array(data)
-            h5F.create_dataset(idstr+'_shape',data=arr.shape)
-            h5F.create_dataset(idstr, data=arr, compression="lzf")
+        def _writeoutListinfo(arrlist,fidstr,h5F):
+            arr=numpy.array([len(arrlist)])
+            h5F.create_dataset(fidstr+'_listlength',data=arr)
+            for i in range(len(arrlist)):
+                idstr=fidstr+str(i)
+                h5F.create_dataset(idstr+'_shape',data=arrlist[i].shape)
+            
+        def _writeoutArrays(arrlist,fidstr,h5F):    
+            for i in range(len(arrlist)):
+                idstr=fidstr+str(i)
+                arr=arrlist[i]
+                h5F.create_dataset(idstr, data=arr, compression="lzf")
         
-        arrw=numpy.array(self.w)
-        arrx=numpy.array(self.x)
-        arry=numpy.array(self.y)
-        
-        _writeout(arrw,'w',h5f)
-        _writeout(arrx,'x',h5f)
-        _writeout(arry,'y',h5f)
         
         arr=numpy.array([self.nsamples],dtype='int')
         h5f.create_dataset('n', data=arr)
-        h5f.close()
-        return
-    
-    
-        #old pickle implementation
-        import pickle
-        import gzip
-        self.fileTimeOut(fileprefix,120) #give eos a minute to recover
-        fd=gzip.open(fileprefix,'wb')
-        pprot=2 #compatibility to python 2
-        pickle.dump(self.w, fd,protocol=pprot)
-        pickle.dump(self.x, fd,protocol=pprot)
-        pickle.dump(self.y, fd,protocol=pprot)
-        pickle.dump(self.nsamples, fd,protocol=pprot)
-        fd.close()
+
+        _writeoutListinfo(self.w,'w',h5f)
+        _writeoutListinfo(self.x,'x',h5f)
+        _writeoutListinfo(self.y,'y',h5f)
+
+        _writeoutArrays(self.w,'w',h5f)
+        _writeoutArrays(self.x,'x',h5f)
+        _writeoutArrays(self.y,'y',h5f)
         
-    def readIn(self,fileprefix):
+        h5f.close()
+       
+       
+    def __createArr(self,shapeinfo):
+        import ctypes
+        import multiprocessing
+        fulldim=1
+        for d in shapeinfo:
+            fulldim*=d 
+        if fulldim < 0: #catch some weird things that happen when there is a file IO error
+            fulldim=0 
+        # reserve memory for array
+        shared_array_base = multiprocessing.RawArray(ctypes.c_float, int(fulldim))
+        shared_array = numpy.ctypeslib.as_array(shared_array_base)#.get_obj())
+        #print('giving shape',shapeinfo)
+        shared_array = shared_array.reshape(shapeinfo)
+        #print('gave shape',shapeinfo)
+        return shared_array
+       
+    def readIn_async(self,fileprefix):
+        
+        if self.readthread:
+            print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
+            self.readIn_join()
+            
+        #print('read')
         import h5py
         import numpy
-        self.fileTimeOut(fileprefix,120)
-        h5f = h5py.File(fileprefix,'r')
-        
-        
-        
         import multiprocessing
-        import ctypes
         
-        def createArr(idstr):
-            shapeinfo=numpy.array(h5f[idstr+'_shape'])
-            fulldim=1
-            for d in shapeinfo:
-                fulldim*=d
-            # reserve memory for array
-            shared_array_base = multiprocessing.Array(ctypes.c_float, int(fulldim))
-            shared_array = numpy.ctypeslib.as_array(shared_array_base.get_obj())
-            shared_array = shared_array.reshape(shapeinfo)
-            return shared_array
-            
+        #print('\ninit async read\n')
         
-        def _read_arrs(arrw,arrx,arry):
-            #still do this sequentially to avoid race in h5py
-            h5f['w'].read_direct(arrw)
-            h5f['x'].read_direct(arrx)
-            h5f['y'].read_direct(arry)
-        
-        
-        def readProcess(arrw,arrx,arry):
-            thread=multiprocessing.Process(target=_read_arrs, args=(arrw,arrx,arry))
-            thread.start()
-            ##now the read process may live on another core
-            thread.join()
-               
-        def arrtolist(Arr):
-            out=[]
-            for i in range(Arr.shape[0]):
-                out.append(Arr[i])
-            return out
-        
-        
-        # this might seem weird, but allows to pass by GIL when 
-        # each read is performed in a normal python thread
-        
-        twarr=createArr('w')
-        txarr=createArr('x')
-        tyarr=createArr('y')
-        readProcess(twarr,txarr,tyarr)
-        
-        
-        self.w=arrtolist(numpy.array(twarr))
-        self.x=arrtolist(numpy.array(txarr))
-        self.y=arrtolist(numpy.array(tyarr))
-        
-        
-        #print(self.x.shape)
-        
-        self.nsamples=h5f['n']
-        self.nsamples=self.nsamples[0]
-        h5f.close()
-        return
-    
-    
-        #old pickle implementation
-        import pickle
-        import gzip
+        self.fileTimeOut(fileprefix,120)
+        #print('\nfile access ok\n')
         self.samplename=fileprefix
-        self.fileTimeOut(fileprefix,120) #give eos a minute to recover
-        fd=gzip.open(fileprefix,'rb')
-        self.w=pickle.load(fd)
-        self.x=pickle.load(fd)
-        self.y=pickle.load(fd)
-        self.nsamples=pickle.load(fd)
-        fd.close()
+        
+        self.h5f = h5py.File(fileprefix,'r')
+        
+        def _readListInfo(idstr):
+            sharedlist=[]
+            shapeinfos=[]
+            wlistlength=self.h5f[idstr+'_listlength'][0]
+            #print(idstr,'list length',wlistlength)
+            for i in range(wlistlength):
+                sharedlist.append(numpy.array([]))
+                iidstr=idstr+str(i)
+                shapeinfo=numpy.array(self.h5f[iidstr+'_shape'])
+                #print('read shape info',shapeinfo)
+                shapeinfos.append(shapeinfo)
+            return sharedlist, shapeinfos
+        
+        def _read_arrs(arrwl,arrxl,arryl,doneVal):
+            idstrs=['w','x','y']
+            alllists=[arrwl,arrxl,arryl]
+            for j in range(len(idstrs)):
+                fidstr=idstrs[j]
+                arl=alllists[j]
+                for i in range(len(arl)):
+                    idstr=fidstr+str(i)
+                    #print('reading',idstr)
+                    self.h5f[idstr].read_direct(arl[i])
+                    #print('done reading',idstr)
+            self.readdone.value=True
+        
+        self.nsamples=self.h5f['n']
+        self.nsamples=self.nsamples[0]
+        
+        self.w_list,w_shapes=_readListInfo('w')
+        self.x_list,x_shapes=_readListInfo('x')
+        self.y_list,y_shapes=_readListInfo('y')
+        
+        for i in range(len(self.w_list)):
+            self.w_list[i]=self.__createArr(w_shapes[i])
+            
+        for i in range(len(self.x_list)):
+            self.x_list[i]=self.__createArr(x_shapes[i])
+            
+        for i in range(len(self.y_list)):
+            self.y_list[i]=self.__createArr(y_shapes[i])
+
+        self.readdone=multiprocessing.Value('b',False)
+        self.readthread=multiprocessing.Process(target=_read_arrs, args=(self.w_list,self.x_list,self.y_list,self.readdone))
+        self.readthread.start()
+        
+        #print('\nstarted async thread\n')
+     
+    def readIn_join(self):
+        #print('joining async read')
+        while not self.readdone.value: 
+            #needs to be done - it can come to deadlocks because of wrong locking in python..
+            #use the shared self.readthread as soft lock
+            self.readthread.join(1)
+        #print('joined async read')
+        
+        #import copy
+        self.w=(self.w_list)#get all arrays back form the shared memory
+        self.x=(self.x_list)
+        self.y=(self.y_list)
+        self.h5f.close()
+        self.w_list=None
+        self.x_list=None
+        self.y_list=None
+        self.readthread.terminate()
+        self.readthread=None
+        self.readdone=None
+        
+    def readIn(self,fileprefix):
+        
+        self.readIn_async(fileprefix)
+        self.readIn_join()
+        
         
     def readTreeFromRootToTuple(self,filenames):
         '''
@@ -289,46 +330,13 @@ class TrainData(object):
         print('took ', sw.getAndReset(), ' to create remove indices')
         
         weights=notremoves
-        #
-        #print('rescale flat branches')
-        #x_global_flat = MeanNormApply(Tuple[self.flatbranches],TupleMeanStd)
-        #x_global_flat = numpy.array(x_global_flat.tolist())
-        #
-        #x_all=x_global_flat
-        #
-        ##def threadFunc(i):
-        ##    return MeanNormZeroPad(Tuple[self.deepbranches[i]],TupleMeanStd,self.deepcutoffs[i])
-        ##
-        ##from multiprocessing.pool import ThreadPool
-        ##pool=ThreadPool(len(self.deepbranches))
-        ##deepzeropadded=pool.map(threadFunc, range(len(self.deepbranches)))
-        ##pool.close()
-        ##pool.join()
-        #
-        #deepzeropadded=[]
-        #for i in range(0,len(self.deepbranches)):
-        #    deepzeropadded.append(numpy.array([]))
-        ##    
-        ##
-        #print(self.deepbranches)
-        #
-        #
-        #print('rescale deep branches')
-        ##deepzeropadded=MeanNormZeroPad(Tuple,TupleMeanStd, self.deepbranches,self.deepcutoffs)
-        #for i in range(0,len(self.deepbranches)):
-        #    #deepzeropadded[i]=MeanNormZeroPad(Tuple[self.deepbranches[i]],TupleMeanStd,self.deepbranches[i],self.deepcutoffs[i])
-        #    deepzeropadded[i]=MeanNormZeroPad(filename,TupleMeanStd,self.deepbranches[i],self.deepcutoffs[i],self.nsamples)
-        #    
-        #print('concatenate')
-        ##simple threading does not help due to pythons weird threading idea
-        #for i in range(0,len(self.deepbranches)):
-        #    x_all=numpy.concatenate( (x_all, 
-        #                              deepzeropadded[i])
-        #                             ,axis=1)  
-        #
-        #
+        
+        
         truthtuple =  Tuple[self.truthclasses]
+        #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
+        
+        #print(alltruth.shape)
         
         print('remove')
         weights=weights[notremoves > 0]
@@ -355,7 +363,7 @@ class TrainData_Flavour(TrainData):
 
     def __init__(self):
         TrainData.__init__(self)
-        
+        self.clear()
         
     
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
@@ -367,6 +375,11 @@ class TrainData_Flavour(TrainData):
         self.y=[alltruth]
         
     def reduceTruth(self, tuple_in):
-        return numpy.array(tuple_in)
+        
+        b = tuple_in['isB'].view(numpy.ndarray)
+        c = tuple_in['isC'].view(numpy.ndarray)
+        uds = tuple_in['isUDS'].view(numpy.ndarray)
+        g = tuple_in['isG'].view(numpy.ndarray)
+        return numpy.vstack((b,c,uds,g)).transpose()
      
         

@@ -1,0 +1,8 @@
+
+
+Important: Please keep the name convention for the makefile to work
+
+
+ yourModule.C -> will be compiled to a python module with shared library
+ 
+ yourHelper.cpp -> will be used as helper class. Will not be compiled to a shared library
