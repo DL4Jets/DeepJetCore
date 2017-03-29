@@ -58,10 +58,10 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 nepochs=100
-batchsize=15000
-startlearnrate=0.0001
+batchsize=10000
+startlearnrate=0.0005
 lrdecrease=0.000025
-lreeveryep=1
+lreeveryep=10
 lrthresh=0.000025
 useweights=False
 splittrainandtest=0.8
@@ -87,7 +87,7 @@ testd=traind.split(splittrainandtest)
 #from from keras.models import Sequential
 
 inputs = Input(shape=traind.getInputShapes()[0])
-model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.3)
+model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 print('compiling')
 
@@ -107,8 +107,9 @@ stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
 from ReduceLROnPlateau import ReduceLROnPlateau
 
 
-LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, 
-                                mode='auto', verbose=1, epsilon=0.001, cooldown=0, min_lr=0.00001)
+LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, 
+                                mode='min', verbose=1, epsilon=0.003, 
+                                cooldown=6, min_lr=0.00001)
 
 
 
@@ -131,7 +132,7 @@ print('training')
 model.fit_generator(traind.generator() ,
         steps_per_epoch=traind.getNBatchesPerEpoch(), 
         epochs=nepochs,
-        callbacks=[history,stopping,LR_onplatCB],
+        callbacks=[history,LR_onplatCB],#,stopping],
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
         max_q_size=maxqsize,
@@ -171,6 +172,9 @@ plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
+
+
+# replace this part with new ROC plotting
 
 features_val=testd.getAllFeatures()[0]
 labels_val=testd.getAllLabels()[0]

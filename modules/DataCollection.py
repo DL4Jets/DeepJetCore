@@ -38,7 +38,7 @@ class DataCollection(object):
         self.weightsfraction=0.05
         self.maxConvertThreads=2
         self.maxFilesOpen=3
-        
+        self.means=None
         self.classweights={}
         
     def removeLast(self):
@@ -111,6 +111,8 @@ class DataCollection(object):
         pickle.dump(self.__batchsize, fd,protocol=0 )
         pickle.dump(self.dataclass, fd,protocol=0 )
         pickle.dump(self.weighter, fd,protocol=0 )
+        #pickle.dump(self.means, fd,protocol=0 )
+        self.means.dump(fd)
         fd.close()
         
     def readFromFile(self,filename):
@@ -124,6 +126,7 @@ class DataCollection(object):
         self.__batchsize=pickle.load(fd)
         self.dataclass=pickle.load(fd)
         self.weighter=pickle.load(fd)
+        self.means=pickle.load(fd)
         fd.close()
         import os
         self.dataDir=os.path.dirname(os.path.abspath(filename))
@@ -143,7 +146,12 @@ class DataCollection(object):
         
     def readRootListFromFile(self,file):
         import os
-        self.clear()
+        
+        self.samples=[]
+        self.sampleentries=[]
+        self.originRoots=[]
+        self.nsamples=0
+        self.dataDir=""
         
         fdir=os.path.dirname(file)
         fdir=os.path.abspath(fdir)
@@ -179,9 +187,9 @@ class DataCollection(object):
         out.dataDir=self.dataDir
 
         out.dataclass=copy.deepcopy(self.dataclass)
-        out.weighter=self.weighter #ref ok
-        
-        
+        out.weighter=self.weighter #ref oks
+        out.means=self.means
+     
         
         itself.samples=[]
         itself.sampleentries=[]
@@ -218,6 +226,17 @@ class DataCollection(object):
         return out
     
     
+    def createTestDataForDataCollection(self,collectionfile,inputfile,outputDir):
+        import copy
+        self.readFromFile(collectionfile)
+        self.dataclass.remove=False
+        self.dataclass.weight=False
+        self.readRootListFromFile(inputfile)
+        self.createDataFromRoot(self.dataclass, outputDir,False)
+        self.writeToFile(outputDir+'/dataCollection.dc')
+        
+        
+    
     def recoverCreateDataFromRootFromSnapshot(self, snapshotfile):
         import os
         snapshotfile=os.path.abspath(snapshotfile)
@@ -226,18 +245,19 @@ class DataCollection(object):
         #For emergency recover  td.reducedtruthclasses=['isB','isC','isUDSG']
         if len(self.originRoots) < 1:
             return
-        means=td.produceMeansFromRootFile(self.originRoots[0])
+        #if not self.means:
+        #    self.means=td.produceMeansFromRootFile(self.originRoots[0])
         outputDir=os.path.dirname(snapshotfile)+'/'
         self.dataDir=outputDir
         finishedsamples=len(self.samples)
         for i in range(finishedsamples, len(self.originRoots)):
             if not self.originRoots[i].endswith('.root'): continue
             print ('creating '+ str(type(self.dataclass)) +' data from '+self.originRoots[i])
-            self.__writeData(self.originRoots[i], means, self.weighter, outputDir, td)
+            self.__writeData(self.originRoots[i], self.means, self.weighter, outputDir, td)
             
         self.writeToFile(outputDir+'/dataCollection.dc')
     
-    def createDataFromRoot(self,dataclass, outputDir):
+    def createDataFromRoot(self,dataclass, outputDir, redo_meansandweights=True):
         '''
         Also creates a file list of the output files
         After the operation, the object will point to the already processed
@@ -259,22 +279,32 @@ class DataCollection(object):
         self.nsamples=0
         self.samples=[]
         self.sampleentries=[]
-        self.dataclass=dataclass
-        td=dataclass
+        import copy
+        self.dataclass=copy.deepcopy(dataclass)
+        td=self.dataclass
         ##produce weighter from a larger dataset as one file
-        weighter=Weighter()
-        print('producing bin weights')
-        if td.remove or td.weight:
+        
+        
+        if redo_meansandweights and (td.remove or td.weight):
+            print('producing weights')
+            weighter=Weighter()
             weighter=td.produceBinWeighter(self.originRoots[0])
             self.weighter=weighter
-        print('producing means')
-        means=td.produceMeansFromRootFile(self.originRoots[0])
         
+        if redo_meansandweights:
+            print('producing means')
+            self.means=td.produceMeansFromRootFile(self.originRoots[0])
+        
+        
+        self.__writeData_async_andCollect(0,outputDir)
+        
+        return
+        # old implementation single threaded
         # go up to a few threads here - all should be same speed so just wait for all to be finished
         for sample in self.originRoots:
             print ('creating '+ str(type(dataclass)) +' data from '+sample)
             
-            self.__writeData(sample, means, weighter,outputDir, td)
+            self.__writeData(sample, self.means, self.weighter,outputDir, td)
             
         
     
@@ -307,9 +337,93 @@ class DataCollection(object):
             td.clear()
             self.writeToFile(outputDir+'/snapshot.dc')
         except Exception as e:
-            os.system('rm -f '+ramdisksample)
+            removefile()
             raise e
         removefile()
+        
+        
+    def __writeData_async_andCollect(self, startindex, outputDir):
+        
+        from multiprocessing import Process, Queue, cpu_count
+        wo_queue = Queue()
+        
+        def writeData_async(index,woq):
+            import os
+            import copy
+            from stopwatch import stopwatch
+            sw=stopwatch()
+            td=copy.deepcopy(self.dataclass)
+            sample=self.originRoots[index]
+            td.fileTimeOut(sample,120) #once available copy to ram
+            ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
+            
+            def removefile():
+                os.system('rm -f '+ramdisksample)
+            
+            import atexit
+            atexit.register(removefile)
+            success=False
+            out_samplename=''
+            out_sampleentries=0
+            os.system('cp '+sample+' '+ramdisksample)
+            try:
+                td.readFromRootFile(ramdisksample,self.means, self.weighter) 
+                newname=os.path.basename(sample).rsplit('.', 1)[0]
+                newpath=os.path.abspath(outputDir+newname+'.z')
+                td.writeOut(newpath)
+                print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
+                
+                out_samplename=newname+'.z'
+                out_sampleentries=td.nsamples
+                success=True
+                td.clear()
+                
+                #this goes after join
+                
+            except Exception as e:
+                removefile()
+                raise e
+            removefile()
+            woq.put((index,[success,out_samplename,out_sampleentries]))
+        
+        
+        def __collectWriteInfo(successful,samplename,sampleentries,outputDir):
+            if not successful:
+                raise Exception("write not successful, stopping")
+            
+            self.samples.append(samplename)
+            self.nsamples+=sampleentries
+            self.sampleentries.append(sampleentries)
+            self.writeToFile(outputDir+'/snapshot.dc')
+            
+        processes=[]
+        for i in range(startindex,len(self.originRoots)):
+            processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
+        
+        nchilds=cpu_count()-1 #don't use all of them
+        if nchilds<1: 
+            nchilds=1
+        
+        index=0
+        alldone=False
+        while not alldone:
+            if index+nchilds >= len(self.originRoots):
+                nchilds=len(self.originRoots)-index
+                alldone=True
+                
+            for i in range(nchilds):
+                processes[i+index].start()
+            for i in range(nchilds):
+                processes[i+index].join()
+            results = [wo_queue.get() for i in range(nchilds)]
+            results.sort()
+            results = [r[1] for r in results]
+            for i in range(nchilds):
+                print(results[i])
+                __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
+            
+            index+=nchilds
+        
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
         self.readRootListFromFile(inputfile)

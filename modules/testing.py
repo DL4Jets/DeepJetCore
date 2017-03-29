@@ -32,6 +32,9 @@ class testDescriptor(object):
         
         from root_numpy import array2root
         import os
+        
+        outputDir=os.path.abspath(outputDir)
+        
         if len(ident)>0:
             ident='_'+ident
         
@@ -65,7 +68,7 @@ class testDescriptor(object):
             self.__sourceroots.append(originroot)
             self.__predictroots.append(outputDir+'/'+outrootfilename)
             
-            print('created predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
+            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
 
     def writeToTextFile(self, outfile):
         '''
@@ -79,11 +82,27 @@ class testDescriptor(object):
         for i in range(len(self.__predictroots)):
             listifle.write(self.__sourceroots[i]+' '+self.__predictroots[i]+'\n')
         listifle.close()
-        
-        
+    
+def makeASequence(arg,length):
+    isseq=(not hasattr(arg, "strip") and
+            hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__"))
+    out=[]
+    if isseq:
+        return arg
+    else:
+        for i in range(length):
+            out.append(arg)      
+    return out      
         
 #just a wrapper
 def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
+    
+    cuts=makeASequence(cuts,len(name_list))
+    probabilities_list=makeASequence(probabilities_list,len(name_list))
+    truths_list=makeASequence(truths_list,len(name_list))
+    vetos_list=makeASequence(vetos_list,len(name_list))
+            
     import c_makeROCs
     c_makeROCs.makeROCs(intextfile,name_list,
                         probabilities_list,
@@ -92,6 +111,32 @@ def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list,
                         colors_list,
                         outpdffile,cuts)
     
+def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
+    
+
+    cuts=makeASequence(cuts,len(name_list))
+    probabilities_list=makeASequence(probabilities_list,len(name_list))
+    truths_list=makeASequence(truths_list,len(name_list))
+    vetos_list=makeASequence(vetos_list,len(name_list))
+    
+    def worker():
+        import c_makeROCs
+        c_makeROCs.makeROCs(intextfile,name_list,
+                        probabilities_list,
+                        truths_list,
+                        vetos_list,
+                        colors_list,
+                        outpdffile,cuts)
+    
+    
+    import multiprocessing
+    p = multiprocessing.Process(target=worker)
+    p.start()
+    return p
+
+    # use multiprocessing return thread for waiting option
+    
+     
     
 ######### old part - keep for reference, might be useful some day 
 
