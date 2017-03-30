@@ -26,7 +26,7 @@ void makeROCs(
 		const boost::python::list vetos,
 		const boost::python::list colors,
 		std::string outfile,
-		std::string cuts) {
+		const boost::python::list cuts) {
 
 
 	std::vector<TString>  s_names = toSTLVector<TString>(names);
@@ -34,6 +34,7 @@ void makeROCs(
 	std::vector<TString>  s_truths = toSTLVector<TString>(truths);
 	std::vector<TString>  s_vetos = toSTLVector<TString>(vetos);
 	std::vector<TString>  s_colors = toSTLVector<TString>(colors);
+	std::vector<TString>  s_cuts = toSTLVector<TString>(cuts);
 
 
 	/*
@@ -42,7 +43,8 @@ void makeROCs(
 	if(s_names.size() != s_probabilities.size() ||
 			s_names.size() != s_truths.size()||
 			s_names.size() != s_vetos.size()||
-			s_names.size() != s_colors.size())
+			s_names.size() != s_colors.size()||
+			s_names.size() != s_cuts.size())
 		throw std::runtime_error("makeROCs: input lists must have same size");
 
 	friendTreeInjector injector;
@@ -52,7 +54,12 @@ void makeROCs(
 	rocCurveCollection rocs;
 
 	for(size_t i=0;i<s_names.size();i++){
-		rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),s_vetos.at(i),s_colors.at(i),(TString)cuts);
+		if(s_cuts.size())
+			rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
+					s_vetos.at(i),s_colors.at(i),s_cuts.at(i));
+		else
+			rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
+					s_vetos.at(i),s_colors.at(i));
 	}
 
 	rocs.printRocs(injector.getChain(),(TString)outfile);

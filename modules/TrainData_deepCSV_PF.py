@@ -19,18 +19,25 @@ class TrainData_deepCSV_PF(TrainData):
         '''
         TrainData.__init__(self)
         
-        self.truthclasses=['isB','isC','isUDS','isG']
+        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUDS','isG']
         
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nsv'])
+        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
         self.addBranches(['Cpfcan_pt',
+                          'Cpfcan_erel',
                               'Cpfcan_phirel',
                               'Cpfcan_etarel', 
+                              'Cpfcan_deltaR', 
+                              #'Cpfcan_puppiw',
                               'Cpfcan_dxy', 
                               'Cpfcan_dxyerr', 
                               'Cpfcan_dxysig', 
                               'Cpfcan_dz', 
                               'Cpfcan_VTX_ass', 
+                              'Cpfcan_fromPV', 
+                              'Cpfcan_vertex_rho', 
+                              'Cpfcan_vertex_phirel', 
+                              'Cpfcan_vertex_etarel',
                               'Cpfcan_dptdpt', 
                               'Cpfcan_detadeta',
                               'Cpfcan_dphidphi',
@@ -48,8 +55,10 @@ class TrainData_deepCSV_PF(TrainData):
         
         
         self.addBranches(['Npfcan_pt',
+                          'Npfcan_erel',
                           'Npfcan_phirel',
                               'Npfcan_etarel',
+                          'Npfcan_deltaR',
                               'Npfcan_isGamma',
                               'Npfcan_HadFrac',
                               ],
@@ -57,6 +66,9 @@ class TrainData_deepCSV_PF(TrainData):
         
         
         self.addBranches(['sv_pt',
+                              'sv_etarel',
+                              'sv_phirel',
+                              'sv_deltaR',
                               'sv_mass',
                               'sv_ntracks',
                               'sv_chi2',
@@ -68,6 +80,7 @@ class TrainData_deepCSV_PF(TrainData):
                               'sv_d3derr',
                               'sv_d3dsig',
                               'sv_costhetasvpv',
+                              'sv_enratio',
                               ],
                              4)
 
@@ -75,12 +88,17 @@ class TrainData_deepCSV_PF(TrainData):
     
     def reduceTruth(self, tuple_in):
         b = tuple_in['isB'].view(numpy.ndarray)
+        bb = tuple_in['isBB'].view(numpy.ndarray)
+        bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+        blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+        
         c = tuple_in['isC'].view(numpy.ndarray)
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
+        allb = b+bb+bl+blc
         l = g + uds
         self.reducedtruthclasses=['isB','isC','isUDSG']
-        return numpy.vstack((b,c,l)).transpose()
+        return numpy.vstack((allb,c,l)).transpose()
        
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
@@ -125,11 +143,19 @@ class TrainData_deepCSV_PF(TrainData):
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
-        notremoves=weighter.createNotRemoveIndices(Tuple)
+        if self.remove:
+            notremoves=weighter.createNotRemoveIndices(Tuple)
         
-        print('took ', sw.getAndReset(), ' to create remove indices')
+            print('took ', sw.getAndReset(), ' to create remove indices')
         
-        weights=notremoves
+        if self.weight:
+            weights=weighter.getJetWeights(Tuple)
+        elif self.remove:
+            weights=notremoves
+        else:
+            print('neither remove nor weight')
+            weights=numpy.empty(self.nsamples)
+            weights.fill(1.)
         
         
         truthtuple =  Tuple[self.truthclasses]
@@ -137,19 +163,20 @@ class TrainData_deepCSV_PF(TrainData):
         alltruth=self.reduceTruth(truthtuple)
         
         #print(alltruth.shape)
-        
-        print('remove')
-        weights=weights[notremoves > 0]
-        x_global=x_global[notremoves > 0]
-        x_cpf=x_cpf[notremoves > 0]
-        x_npf=x_npf[notremoves > 0]
-        x_sv=x_sv[notremoves > 0]
-        alltruth=alltruth[notremoves > 0]
+        if self.remove:
+            print('remove')
+            weights=weights[notremoves > 0]
+            x_global=x_global[notremoves > 0]
+            x_cpf=x_cpf[notremoves > 0]
+            x_npf=x_npf[notremoves > 0]
+            x_sv=x_sv[notremoves > 0]
+            alltruth=alltruth[notremoves > 0]
        
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
+        print(x_global.shape,self.nsamples)
 
         self.w=[weights]
         self.x=[x_global,x_cpf,x_npf,x_sv]

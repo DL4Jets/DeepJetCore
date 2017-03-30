@@ -314,7 +314,7 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     #shape could be more generic here... but must be passed to c module then
     array = numpy.zeros((nevents,totallengthperjet) , dtype='float32')
     
-    print('created array with shape ',array.shape)
+    #print('created array with shape ',array.shape)
     
     normslist=[]
     meanslist=[]
@@ -327,10 +327,7 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
         meanslist.append(means)
         normslist.append(norms)
     
-    #print('means list\n',meanslist,'\n')
-    #print('norms list\n',normslist,'\n')
-    #print('inbranches_lst list\n',inbranches_listlist,'\n')
-    #print('nMaxslist \n',nMaxslist,'\n')
+    
     
     c_meanNormZeroPad.process(array,normslist,meanslist,inbranches_listlist,nMaxslist,Filename_in)
     #import numpy as np

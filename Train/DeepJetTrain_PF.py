@@ -23,65 +23,10 @@ import os
 from argparse import ArgumentParser
 import shutil
 
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad,Dense_model_broad_flat
+from DeepJet_models import Dense_model,Dense_model2, Dense_model_lessbroad, Dense_model_broad,Dense_model_broad_flat
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
-def predictAndMakeRoc(features_val, labels_val, nameprefix, names,formats, model):
-
-    import numpy
-
-    predict_test = model.predict(features_val)
-    metric=model.evaluate(features_val, labels_val, batch_size=10000)
-    
-    print(metric)
-    
-    predict_write = np.core.records.fromarrays(  predict_test.transpose(), 
-                                                 names=names,
-                                                 formats = formats)
-    
-    # this makes you some ROC curves
-    from sklearn.metrics import roc_curve
-    labels_val = numpy.array(labels_val[0])
-    # ROC one against all
-    plt.figure(3)
-    for i in range(labels_val.shape[1]):
-    #    print (i , ' is', labels_val[i][:], ' ', predict_test[i][:])
-        
-        fpr , tpr, _ = roc_curve(labels_val[:,i], predict_test[:,i])
-    #   print (fpr, ' ', tpr, ' ', _)
-        plt.plot(tpr, fpr, label=predict_write.dtype.names[i])
-    print (predict_write.dtype.names)
-    plt.semilogy()
-    plt.legend(predict_write.dtype.names, loc='upper left')
-    plt.savefig(nameprefix+'ROCs.pdf')
-    plt.close(3)
-    
-    # ROC one against som others
-    plt.figure(4)
-    # b vs light (assumes truth C is at index 1 and b truth at 0
-    labels_val_noC = (labels_val[:,1] == 1)
-    labels_val_killedC = labels_val[np.invert(labels_val_noC) ]
-    predict_test_killedC = predict_test[np.invert(labels_val_noC)]
-    fprC , tprC, _ = roc_curve(labels_val_killedC[:,0], predict_test_killedC[:,0])
-    BvsL, = plt.plot(tprC, fprC, label='b vs. light')
-    # b vs c (assumes truth light is at index 2
-    labels_val_noL = (labels_val[:,2] ==1)
-    
-    labels_val_killedL = labels_val[np.invert(labels_val_noL)]
-    predict_test_killedL = predict_test[np.invert(labels_val_noL)]
-    fpr , tpr, _ = roc_curve(labels_val_killedL[:,0], predict_test_killedL[:,0])
-    BvsC, = plt.plot(tpr, fpr, label='b vs. c')
-    plt.semilogy()
-    #plt.legend([BvsL,BvsC],loc='upper left')
-    plt.ylabel('BKG efficiency')
-    plt.xlabel('b efficiency')
-    plt.ylim((0.001,1))
-    plt.grid(True)
-    plt.savefig(nameprefix+'ROCs_multi.pdf')
-    plt.close(4)
-    
-    return metric
     
 # argument parsing and bookkeeping
 
@@ -114,11 +59,12 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=500
-batchsize=10000
-startlearnrate=0.003
+
+nepochs=140
+batchsize=20000
+startlearnrate=0.001
 useweights=False
-splittrainandtest=0.75
+splittrainandtest=0.8
 maxqsize=10 #sufficient
 
 
@@ -164,28 +110,40 @@ inputs = [Input(shape=shapes[0]),
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.2)
+model = Dense_model_lessbroad(inputs,traind.getTruthShape()[0],shapes,0.2)
 print('compiling')
+
 
 from keras.optimizers import Adam
 adam = Adam(lr=startlearnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
-from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, ReduceLROnPlateau # , TensorBoard
+from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStopping, LambdaCallback,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, mode='min')
+stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
 
 from ReduceLROnPlateau import ReduceLROnPlateau
 
 
 LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, 
-                                mode='auto', verbose=1, epsilon=0.001, cooldown=0, min_lr=0.00001)
+                                mode='min', verbose=1, epsilon=0.001, cooldown=4, min_lr=0.00001)
 
+modelcheck=ModelCheckpoint(outputDir+"KERAS_check_model.h5", monitor='val_loss', verbose=1, save_best_only=True)
 
+class newline_callbacks(Callback):
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        print('\n***callsbacks***\n')
+        
+class newline_callbackss(Callback):
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        print('\n***callsbacks nd***\n')
+
+nLcb=newline_callbacks()
+nLcbe=newline_callbackss()
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
@@ -200,10 +158,10 @@ print('training')
 
 
 # the actual training
-model.fit_generator(traind.generator() ,
+model.fit_generator(traind.generator() , verbose=1,
         steps_per_epoch=traind.getNBatchesPerEpoch(), 
         epochs=nepochs,
-        callbacks=[history,stopping,LR_onplatCB],
+        callbacks=[nLcb,history,stopping,LR_onplatCB,modelcheck,nLcbe],
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
         max_q_size=maxqsize,
@@ -221,7 +179,7 @@ print(history.history.keys())
 
 model.save(outputDir+"KERAS_model.h5")
 traind.writeToFile(outputDir+'trainsamples.dc')
-testd.writeToFile(outputDir+'testsamples.dc')
+testd.writeToFile(outputDir+'valsamples.dc')
 
 
 # summarize history for loss for trainin and test sample
@@ -244,6 +202,8 @@ plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
+
+exit()
 
 features_val=testd.getAllFeatures()
 labels_val=testd.getAllLabels()

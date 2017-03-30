@@ -46,7 +46,7 @@ def main(argv=None):
     parser.add_argument("-o",  help="set output path", metavar="PATH")
     parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCMVA_ST, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
     parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
-    parser.add_argument("--testdata", default=False, type=bool)
+    parser.add_argument("--testdatafor", default='')
 
     
     # process options
@@ -55,7 +55,7 @@ def main(argv=None):
     outPath=args.o
     Class=args.c
     Recover=args.r
-    isTestData=args.testdata
+    testdatafor=args.testdatafor
 
     if infile:
         print("infile = %s" % infile)
@@ -69,7 +69,7 @@ def main(argv=None):
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
-    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCMVA_ST,TrainData_deepCSV_ST_broad
+    from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCMVA_SST,TrainData_deepCMVA_ST,TrainData_deepCSV_ST_broad
     from TrainData_deepCSV_PF import  TrainData_deepCSV_PF
     
     dc=DataCollection()
@@ -84,23 +84,25 @@ def main(argv=None):
         traind=TrainData_deepCSV_PF
     elif Class == 'TrainData_deepCMVA_ST':
         traind=TrainData_deepCMVA_ST
+    elif Class == 'TrainData_deepCMVA_SST':
+        traind=TrainData_deepCMVA_SST
     elif Class == 'TrainData_deepCSV_ST_broad':
         traind=TrainData_deepCSV_ST_broad
-    elif len(Recover)<1:
+    elif len(Recover)<1 and len(testdatafor)<1:
         raise Exception('wrong class selecton')
     
-    if isTestData:
+    if len(testdatafor):
         print('converting test data, no weights applied')
-        #that doesn't work, it is not an instance of the class
-        traind.remove=False
-        traind.weight=False
+        dc.createTestDataForDataCollection(testdatafor,infile,outPath)
     
-    if len(Recover)>0:
+    elif len(Recover)>0:
         dc.recoverCreateDataFromRootFromSnapshot(Recover)
     else:
         notdone=True
         while notdone:
-            #try:
+            
+            # testdata for.. and then pass DataCollection (for means and norms)
+            
             dc.convertListOfRootFiles(infile, traind(), outPath)
             notdone=False
             #except Exception as e:

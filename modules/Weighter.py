@@ -109,6 +109,8 @@ class Weighter(object):
             print('removeProbabilties bins not initialised. Cannot create indices per jet')
             raise Exception('removeProbabilties bins not initialised. Cannot create indices per jet')
         
+        tuplelength=len(Tuple)
+        
         notremove=[]
         xaverage=[]
         norm=[]
@@ -144,9 +146,15 @@ class Weighter(object):
         for c in range(len(yaverage)):
             print('yav ', c, yaverage[c]/norm[c])
             
+        if not len(notremove) == tuplelength:
+            raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")
+        
+        
         return numpy.array(notremove)
 
     def createBinWeights(self,Tuple,nameX,nameY,bins,classes=[],normed=False):
+        
+       
         
         import numpy
         self.Axixandlabel=[]

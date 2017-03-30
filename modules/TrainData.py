@@ -13,8 +13,8 @@ class TrainData(object):
     Base class for batch-wise training of the DNN
     '''
     
-    remove=True    
-    weight=False
+    
+    
     
     def __init__(self):
         '''
@@ -35,6 +35,8 @@ class TrainData(object):
         self.readthread=None
         self.readdone=None
         
+        self.remove=True    
+        self.weight=False
 
     def clear(self):
         import numpy
@@ -323,15 +325,14 @@ class TrainData(object):
         self.nsamples=tree.GetEntries()
         
         print('took ', sw.getAndReset(), ' seconds for getting tree entries')
-        
-        
-        
-        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+    
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
         
         x_all = MeanNormZeroPad(filename,TupleMeanStd,self.branches,self.branchcutoffs,self.nsamples)
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
         notremoves=numpy.array([])
         weights=numpy.array([])
@@ -346,6 +347,7 @@ class TrainData(object):
             print('neither remove nor weight')
             weights=numpy.empty(self.nsamples)
             weights.fill(1.)
+        
         
         
         truthtuple =  Tuple[self.truthclasses]
