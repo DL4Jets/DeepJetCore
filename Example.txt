@@ -7,7 +7,7 @@ The training has 2 steps outside CMSSW
 1) Convert the root tuples to the correct data format:
 
    cd convertFromRoot
-   ./convertFromRoot.py -i /path/to/your/root/ntuples/samples.txt -o /directory/to/store/output/must/not/yet/exist -c data_format
+   ./convertFromRoot.py -i /path/to/your/root/ntuples/train_val_samples.txt -o /directory/to/store/output/must/not/yet/exist -c data_format
    
    To store the output, it is recommended to use eos. The data format is defined by the classes TrainData_XX.py in the modules directory.
    For a first example, please use: TrainData_deepCSV_ST
