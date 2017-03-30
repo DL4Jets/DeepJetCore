@@ -23,7 +23,7 @@ class TrainData(object):
         '''
         self.clear()
         
-        
+
         self.truthclasses=[]
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
@@ -34,7 +34,6 @@ class TrainData(object):
         
         self.readthread=None
         self.readdone=None
-        
         
 
     def clear(self):
