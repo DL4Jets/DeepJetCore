@@ -367,7 +367,7 @@ class TrainData(object):
         
         print('took in total ', swall.getAndReset(),' seconds for conversion')
         
-        return weights,x_all,alltruth
+        return weights,x_all,alltruth, notremoves
         
 
 from preprocessing import MeanNormApply, MeanNormZeroPad
@@ -386,7 +386,7 @@ class TrainData_Flavour(TrainData):
     
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         
-        weights,x_all,alltruth=self.getFlavourClassificationData(filename,TupleMeanStd, weighter)
+        weights,x_all,alltruth, _ =self.getFlavourClassificationData(filename,TupleMeanStd, weighter)
         
         self.w=[weights]
         self.x=[x_all]
