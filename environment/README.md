@@ -37,6 +37,10 @@ Please call:
 
  ./setupEnv.sh deepjetLinux3.conda 
 
+if you have GPU access also do:
+
+ ./setupEnv.sh deepjetLinux3.conda gpu
+
 Each time before running, the environment should be activated and the PYTHONPATH needs to be adapted.
 This can be easily done for zsh/bash/sh shells with 
 
