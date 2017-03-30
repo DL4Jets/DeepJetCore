@@ -23,7 +23,7 @@ import os
 from argparse import ArgumentParser
 import shutil
 from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST, TrainData_deepCMVA_ST
 
 
 # argument parsing and bookkeeping
@@ -70,7 +70,7 @@ maxqsize=10 #sufficient
 
 
 from DataCollection import DataCollection
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
+from TrainData_deepCSV_ST import TrainData_deepCSV_ST, TrainData_deepCMVA_ST
 from TrainData_deepCSV import TrainData_deepCSV
 
 traind=DataCollection()
@@ -184,8 +184,8 @@ weights_val=np.array([weights_val])
 
 from ROCs import predictAndMakeRoc
 
-names='probB, probC, probUDSG'
-formats='float32,float32,float32'
+names='probB, probLeptonicB, probLeptonicB_C, probC, probUDSG'
+formats='float32,float32,float32,float32,float32'
 predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
 labelsandweights = np.concatenate((labels_val,weights_val.T),axis=1)
 
@@ -194,8 +194,8 @@ from root_numpy import array2root
 predict_test = model.predict(features_val)
 # to add back to raw root for more detaiel ROCS and debugging
 all_write = np.core.records.fromarrays(  np.hstack((predict_test,labelsandweights)).transpose(), 
-                                             names='probB, probC, probUDSG, isB, isC, isUDSG,weights',
-                                             formats = 'float32,float32,float32,float32,float32,float32,float32')
+                                             names='probB, probLeptonicB, probLeptonicB_C, probC, probUDSG, isB, isLeptonicB, isLeptonicB_C, isC, isUDSG,weights',
+                                             formats = 'float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32')
 #labels_val
 print(all_write.shape)
 

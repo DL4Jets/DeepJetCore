@@ -23,7 +23,7 @@ class TrainData(object):
         '''
         self.clear()
         
-        
+
         self.truthclasses=[]
         self.reducedtruthclasses=[]
         self.regressionclasses=[]

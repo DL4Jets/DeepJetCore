@@ -10,7 +10,7 @@ import numpy
 
 class TrainData_deepCSV_ST(TrainData_Flavour):
     '''
-    same as TrainData_deepCSV but with 3 truth labels: UDSG C B
+    same as TrainData_deepCSV but with 3 truth labels: B C UDSG
     '''
 
 
@@ -59,12 +59,14 @@ class TrainData_deepCSV_ST(TrainData_Flavour):
         bb = tuple_in['isBB'].view(numpy.ndarray)
         bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
         blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
-        
+        allb = b+bb+bl+blc
+       
         c = tuple_in['isC'].view(numpy.ndarray)
+
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
-        allb = b+bb+bl+blc
         l = g + uds
+
         self.reducedtruthclasses=['isB','isC','isUDSG']
         return numpy.vstack((allb,c,l)).transpose()
         
@@ -135,16 +137,15 @@ class TrainData_deepCMVA_SST(TrainData_Flavour):
                 
 class TrainData_deepCMVA_ST(TrainData_Flavour):
     '''
-    same as TrainData_deepCSV but with 5 truth labels: UDSG C B leptonicB leptonicB_C
+    same as TrainData_deepCSV but with 5 truth labels: B leptonicB leptonicB_C C UDSG
     '''
-
 
     def __init__(self):
         '''
         Constructor
         '''
         TrainData_Flavour.__init__(self)
-        self.truthclasses=['isB','isLeptonicB','isLeptonicB_C','isC','isUDS','isG']
+        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUDS','isG']
         
         self.addBranches(['jet_pt', 'jet_eta',
                            'TagVarCSV_jetNSecondaryVertices', 
@@ -155,7 +156,6 @@ class TrainData_deepCMVA_ST(TrainData_Flavour):
                            'TagVarCSV_jetNTracksEtaRel',
                            'softPFMuonBJetTags', 'softPFElectronBJetTags',
                            'pfJetBProbabilityBJetTags', 'pfJetProbabilityBJetTags'])
-      
 
         self.addBranches(['TagVarCSVTrk_trackJetDistVal',
                               'TagVarCSVTrk_trackPtRel', 
@@ -165,7 +165,6 @@ class TrainData_deepCMVA_ST(TrainData_Flavour):
                               'TagVarCSVTrk_trackSip2dSig', 
                               'TagVarCSVTrk_trackDecayLenVal'],
                              6)
-        
         
         self.addBranches(['TagVarCSV_trackEtaRel'],4)
 
@@ -179,19 +178,23 @@ class TrainData_deepCMVA_ST(TrainData_Flavour):
                               'TagVarCSV_flightDistance3dSig'],
                              1)
 
-
         self.reducedtruthclasses=['isB','isLeptonicB','isLeptonicB_C','isC','isUDSG']
-        
+
     def reduceTruth(self, tuple_in):
         b = tuple_in['isB'].view(numpy.ndarray)
-        lep_b = tuple_in['isLeptonicB'].view(numpy.ndarray)
-        lep_b_c = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+        bb = tuple_in['isBB'].view(numpy.ndarray)
+        b_bb = b+bb
+
+        bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+        blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
         c = tuple_in['isC'].view(numpy.ndarray)
+ 
         uds = tuple_in['isUDS'].view(numpy.ndarray)
         g = tuple_in['isG'].view(numpy.ndarray)
         l = g + uds
+
         self.reducedtruthclasses=['isB','isLeptonicB','isLeptonicB_C','isC','isUDSG']
-        return numpy.vstack((b,lep_b,lep_b_c,c,l)).transpose()
+        return numpy.vstack((b_bb,bl,blc,c,l)).transpose()
 
 
 class TrainData_deepCSV_ST_broad(TrainData_Flavour):
