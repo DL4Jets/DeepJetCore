@@ -50,6 +50,11 @@ outputDir+='/'
 shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
 shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
+
+
+print ('start')
+
+
 ######################### KERAS PART ######################
 # configure the in/out/split etc
 
@@ -67,6 +72,7 @@ from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 from TrainData_deepCSV import TrainData_deepCSV
 
 traind=DataCollection()
+print (inputData, ' shappes ')
 traind.readFromFile(inputData)
 traind.setBatchSize(batchsize)
 traind.useweights=useweights
@@ -97,8 +103,10 @@ print(traind.getTruthShape()[0])
 
 from keras.layers import Input
 print ('my shape is' , shapes[0])
+print ('my shape is' , shapes[1])
+
 inputs = [Input(shape=shapes[0]),
-          Input(shape=[1]),]
+          Input(shape=[1])]
 
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
