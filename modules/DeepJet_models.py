@@ -64,7 +64,7 @@ def Dense_model_reg(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     Dense matrix, defaults similar to 2016 training now with regression
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform',input_shape[0]=Inputshape)(Inputs[0])
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform',input_shape=Inputshape[0])(Inputs[0])
     x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
@@ -76,7 +76,7 @@ def Dense_model_reg(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     x = Dropout(dropoutRate)(x)
     x =  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = merge( [x,Inputs[1]] , mode='concat')
-    [Dense(1, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',init='lecun_uniform')(x)]
+    predictions = [Dense(nclasses, activation='softmax',init='lecun_uniform')(x),Dense(1, activation='linear',init='normal')(x),]
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
