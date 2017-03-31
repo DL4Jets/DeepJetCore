@@ -195,6 +195,22 @@ class TrainData_deepCSV_PF(TrainData):
         self.y=[alltruth]
         
         
+    def produceBinWeighter(self,filename):
+        from Weighter import Weighter
+        weighter=Weighter() 
+        Tuple = self.readTreeFromRootToTuple(filename)
+        weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
+                                     400,500,600,2000],dtype=float)
+        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
+        
+        if self.remove:
+            weighter.createRemoveProbabilities(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],
+                                               classes=self.truthclasses)
+       
+        weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
+    
+        return weighter
+        
 
 class TrainData_deepCSV_miniPF(TrainData_deepCSV_PF):
     '''
@@ -212,20 +228,12 @@ class TrainData_deepCSV_miniPF(TrainData_deepCSV_PF):
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
-        self.addBranches([#'Cpfcan_pt',
+        self.addBranches(['Cpfcan_pt',
                           'Cpfcan_ptrel',
-                          #'Cpfcan_erel',
-                              #'Cpfcan_phirel',
-                              #'Cpfcan_etarel', 
                               'Cpfcan_deltaR', 
-                              #'Cpfcan_puppiw',
+                              'Cpfcan_puppiw',
                               'Cpfcan_dxy', 
-                              
-                              #'Cpfcan_dxyerr', 
                               'Cpfcan_dxysig', 
-                              
-                              #'Cpfcan_dz', 
-                              #'Cpfcan_VTX_ass', 
                               'Cpfcan_fromPV', 
                               'Cpfcan_drminsv', 
                               
@@ -233,54 +241,27 @@ class TrainData_deepCSV_miniPF(TrainData_deepCSV_PF):
                               'Cpfcan_vertex_phirel', 
                               'Cpfcan_vertex_etarel',
                               
-                              #'Cpfcan_dptdpt', 
-                              'Cpfcan_detadeta',
-                              'Cpfcan_dphidphi',
-                              
-                              'Cpfcan_dxydxy',
-                              'Cpfcan_dzdz',
-                              'Cpfcan_dxydz',
-                              'Cpfcan_dphidxy',
-                              #'Cpfcan_dlambdadz',
-                              
-                              #'Cpfcan_isMu',
-                              #'Cpfcan_isEl',
                               'Cpfcan_chi2',
-                              #'Cpfcan_quality'
                               ],
-                             15)
+                             10)
         
         
-        self.addBranches([#'Npfcan_pt',
-                          'Npfcan_ptrel',
-                          #'Npfcan_erel',
-                          
-                          #'Npfcan_phirel',
-                          #'Npfcan_etarel',
+        self.addBranches(['Npfcan_ptrel',
                           'Npfcan_deltaR',
-                              #'Npfcan_isGamma',
                               'Npfcan_HadFrac',
                               'Npfcan_drminsv',
                               ],
-                             15)
+                             7)
         
         
         self.addBranches(['sv_pt',
-                              #'sv_etarel',
-                              #'sv_phirel',
                               'sv_deltaR',
                               'sv_mass',
                               'sv_ntracks',
-                              #'sv_chi2',
-                              #'sv_ndf',
-                              'sv_normchi2',
                               'sv_dxy',
-                              #'sv_dxyerr',
                               'sv_dxysig',
                               'sv_d3d',
-                              #'sv_d3derr',
                               'sv_d3dsig',
-                              'sv_costhetasvpv',
                               'sv_enratio',
                               ],
                              4)

@@ -250,12 +250,9 @@ class DataCollection(object):
         outputDir=os.path.dirname(snapshotfile)+'/'
         self.dataDir=outputDir
         finishedsamples=len(self.samples)
-        for i in range(finishedsamples, len(self.originRoots)):
-            if not self.originRoots[i].endswith('.root'): continue
-            print ('creating '+ str(type(self.dataclass)) +' data from '+self.originRoots[i])
-            self.__writeData(self.originRoots[i], self.means, self.weighter, outputDir, td)
-            
-        self.writeToFile(outputDir+'/dataCollection.dc')
+        
+        self.__writeData_async_andCollect(finishedsamples,outputDir)
+        
     
     def createDataFromRoot(self,dataclass, outputDir, redo_meansandweights=True):
         '''
@@ -298,14 +295,6 @@ class DataCollection(object):
         
         self.__writeData_async_andCollect(0,outputDir)
         
-        return
-        # old implementation single threaded
-        # go up to a few threads here - all should be same speed so just wait for all to be finished
-        for sample in self.originRoots:
-            print ('creating '+ str(type(dataclass)) +' data from '+sample)
-            
-            self.__writeData(sample, self.means, self.weighter,outputDir, td)
-            
         
     
     def __writeData(self,sample,means, weighter,outputDir,dataclass):
