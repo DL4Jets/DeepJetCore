@@ -23,7 +23,7 @@ import os
 from argparse import ArgumentParser
 import shutil
 
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_lessbroad, Dense_model_broad,Dense_model_broad_flat
+from DeepJet_models import Dense_model,Dense_model2, Dense_model_Rec,Dense_model_lessbroad, Dense_model_broad,Dense_model_broad_flat
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 
@@ -60,9 +60,9 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 
-nepochs=140
-batchsize=20000
-startlearnrate=0.001
+nepochs=500
+batchsize=5000
+startlearnrate=0.0008
 useweights=False
 splittrainandtest=0.8
 maxqsize=10 #sufficient
@@ -110,7 +110,9 @@ inputs = [Input(shape=shapes[0]),
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-model = Dense_model_lessbroad(inputs,traind.getTruthShape()[0],shapes,0.2)
+model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
+#model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.2)
+#model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.4)
 print('compiling')
 
 
@@ -124,13 +126,15 @@ from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStoppi
 history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
+stopping = EarlyStopping(monitor='val_loss', patience=30, verbose=1, mode='min')
 
-from ReduceLROnPlateau import ReduceLROnPlateau
+from ReduceLROnPlateau import ReduceLROnPlateau,ReduceLRAfterBatch
 
 
-LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=2, 
+LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=1, 
                                 mode='min', verbose=1, epsilon=0.001, cooldown=4, min_lr=0.00001)
+
+LR_afterbatch=ReduceLRAfterBatch()
 
 modelcheck=ModelCheckpoint(outputDir+"KERAS_check_model.h5", monitor='val_loss', verbose=1, save_best_only=True)
 

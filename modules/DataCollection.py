@@ -400,7 +400,10 @@ class DataCollection(object):
         for i in range(startindex,len(self.originRoots)):
             processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
         
-        nchilds=cpu_count()-1 #don't use all of them
+        nchilds=cpu_count()-4 #don't use all of them
+        #import os
+        #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
+        #    nchilds=cpu_count()-5
         if nchilds<1: 
             nchilds=1
         
