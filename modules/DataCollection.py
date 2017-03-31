@@ -546,6 +546,8 @@ class DataCollection(object):
             if lastbatchrest >= self.__batchsize:
                 batchcomplete = True
                 
+            # if(xstored[1].ndim==1):
+                
             while not batchcomplete:
                
                 while nsamplesinqueue < self.maxFilesOpen and nextfiletoread < len(self.samples):
@@ -597,17 +599,26 @@ class DataCollection(object):
                     if self.__batchsize < td.nsamples:
                         for i in range(0,dimx):
                             splitted=numpy.split(td.x[i],[self.__batchsize-lastbatchrest])
-                            xout[i] = numpy.vstack((xstored[i],splitted[0]))
+                            if(xstored[i].ndim==1):
+                                xout[i] = numpy.append(xstored[i],splitted[0])
+                            else:
+                                xout[i] = numpy.vstack((xstored[i],splitted[0]))
                             xstored[i]= splitted[1]
                         
                         for i in range(0,dimy):
                             splitted=numpy.split(td.y[i],[self.__batchsize-lastbatchrest])
-                            yout[i] = numpy.vstack((ystored[i],splitted[0]))
+                            if(ystored[i].ndim==1):
+                                yout[i] = numpy.append(ystored[i],splitted[0])
+                            else:
+                                yout[i] = numpy.vstack((ystored[i],splitted[0]))
                             ystored[i]= splitted[1]
                         
                         for i in range(0,dimw):
                             splitted=numpy.split(td.w[i],[self.__batchsize-lastbatchrest])
-                            wout[i] = numpy.append(wstored[i],splitted[0])
+                            if(wstored[i].ndim==1):
+                                wout[i] = numpy.append(wstored[i],splitted[0])
+                            else:
+                                wout[i] = numpy.vstack((wstored[i],splitted[0]))
                             wstored[i]= splitted[1]
                             
                             
