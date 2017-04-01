@@ -60,7 +60,7 @@ print ('start')
 
 testrun=False
 
-nepochs=140
+nepochs=500
 batchsize=20000
 startlearnrate=0.001
 useweights=False
@@ -97,16 +97,15 @@ shapes=traind.getInputShapes()
 
 print(shapes)
 
-print(traind.getTruthShape()[0])
+print(traind.getTruthShape())
 
 #from from keras.models import Sequential
 
 from keras.layers import Input
 print ('my shape is' , shapes[0])
-print ('my shape is' , shapes[1])
+#print ('my shape is' , shapes[1])
 
-inputs = [Input(shape=shapes[0]),
-          Input(shape=[1])]
+inputs = [Input(shape=shapes[0])]
 
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
@@ -125,7 +124,7 @@ from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStoppi
 history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
+stopping = EarlyStopping(monitor='val_loss', patience=500, verbose=1, mode='min')
 
 from ReduceLROnPlateau import ReduceLROnPlateau
 

@@ -59,7 +59,7 @@ class TrainData_deepCSV_ST(TrainData_Flavour):
         bb = tuple_in['isBB'].view(numpy.ndarray)
         bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
         blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
-        allb = b+bb+bl+blc
+        allb = b+bl+blc
        
         c = tuple_in['isC'].view(numpy.ndarray)
 
@@ -67,8 +67,8 @@ class TrainData_deepCSV_ST(TrainData_Flavour):
         g = tuple_in['isG'].view(numpy.ndarray)
         l = g + uds
 
-        self.reducedtruthclasses=['isB','isC','isUDSG']
-        return numpy.vstack((allb,c,l)).transpose()
+        self.reducedtruthclasses=['isB','isBB','isC','isUDSG']
+        return numpy.vstack((allb,bb,c,l)).transpose()
         
 
 class TrainData_deepCMVA_SST(TrainData_Flavour):

@@ -6,7 +6,7 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from Weighter import Weighter
-from TrainData import TrainData
+from TrainData import TrainData, fileTimeOut
 #for convenience
 
 
@@ -189,6 +189,7 @@ class DataCollection(object):
         out.dataclass=copy.deepcopy(self.dataclass)
         out.weighter=self.weighter #ref oks
         out.means=self.means
+        out.useweights=self.useweights
      
         
         itself.samples=[]
@@ -304,7 +305,7 @@ class DataCollection(object):
         sw=stopwatch()
         td=copy.deepcopy(dataclass)
         
-        td.fileTimeOut(sample,120) #once available copy to ram
+        fileTimeOut(sample,120) #once available copy to ram
         ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
         
         def removefile():
@@ -335,16 +336,22 @@ class DataCollection(object):
         
         from multiprocessing import Process, Queue, cpu_count
         wo_queue = Queue()
+        import os
+        thispid=str(os.getpid())
+        
+        tempstoragepath='/dev/shm/'+thispid
+        
+        os.system('mkdir -p '+tempstoragepath)
         
         def writeData_async(index,woq):
-            import os
+            
             import copy
             from stopwatch import stopwatch
             sw=stopwatch()
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
-            td.fileTimeOut(sample,120) #once available copy to ram
-            ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
+            fileTimeOut(sample,120) #once available copy to ram
+            ramdisksample= tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
             
             def removefile():
                 os.system('rm -f '+ramdisksample)
@@ -369,9 +376,9 @@ class DataCollection(object):
                 
                 #this goes after join
                 
-            except Exception as e:
+            except:
                 removefile()
-                raise e
+                raise 
             removefile()
             woq.put((index,[success,out_samplename,out_sampleentries]))
         
@@ -398,24 +405,29 @@ class DataCollection(object):
         
         index=0
         alldone=False
-        while not alldone:
-            if index+nchilds >= len(self.originRoots):
-                nchilds=len(self.originRoots)-index
-                alldone=True
+        try:
+            while not alldone:
+                if index+nchilds >= len(self.originRoots):
+                    nchilds=len(self.originRoots)-index
+                    alldone=True
+                    
+                for i in range(nchilds):
+                    processes[i+index].start()
+                for i in range(nchilds):
+                    processes[i+index].join()
+                results = [wo_queue.get() for i in range(nchilds)]
+                results.sort()
+                results = [r[1] for r in results]
+                for i in range(nchilds):
+                    print(results[i])
+                    __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
                 
-            for i in range(nchilds):
-                processes[i+index].start()
-            for i in range(nchilds):
-                processes[i+index].join()
-            results = [wo_queue.get() for i in range(nchilds)]
-            results.sort()
-            results = [r[1] for r in results]
-            for i in range(nchilds):
-                print(results[i])
-                __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
-            
-            index+=nchilds
+                index+=nchilds
         
+        except:
+            os.system('rm -rf '+tempstoragepath)
+            raise 
+        os.system('rm -rf '+tempstoragepath)
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
         self.readRootListFromFile(inputfile)
@@ -471,6 +483,86 @@ class DataCollection(object):
         
     def generator(self):
         import numpy
+        import copy
+        
+        
+        #helper class
+        class tdreader(object):
+            def __init__(self,filelist,maxopen,tdclass):
+                
+                #print('init reader for '+str(len(filelist))+' files:')
+                #print(filelist)
+                
+                self.filelist=filelist
+                self.max=maxopen
+                self.nfiles=len(filelist)
+                self.tdlist=[]
+                self.tdopen=[]
+                self.tdclass=tdclass
+                for i in range(maxopen):
+                    self.tdlist.append(copy.deepcopy(tdclass))
+                    self.tdopen.append(False)
+                    
+                self.closeAll() #reset state
+                
+            def start(self):
+                for i in range(self.max):
+                    self.__readNext()
+                
+            def __readNext(self):
+                import copy
+                readfilename=self.filelist[self.filecounter]
+                self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
+                self.tdlist[self.nextcounter].readIn_async(readfilename)
+                
+                #print('reading file '+readfilename)#DEBUG
+                
+                self.tdopen[self.nextcounter]=True
+                self.filecounter=self.__increment(self.filecounter,self.nfiles)
+                
+                #if self.filecounter==0:
+                #    print('file counter reset to 0 after file '+readfilename)
+                
+                self.nextcounter=self.__increment(self.nextcounter,self.max)
+                
+            def __getLast(self):
+                td=self.tdlist[self.lastcounter]
+                td.readIn_join()
+                
+                #print('got '+td.samplename+' with '+str(len(td.x[0]))+' samples')
+                
+                self.tdopen[self.lastcounter]=False
+                self.lastcounter=self.__increment(self.lastcounter,self.max)
+                return td
+                
+            def __increment(self,counter,maxval):
+                counter+=1
+                if counter>=maxval:
+                    counter=0   
+                return counter 
+            def NOT__del__(self):
+                #print('del')
+                self.closeAll()
+                
+            def closeAll(self):
+                #close all
+                for i in range(self.max):
+                    if self.tdopen[i]:
+                        self.tdlist[i].readIn_abort()
+                        self.tdlist[i].clear()
+                        self.tdopen[i]=False
+                
+                self.nextcounter=0
+                self.lastcounter=0
+                self.filecounter=0
+                #print('closed')
+                
+            def get(self):
+                #returns last reads next circular
+                td=self.__getLast()
+                self.__readNext()
+                return td
+                
         
         td=(self.dataclass)
         totalbatches=self.getNBatchesPerEpoch()
@@ -491,39 +583,31 @@ class DataCollection(object):
         wout=[]
         samplefilecounter=0
         
-        import copy
-        ttdl=[]
-        nsamplesinqueue=0
+        #prepare file list
+        filelist=[]
         for s in self.samples:
-            ttdl.append(copy.deepcopy(td))
+            filelist.append(self.getSamplePath(s))
         
+        TDReader=tdreader(filelist, self.maxFilesOpen, self.dataclass)
         
-        #locks=[]
-        #from threading import Lock
-        #for i in range(len(self.samples)):
-        #    locks.append(Lock())
-        ##read the next sample in advance
-        #from threading import Thread
-        #def readTDThread(idx,TD):
-        #    locks[idx].acquire()
-        #    print('read',idx)
-        #    TD.readIn(self.getSamplePath(self.samples[idx]))
-        #    locks[idx].release()
-            #the reading itself uses multiple cores
-            #the threads spawned here will sleep on this core until
-            #the reading has finished
-            #prevent access to same file at the same time
-            
-
+        #print('generator: total batches '+str(totalbatches))
+        
+        TDReader.start()
+        #### 
+        #
+        # make block class for file read with get function that starts the next read automatically
+        # and closes all files in destructor?
+        #
+        #  check if really the right ones are read....
+        #
+        psamples=0 #DEBUG
         while 1:
-            
             if processedbatches == totalbatches:
                 processedbatches=0
             
             lastbatchrest=0
             if processedbatches == 0: #reset buffer and start new
-                nextfiletoread=0
-                samplefilecounter=0
+                #print('DataCollection: new turnaround')
                 xstored=[numpy.array([])]
                 dimx=0
                 ystored=[]
@@ -531,16 +615,14 @@ class DataCollection(object):
                 wstored=[]
                 dimw=0
                 lastbatchrest=0
-                nsamplesinqueue=0
-                #readthreads=[]
-                #for idx in range(len(self.samples)):
-                #    readthreads.append(Thread(target=readTDThread, args=(idx,ttdl[idx])))
+                
+                psamples=0
                 
             else:
                 lastbatchrest=xstored[0].shape[0]
             
             batchcomplete=False
-            doSplit=True
+            
             
             
             if lastbatchrest >= self.__batchsize:
@@ -549,35 +631,15 @@ class DataCollection(object):
             # if(xstored[1].ndim==1):
                 
             while not batchcomplete:
-               
-                while nsamplesinqueue < self.maxFilesOpen and nextfiletoread < len(self.samples):
-                    #print('start',nextfiletoread)
-                    #readthreads[nextfiletoread].start()
-                    ttdl[nextfiletoread].readIn_async(self.getSamplePath(
-                        self.samples[nextfiletoread]))
-                    nextfiletoread+=1
-                    nsamplesinqueue+=1
+                import sys, traceback
+                try:
+                    td=TDReader.get()
+                except:
+                    traceback.print_exc(file=sys.stdout)
                 
-                
-                #print('\njoin:',readsample,nextfiletoread,len(self.samples),self.isTrain,'\n')
-                
-                ttdl[samplefilecounter].readIn_join()
-                td=ttdl[samplefilecounter]
-                #print('joined',samplefilecounter)
-                
-                
-                nsamplesinqueue-=1
-                samplefilecounter+=1
-                
-                if samplefilecounter >= len(self.samples):
-                    samplefilecounter=0
-                #readTDThread(td,readsample)
-                #td.readIn(readsample)
-                #get the format right in the first read
-                if samplefilecounter == 1 or xstored[0].shape[0] ==0: #either first file or nothing left, so no need to append
-                    #print('\nfull in\n')
+                if xstored[0].shape[0] ==0:
+                    #print('dc:read direct') #DEBUG
                     xstored=td.x
-                    
                     dimx=len(xstored)
                     ystored=td.y
                     dimy=len(ystored)
@@ -596,53 +658,38 @@ class DataCollection(object):
                         wout.append([])
                         
                 else:
-                    if self.__batchsize < td.nsamples:
-                        for i in range(0,dimx):
-                            splitted=numpy.split(td.x[i],[self.__batchsize-lastbatchrest])
-                            if(xstored[i].ndim==1):
-                                xout[i] = numpy.append(xstored[i],splitted[0])
-                            else:
-                                xout[i] = numpy.vstack((xstored[i],splitted[0]))
-                            xstored[i]= splitted[1]
-                        
-                        for i in range(0,dimy):
-                            splitted=numpy.split(td.y[i],[self.__batchsize-lastbatchrest])
-                            if(ystored[i].ndim==1):
-                                yout[i] = numpy.append(ystored[i],splitted[0])
-                            else:
-                                yout[i] = numpy.vstack((ystored[i],splitted[0]))
-                            ystored[i]= splitted[1]
-                        
-                        for i in range(0,dimw):
-                            splitted=numpy.split(td.w[i],[self.__batchsize-lastbatchrest])
-                            if(wstored[i].ndim==1):
-                                wout[i] = numpy.append(wstored[i],splitted[0])
-                            else:
-                                wout[i] = numpy.vstack((wstored[i],splitted[0]))
-                            wstored[i]= splitted[1]
-                            
-                            
-                        doSplit = False
-                        batchcomplete = True
+                    #print('dc:append read sample') #DEBUG
+                    for i in range(0,dimx):
+                        if(xstored[i].ndim==1):
+                            xstored[i] = numpy.append(xstored[i],td.x[i])
+                        else:
+                            xstored[i] = numpy.vstack((xstored[i],td.x[i]))
                     
-                    else:  ##this alternative way is more generic but requires more performance
-                        for i in range(0,dimx):
-                            xstored[i]=numpy.vstack((xstored[i],td.x[i]))
-                        
-                        for i in range(0,dimy):
-                            ystored[i]=numpy.vstack((ystored[i],td.y[i]))
-                        
-                        for i in range(0,dimw):
-                            wstored[i]=numpy.append(wstored[i],td.w[i])
+                    for i in range(0,dimy):
+                        if(ystored[i].ndim==1):
+                            ystored[i] = numpy.append(ystored[i],td.y[i])
+                        else:
+                            ystored[i] = numpy.vstack((ystored[i],td.y[i]))
+                    
+                    for i in range(0,dimw):
+                        if(wstored[i].ndim==1):
+                            wstored[i] = numpy.append(wstored[i],td.w[i])
+                        else:
+                            wstored[i] = numpy.vstack((wstored[i],td.w[i]))
                     
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
-                     
+                 
+                psamples+=  td.x[0].shape[0]   
+                
                 td.clear()
 
 
                 
-            if batchcomplete and doSplit:
+            if batchcomplete:
+                
+                #print('batch complete, split')#DEBUG
+                
                 for i in range(0,dimx):
                     splitted=numpy.split(xstored[i],[self.__batchsize])
                     xstored[i] = splitted[1]
@@ -656,8 +703,13 @@ class DataCollection(object):
                     wstored[i] = splitted[1]
                     wout[i] = splitted[0]
                     
-                
+            for i in range(0,dimy):
+                if(yout[i].ndim==1):
+                    yout[i].reshape(yout[i].shape[0],1)
+            
             processedbatches+=1
+            #print('generator: processed batch '+str(processedbatches)+' of '+str(totalbatches)+' '+str(psamples))
+            
             
             
             if self.useweights:

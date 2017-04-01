@@ -70,22 +70,26 @@ def main(argv=None):
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_veryDeepJet import TrainData_veryDeepJet
     from TrainData_deepCSV_ST import TrainData_deepCSV_ST,TrainData_deepCMVA_SST,TrainData_deepCMVA_ST,TrainData_deepCSV_ST_broad
-    from TrainData_deepCSV_PF import  TrainData_deepCSV_PF,TrainData_deepCSV_miniPF
-    from TrainData_deepJet_Fla_PT import TrainData_deepCMVA_Fla_PT
+    from TrainData_deepCSV_PF import  TrainData_deepConvCSV,TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF
+    from TrainData_deepJet_Reg import TrainData_deepJet_Reg
     dc=DataCollection()
     traind=TrainData
     if Class == 'TrainData_deepCSV':
         traind=TrainData_deepCSV
     elif Class == 'TrainData_veryDeepJet':
         traind=TrainData_veryDeepJet
-    elif Class == 'TrainData_deepCMVA_Fla_PT':
-        traind=TrainData_deepCMVA_Fla_PT
+    elif Class == 'TrainData_deepJet_Reg':
+        traind=TrainData_deepJet_Reg
     elif Class ==  'TrainData_deepCSV_ST':
         traind=TrainData_deepCSV_ST
     elif Class ==  'TrainData_deepCSV_PF':
         traind=TrainData_deepCSV_PF
+    elif Class ==  'TrainData_deepConvCSV':
+        traind=TrainData_deepConvCSV
     elif Class ==  'TrainData_deepCSV_miniPF':
         traind=TrainData_deepCSV_miniPF
+    elif Class ==  'TrainData_deepCSV_microPF':
+        traind=TrainData_deepCSV_microPF
     elif Class == 'TrainData_deepCMVA_ST':
         traind=TrainData_deepCMVA_ST
     elif Class == 'TrainData_deepCMVA_SST':

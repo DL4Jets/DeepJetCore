@@ -7,6 +7,28 @@ Created on 20 Feb 2017
 
 from Weighter import Weighter
 
+def fileTimeOut(fileName, timeOut):
+    '''
+    simple wait function in case the file system has a glitch.
+    waits until the dir, the file should be stored in/read from, is accessible
+    again, or the the timeout
+    '''
+    import os
+    filepath=os.path.dirname(fileName)
+    if len(filepath) < 1:
+        filepath = '.'
+    if os.path.isdir(filepath):
+        return
+    import time
+    counter=0
+    print('file I/O problems... waiting for filesystem to become available for '+fileName)
+    while not os.path.isdir(filepath):
+        if counter > timeOut:
+            print('...file could not be opened within '+str(timeOut)+ ' seconds')
+        counter+=1
+        time.sleep(1)
+
+
 
 class TrainData(object):
     '''
@@ -21,7 +43,7 @@ class TrainData(object):
         Constructor
         
         '''
-        self.clear()
+        
         
 
         self.truthclasses=[]
@@ -37,10 +59,14 @@ class TrainData(object):
         
         self.remove=True    
         self.weight=False
+        
+        self.clear()
 
     def clear(self):
         import numpy
         self.samplename=''
+        self.readthread=None
+        self.readdone=None
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
         self.w=[numpy.array([])]
@@ -93,32 +119,12 @@ class TrainData(object):
         import numpy
         return numpy.array(tuple_in.tolist())
 
-    def fileTimeOut(self,fileName, timeOut):
-        '''
-        simple wait function in case the file system has a glitch.
-        waits until the dir, the file should be stored in/read from, is accessible
-        again, or the the timeout
-        '''
-        import os
-        filepath=os.path.dirname(fileName)
-        if len(filepath) < 1:
-            filepath = '.'
-        if os.path.isdir(filepath):
-            return
-        import time
-        counter=0
-        print('file I/O problems... waiting for filesystem to become available for '+fileName)
-        while not os.path.isdir(filepath):
-            if counter > timeOut:
-                print('...file could not be opened within '+str(timeOut)+ ' seconds')
-            counter+=1
-            time.sleep(1)
-
+    
 
     def writeOut(self,fileprefix):
         import h5py
         import numpy
-        self.fileTimeOut(fileprefix,120)
+        fileTimeOut(fileprefix,120)
         h5f = h5py.File(fileprefix, 'w')
         
         # try "lzf", too, faster, but less compression
@@ -166,9 +172,9 @@ class TrainData(object):
         #print('gave shape',shapeinfo)
         return shared_array
        
-    def readIn_async(self,fileprefix):
+    def readIn_async(self,fileprefix,read_async=True):
         
-        if self.readthread:
+        if self.readthread and read_async:
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
             self.readIn_join()
             
@@ -179,13 +185,13 @@ class TrainData(object):
         
         #print('\ninit async read\n')
         
-        self.fileTimeOut(fileprefix,120)
+        fileTimeOut(fileprefix,120)
         #print('\nfile access ok\n')
         self.samplename=fileprefix
         
-        self.h5f = h5py.File(fileprefix,'r')
         
-        def _readListInfo(idstr):
+        
+        def _readListInfo_(idstr):
             sharedlist=[]
             shapeinfos=[]
             wlistlength=self.h5f[idstr+'_listlength'][0]
@@ -198,25 +204,27 @@ class TrainData(object):
                 shapeinfos.append(shapeinfo)
             return sharedlist, shapeinfos
         
-        def _read_arrs(arrwl,arrxl,arryl,doneVal):
+        def _read_arrs_(arrwl,arrxl,arryl,doneVal):
             idstrs=['w','x','y']
+            h5f = h5py.File(fileprefix,'r')
             alllists=[arrwl,arrxl,arryl]
             for j in range(len(idstrs)):
                 fidstr=idstrs[j]
                 arl=alllists[j]
                 for i in range(len(arl)):
                     idstr=fidstr+str(i)
-                    #print('reading',idstr)
-                    self.h5f[idstr].read_direct(arl[i])
-                    #print('done reading',idstr)
+                    h5f[idstr].read_direct(arl[i])
             self.readdone.value=True
-        
+            h5f.close()
+            
+        self.h5f = h5py.File(fileprefix,'r')
         self.nsamples=self.h5f['n']
         self.nsamples=self.nsamples[0]
         
-        self.w_list,w_shapes=_readListInfo('w')
-        self.x_list,x_shapes=_readListInfo('x')
-        self.y_list,y_shapes=_readListInfo('y')
+        self.w_list,w_shapes=_readListInfo_('w')
+        self.x_list,x_shapes=_readListInfo_('x')
+        self.y_list,y_shapes=_readListInfo_('y')
+        self.h5f.close()
         
         for i in range(len(self.w_list)):
             self.w_list[i]=self.__createArr(w_shapes[i])
@@ -227,36 +235,86 @@ class TrainData(object):
         for i in range(len(self.y_list)):
             self.y_list[i]=self.__createArr(y_shapes[i])
 
-        self.readdone=multiprocessing.Value('b',False)
-        self.readthread=multiprocessing.Process(target=_read_arrs, args=(self.w_list,self.x_list,self.y_list,self.readdone))
-        self.readthread.start()
+        if read_async:
+            self.readdone=multiprocessing.Value('b',False)
+            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone))
+            self.readthread.start()
+        else:
+            self.readdone=multiprocessing.Value('b',False)
+            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone)
+            
+            
         
-        #print('\nstarted async thread\n')
-     
-    def readIn_join(self):
-        #print('joining async read')
-        while not self.readdone.value: 
-            #needs to be done - it can come to deadlocks because of wrong locking in python..
-            #use the shared self.readthread as soft lock
-            self.readthread.join(1)
-        #print('joined async read')
         
-        #import copy
-        self.w=(self.w_list)#get all arrays back form the shared memory
-        self.x=(self.x_list)
-        self.y=(self.y_list)
-        self.h5f.close()
-        self.w_list=None
-        self.x_list=None
-        self.y_list=None
+    def readIn_async_NEW(self,fileprefix):
+        
+        #if self.readthread:
+        #    print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
+        #    self.readIn_join()
+        #    
+        #
+        #import multiprocessing
+        #
+        #self.samplename=fileprefix
+        #self.readqueue=multiprocessing.Queue()
+        #
+        #self.readdone=multiprocessing.Value('b',False)
+        #self.readthread=multiprocessing.Process(target=_read_arrs, args=(fileprefix,self.readdone,self.readqueue))
+        #self.readthread.start()
+        #
+        print('\nstarted async thread\n')
+        
+        
+    #def __del__(self):
+    #    self.readIn_abort()
+        
+    def readIn_abort(self):
+        if not self.readthread:
+            return
         self.readthread.terminate()
         self.readthread=None
         self.readdone=None
+     
+    def readIn_join(self,wasasync=True):
+        #print('joining async read')
+        if not self.readthread and wasasync:
+            print('\nreadIn_join:read never started\n')
+        
+        
+        counter=0
+        while not self.readdone.value and wasasync: 
+            self.readthread.join(1)
+            counter+=1
+            if counter>5: #read failed. do synchronous read
+                #print('\nfalling back to sync read\n')
+                self.readthread.terminate()
+                self.readthread=None
+                self.readIn(self.samplename)
+                return
+                
+            
+        self.w=(self.w_list)
+        self.x=(self.x_list)
+        self.y=(self.y_list)
+        
+        self.w_list=None
+        self.x_list=None
+        self.y_list=None
+        if wasasync:
+            self.readthread.terminate()
+        self.readthread=None
         
     def readIn(self,fileprefix):
         
-        self.readIn_async(fileprefix)
-        self.readIn_join()
+        self.readIn_async(fileprefix,False)
+        self.w=(self.w_list)
+        self.x=(self.x_list)
+        self.y=(self.y_list)
+        
+        self.w_list=None
+        self.x_list=None
+        self.y_list=None
+        self.readthread=None
         
         
     def readTreeFromRootToTuple(self,filenames):
@@ -274,13 +332,13 @@ class TrainData(object):
         if isalist:
             raise Exception('readTreeFromRootToTuple: reading from list does not work, yet')
             for f in filenames:
-                self.fileTimeOut(f,120)
+                fileTimeOut(f,120)
             print('add files')
             Tuple = root2array(filenames, treename="deepntuplizer/tree")
             print('done add files')
             return Tuple
         else:    
-            self.fileTimeOut(filenames,120) #give eos a minute to recover
+            fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile(filenames)
             tree = rfile.Get("deepntuplizer/tree")
             self.nsamples=tree.GetEntries()
@@ -295,9 +353,11 @@ class TrainData(object):
     
     #overload if necessary
     def produceBinWeighter(self,filename):
+        from Weighter import Weighter
         weighter=Weighter() 
         Tuple = self.readTreeFromRootToTuple(filename)
-        weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,2000],dtype=float)
+        weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
+                                     400,500,600,2000],dtype=float)
         weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
         
         if self.remove:
@@ -307,7 +367,7 @@ class TrainData(object):
         weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
     
         return weighter
-        
+          
         
         
         
@@ -319,7 +379,7 @@ class TrainData(object):
         
         import ROOT
         
-        self.fileTimeOut(filename,120) #give eos a minute to recover
+        fileTimeOut(filename,120) #give eos a minute to recover
         rfile = ROOT.TFile(filename)
         tree = rfile.Get("deepntuplizer/tree")
         self.nsamples=tree.GetEntries()
