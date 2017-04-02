@@ -37,7 +37,7 @@ class DataCollection(object):
         self.weighter=Weighter()
         self.weightsfraction=0.05
         self.maxConvertThreads=2
-        self.maxFilesOpen=3
+        self.maxFilesOpen=5
         self.means=None
         self.classweights={}
         
@@ -484,7 +484,7 @@ class DataCollection(object):
     def generator(self):
         import numpy
         import copy
-        
+        from sklearn.utils import shuffle
         
         #helper class
         class tdreader(object):
@@ -498,7 +498,8 @@ class DataCollection(object):
                 self.nfiles=len(filelist)
                 self.tdlist=[]
                 self.tdopen=[]
-                self.tdclass=tdclass
+                self.tdclass=copy.deepcopy(tdclass)
+                self.tdclass.clear()#only use the format, no data
                 for i in range(maxopen):
                     self.tdlist.append(copy.deepcopy(tdclass))
                     self.tdopen.append(False)
@@ -600,7 +601,7 @@ class DataCollection(object):
         #
         #  check if really the right ones are read....
         #
-        psamples=0 #DEBUG
+        psamples=0 #for random shuffling
         while 1:
             if processedbatches == totalbatches:
                 processedbatches=0
@@ -616,7 +617,6 @@ class DataCollection(object):
                 dimw=0
                 lastbatchrest=0
                 
-                psamples=0
                 
             else:
                 lastbatchrest=xstored[0].shape[0]
@@ -679,8 +679,23 @@ class DataCollection(object):
                     
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
-                 
+                    
+                    #random shuffle each time
+                    for i in range(0,dimx):
+                        xstored[i]=shuffle(xstored[i], random_state=psamples)
+                    for i in range(0,dimy):
+                        ystored[i]=shuffle(ystored[i], random_state=psamples)
+                    for i in range(0,dimw):
+                        wstored[i]=shuffle(wstored[i], random_state=psamples)
+                    
+                    
+                    #randomize elements
+                     
+                #limit of the random generator number 
                 psamples+=  td.x[0].shape[0]   
+                if psamples > 4e8:
+                    psamples/=1e6
+                    psamples=int(psamples)
                 
                 td.clear()
 
@@ -702,15 +717,35 @@ class DataCollection(object):
                     splitted=numpy.split(wstored[i],[self.__batchsize])
                     wstored[i] = splitted[1]
                     wout[i] = splitted[0]
-                    
+            
+            for i in range(0,dimx):
+                if(xout[i].ndim==1):
+                    xout[i]=(xout[i].reshape(xout[i].shape[0],1)) 
+                if not xout[i].shape[1] >0:
+                    raise Exception('serious problem with the output shapes!!')
+                            
             for i in range(0,dimy):
                 if(yout[i].ndim==1):
-                    yout[i].reshape(yout[i].shape[0],1)
+                    yout[i]=(yout[i].reshape(yout[i].shape[0],1))
+                if not yout[i].shape[1] >0:
+                    raise Exception('serious problem with the output shapes!!')
+                    
+            for i in range(0,dimw):
+                if(wout[i].ndim==1):
+                    wout[i]=(wout[i].reshape(wout[i].shape[0],1))
+                if not xout[i].shape[1] >0:
+                    raise Exception('serious problem with the output shapes!!')
             
             processedbatches+=1
             #print('generator: processed batch '+str(processedbatches)+' of '+str(totalbatches)+' '+str(psamples))
             
+            #safety check
             
+            #xout[1]=numpy.zeros(self.__batchsize) #DEBUG
+            #xout[1]=(xout[1].reshape(xout[1].shape[0],1))
+            
+            #yout[1]=numpy.zeros(self.__batchsize) #DEBUG
+            #yout[1]=(yout[1].reshape(yout[1].shape[0],1))
             
             if self.useweights:
                 yield (xout,yout,wout)

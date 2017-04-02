@@ -62,7 +62,7 @@ testrun=False
 
 nepochs=500
 batchsize=20000
-startlearnrate=0.001
+startlearnrate=0.009
 useweights=False
 splittrainandtest=0.8
 maxqsize=10 #sufficient
@@ -72,7 +72,7 @@ from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 from TrainData_deepCSV import TrainData_deepCSV
 
 traind=DataCollection()
-print (inputData, ' shappes ')
+print (inputData, ' shapes ')
 traind.readFromFile(inputData)
 traind.setBatchSize(batchsize)
 traind.useweights=useweights
@@ -83,6 +83,8 @@ if testrun:
     
 testd=traind.split(splittrainandtest)
 shapes=traind.getInputShapes()
+
+
 
 #shapes=[]
 #for s in shapesin:
@@ -102,21 +104,22 @@ print(traind.getTruthShape())
 #from from keras.models import Sequential
 
 from keras.layers import Input
-print ('my shape is' , shapes[0])
-#print ('my shape is' , shapes[1])
 
-inputs = [Input(shape=shapes[0])]
+inputs = [Input(shape=shapes[0]),Input(shape=shapes[1])]
 
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-model = Dense_model_reg(inputs,traind.getTruthShape()[0],shapes,0.2)
+model = Dense_model_reg(inputs,traind.getTruthShape()[0],shapes,0.1)
 print('compiling')
 
 
 from keras.optimizers import Adam
 adam = Adam(lr=startlearnrate)
-model.compile(loss=['categorical_crossentropy','mean_absolute_percentage_error'], optimizer=adam,metrics=['accuracy'])
+model.compile(loss=['categorical_crossentropy','mean_absolute_percentage_error'], 
+              optimizer=adam,
+              metrics=['accuracy','accuracy'],
+              loss_weights=[1., 0.0003])#strong focus on flavour
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStopping, LambdaCallback,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard

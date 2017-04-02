@@ -22,7 +22,7 @@ class TrainData_deepJet_Reg(TrainData_deepCMVA_ST):
         TrainData_deepCMVA_ST.__init__(self)
         
         self.regtruth='gen_pt'
-       
+        self.regreco='jet_pt'
        
     def produceBinWeighter(self,filename):
         from Weighter import Weighter
@@ -48,20 +48,22 @@ class TrainData_deepJet_Reg(TrainData_deepCMVA_ST):
         
         Tuple = self.readTreeFromRootToTuple(filename)
         pttruth=Tuple[self.regtruth]
-        
+        ptreco=Tuple[self.regreco]
         
         if self.remove:
             print('remove')
             pttruth=pttruth[notremoves > 0]
+            ptreco=ptreco[notremoves > 0]
        
         ## additions jan - was missing
         self.nsamples=len(pttruth)
         
         # check if really necssary
         pttruth.reshape(pttruth.shape[0],1)
+        ptreco.reshape(ptreco.shape[0],1)
         
         self.w=[weights]
-        self.x=[x_all]
+        self.x=[x_all,ptreco]
         self.y=[alltruth, pttruth]
         
         

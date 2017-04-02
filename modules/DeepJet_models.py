@@ -65,17 +65,27 @@ def Dense_model_reg(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(Inputs[0])
-    x = Dropout(dropoutRate)(x)
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x =  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x =  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
-    predictions = [Dense(nclasses, activation='softmax',init='lecun_uniform')(x),Dense(1, activation='linear',init='normal')(x),]
+    #x = Dropout(dropoutRate)(x)
+    #x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    #x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    #x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    #x =  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    #x = Dropout(dropoutRate)(x)
+    #x =  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    
+    
+    
+    predictflav=Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='flavour_pred')(x)
+   
+    flavpt=merge( [predictflav,Inputs[1]] , mode='concat')
+    #flavpt=Dense(10, activation='relu',kernel_initializer='lecun_uniform')(flavpt)
+    #flavpt=Dense(10, activation='linear',kernel_initializer='lecun_uniform')(flavpt)
+   
+    predictions = [predictflav,
+                   Dense(1, activation='linear',kernel_initializer='normal',name='pt_pred')(flavpt)]
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 

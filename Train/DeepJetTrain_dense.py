@@ -57,15 +57,15 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=100
-batchsize=10000
-startlearnrate=0.0005
+nepochs=500
+batchsize=18000
+startlearnrate=0.0002
 lrdecrease=0.000025
 lreeveryep=10
 lrthresh=0.000025
 useweights=False
 splittrainandtest=0.8
-maxqsize=10 #sufficient
+maxqsize=20 #sufficient
 
 
 
@@ -87,7 +87,7 @@ testd=traind.split(splittrainandtest)
 #from from keras.models import Sequential
 
 inputs = Input(shape=traind.getInputShapes()[0])
-model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.1)
+model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.25)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 print('compiling')
 
@@ -97,19 +97,19 @@ model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 
-from keras.callbacks import History, LearningRateScheduler, EarlyStopping #, ReduceLROnPlateau # , TensorBoard
+from keras.callbacks import Callback, History, LearningRateScheduler, EarlyStopping,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, mode='min')
+stopping = EarlyStopping(monitor='val_loss', patience=300, verbose=1, mode='min')
 
 from ReduceLROnPlateau import ReduceLROnPlateau
 
 
-LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, 
-                                mode='min', verbose=1, epsilon=0.003, 
-                                cooldown=6, min_lr=0.00001)
+LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.75, patience=3, 
+                                mode='min', verbose=1, epsilon=0.001, 
+                                cooldown=6, min_lr=0.0000002)
 
 
 
@@ -117,6 +117,19 @@ from learningRateCallback import learningRateDecrease
 lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
 
 LearningRateScheduler(lrdecr_cb.reducelearnrate)
+
+class newline_callbacks(Callback):
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        print('\n***callsbacks***\n')
+        
+class newline_callbackss(Callback):
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        print('\n***callsbacks nd***\n')
+
+BNLC=newline_callbacks()
+ENLC=newline_callbackss()
+
+modelcheck=ModelCheckpoint(outputDir+"KERAS_check_model.h5", monitor='val_loss', verbose=1, save_best_only=True)
 
 
 testd.isTrain=False
@@ -132,7 +145,7 @@ print('training')
 model.fit_generator(traind.generator() ,
         steps_per_epoch=traind.getNBatchesPerEpoch(), 
         epochs=nepochs,
-        callbacks=[history,LR_onplatCB],#,stopping],
+        callbacks=[BNLC,history,LR_onplatCB,modelcheck,ENLC,stopping],
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
         max_q_size=maxqsize,

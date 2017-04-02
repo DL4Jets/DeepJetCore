@@ -28,7 +28,19 @@ def fileTimeOut(fileName, timeOut):
         counter+=1
         time.sleep(1)
 
-
+def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
+    import h5py
+    idstrs=['w','x','y']
+    h5f = h5py.File(fileprefix,'r')
+    alllists=[arrwl,arrxl,arryl]
+    for j in range(len(idstrs)):
+        fidstr=idstrs[j]
+        arl=alllists[j]
+        for i in range(len(arl)):
+            idstr=fidstr+str(i)
+            h5f[idstr].read_direct(arl[i])
+    doneVal.value=True
+    h5f.close()
 
 class TrainData(object):
     '''
@@ -87,10 +99,12 @@ class TrainData(object):
             _sl=[]
             for i in range(len(s)):
                 if i:
+                    print(s[i])
                     _sl.append(s[i])
             s=(_sl)
+            if len(s)==0:
+                s.append(1)
             shapes.append(s)
-
         return shapes
         
     def getTruthShapes(self):
@@ -200,48 +214,43 @@ class TrainData(object):
                 sharedlist.append(numpy.array([]))
                 iidstr=idstr+str(i)
                 shapeinfo=numpy.array(self.h5f[iidstr+'_shape'])
-                #print('read shape info',shapeinfo)
                 shapeinfos.append(shapeinfo)
             return sharedlist, shapeinfos
         
-        def _read_arrs_(arrwl,arrxl,arryl,doneVal):
-            idstrs=['w','x','y']
-            h5f = h5py.File(fileprefix,'r')
-            alllists=[arrwl,arrxl,arryl]
-            for j in range(len(idstrs)):
-                fidstr=idstrs[j]
-                arl=alllists[j]
-                for i in range(len(arl)):
-                    idstr=fidstr+str(i)
-                    h5f[idstr].read_direct(arl[i])
-            self.readdone.value=True
-            h5f.close()
+        
             
         self.h5f = h5py.File(fileprefix,'r')
         self.nsamples=self.h5f['n']
         self.nsamples=self.nsamples[0]
-        
-        self.w_list,w_shapes=_readListInfo_('w')
-        self.x_list,x_shapes=_readListInfo_('x')
-        self.y_list,y_shapes=_readListInfo_('y')
+        if True or not hasattr(self, 'w_shapes'):
+            self.w_list,self.w_shapes=_readListInfo_('w')
+            self.x_list,self.x_shapes=_readListInfo_('x')
+            self.y_list,self.y_shapes=_readListInfo_('y')
+        else:
+            print('\nshape known\n')
+            self.w_list,_=_readListInfo_('w')
+            self.x_list,_=_readListInfo_('x')
+            self.y_list,_=_readListInfo_('y')
+            
         self.h5f.close()
         
+        #create shared mem in sync mode
         for i in range(len(self.w_list)):
-            self.w_list[i]=self.__createArr(w_shapes[i])
+            self.w_list[i]=self.__createArr(self.w_shapes[i])
             
         for i in range(len(self.x_list)):
-            self.x_list[i]=self.__createArr(x_shapes[i])
+            self.x_list[i]=self.__createArr(self.x_shapes[i])
             
         for i in range(len(self.y_list)):
-            self.y_list[i]=self.__createArr(y_shapes[i])
+            self.y_list[i]=self.__createArr(self.y_shapes[i])
 
         if read_async:
             self.readdone=multiprocessing.Value('b',False)
-            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone))
+            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix))
             self.readthread.start()
         else:
             self.readdone=multiprocessing.Value('b',False)
-            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone)
+            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix)
             
             
         
@@ -280,22 +289,45 @@ class TrainData(object):
         if not self.readthread and wasasync:
             print('\nreadIn_join:read never started\n')
         
+        import numpy
         
         counter=0
         while not self.readdone.value and wasasync: 
             self.readthread.join(1)
             counter+=1
-            if counter>5: #read failed. do synchronous read
-                #print('\nfalling back to sync read\n')
+            if counter>10: #read failed. do synchronous read
+                print('\nfalling back to sync read\n')
                 self.readthread.terminate()
                 self.readthread=None
                 self.readIn(self.samplename)
                 return
+        if self.readdone.value:
+            self.readthread.join(1)
                 
-            
-        self.w=(self.w_list)
-        self.x=(self.x_list)
-        self.y=(self.y_list)
+        import copy
+        #move away from shared memory
+        #this costs performance but seems necessary
+        self.w=copy.deepcopy(self.w_list)
+        del self.w_list
+        self.x=copy.deepcopy(self.x_list)
+        del self.x_list
+        self.y=copy.deepcopy(self.y_list)
+        del self.y_list
+        
+        
+        def reshape_fast(arr,shapeinfo):
+            if len(shapeinfo)<2:
+                shapeinfo=numpy.array([arr.shape[0],1])
+            arr=arr.reshape(shapeinfo)
+            return arr
+        
+        
+        for i in range(len(self.w)):
+            self.w[i]=reshape_fast(self.w[i],self.w_shapes[i])
+        for i in range(len(self.x)):
+            self.x[i]=reshape_fast(self.x[i],self.x_shapes[i])
+        for i in range(len(self.y)):
+            self.y[i]=reshape_fast(self.y[i],self.y_shapes[i])
         
         self.w_list=None
         self.x_list=None
@@ -303,13 +335,28 @@ class TrainData(object):
         if wasasync:
             self.readthread.terminate()
         self.readthread=None
+        self.readdone=None
         
     def readIn(self,fileprefix):
-        
+        import numpy
         self.readIn_async(fileprefix,False)
         self.w=(self.w_list)
         self.x=(self.x_list)
         self.y=(self.y_list)
+        
+        def reshape_fast(arr,shapeinfo):
+            if len(shapeinfo)<2:
+                shapeinfo=numpy.array([arr.shape[0],1])
+            arr=arr.reshape(shapeinfo)
+            return arr
+        
+        
+        for i in range(len(self.w)):
+            self.w[i]=reshape_fast(self.w[i],self.w_shapes[i])
+        for i in range(len(self.x)):
+            self.x[i]=reshape_fast(self.x[i],self.x_shapes[i])
+        for i in range(len(self.y)):
+            self.y[i]=reshape_fast(self.y[i],self.y_shapes[i])
         
         self.w_list=None
         self.x_list=None
