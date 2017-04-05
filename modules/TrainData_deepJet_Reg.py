@@ -21,8 +21,8 @@ class TrainData_deepJet_Reg(TrainData_deepCMVA_ST):
         '''
         TrainData_deepCMVA_ST.__init__(self)
         
-        self.regtruth='gen_pt'
-        self.regreco='jet_pt'
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
        
     def produceBinWeighter(self,filename):
         from Weighter import Weighter
