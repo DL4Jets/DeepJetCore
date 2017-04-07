@@ -21,8 +21,8 @@ class TrainData_deepJet_Reg(TrainData_deepCMVA):
         '''
         TrainData_deepCMVA.__init__(self)
         
-        self.regtruth='gen_pt'
-        self.regreco='jet_pt'
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
        
     
        

@@ -1,5 +1,3 @@
-
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -51,7 +49,6 @@ shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
 shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 
-
 print ('start')
 
 
@@ -60,8 +57,8 @@ print ('start')
 
 testrun=False
 
-nepochs=500
-batchsize=20000
+nepochs=20
+batchsize=10000
 startlearnrate=0.009
 useweights=False
 splittrainandtest=0.8
@@ -83,8 +80,6 @@ if testrun:
     
 testd=traind.split(splittrainandtest)
 shapes=traind.getInputShapes()
-
-
 
 #shapes=[]
 #for s in shapesin:
@@ -119,7 +114,7 @@ adam = Adam(lr=startlearnrate)
 model.compile(loss=['categorical_crossentropy','mean_absolute_percentage_error'], 
               optimizer=adam,
               metrics=['accuracy','accuracy'],
-              loss_weights=[1., 0.0003])#strong focus on flavour
+              loss_weights=[1., 0.05])#strong focus on flavour
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStopping, LambdaCallback,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
@@ -197,38 +192,38 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'learningcurve.pdf') 
 #plt.show()
 
-plt.figure(2)
-plt.plot(history.history['acc'])
+#plt.figure(2)
+#plt.plot(history.history['acc'])
 #print(history.history['val_loss'],history.history['loss'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('acc')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.savefig(outputDir+'accuracycurve.pdf')
+#plt.plot(history.history['val_acc'])
+#plt.title('model accuracy')
+#plt.ylabel('acc')
+#plt.xlabel('epoch')
+#plt.legend(['train', 'test'], loc='upper left')
+#plt.savefig(outputDir+'accuracycurve.pdf')
 
-exit()
+#exit()
 
 features_val=testd.getAllFeatures()
 labels_val=testd.getAllLabels()
 
 print('making rocs',len(labels_val))
 
-weights_val=testd.getAllWeights()[0]
-
-
-names='probB, probC, probUDSG'
-formats='float32,float32,float32'
-predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
-labelsandweights = labels_val[0] #np.concatenate((labels_val,weights_val.T),axis=1)
+#weights_val=testd.getAllWeights()[0]
+#names='probB, probC, probUDSG'
+#formats='float32,float32,float32'
+#predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
+#labelsandweights = labels_val[0] #np.concatenate((labels_val,weights_val.T),axis=1)
 
 from root_numpy import array2root
 
+savePTREC = features_val[1]
+
 predict_test = model.predict(features_val)
 # to add back to raw root for more detaiel ROCS and debugging
-all_write = np.core.records.fromarrays(  np.hstack((predict_test,labelsandweights)).transpose(), 
-                                             names='probB, probC, probUDSG, isB, isC',# isUDSG,weights',
-                                             formats = 'float32,float32,float32,float32,float32,float32')#,float32')
+all_write = np.core.records.fromarrays(  np.hstack((predict_test[0],predict_test[1],labels_val[0],labels_val[1],savePTREC)).transpose(), 
+                                             names='isB,isLeptonicB,isLeptonicB_C,isC,isUDSG,PTtruth,TisB,TisLeptonicB,TisLeptonicB_C,TisC,TisUDSG,TPTtruth,PTREC',
+                                             formats = 'float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32')#,float32')
 #labels_val
 print(all_write.shape)
 
@@ -236,44 +231,3 @@ array2root(all_write,outputDir+"KERAS_result_val.root",mode="recreate")
 
 
 #from keras.models import load_model
-
-
-# per file plots. Take lot of time
-exit()
-
-metrics=[]
-print('making individual ROCs for test data')
-for samplefile in testd.samples:
-    tdt=useDataClass()
-    tdt.readIn(testd.getSamplePath(samplefile))
-    print(samplefile)
-    metrics.append(predictAndMakeRoc(tdt.x[0],tdt.y[0],outputDir+samplefile+"_val",names,formats,model))
-    
-
-print('making individual ROCs for train data')
-for samplefile in traind.samples:
-    tdt=useDataClass()
-    tdt.readIn(traind.getSamplePath(samplefile))
-    print(samplefile)
-    metrics.append(predictAndMakeRoc(tdt.x[0],tdt.y[0],outputDir+samplefile+"_train",names,formats,model))
-    
-metricsloss=[]
-metricsacc=[]
-count=range(0,len(metrics))
-for m in metrics:
-    metricsloss.append(m[0])
-    metricsacc.append(m[1])
-    
-    
-
-plt.figure(6)
-plt.plot(count,metricsloss)
-plt.grid(True)
-plt.savefig(outputDir+'lossperfile.pdf')
-plt.figure(7)
-plt.plot(count,metricsacc)
-plt.grid(True)
-plt.savefig(outputDir+'accperfile.pdf')
-    
-
-
