@@ -56,9 +56,10 @@ class TrainData(object):
         
         '''
         
+        self.undefTruth=['isUndefined']
         
-
-        self.truthclasses=[]
+        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
+        
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
         
@@ -73,6 +74,8 @@ class TrainData(object):
         self.weight=False
         
         self.clear()
+        
+        self.reduceTruth(None)
 
     def clear(self):
         import numpy
@@ -129,11 +132,12 @@ class TrainData(object):
         #just call read from root (virtual in python??), and mix with existing x,y,weight
 
 
-    def __reduceTruth(self,tuple_in):
-        import numpy
-        return numpy.array(tuple_in.tolist())
 
-    
+    def reduceTruth(self, tuple_in=None):
+        self.reducedtruthclasses=self.truthclasses
+        if tuple_in is not None:
+            import numpy
+            return numpy.array(tuple_in.tolist())
 
     def writeOut(self,fileprefix):
         import h5py
@@ -402,6 +406,7 @@ class TrainData(object):
     def produceBinWeighter(self,filename):
         from Weighter import Weighter
         weighter=Weighter() 
+        weighter.undefTruth=self.undefTruth
         Tuple = self.readTreeFromRootToTuple(filename)
         weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
                                      400,500,600,2000],dtype=float)
@@ -482,10 +487,8 @@ import numpy
 
 class TrainData_Flavour(TrainData):
     '''
-    same as TrainData_deepCSV but with 3 truth labels: UDSG C B
+    
     '''
-
-
     def __init__(self):
         TrainData.__init__(self)
         self.clear()
@@ -500,4 +503,57 @@ class TrainData_Flavour(TrainData):
         self.y=[alltruth]
         
      
+     
+class TrainData_simpleTruth(TrainData):
+    def __init__(self):
+        TrainData.__init__(self)
+        self.clear()
         
+    def reduceTruth(self, tuple_in):
+        
+        self.reducedtruthclasses=['isB','isBB','isC','isUDSG']
+        if tuple_in is not None:
+            b = tuple_in['isB'].view(numpy.ndarray)
+            bb = tuple_in['isBB'].view(numpy.ndarray)
+            bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            allb = b+bl+blc
+            
+           
+            c = tuple_in['isC'].view(numpy.ndarray)
+           
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
+            uds=ud+s
+            g = tuple_in['isG'].view(numpy.ndarray)
+            l = g + uds
+            return numpy.vstack((allb,bb,c,l)).transpose()
+    
+    
+class TrainData_leptTruth(TrainData):
+    def __init__(self):
+        TrainData.__init__(self)
+        self.clear()
+        
+    def reduceTruth(self, tuple_in):
+        
+        self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDSG']
+        if tuple_in is not None:
+            b = tuple_in['isB'].view(numpy.ndarray)
+            bb = tuple_in['isBB'].view(numpy.ndarray)
+            allb = b+bb
+            
+            bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            lepb=bl+blc
+           
+            c = tuple_in['isC'].view(numpy.ndarray)
+           
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
+            uds=ud+s
+            
+            g = tuple_in['isG'].view(numpy.ndarray)
+            l = g + uds
+            
+            return numpy.vstack((allb,bb,lepb,c,l)).transpose()    

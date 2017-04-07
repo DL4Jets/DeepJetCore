@@ -17,6 +17,7 @@ class Weighter(object):
         self.removeProbabilties=[]
         self.classes=[]
         self.refclassidx=0
+        self.undefTruth=[]
     
     def createRemoveProbabilities(self,Tuple,nameX,nameY,bins,classes,referenceclass='isB'):
         import numpy
@@ -57,7 +58,7 @@ class Weighter(object):
                     if ratio>scaler: scaler=ratio
             return scaler
         
-        def getProbHisto(scaledhisto,refhisto):
+        def getProbHisto(scaledhisto,refhisto,classname):
             out=numpy.copy(refhisto)
             for indexx,binx in enumerate(self.axisX):
                 if not indexx:
@@ -69,7 +70,9 @@ class Weighter(object):
                     thisval=scaledhisto[indexx-1][indexy-1]
                     prob=0
                     if thisval+refval:
-                        prob=float(thisval-refval)/float(thisval+refval)
+                        prob=float(thisval-refval)/float(thisval+refval) 
+                    if classname in self.undefTruth:
+                        prob=1
                     out[indexx-1][indexy-1]=prob
             return out
         
@@ -95,7 +98,7 @@ class Weighter(object):
             tmphist,_,_=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],bins)
             scaler=getScaler(tmphist,refhist)
             tmphist*=scaler
-            probhist=getProbHisto(tmphist,refhist)
+            probhist=getProbHisto(tmphist,refhist,classes[i])
             probhists.append(probhist)
         
         self.removeProbabilties=probhists
@@ -138,13 +141,16 @@ class Weighter(object):
                         xaverage[index]+=jet[self.nameX]
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
+            
                         
                     
         for c in range(len(xaverage)):
-            print('xav ', c, xaverage[c]/norm[c])
+            if not norm[c]:
+                norm[c]=1
+            print(self.classes[c], c, xaverage[c]/norm[c])
             
         for c in range(len(yaverage)):
-            print('yav ', c, yaverage[c]/norm[c])
+            print(self.classes[c], c, yaverage[c]/norm[c])
             
         if not len(notremove) == tuplelength:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")

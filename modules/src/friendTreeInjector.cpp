@@ -78,6 +78,10 @@ void friendTreeInjector::createChain(){
 		}
 	}
 	for(size_t i=0;i<friendchains_.size();i++){
+		size_t entries=chain_->GetEntries();
+		size_t friendentries=friendchains_.at(i)->GetEntries();
+		if(entries!=friendentries)
+			throw std::out_of_range("friendTreeInjector::createChain: trees don't have same number of entries.\nIs is possible that the test data was not converted using --testdatafor?");
 		chain_->AddFriend(friendchains_.at(i));
 	}
 

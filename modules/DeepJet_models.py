@@ -266,30 +266,26 @@ def Dense_model_microPF(Inputs,nclasses,Inputshapes,dropoutRate=-1):
    
     npf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
     npf = Dropout(dropoutRate)(npf)
-    npf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
-    npf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
     npf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+    npf = Dropout(dropoutRate)(npf)
+    npf  = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Dropout(dropoutRate)(npf)
     npf = Flatten()(npf)
     
-    #wrong branch format in first plave - ignore..
-    mistake=Flatten()(Inputs[2])
     
     
-    x = merge( [Inputs[0],npf,mistake,Inputs[3] ] , mode='concat')
+    x = merge( [Inputs[0],npf,Inputs[2] ] , mode='concat')
     
     
     x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model

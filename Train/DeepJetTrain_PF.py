@@ -23,11 +23,6 @@ import os
 from argparse import ArgumentParser
 import shutil
 
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_Rec,Dense_model_lessbroad, Dense_model_broad,Dense_model_broad_flat
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
-
-
-    
 # argument parsing and bookkeeping
 
 parser = ArgumentParser('Run the training')
@@ -62,7 +57,18 @@ testrun=False
 
 nepochs=500
 batchsize=5000
-startlearnrate=0.0008
+startlearnrate=0.0005
+from DeepJet_callbacks import DeepJet_callbacks
+
+callbacks=DeepJet_callbacks(stop_patience=15, 
+                            
+                            lr_factor=0.5,
+                            lr_patience=2, 
+                            lr_epsilon=0.001, 
+                            lr_cooldown=4, 
+                            lr_minimum=1e-5, 
+                            
+                            outputDir=outputDir)
 useweights=False
 splittrainandtest=0.8
 maxqsize=10 #sufficient
@@ -110,9 +116,10 @@ inputs = [Input(shape=shapes[0]),
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-#model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.2)
-#model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.4)
+from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
+#model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
+model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.2)
+#model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 print('compiling')
 
 
@@ -121,33 +128,9 @@ adam = Adam(lr=startlearnrate)
 model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy'])
 
 # This stores the history of the training to e.g. allow to plot the learning curve
-from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStopping, LambdaCallback,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
-# loss per epoch
-history = History()
 
 #stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=30, verbose=1, mode='min')
 
-from ReduceLROnPlateau import ReduceLROnPlateau,ReduceLRAfterBatch
-
-
-LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=1, 
-                                mode='min', verbose=1, epsilon=0.001, cooldown=4, min_lr=0.00001)
-
-LR_afterbatch=ReduceLRAfterBatch()
-
-modelcheck=ModelCheckpoint(outputDir+"KERAS_check_model.h5", monitor='val_loss', verbose=1, save_best_only=True)
-
-class newline_callbacks(Callback):
-    def on_epoch_end(self,epoch, epoch_logs={}):
-        print('\n***callsbacks***\n')
-        
-class newline_callbackss(Callback):
-    def on_epoch_end(self,epoch, epoch_logs={}):
-        print('\n***callsbacks nd***\n')
-
-nLcb=newline_callbacks()
-nLcbe=newline_callbackss()
 
 ntrainepoch=traind.getSamplesPerEpoch()
 nvalepoch=testd.getSamplesPerEpoch()
@@ -165,7 +148,7 @@ print('training')
 model.fit_generator(traind.generator() , verbose=1,
         steps_per_epoch=traind.getNBatchesPerEpoch(), 
         epochs=nepochs,
-        callbacks=[nLcb,history,stopping,LR_onplatCB,modelcheck,nLcbe],
+        callbacks=callbacks.callbacks,
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
         max_q_size=maxqsize,
@@ -179,7 +162,7 @@ model.fit_generator(traind.generator() , verbose=1,
 
 #options to use are:
 print(traind.getUsedTruth())
-print(history.history.keys())
+print(callbacks.history.history.keys())
 
 model.save(outputDir+"KERAS_model.h5")
 traind.writeToFile(outputDir+'trainsamples.dc')
@@ -187,9 +170,9 @@ testd.writeToFile(outputDir+'valsamples.dc')
 
 
 # summarize history for loss for trainin and test sample
-plt.plot(history.history['loss'])
-#print(history.history['val_loss'],history.history['loss'])
-plt.plot(history.history['val_loss'])
+plt.plot(callbacks.history.history['loss'])
+#print(callbacks.history.history['val_loss'],history.history['loss'])
+plt.plot(callbacks.history.history['val_loss'])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
@@ -198,9 +181,9 @@ plt.savefig(outputDir+'learningcurve.pdf')
 #plt.show()
 
 plt.figure(2)
-plt.plot(history.history['acc'])
-#print(history.history['val_loss'],history.history['loss'])
-plt.plot(history.history['val_acc'])
+plt.plot(callbacks.history.history['acc'])
+#print(callbacks.history.history['val_loss'],history.history['loss'])
+plt.plot(callbacks.history.history['val_acc'])
 plt.title('model accuracy')
 plt.ylabel('acc')
 plt.xlabel('epoch')
