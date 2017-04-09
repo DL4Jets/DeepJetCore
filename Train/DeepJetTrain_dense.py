@@ -22,8 +22,7 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DeepJet_models import Dense_model,Dense_model2, Dense_model_broad
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST, TrainData_deepCMVA_ST
+from DeepJet_models import Dense_model
 
 
 # argument parsing and bookkeeping
@@ -58,11 +57,19 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 nepochs=500
-batchsize=18000
-startlearnrate=0.0002
-lrdecrease=0.000025
-lreeveryep=10
-lrthresh=0.000025
+batchsize=10000
+startlearnrate=0.0005
+from DeepJet_callbacks import DeepJet_callbacks
+
+callbacks=DeepJet_callbacks(stop_patience=400, 
+                            
+                            lr_factor=0.5,
+                            lr_patience=3, 
+                            lr_epsilon=0.003, 
+                            lr_cooldown=6, 
+                            lr_minimum=0.000001, 
+                            
+                            outputDir=outputDir)
 useweights=False
 splittrainandtest=0.8
 maxqsize=20 #sufficient
@@ -70,8 +77,6 @@ maxqsize=20 #sufficient
 
 
 from DataCollection import DataCollection
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST, TrainData_deepCMVA_ST
-from TrainData_deepCSV import TrainData_deepCSV
 
 traind=DataCollection()
 traind.readFromFile(inputData)
@@ -87,7 +92,7 @@ testd=traind.split(splittrainandtest)
 #from from keras.models import Sequential
 
 inputs = Input(shape=traind.getInputShapes()[0])
-model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.25)
+model = Dense_model(inputs,traind.getTruthShape()[0],traind.getInputShapes()[0],dropoutRate=0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 print('compiling')
 
@@ -97,40 +102,8 @@ model.compile(loss='categorical_crossentropy', optimizer=adam,metrics=['accuracy
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 
-from keras.callbacks import Callback, History, LearningRateScheduler, EarlyStopping,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
-history = History()
-
-#stop when val loss does not decrease anymore
-stopping = EarlyStopping(monitor='val_loss', patience=300, verbose=1, mode='min')
-
-from ReduceLROnPlateau import ReduceLROnPlateau
-
-
-LR_onplatCB = ReduceLROnPlateau(monitor='val_loss', factor=0.75, patience=3, 
-                                mode='min', verbose=1, epsilon=0.001, 
-                                cooldown=6, min_lr=0.0000002)
-
-
-
-from learningRateCallback import learningRateDecrease
-lrdecr_cb=learningRateDecrease(lreeveryep, lrdecrease, startlearnrate,1,lrthresh)
-
-LearningRateScheduler(lrdecr_cb.reducelearnrate)
-
-class newline_callbacks(Callback):
-    def on_epoch_end(self,epoch, epoch_logs={}):
-        print('\n***callsbacks***\n')
-        
-class newline_callbackss(Callback):
-    def on_epoch_end(self,epoch, epoch_logs={}):
-        print('\n***callsbacks nd***\n')
-
-BNLC=newline_callbacks()
-ENLC=newline_callbackss()
-
-modelcheck=ModelCheckpoint(outputDir+"KERAS_check_model.h5", monitor='val_loss', verbose=1, save_best_only=True)
-
+history = callbacks.history
 
 testd.isTrain=False
 traind.isTrain=True
@@ -145,7 +118,7 @@ print('training')
 model.fit_generator(traind.generator() ,
         steps_per_epoch=traind.getNBatchesPerEpoch(), 
         epochs=nepochs,
-        callbacks=[BNLC,history,LR_onplatCB,modelcheck,ENLC,stopping],
+        callbacks=callbacks.callbacks,
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
         max_q_size=maxqsize,

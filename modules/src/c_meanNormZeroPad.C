@@ -21,7 +21,7 @@
 #include "TStopwatch.h"
 #include "../interface/indata.h"
 #include "../interface/pythonToSTL.h"
-
+#include "../interface/helper.h"
 
 using namespace boost::python; //for some reason....
 
@@ -102,8 +102,12 @@ void priv_process(boost::python::numeric::array numpyarray,
 	std::vector<__hidden::indata> alldata;
 	alldata=__hidden::createDataVector(s_branches_,s_norms,s_means,s_max);
 
+	TString tfilename=filename;
+	//this is a bit more stable and possibly faster
+	//root version seems to not support xrootd
+	//tfilename=prependXRootD(tfilename);
 
-	TFile * tfile=new TFile(filename.data(),"READ");
+	TFile * tfile=new TFile(tfilename,"READ");
 
 	priv_meanNormZeroPad(numpyarray,alldata,tfile,mode);
 

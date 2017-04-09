@@ -98,13 +98,14 @@ def makeASequence(arg,length):
 #just a wrapper
 def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
     
+    files=makeASequence(intextfile,len(name_list))
     cuts=makeASequence(cuts,len(name_list))
     probabilities_list=makeASequence(probabilities_list,len(name_list))
     truths_list=makeASequence(truths_list,len(name_list))
     vetos_list=makeASequence(vetos_list,len(name_list))
             
     import c_makeROCs
-    c_makeROCs.makeROCs(intextfile,name_list,
+    c_makeROCs.makeROCs(files,name_list,
                         probabilities_list,
                         truths_list,
                         vetos_list,
@@ -113,7 +114,7 @@ def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list,
     
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
     
-
+    files=makeASequence(intextfile,len(name_list))
     cuts=makeASequence(cuts,len(name_list))
     probabilities_list=makeASequence(probabilities_list,len(name_list))
     truths_list=makeASequence(truths_list,len(name_list))
@@ -121,7 +122,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     def worker():
         import c_makeROCs
-        c_makeROCs.makeROCs(intextfile,name_list,
+        c_makeROCs.makeROCs(files,name_list,
                         probabilities_list,
                         truths_list,
                         vetos_list,

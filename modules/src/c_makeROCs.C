@@ -19,7 +19,7 @@ using namespace boost::python; //for some reason....
 
 
 void makeROCs(
-		std::string intextfile,
+		const boost::python::list intextfiles,
 		const boost::python::list names,
 		const boost::python::list probabilities ,
 		const boost::python::list truths,
@@ -29,6 +29,7 @@ void makeROCs(
 		const boost::python::list cuts) {
 
 
+	std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
 	std::vector<TString>  s_names = toSTLVector<TString>(names);
 	std::vector<TString>  s_probabilities = toSTLVector<TString>(probabilities);
 	std::vector<TString>  s_truths = toSTLVector<TString>(truths);
@@ -40,16 +41,37 @@ void makeROCs(
 	/*
 	 * Size checks!!!
 	 */
-	if(s_names.size() != s_probabilities.size() ||
+	if(s_intextfiles.size() !=s_names.size()||
+			s_names.size() != s_probabilities.size() ||
 			s_names.size() != s_truths.size()||
 			s_names.size() != s_vetos.size()||
 			s_names.size() != s_colors.size()||
 			s_names.size() != s_cuts.size())
 		throw std::runtime_error("makeROCs: input lists must have same size");
 
+	//make unique list of infiles
+	std::vector<TString> u_infiles;
+	std::vector<TString> aliases;
+	for(const auto& f:s_intextfiles){
+		if(std::find(u_infiles.begin(),u_infiles.end(),f) == u_infiles.end()){
+			u_infiles.push_back(f);
+			TString s="";
+			s+=aliases.size();
+			aliases.push_back(s);
+		}
+	}
+
+
+
 	friendTreeInjector injector;
-	injector.addFromFile((TString)intextfile);
+	for(size_t i=0;i<u_infiles.size();i++){
+		if(!aliases.size())
+			injector.addFromFile((TString)u_infiles.at(i));
+		else
+			injector.addFromFile((TString)u_infiles.at(i),aliases.at(i));
+	}
 	injector.createChain();
+
 
 	rocCurveCollection rocs;
 

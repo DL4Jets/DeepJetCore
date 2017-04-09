@@ -400,7 +400,9 @@ class TrainData(object):
     def produceMeansFromRootFile(self,filename):
         from preprocessing import meanNormProd
         Tuple=self.readTreeFromRootToTuple(filename)
-        return meanNormProd(Tuple)
+        means= meanNormProd(Tuple)
+        del Tuple
+        return means
     
     #overload if necessary
     def produceBinWeighter(self,filename):
@@ -417,7 +419,7 @@ class TrainData(object):
                                                classes=self.truthclasses)
        
         weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
-    
+        del Tuple
         return weighter
           
         
@@ -436,7 +438,7 @@ class TrainData(object):
         tree = rfile.Get("deepntuplizer/tree")
         self.nsamples=tree.GetEntries()
         
-        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        #print('took ', sw.getAndReset(), ' seconds for getting tree entries')
     
         
         Tuple = self.readTreeFromRootToTuple(filename)
@@ -444,16 +446,16 @@ class TrainData(object):
         
         x_all = MeanNormZeroPad(filename,TupleMeanStd,self.branches,self.branchcutoffs,self.nsamples)
         
-        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+        #print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
         notremoves=numpy.array([])
         weights=numpy.array([])
         if self.remove:
             notremoves=weighter.createNotRemoveIndices(Tuple)
             weights=notremoves
-            print('took ', sw.getAndReset(), ' to create remove indices')
+            #print('took ', sw.getAndReset(), ' to create remove indices')
         elif self.weight:
-            print('creating weights')
+            #print('creating weights')
             weights= weighter.getJetWeights(Tuple)
         else:
             print('neither remove nor weight')
@@ -468,16 +470,16 @@ class TrainData(object):
         
         #print(alltruth.shape)
         if self.remove:
-            print('remove')
+            #print('remove')
             weights=weights[notremoves > 0]
             x_all=x_all[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
        
         newnsamp=x_all.shape[0]
-        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
+        #print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
-        print('took in total ', swall.getAndReset(),' seconds for conversion')
+        #print('took in total ', swall.getAndReset(),' seconds for conversion')
         
         return weights,x_all,alltruth, notremoves
         

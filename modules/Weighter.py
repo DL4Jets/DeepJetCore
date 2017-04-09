@@ -143,14 +143,36 @@ class Weighter(object):
                         norm[index]+=1
             
                         
-                    
+        allxav=0
+        validclasses=0            
         for c in range(len(xaverage)):
-            if not norm[c]:
-                norm[c]=1
-            print(self.classes[c], c, xaverage[c]/norm[c])
-            
+            if norm[c]:
+                allxav+=xaverage[c]/norm[c]
+                validclasses+=1
+            #print(self.classes[c], c, xaverage[c]/norm[c])
+        allxav/=float(validclasses) 
+        
+        allyav=0  
+          
         for c in range(len(yaverage)):
-            print(self.classes[c], c, yaverage[c]/norm[c])
+            if norm[c]:
+                allyav+=yaverage[c]/norm[c]
+        allyav/=float(validclasses)   
+             
+        for c in range(len(xaverage)):
+            if norm[c]:
+                reldiff=abs(xaverage[c]/norm[c] - allxav)/allxav
+                if reldiff >0.15:
+                    print('warning (x) ',self.classes[c],xaverage[c]/norm[c])
+                    
+         
+        for c in range(len(yaverage)):
+            if norm[c]:
+                reldiff=abs(yaverage[c]/norm[c] - allyav)/allyav
+                if reldiff >0.15:
+                    print('warning (y) ',self.classes[c],yaverage[c]/norm[c])
+                    
+            #print(self.classes[c], c, yaverage[c]/norm[c])
             
         if not len(notremove) == tuplelength:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")

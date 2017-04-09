@@ -14,7 +14,7 @@ friendTreeInjector::~friendTreeInjector(){
 	resetChain();
 }
 
-void friendTreeInjector::addFromFile(const TString& filename){
+void friendTreeInjector::addFromFile(const TString& filename, const TString& alias){
 
 	//add to treesandfriends_
 
@@ -30,6 +30,7 @@ void friendTreeInjector::addFromFile(const TString& filename){
 		originroots.push_back(a);
 		toinject.push_back(b);
 	}
+	friendaliases_.push_back(alias);
 
 	if(treesandfriends_.size()<1){
 		for(size_t i=0;i<originroots.size();i++){
@@ -41,7 +42,7 @@ void friendTreeInjector::addFromFile(const TString& filename){
 	}
 	//check for size
 	if(originroots.size()!=treesandfriends_.size()){
-		//throw something
+		throw std::runtime_error("friendTreeInjector::addFromFile: file lists not same length");
 	}
 
 	//else
@@ -54,6 +55,8 @@ void friendTreeInjector::addFromFile(const TString& filename){
 			}
 		}
 	}
+
+
 
 
 }
@@ -70,19 +73,29 @@ void friendTreeInjector::showList()const{
 void friendTreeInjector::createChain(){
 	resetChain();
 	chain_ = new TChain();
-	friendchains_ = std::vector<TChain*> (treesandfriends_.at(0).size()-1, new TChain());
+	friendchains_ = std::vector<TChain*> (treesandfriends_.at(0).size()-1,0);
+	for(size_t i=0;i<treesandfriends_.at(0).size()-1;i++){
+	    TString s="";
+	    s+=i;
+	    friendchains_.at(i)=new TChain(s,s);
+	}
 	for(size_t i=0;i<treesandfriends_.size();i++){
-		chain_->AddFile(treesandfriends_.at(i).at(0)+"/deepntuplizer/tree");
+	    TString basetree=treesandfriends_.at(i).at(0)+"/deepntuplizer/tree";
+	    //std::cout << basetree << std::endl;
+		chain_->AddFile(basetree);
 		for(size_t j=1;j<treesandfriends_.at(i).size();j++){
-			friendchains_.at(j-1)->AddFile(treesandfriends_.at(i).at(j)+"/tree");
+		    TString friendtree=treesandfriends_.at(i).at(j)+"/tree";
+		    //std::cout << j-1<<' '<<friendtree << std::endl;
+			friendchains_.at(j-1)->AddFile(friendtree);
 		}
 	}
 	for(size_t i=0;i<friendchains_.size();i++){
 		size_t entries=chain_->GetEntries();
 		size_t friendentries=friendchains_.at(i)->GetEntries();
+		//std::cout << entries << ' '<< friendentries << std::endl;
 		if(entries!=friendentries)
 			throw std::out_of_range("friendTreeInjector::createChain: trees don't have same number of entries.\nIs is possible that the test data was not converted using --testdatafor?");
-		chain_->AddFriend(friendchains_.at(i));
+		chain_->AddFriend(friendchains_.at(i),friendaliases_.at(i));
 	}
 
 }
@@ -91,7 +104,3 @@ void friendTreeInjector::resetChain(){
 
 }
 
-//std::vector<std::vector<TString> > treesandfriends_;
-//std::vector<TString> friendaliases_;
-//
-//TChain* chain_;

@@ -55,18 +55,18 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 
-nepochs=500
-batchsize=5000
+nepochs=100
+batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
 
-callbacks=DeepJet_callbacks(stop_patience=15, 
+callbacks=DeepJet_callbacks(stop_patience=100, 
                             
                             lr_factor=0.5,
-                            lr_patience=2, 
-                            lr_epsilon=0.001, 
-                            lr_cooldown=4, 
-                            lr_minimum=1e-5, 
+                            lr_patience=3, 
+                            lr_epsilon=0.003, 
+                            lr_cooldown=6, 
+                            lr_minimum=0.00001, 
                             
                             outputDir=outputDir)
 useweights=False
@@ -118,7 +118,7 @@ inputs = [Input(shape=shapes[0]),
 print(traind.getTruthShape()[0])
 from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
 #model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.2)
+model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 print('compiling')
 

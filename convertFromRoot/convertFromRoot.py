@@ -47,6 +47,8 @@ def main(argv=None):
     parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCMVA_ST, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
     parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
     parser.add_argument("--testdatafor", default='')
+    parser.add_argument("--usemeansfrom", default='')
+
 
     
     # process options
@@ -56,6 +58,7 @@ def main(argv=None):
     Class=args.c
     Recover=args.r
     testdatafor=args.testdatafor
+    usemeansfrom=args.usemeansfrom
 
     if infile:
         print("infile = %s" % infile)
@@ -65,7 +68,9 @@ def main(argv=None):
     # MAIN BODY #
     
     
+    
     from DataCollection import DataCollection
+    
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
@@ -73,6 +78,8 @@ def main(argv=None):
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg
     dc=DataCollection()
+    
+    
     traind=TrainData
     if Class == 'TrainData_deepCSV':
         traind=TrainData_deepCSV
@@ -91,19 +98,22 @@ def main(argv=None):
     elif len(Recover)<1 and len(testdatafor)<1:
         raise Exception('wrong class selecton')
     
+    
+    
     if len(testdatafor):
         print('converting test data, no weights applied')
         dc.createTestDataForDataCollection(testdatafor,infile,outPath)
     
     elif len(Recover)>0:
         dc.recoverCreateDataFromRootFromSnapshot(Recover)
+        
     else:
         notdone=True
         while notdone:
             
             # testdata for.. and then pass DataCollection (for means and norms)
             
-            dc.convertListOfRootFiles(infile, traind(), outPath)
+            dc.convertListOfRootFiles(infile, traind(), outPath,usemeansfrom)
             notdone=False
             #except Exception as e:
             #    print('for recovering run: convertFromRoot.py -r '+outPath+'/snapshot.dc')

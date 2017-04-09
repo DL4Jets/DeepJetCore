@@ -16,7 +16,7 @@ public:
 	friendTreeInjector();
 	~friendTreeInjector();
 
-	void addFromFile(const TString& filename);
+	void addFromFile(const TString& filename, const TString& alias="");
 
 	void createChain();
 

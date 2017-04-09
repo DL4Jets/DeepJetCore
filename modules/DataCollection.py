@@ -155,6 +155,7 @@ class DataCollection(object):
         
         fdir=os.path.dirname(file)
         fdir=os.path.abspath(fdir)
+        fdir=os.path.realpath(fdir)
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
@@ -361,26 +362,32 @@ class DataCollection(object):
             success=False
             out_samplename=''
             out_sampleentries=0
-            os.system('cp '+sample+' '+ramdisksample)
+            newname=os.path.basename(sample).rsplit('.', 1)[0]
+            newpath=os.path.abspath(outputDir+newname+'.z')
+            
+            
+            
             try:
+                os.system('cp '+sample+' '+ramdisksample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
-                newname=os.path.basename(sample).rsplit('.', 1)[0]
-                newpath=os.path.abspath(outputDir+newname+'.z')
                 td.writeOut(newpath)
-                print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
+                print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname+'.z'
                 out_sampleentries=td.nsamples
                 success=True
                 td.clear()
+                removefile()
+                woq.put((index,[success,out_samplename,out_sampleentries]))
                 
-                #this goes after join
                 
             except:
+                print('problem in '+newname)
                 removefile()
+                woq.put((index,[False,out_samplename,out_sampleentries]))
                 raise 
-            removefile()
-            woq.put((index,[success,out_samplename,out_sampleentries]))
+            
+            
         
         
         def __collectWriteInfo(successful,samplename,sampleentries,outputDir):
@@ -396,12 +403,14 @@ class DataCollection(object):
         for i in range(startindex,len(self.originRoots)):
             processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
         
-        nchilds=cpu_count()-4 #don't use all of them
+        nchilds=cpu_count()
+        nchilds=int(nchilds/2) #don't use all of them
         #import os
         #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
         #    nchilds=cpu_count()-5
         if nchilds<1: 
             nchilds=1
+        
         
         index=0
         alldone=False
@@ -410,12 +419,31 @@ class DataCollection(object):
                 if index+nchilds >= len(self.originRoots):
                     nchilds=len(self.originRoots)-index
                     alldone=True
-                    
+                
+                
+                print('starting '+str(nchilds)+' child processes')
                 for i in range(nchilds):
+                    print('starting '+self.originRoots[i+index]+'...')
                     processes[i+index].start()
+                        
+                results=[]
+                import time
+                time.sleep(1)
+
+                while 1:
+                    running = len(results)<nchilds #  any(p.is_alive() for p in processes)
+                    while not wo_queue.empty():
+                        res=wo_queue.get()
+                        results.append(res)
+                        print('collected result '+str(res[0])+', ' +str(nchilds-len(results))+' left')
+                    if not running:
+                        break
+                    time.sleep(0.1)
+                
+                print('joining')
                 for i in range(nchilds):
-                    processes[i+index].join()
-                results = [wo_queue.get() for i in range(nchilds)]
+                    processes[i+index].join(5)
+                    
                 results.sort()
                 results = [r[1] for r in results]
                 for i in range(nchilds):
@@ -429,9 +457,13 @@ class DataCollection(object):
             raise 
         os.system('rm -rf '+tempstoragepath)
         
-    def convertListOfRootFiles(self, inputfile, dataclass, outputDir):
+    def convertListOfRootFiles(self, inputfile, dataclass, outputDir, takemeansfrom=''):
+        newmeans=True
+        if len(takemeansfrom)>0:
+            self.readFromFile(takemeansfrom)
+            newmeans=False
         self.readRootListFromFile(inputfile)
-        self.createDataFromRoot(dataclass, outputDir)
+        self.createDataFromRoot(dataclass, outputDir,newmeans)
         self.writeToFile(outputDir+'/dataCollection.dc')
         
     def getAllLabels(self):
