@@ -351,34 +351,14 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
         TrainData.__init__(self)
         
         
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
-       
-        
-        
-        
-        self.addBranches(['Npfcan_pt',
-                          'Npfcan_ptrel',
-                          'Npfcan_erel',
-                          'Npfcan_phirel',
-                          'Npfcan_etarel',
-                          'Npfcan_deltaR',
-                              'Npfcan_isGamma',
-                              'Npfcan_HadFrac',
-                              'Npfcan_drminsv',
-                              ],
-                             15)
-        
-        
-        
-        
-        #b-tag vars
-        self.addBranches([ 'TagVarCSV_jetNSecondaryVertices', 
+        self.addBranches(['jet_pt', 'jet_eta','nNpfcand',#'npv',
+                           'TagVarCSV_jetNSecondaryVertices', 
                            'TagVarCSV_trackSumJetEtRatio', 'TagVarCSV_trackSumJetDeltaR', 
                            'TagVarCSV_vertexCategory', 'TagVarCSV_trackSip2dValAboveCharm', 
                            'TagVarCSV_trackSip2dSigAboveCharm', 'TagVarCSV_trackSip3dValAboveCharm', 
                            'TagVarCSV_trackSip3dSigAboveCharm', 'TagVarCSV_jetNSelectedTracks', 
                            'TagVarCSV_jetNTracksEtaRel'])
-        
+       
         self.addBranches(['TagVarCSVTrk_trackJetDistVal',
                               'TagVarCSVTrk_trackPtRel', 
                               'TagVarCSVTrk_trackDeltaR', 
@@ -386,7 +366,7 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
                               'TagVarCSVTrk_trackSip3dSig', 
                               'TagVarCSVTrk_trackSip2dSig', 
                               'TagVarCSVTrk_trackDecayLenVal'],
-                             7)
+                             6)
         
         
         self.addBranches(['TagVarCSV_trackEtaRel'],4)
@@ -403,6 +383,17 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
 
 
         
+        self.addBranches(['Npfcan_pt',
+                          'Npfcan_ptrel',
+                          'Npfcan_erel',
+                          'Npfcan_phirel',
+                          'Npfcan_etarel',
+                          'Npfcan_deltaR',
+                              'Npfcan_isGamma',
+                              'Npfcan_HadFrac',
+                              'Npfcan_drminsv',
+                              ],
+                             15)
 
 
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
@@ -426,19 +417,15 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
         # split for convolutional network
         
         x_global = MeanNormZeroPad(filename,TupleMeanStd,
-                                   [self.branches[0]],
-                                   [self.branchcutoffs[0]],self.nsamples)
+                                   self.branches[0:4],
+                                   self.branchcutoffs[0:4],self.nsamples)
         
         
         x_npf = MeanNormZeroPadParticles(filename,TupleMeanStd,
-                                   self.branches[1],
-                                   self.branchcutoffs[1],self.nsamples)
+                                   self.branches[4],
+                                   self.branchcutoffs[4],self.nsamples)
         
         
-        
-        x_global_csv = MeanNormZeroPad(filename,TupleMeanStd,
-                                   self.branches[2:],
-                                   self.branchcutoffs[2:],self.nsamples)
         
         
         
@@ -471,7 +458,6 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
             x_npf=x_npf[notremoves > 0]
-            x_global_csv=x_global_csv[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
        
         newnsamp=x_global.shape[0]
@@ -481,7 +467,7 @@ class TrainData_deepCSV_microPF(TrainData_deepCSV_PF):
         print(x_global.shape,self.nsamples)
 
         self.w=[weights]
-        self.x=[x_global,x_npf,x_global_csv]
+        self.x=[x_global,x_npf]
         self.y=[alltruth]
         
         

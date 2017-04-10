@@ -73,6 +73,7 @@ def main(argv=None):
     
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
+    from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
     from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF
     from TrainData_deepConvCSV import TrainData_deepConvCSV
@@ -83,6 +84,8 @@ def main(argv=None):
     traind=TrainData
     if Class == 'TrainData_deepCSV':
         traind=TrainData_deepCSV
+    elif Class == 'TrainData_deepConvCSV':
+        traind=TrainData_deepConvCSV
     elif Class == 'TrainData_deepJet_Reg':
         traind=TrainData_deepJet_Reg
     elif Class ==  'TrainData_deepCSV_PF':

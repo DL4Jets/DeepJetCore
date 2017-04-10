@@ -3,6 +3,7 @@ Created on 7 Apr 2017
 
 @author: jkiesele
 '''
+from __future__ import print_function
 
 from ReduceLROnPlateau import ReduceLROnPlateau
 from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard

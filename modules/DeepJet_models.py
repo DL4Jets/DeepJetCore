@@ -164,15 +164,11 @@ def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     
     cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
     cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
-    cpf = Dropout(dropoutRate)(cpf)
     cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
     cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
-    cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+    cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
     cpf = Flatten()(cpf)
     
     
@@ -180,31 +176,23 @@ def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     npf = Dropout(dropoutRate)(npf)
     npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Dropout(dropoutRate)(npf)
-    npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
-    npf = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+    npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Flatten()(npf)
     
     vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(Inputs[3])
     vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
-    vtx = Dropout(dropoutRate)(vtx)
     vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
     vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
-    vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+    vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
     vtx = Flatten()(vtx)
     
     
     x = merge( [Inputs[0],cpf,npf,vtx ] , mode='concat')
     
 
-    x=  Dense(600, activation='relu',kernel_initializer='lecun_uniform')(x)
-    x = Dropout(dropoutRate)(x)
-    x=  Dense(300, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(350, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
     x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
@@ -214,7 +202,6 @@ def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     x = Dropout(dropoutRate)(x)
     x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
@@ -282,22 +269,22 @@ def Dense_model_microPF(Inputs,nclasses,Inputshapes,dropoutRate=-1):
    
     from keras.layers.local import LocallyConnected1D
    
-    npf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
-    npf = Dropout(dropoutRate)(npf)
-    npf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
-    npf  = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
-    npf = Flatten()(npf)
+    #npf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
+    #npf = Dropout(dropoutRate)(npf)
+    #npf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+    #npf = Dropout(dropoutRate)(npf)
+    #npf  = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+    #npf = Dropout(dropoutRate)(npf)
+    npf = Flatten()(Inputs[1])
     
     
     
-    x = merge( [Inputs[0],npf,Inputs[2] ] , mode='concat')
+    x = merge( [Inputs[0],npf] , mode='concat')
     
     
-    x=  Dense(150, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(250, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
-    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x=  Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
     x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
@@ -314,28 +301,26 @@ def Dense_model_ConvCSV(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     Inputs similar to 2016 training, but with covolutional layers on each track and sv
     """
     
-    a  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
+    a  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
     a = Dropout(dropoutRate)(a)
-    a  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(a)
+    a  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(a)
     a = Dropout(dropoutRate)(a)
     a  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(a)
     a = Dropout(dropoutRate)(a)
     a=Flatten()(a)
     
-    b  = Convolution1D(1, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
-    b = Dropout(dropoutRate)(b)
-    b =Flatten()(b)
-    
-    c  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[3])
+    c  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
     c = Dropout(dropoutRate)(c)
-    c  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(c)
+    c  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(c)
     c = Dropout(dropoutRate)(c)
     c  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(c)
     c = Dropout(dropoutRate)(c)
     c=Flatten()(c)
     
-    x = merge( [Inputs[0],a,b,c] , mode='concat')
+    x = merge( [Inputs[0],a,c] , mode='concat')
     
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)

@@ -19,6 +19,8 @@ Created on 21 Mar 2017
 #
 #
 
+from __future__ import print_function
+
 class testDescriptor(object):
     
     def __init__(self):

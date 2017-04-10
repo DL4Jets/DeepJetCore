@@ -60,13 +60,13 @@ batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
 
-callbacks=DeepJet_callbacks(stop_patience=100, 
+callbacks=DeepJet_callbacks(stop_patience=300, 
                             
                             lr_factor=0.5,
                             lr_patience=3, 
                             lr_epsilon=0.003, 
                             lr_cooldown=6, 
-                            lr_minimum=0.00001, 
+                            lr_minimum=0.000001, 
                             
                             outputDir=outputDir)
 useweights=False
@@ -76,8 +76,6 @@ maxqsize=10 #sufficient
 
 
 from DataCollection import DataCollection
-from TrainData_deepCSV_ST import TrainData_deepCSV_ST
-from TrainData_deepCSV import TrainData_deepCSV
 
 traind=DataCollection()
 traind.readFromFile(inputData)
@@ -118,7 +116,7 @@ inputs = [Input(shape=shapes[0]),
 print(traind.getTruthShape()[0])
 from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
 #model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-model = Dense_model_broad_flat(inputs,traind.getTruthShape()[0],shapes,0.1)
+model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 print('compiling')
 

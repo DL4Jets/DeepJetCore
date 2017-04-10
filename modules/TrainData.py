@@ -4,6 +4,7 @@ Created on 20 Feb 2017
 @author: jkiesele
 '''
 
+from __future__ import print_function
 
 from Weighter import Weighter
 

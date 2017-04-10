@@ -4,6 +4,8 @@ Created on 26 Feb 2017
 @author: jkiesele
 '''
 
+from __future__ import print_function
+
 class Weighter(object):
     '''
     contains the histograms/input to calculate jet-wise weights
