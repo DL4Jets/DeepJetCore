@@ -50,4 +50,4 @@ class DeepJet_callbacks(object):
   
         self.history=History()
   
-        self.callbacks=[self.nl_begin,self.modelbestcheck,self.modelcheck,self.reduce_lr, self.stopping,self.nl_end]
+        self.callbacks=[self.nl_begin,self.modelbestcheck,self.modelcheck,self.reduce_lr, self.stopping,self.nl_end,self.history]
