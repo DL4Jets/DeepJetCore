@@ -77,6 +77,7 @@ def main(argv=None):
     from TrainData_deepCMVA import TrainData_deepCMVA
     from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF
     from TrainData_deepConvCSV import TrainData_deepConvCSV
+    from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     dc=DataCollection()
     
@@ -93,6 +94,8 @@ def main(argv=None):
         traind=TrainData_deepJet_Reg
     elif Class ==  'TrainData_deepCSV_PF':
         traind=TrainData_deepCSV_PF
+    elif Class ==  'TrainData_deepCSV_PF_Reg':
+        traind=TrainData_deepCSV_PF_Reg
     elif Class ==  'TrainData_deepCSV_softL_PF':
         traind=TrainData_deepCSV_softL_PF
     elif Class ==  'TrainData_deepConvCSV':

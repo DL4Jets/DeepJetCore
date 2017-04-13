@@ -8,6 +8,12 @@ Created on 21 Feb 2017
 from TrainData_deepCMVA import TrainData_deepCMVA
 
 
+class TrainData_PF_Reg(TrainData_deepCMVA):
+    
+    #PLEASE FILL AGAIN OR SIMILAR! WAS NOT COMMITTED
+    def __init__(self):
+        self.nothing=0
+
 class TrainData_deepJet_Reg(TrainData_deepCMVA):
     '''
     same as TrainData_deepCSV but with 5 truth labels: UDSG C B leptonicB leptonicB_C
