@@ -329,7 +329,7 @@ class TrainData_deepCSV_PF(TrainData_simpleTruth):
                           'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass'
                               ],
-                             20)
+                             25)
         
         
         self.addBranches(['Npfcan_erel',
@@ -338,7 +338,7 @@ class TrainData_deepCSV_PF(TrainData_simpleTruth):
                               'Npfcan_HadFrac',
                               'Npfcan_drminsv',
                               ],
-                             15)
+                             25)
         
         
         self.addBranches(['sv_pt',

@@ -86,7 +86,7 @@ def main(argv=None):
     if Class == 'TrainData_deepCSV':
         traind=TrainData_deepCSV
 
-    if Class == 'TrainData_PF_Reg':
+    elif Class == 'TrainData_PF_Reg':
         traind=TrainData_PF_Reg
     elif Class == 'TrainData_deepConvCSV':
         traind=TrainData_deepConvCSV

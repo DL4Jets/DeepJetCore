@@ -11,8 +11,26 @@ from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, R
 
 
 class newline_callbacks_begin(Callback):
+    
+    def __init__(self,outputDir):
+        self.outputDir=outputDir
+        self.loss=[]
+        self.val_loss=[]
+        
     def on_epoch_end(self,epoch, epoch_logs={}):
-        print('\n***callbacks***\n')
+        import os
+        lossfile=os.path.join( self.outputDir, 'losses.log')
+        print('\n***callbacks***\nsaving losses to '+lossfile)
+        self.loss.append(epoch_logs.get('loss'))
+        self.val_loss.append(epoch_logs.get('val_loss'))
+        f = open(lossfile, 'w')
+        for i in range(len(self.loss)):
+            f.write(str(self.loss[i]))
+            f.write(" ")
+            f.write(str(self.val_loss[i]))
+            f.write("\n")
+        f.close()    
+        
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, epoch_logs={}):
@@ -31,7 +49,7 @@ class DeepJet_callbacks(object):
                  outputDir=''):
         
         
-        self.nl_begin=newline_callbacks_begin()
+        self.nl_begin=newline_callbacks_begin(outputDir)
         self.nl_end=newline_callbacks_end()
         
         self.stopping = EarlyStopping(monitor='val_loss', 

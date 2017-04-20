@@ -98,7 +98,8 @@ def makeASequence(arg,length):
     return out      
         
 #just a wrapper
-def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
+def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, 
+             outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment=''): 
     
     files=makeASequence(intextfile,len(name_list))
     cuts=makeASequence(cuts,len(name_list))
@@ -112,9 +113,10 @@ def makeROCs(intextfile, name_list, probabilities_list, truths_list, vetos_list,
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,cuts)
+                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment)
     
-def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list, colors_list, outpdffile, cuts=''): 
+def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
+                    colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment=''): 
     
     files=makeASequence(intextfile,len(name_list))
     cuts=makeASequence(cuts,len(name_list))
@@ -129,7 +131,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,cuts)
+                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment)
     
     
     import multiprocessing

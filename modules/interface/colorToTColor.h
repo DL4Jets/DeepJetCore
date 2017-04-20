@@ -26,45 +26,63 @@
  *
  */
 
+
+int lineToTLineStyle(const TString& str){
+    TString copstr=str;
+    copstr.ToLower();
+    if(copstr.Contains("solid"))
+        return 1;
+
+    if(copstr.Contains("dashed"))
+        return 2;
+
+    if(copstr.Contains("dotted"))
+        return 3;
+
+    return 1;
+}
+
+
 int colorToTColor(const TString& str){
-	TString copstr=str;
-	copstr.ToLower();
+    TString copstr=str;
+    copstr.ToLower();
 
-	if(copstr=="black")
-		return kBlack;
+    if(copstr.Contains("black"))
+        return kBlack;
 
-	if(copstr=="gray")
-		return kGray+1;
+    if(copstr.Contains("gray"))
+        return kGray+1;
 
-	if(copstr=="white")
-		return kWhite;
+    if(copstr.Contains("white"))
+        return kWhite;
 
-	if(copstr=="red")
-		return kRed;
+    if(copstr.Contains("darkred"))
+        return kRed+2;
 
-	if(copstr=="darkred")
-		return kRed+2;
+    if(copstr.Contains("red"))
+        return kRed;
 
-	if(copstr=="blue")
-		return kAzure+2;
+    if(copstr.Contains("darkblue"))
+        return kBlue+1;
 
-	if(copstr=="darkblue")
-		return kBlue+1;
+    if(copstr.Contains("blue"))
+        return kAzure+2;
 
-	if(copstr=="green")
-		return kGreen+1;
+    if(copstr.Contains("darkgreen"))
+        return kGreen+3;
 
-	if(copstr=="darkgreen")
-		return kGreen+3;
+    if(copstr.Contains("green"))
+        return kGreen+1;
 
-	if(copstr=="purple")
-		return kMagenta+1;
+    if(copstr.Contains("darkpurple"))
+        return kMagenta+3;
 
-	if(copstr=="darkpurple")
-		return kMagenta+3;
+    if(copstr.Contains("purple"))
+        return kMagenta+1;
 
-	std::cerr<<"color string " << str << " not recognised\noptions"
-			<<"\n\
+
+    std::cerr<<"color string " << str << " not recognised\noptions"
+            <<"\n\
  * black\n\
  * gray\n\
  * white\n\
@@ -76,7 +94,7 @@ int colorToTColor(const TString& str){
  * darkgreen\n\
  * purple\n\
  * darkpurple"<<std::endl;
-	return kBlack;
+    return kBlack;
 
 }
 

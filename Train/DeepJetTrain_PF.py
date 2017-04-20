@@ -55,7 +55,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 
-nepochs=100
+nepochs=150
 batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
@@ -63,7 +63,7 @@ from DeepJet_callbacks import DeepJet_callbacks
 callbacks=DeepJet_callbacks(stop_patience=300, 
                             
                             lr_factor=0.5,
-                            lr_patience=3, 
+                            lr_patience=2, 
                             lr_epsilon=0.003, 
                             lr_cooldown=6, 
                             lr_minimum=0.000001, 
@@ -140,6 +140,9 @@ print('split to '+str(ntrainepoch)+' train samples and '+str(nvalepoch)+' test s
 
 print('training')
 
+#for bookkeeping
+traind.writeToFile(outputDir+'trainsamples.dc')
+testd.writeToFile(outputDir+'valsamples.dc')
 
 
 # the actual training
@@ -163,8 +166,6 @@ print(traind.getUsedTruth())
 print(callbacks.history.history.keys())
 
 model.save(outputDir+"KERAS_model.h5")
-traind.writeToFile(outputDir+'trainsamples.dc')
-testd.writeToFile(outputDir+'valsamples.dc')
 
 
 # summarize history for loss for trainin and test sample
