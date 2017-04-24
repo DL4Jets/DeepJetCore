@@ -38,11 +38,11 @@ public:
 
 	void setCMSStyle(bool cmsst){cmsstyle_=cmsst;}
 
-	void addROC(const TString& name, const TString& probability, const TString& truth,
-		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
+//	void addROC(const TString& name, const TString& probability, const TString& truth,
+//		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
 
 	void addROC(const TString& name, const TString& probability, const TString& truth,
-		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="");
+		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="");
 
 
 	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0);

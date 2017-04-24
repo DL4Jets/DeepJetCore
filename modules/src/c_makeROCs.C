@@ -27,9 +27,10 @@ void makeROCs(
 		const boost::python::list colors,
 		std::string outfile,
 		const boost::python::list cuts,
-		bool usecmsstyle=false,
-		std::string firstcomment="",
-		std::string secondcomment="") {
+		bool usecmsstyle,
+		std::string firstcomment,
+		std::string secondcomment,
+		const boost::python::list invalidate) {
 
 
 	std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -39,7 +40,7 @@ void makeROCs(
 	std::vector<TString>  s_vetos = toSTLVector<TString>(vetos);
 	std::vector<TString>  s_colors = toSTLVector<TString>(colors);
 	std::vector<TString>  s_cuts = toSTLVector<TString>(cuts);
-
+	std::vector<TString>  s_invalidate =toSTLVector<TString>(invalidate);
 
 	/*
 	 * Size checks!!!
@@ -49,7 +50,8 @@ void makeROCs(
 			s_names.size() != s_truths.size()||
 			s_names.size() != s_vetos.size()||
 			s_names.size() != s_colors.size()||
-			s_names.size() != s_cuts.size())
+			s_names.size() != s_cuts.size() ||
+			s_invalidate.size() != s_names.size())
 		throw std::runtime_error("makeROCs: input lists must have same size");
 
 	//make unique list of infiles
@@ -96,10 +98,10 @@ void makeROCs(
 	for(size_t i=0;i<s_names.size();i++){
 		if(s_cuts.size())
 			rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
-					s_vetos.at(i),s_colors.at(i),s_cuts.at(i));
+					s_vetos.at(i),s_colors.at(i),s_cuts.at(i),s_invalidate.at(i));
 		else
 			rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
-					s_vetos.at(i),s_colors.at(i),"");
+					s_vetos.at(i),s_colors.at(i),"",s_invalidate.at(i));
 	}
 
 	rocs.printRocs(injector.getChain(),(TString)outfile);

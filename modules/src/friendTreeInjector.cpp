@@ -86,16 +86,18 @@ void friendTreeInjector::createChain(){
 		for(size_t j=1;j<treesandfriends_.at(i).size();j++){
 		    TString friendtree=treesandfriends_.at(i).at(j)+"/tree";
 		    //std::cout << j-1<<' '<<friendtree << std::endl;
-			friendchains_.at(j-1)->AddFile(friendtree);
+		    if(friendtree!="DUMMY/tree")
+		        friendchains_.at(j-1)->AddFile(friendtree);
 		}
 	}
 	for(size_t i=0;i<friendchains_.size();i++){
 		size_t entries=chain_->GetEntries();
 		size_t friendentries=friendchains_.at(i)->GetEntries();
 		//std::cout << entries << ' '<< friendentries << std::endl;
-		if(entries!=friendentries)
+		if(friendentries!=0 && entries!=friendentries)
 			throw std::out_of_range("friendTreeInjector::createChain: trees don't have same number of entries.\nIs is possible that the test data was not converted using --testdatafor?");
-		chain_->AddFriend(friendchains_.at(i),friendaliases_.at(i));
+		if(friendentries)
+		    chain_->AddFriend(friendchains_.at(i),friendaliases_.at(i));
 	}
 
 }

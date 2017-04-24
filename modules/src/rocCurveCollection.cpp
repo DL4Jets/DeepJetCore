@@ -17,17 +17,23 @@
 #include "TLegendEntry.h"
 #include "TLatex.h"
 
+//void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
+//        const TString& vetotruth, int linecol, const TString& cuts, int linestyle){
+//
+//    roccurves_.push_back(rocCurve(name,probability,truth,vetotruth,linecol,linestyle,cuts));
+//
+//}
+
 void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
-        const TString& vetotruth, int linecol, const TString& cuts, int linestyle){
+        const TString& vetotruth, const TString& linecol, const TString& cuts,const TString& invalidateif){
 
-    roccurves_.push_back(rocCurve(name,probability,truth,vetotruth,linecol,linestyle,cuts));
-
-}
-
-void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
-        const TString& vetotruth, const TString& linecol, const TString& cuts){
-
-    roccurves_.push_back(rocCurve(name,probability,truth,vetotruth,colorToTColor(linecol),lineToTLineStyle(linecol),cuts));
+    rocCurve rc=rocCurve(name,probability,truth,vetotruth,colorToTColor(linecol),lineToTLineStyle(linecol),cuts,invalidateif);
+    rc.setLineWidth(linewidth_);
+    TString lc=linecol;
+    lc.ToLower() ;
+    if(lc.Contains("dummy"))
+        rc.setLineWidth(0);
+    roccurves_.push_back(rc);
 
 }
 
@@ -37,11 +43,6 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
     gROOT->SetBatch();
 
-
-    for(auto& rc:roccurves_){
-        rc.process(c);
-    }
-
     TString filename=outpdf;
     filename=filename(0,filename.Length()-4);
     bool createFile=false;
@@ -49,6 +50,25 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         f =new TFile(filename+".root","RECREATE");
         createFile=true;
     }
+    size_t count=0;
+    std::vector<TH1D*> probhistos,vetohistos,invalidhistos;
+    for(auto& rc:roccurves_){
+        rc.setNBins(200);
+        rc.process(c);
+        TString tempname="";
+        tempname+=count;
+        count++;
+
+        TH1D* ha=(TH1D*)rc.getProbHisto()->Clone(tempname);
+        probhistos.push_back(ha);
+        tempname+=count;
+        TH1D* hb=(TH1D*)rc.getVetoProbHisto()->Clone(tempname);
+        vetohistos.push_back(hb);
+        tempname+=count;
+        TH1D* hc=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
+        invalidhistos.push_back(hc);
+    }
+
 
     bool createCanvas=false;
     if(!cv){
@@ -94,8 +114,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     double xmin=1;
 
     std::vector<TGraph*> graphs;
+    count=0;
     for(auto& rc:roccurves_){
-        rc.setLineWidth(linewidth_);
         TGraph* g=rc.getROC();
         graphs.push_back(g);
         g->SetLineWidth(linewidth_);
@@ -108,8 +128,17 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
             }
         }
         g->Draw("L,same");
+        g->Write();
         leg_->AddEntry(g,g->GetTitle(),"l");
+        vetohistos.at(count)->SetName((TString)g->GetTitle()+"_veto");
+        vetohistos.at(count)->Write();
+        probhistos.at(count)->SetName((TString)g->GetTitle()+"_prob");
+        probhistos.at(count)->Write();
+        invalidhistos.at(count)->SetName((TString)g->GetTitle()+"_invalid");
+        invalidhistos.at(count)->Write();
+        count++;
     }
+
     xmin*=10;
     xmin=(int)xmin;
     xmin/=10;
@@ -160,7 +189,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
         haxis.GetXaxis()->SetTitle("b-jet efficiency");
 
-        // haxis.GetXaxis()->SetRangeUser(0,1);
+        haxis.GetXaxis()->SetRangeUser(0,1);
     }
 
     leg_->Draw("same");
@@ -183,6 +212,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     if(createCanvas){
         cv->Print(outpdf);
         cv->Write();
+        //if(cmsstyle_) //not working due to missing libraries
+        //    cv->Print(filename+".png");
     }
     if(createFile){
         f->Close();

@@ -55,7 +55,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 testrun=False
 
 
-nepochs=150
+nepochs=100
 batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
