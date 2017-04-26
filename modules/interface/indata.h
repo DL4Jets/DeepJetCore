@@ -40,10 +40,16 @@ public:
 	}
 
 	float getData(const size_t& b,const size_t& i);
+	float getDefault(const size_t& b);
 
 	void allZero();
 
 	void getEntry(size_t entry);
+
+	void zeroAndGet(size_t entry) {
+		allZero(); 
+		getEntry(entry);
+	}
 
 	void setup(TTree* tree);
 
@@ -51,7 +57,8 @@ public:
 		return i*max;
 	}
 
-
+	size_t nfeatures() {return branches.size();}
+	size_t nelements() {return buffer.size();}
 
 	std::vector<float* > buffer;
 

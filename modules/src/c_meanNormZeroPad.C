@@ -177,6 +177,101 @@ void priv_particlecluster(boost::python::numeric::array& numpyarray,
 
 }
 
+int square_bins(
+	double xval, double xcenter, 
+	int nbins, double half_width) {
+	double bin_width = (2*half_width)/nbins;
+	double low_edge = xcenter - half_width;
+	int ibin = std::floor((xval - low_edge)/bin_width);
+	return (ibin >= 0 && ibin < nbins) ? ibin : -1;
+}
+
+void particle_binner(
+	boost::python::numeric::array numpyarray,
+	const boost::python::list inl_norms,
+	const boost::python::list inl_means ,
+	const boost::python::list inl_branches,
+	int nmax, std::string filename, 
+	std::string xbranch, std::string xcenter, int xbins, float xwidth, 
+	std::string ybranch, std::string ycenter, int ybins, float ywidth
+	) {
+	std::vector<TString> s_branches = toSTLVector<TString>(inl_branches);
+	std::vector<double>  s_norms    = toSTLVector<double>(inl_norms);
+	std::vector<double>  s_means    = toSTLVector<double>(inl_means);	
+
+	//get the branch handlers
+  //pick all the objects in the collection cut off and zero padding is done per bin
+	__hidden::indata branches;
+	branches.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH); 
+
+	//get x,y (eta, phi but could be something else) branches
+	//mean =0  norm = 1 to avoid scaling
+	__hidden::indata xy;
+	xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+
+	//get jet center
+	__hidden::indata xy_center;
+	xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
+
+	//get file and tree
+	TFile* tfile=new TFile(filename.c_str(), "READ");
+	TTree* tree=(TTree*)tfile->Get("deepntuplizer/tree");
+
+	//connect all branches
+	branches.setup(tree);
+	xy.setup(tree);
+	xy_center.setup(tree);
+
+	//find bin indexes
+	const int nevents=tree->GetEntries();
+
+	for(int jet=0;jet<nevents;jet++){
+		//get values
+		branches.zeroAndGet(jet);
+		xy.zeroAndGet(jet);
+		xy_center.zeroAndGet(jet);
+
+		//map filled indices
+		int current_indexes[xbins][ybins];
+		for(size_t x=0; x<xbins; x++) {
+			for(size_t y=0; y<ybins; y++) {
+				current_indexes[x][y] = 0;
+			}
+		}
+
+		//loop over all candidates
+		for(size_t elem=0; elem < MAXBRANCHLENGTH; elem++) {
+			//get bin id
+			int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, elem), xbins, xwidth);
+			int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, elem), ybins, ywidth);
+			if(xidx == -1 || yidx == -1) continue;
+			//if bin is full skip
+			if(current_indexes[xidx][yidx] == nmax) continue;
+			int particle_idx = current_indexes[xidx][yidx];
+			current_indexes[xidx][yidx]++;
+			
+			for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= branches.getData(ifeat, elem);
+			}			
+		}
+		//now, pad with defaults what remains of each bin
+		for(size_t x=0; x<xbins; x++) {
+			for(size_t y=0; y<ybins; y++) {
+				for(size_t idx=current_indexes[x][y]; idx<nmax; idx++) {
+					for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+						numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
+					}
+				}
+			}
+		}
+
+	}	
+
+	tfile->Close();
+	delete tfile;
+}
+
+
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_meanNormZeroPad) {

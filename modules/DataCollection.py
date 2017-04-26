@@ -10,7 +10,8 @@ from __future__ import print_function
 from Weighter import Weighter
 from TrainData import TrainData, fileTimeOut
 #for convenience
-
+import logging
+from pdb import set_trace
 
 class DataCollection(object):
     '''
@@ -18,11 +19,12 @@ class DataCollection(object):
     '''
 
 
-    def __init__(self):
+    def __init__(self, nprocs = -1):
         '''
         Constructor
         '''
         self.clear()
+        self.nprocs = nprocs
         
         
     def clear(self):
@@ -287,13 +289,13 @@ class DataCollection(object):
         
         
         if redo_meansandweights and (td.remove or td.weight):
-            print('producing weights')
+            logging.info('producing weights')
             weighter=Weighter()
             weighter=td.produceBinWeighter(self.originRoots[0])
             self.weighter=weighter
         
         if redo_meansandweights:
-            print('producing means')
+            logging.info('producing means')
             self.means=td.produceMeansFromRootFile(self.originRoots[0])
         
         
@@ -405,8 +407,7 @@ class DataCollection(object):
         for i in range(startindex,len(self.originRoots)):
             processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
         
-        nchilds=cpu_count()
-        nchilds=int(nchilds/2) #don't use all of them
+        nchilds = int(cpu_count()/2) if self.nprocs <= 0 else self.nprocs
         #import os
         #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
         #    nchilds=cpu_count()-5
@@ -423,9 +424,9 @@ class DataCollection(object):
                     alldone=True
                 
                 
-                print('starting '+str(nchilds)+' child processes')
+                logging.info('starting %d child processes' % nchilds)
                 for i in range(nchilds):
-                    print('starting '+self.originRoots[i+index]+'...')
+                    logging.info('starting %s...' % self.originRoots[i+index])
                     processes[i+index].start()
                         
                 results=[]
@@ -437,19 +438,19 @@ class DataCollection(object):
                     while not wo_queue.empty():
                         res=wo_queue.get()
                         results.append(res)
-                        print('collected result '+str(res[0])+', ' +str(nchilds-len(results))+' left')
+                        logging.info('collected result %d, %d left' % (res[0], (nchilds-len(results))))
                     if not running:
                         break
                     time.sleep(0.1)
                 
-                print('joining')
+                logging.info('joining')
                 for i in range(nchilds):
                     processes[i+index].join(5)
                     
                 results.sort()
                 results = [r[1] for r in results]
                 for i in range(nchilds):
-                    print(results[i])
+                    logging.info(results[i])
                     __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
                 
                 index+=nchilds
