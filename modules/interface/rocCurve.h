@@ -66,6 +66,7 @@ public:
 	const TH1D* getProbHisto()const{return &probh_;}
 	const TH1D* getVetoProbHisto()const{return &vetoh_;}
     const TH1D* getInvalidatedHisto()const{return &invalidate_;}
+    const TH1D* getInvalidatedVetoHisto()const{return &invalidate_veto_;}
 
 
 private:
@@ -84,7 +85,7 @@ private:
 
 	TH1D probh_;
 	TH1D vetoh_;
-    TH1D invalidate_;
+    TH1D invalidate_,invalidate_veto_;
 
 	TGraph roc_;
 	int linecol_,linewidth_,linestyle_;

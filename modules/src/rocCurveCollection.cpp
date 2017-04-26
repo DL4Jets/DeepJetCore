@@ -51,7 +51,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         createFile=true;
     }
     size_t count=0;
-    std::vector<TH1D*> probhistos,vetohistos,invalidhistos;
+    std::vector<TH1D*> probhistos,vetohistos,invalidhistos,invalidvetohistos;
     for(auto& rc:roccurves_){
         rc.setNBins(200);
         rc.process(c);
@@ -67,6 +67,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         tempname+=count;
         TH1D* hc=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
         invalidhistos.push_back(hc);
+        TH1D* hd=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
+        invalidvetohistos.push_back(hd);
     }
 
 
@@ -136,6 +138,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         probhistos.at(count)->Write();
         invalidhistos.at(count)->SetName((TString)g->GetTitle()+"_invalid");
         invalidhistos.at(count)->Write();
+        invalidvetohistos.at(count)->SetName((TString)g->GetTitle()+"_invalid_veto");
+        invalidvetohistos.at(count)->Write();
         count++;
     }
 

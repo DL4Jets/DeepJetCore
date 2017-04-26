@@ -79,12 +79,13 @@ void rocCurve::process(TChain *c){
     probstr.Remove(probstr.Length()-1);
 
     TString allcuts=truthstr;
-    TString allinvalid=makeinvalidif_;
-    if(allinvalid.Length()<1){
-        allinvalid=probstr+"<-10000"; //false
+    TString allinvalid_truth=makeinvalidif_;
+    if(allinvalid_truth.Length()<1){
+        allinvalid_truth=probstr+"<-10000"; //false
     }
 
-    allinvalid+="&&"+truthstr;
+    TString allinvalid_veto=allinvalid_truth+"&&"+vetostr;
+    allinvalid_truth+="&&"+truthstr;
 
     if(cuts_.Length()){
         if(allcuts.Length())
@@ -96,7 +97,8 @@ void rocCurve::process(TChain *c){
         else
             vetostr=cuts_;
 
-        allinvalid=allinvalid+"&&"+cuts_;
+        allinvalid_truth=allinvalid_truth+"&&"+cuts_;
+        allinvalid_veto+="&&"+cuts_;
     }
 
 
@@ -106,21 +108,25 @@ void rocCurve::process(TChain *c){
     probh_=TH1D("prob","prob",nbins_,0,1);
     vetoh_=TH1D("veto","veto",nbins_,0,1);
     invalidate_=TH1D("invalid","invalid",nbins_,0,1);
+    invalidate_veto_=TH1D("invalid_veto","invalid_veto",nbins_,0,1);
 
 
     c->Draw(probstr+">>prob",allcuts);//probcuts);
     c->Draw(probstr+">>veto",vetostr);
-    c->Draw(probstr+">>invalid",allinvalid);
+    c->Draw(probstr+">>invalid",allinvalid_truth);
+    c->Draw(probstr+">>invalid_veto",allinvalid_veto);
 
 
     //remove from mem list
     probh_.SetDirectory(0);
     vetoh_.SetDirectory(0);
     invalidate_.SetDirectory(0);
+    invalidate_veto_.SetDirectory(0);
 
     probh_.SetName("probh_");
     vetoh_.SetName("vetoh_");
     invalidate_.SetName("invalidate_");
+    invalidate_veto_.SetName("invalidate_veto_");
 
     std::vector<double> p(nbins_),v(nbins_);
 
@@ -129,6 +135,8 @@ void rocCurve::process(TChain *c){
    // double invalidintegral=invalid.Integral(0,nbins_);
 
     probh_.Add(&invalidate_,-1.);
+    vetoh_.Add(&invalidate_veto_,-1.);
+
     for(int i=0;i<=probh_.GetNbinsX();i++){
         if(probh_.GetBinContent(i)<0)probh_.SetBinContent(i,0);//just safety measure
     }
