@@ -135,7 +135,8 @@ class DataCollection(object):
         import os
         self.dataDir=os.path.dirname(os.path.abspath(filename))
         self.dataDir+='/'
-        #check if files exist
+        #don't check if files exist
+        return 
         for f in self.originRoots:
             if not f.endswith(".root"): continue
             if not os.path.isfile(f):

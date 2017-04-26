@@ -154,37 +154,43 @@ def Dense_model_broad_flat(Inputs,nclasses,Inputshapes,dropoutRate=-1):
 
 def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     """
-    the inputs are really not working as they are. need a reshaping well before
+    reference 1x1 convolutional model for 'deepFlavour'
     """  
-    #gl = Dense(8, activation='relu',kernel_initializer='lecun_uniform',input_shape=Inputshapes[0])(Inputs[0])
-    #gl = Dense(8, activation='relu',kernel_initializer='lecun_uniform')(gl)
-    #gl = Dense(8, activation='relu',kernel_initializer='lecun_uniform')(gl)
     
-    
-    cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
-    cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
-    cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
-    cpf = Dropout(dropoutRate)(cpf)
-    cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+
+    UseConv=True
+    cpf=Inputs[1]
+    if UseConv:
+        cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        
     cpf = Flatten()(cpf)
     
-    
-    npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
-    npf = Dropout(dropoutRate)(npf)
-    npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
-    npf = Dropout(dropoutRate)(npf)
-    npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+    npf=Inputs[2]
+    if UseConv:
+        npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+        
     npf = Flatten()(npf)
     
-    vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(Inputs[3])
-    vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
-    vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
-    vtx = Dropout(dropoutRate)(vtx)
-    vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+    vtx = Inputs[3]
+    if UseConv:
+        vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        
     vtx = Flatten()(vtx)
     
     
@@ -192,6 +198,12 @@ def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     
 
     x=  Dense(350, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
     x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)

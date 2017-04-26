@@ -12,10 +12,12 @@
 #include <vector>
 #include "TLegend.h"
 #include "TChain.h"
+#include "TFile.h"
+#include "TCanvas.h"
 
 class rocCurveCollection{
 public:
-	rocCurveCollection():leg_(0),linewidth_(2){}
+	rocCurveCollection():leg_(0),linewidth_(2),cmsstyle_(false){}
 	~rocCurveCollection(){
 		if(leg_)
 			delete leg_;
@@ -26,19 +28,31 @@ public:
 		linewidth_=width;
 	}
 
-	void addROC(const TString& name, const TString& probability, const TString& truth,
-		const TString& vetotruth, int linecol, const TString& cuts="", int linestyle=1);
+	void setCommentLine0(const TString& l){
+	    comment0_=l;
+	}
+
+    void setCommentLine1(const TString& l){
+        comment1_=l;
+    }
+
+	void setCMSStyle(bool cmsst){cmsstyle_=cmsst;}
+
+//	void addROC(const TString& name, const TString& probability, const TString& truth,
+//		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
 
 	void addROC(const TString& name, const TString& probability, const TString& truth,
-		const TString& vetotruth, const TString& linecol, const TString& cuts="", int linestyle=1);
+		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="");
 
 
-	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="");
+	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0);
 
 private:
 	TLegend * leg_;
 	int linewidth_;
 	std::vector<rocCurve> roccurves_;
+	bool cmsstyle_;
+	TString comment0_, comment1_;
 };
 
 

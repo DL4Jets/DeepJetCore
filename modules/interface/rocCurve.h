@@ -18,7 +18,8 @@ public:
 	rocCurve();
 	rocCurve(const TString& name);
 	rocCurve(const TString& name, const TString& probability, const TString& truth, const TString& vetotruth, const TString& cuts="");
-	rocCurve(const TString& name, const TString& probability, const TString& truth, const TString& vetotruth, int linecol, int linestyle, const TString& cuts="");
+	rocCurve(const TString& name, const TString& probability, const TString& truth, const TString& vetotruth, int linecol, int linestyle,
+	        const TString& cuts="",const TString& invalidateif="");
 
 	~rocCurve();
 
@@ -33,6 +34,10 @@ public:
 	void addTagProbability(const TString& p){
 		probabilities_.push_back(p);
 	}
+
+	void setInvalidCuts(const TString& p){
+	    makeinvalidif_=p;
+    }
 
 	void setCuts(const TString& cut){
 		cuts_=cut;
@@ -60,6 +65,7 @@ public:
 
 	const TH1D* getProbHisto()const{return &probh_;}
 	const TH1D* getVetoProbHisto()const{return &vetoh_;}
+    const TH1D* getInvalidatedHisto()const{return &invalidate_;}
 
 
 private:
@@ -74,9 +80,11 @@ private:
 	std::vector<TString> vetotruths_;
 
 	std::vector<TString> probabilities_;
+	TString makeinvalidif_;
 
 	TH1D probh_;
 	TH1D vetoh_;
+    TH1D invalidate_;
 
 	TGraph roc_;
 	int linecol_,linewidth_,linestyle_;
