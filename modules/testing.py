@@ -51,6 +51,9 @@ class testDescriptor(object):
             
             fullpath=testdatacollection.getSamplePath(sample)
             td=testdatacollection.dataclass
+            
+            pt_regression_activate=hasattr(td, 'regtruth')
+            
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
             formatstring=''
@@ -60,13 +63,20 @@ class testDescriptor(object):
             print(formatstring)
             features=td.x
             labels=td.y
-            metric=model.evaluate(features, labels, batch_size=10000)
+            #metric=model.evaluate(features, labels, batch_size=10000)
             
             prediction = model.predict(features)
-            all_write = np.core.records.fromarrays(prediction.transpose(), names= formatstring)
-            array2root(all_write,outputDir+'/'+outrootfilename,mode="recreate")
+            if not pt_regression_activate:
+                all_write = np.core.records.fromarrays(np.transpose(prediction), names= formatstring)
+            else :
+                flavour_pred=prediction[0]
+                pt_pred=prediction[1]
+                all_write=np.concatenate((flavour_pred,pt_pred),axis=1)
+                all_write = np.core.records.fromarrays(np.transpose(all_write), names= formatstring+",reg_uncPt,reg_Pt")
+        
+            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
             
-            self.metrics.append(metric)
+            #self.metrics.append(metric)
             self.__sourceroots.append(originroot)
             self.__predictroots.append(outputDir+'/'+outrootfilename)
             
@@ -107,9 +117,9 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     truths_list=makeASequence(truths_list,len(name_list))
     vetos_list=makeASequence(vetos_list,len(name_list))
     invalidlist=makeASequence(invalidlist,len(name_list))
-    
+    import c_makeROCs
     def worker():
-        import c_makeROCs
+        
         c_makeROCs.makeROCs(files,name_list,
                         probabilities_list,
                         truths_list,
@@ -125,7 +135,28 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
 
     # use multiprocessing return thread for waiting option
     
-     
+def makePlots_async(intextfile, name_list, variables, cuts, colours,
+                     outpdffile, xaxis='',yaxis='',normalized=False): 
+    
+    
+    files_list=makeASequence(intextfile,len(name_list))
+    variables_list=makeASequence(variables,len(name_list))
+    cuts_list=makeASequence(cuts,len(name_list))
+    colours_list=makeASequence(colours,len(name_list))
+    
+
+    import c_makePlots
+    def worker():
+        
+        c_makePlots.makePlots(files_list,name_list,
+                        variables_list,cuts_list,colours_list,
+                        outpdffile,xaxis,yaxis,normalized)
+    
+    
+    import multiprocessing
+    p = multiprocessing.Process(target=worker)
+    p.start()
+    return p     
     
 ######### old part - keep for reference, might be useful some day 
 
