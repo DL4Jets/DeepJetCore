@@ -17,8 +17,8 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         #class specific
         self.charged_per_bin = 5 # number of charged particles per 2D bin
         self.neutral_per_bin = 5 # number of charged particles per 2D bin
-        self.nbins = 20
-        self.jet_radius = 0.4
+        self.nbins = 20 #10
+        self.jet_radius = 0.4 #0.6
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
@@ -91,7 +91,6 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         
         
         # split for convolutional network
-        
         x_global = MeanNormZeroPad(filename,TupleMeanStd,
                                    [self.branches[0]],
                                    [self.branchcutoffs[0]],self.nsamples)
@@ -106,6 +105,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
             self.nsamples, 
             ('Cpfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Cpfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
+            'nCpfcand'
         )
         
         x_npf = MeanNormZeroPadBinned(
@@ -114,6 +114,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
             self.nsamples, 
             ('Npfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Npfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
+            'nNpfcand'
         )
         
         x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,

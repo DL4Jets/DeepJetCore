@@ -268,15 +268,18 @@ def MeanNormApply(Tuple,MeanNormTuple):
 
 def MeanNormZeroPadBinned(
     Filename_in, MeanNormTuple, inbranches, 
-    nMax, nevents, dimension1, dimension2, makeSum = False
+    nMax, nevents, dimension1, dimension2, 
+    counter, makeSum = False
     ):
     import c_meanNormZeroPad
     
     means=[]
     norms=[]
     for b in inbranches:
-        means.append(MeanNormTuple[b][0])
-        norms.append(MeanNormTuple[b][1])
+        means.append(0)
+        norms.append(1)
+        #means.append(MeanNormTuple[b][0]) FIXME
+        #norms.append(MeanNormTuple[b][1])
 
     x_branch, x_center, x_bins, x_width = dimension1
     y_branch, y_center, y_bins, y_width = dimension2
@@ -288,10 +291,11 @@ def MeanNormZeroPadBinned(
             (nevents,x_bins,y_bins,nMax,len(inbranches)) , dtype='float32')
 
     c_meanNormZeroPad.particle_binner(
-        array, norms, means, inbranches, nMax, Filename_in,
+        array, norms, means, inbranches, nMax, Filename_in, counter,
         x_branch, x_center, x_bins, x_width,
         y_branch, y_center, y_bins, y_width
         )
+    return array
         
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
@@ -350,8 +354,8 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
         means=[]
         norms=[]
         for b in inbranches:
-            means.append(MeanNormTuple[b][0])
-            norms.append(MeanNormTuple[b][1])
+            means.append(0) ## MeanNormTuple[b][0]) FIXME
+            norms.append(1) ## MeanNormTuple[b][1])
         meanslist.append(means)
         normslist.append(norms)
     
