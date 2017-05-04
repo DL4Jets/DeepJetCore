@@ -17,8 +17,8 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         #class specific
         self.charged_per_bin = 5 # number of charged particles per 2D bin
         self.neutral_per_bin = 5 # number of charged particles per 2D bin
-        self.nbins = 20 #10
-        self.jet_radius = 0.4 #0.6
+        self.nbins = 10
+        self.jet_radius = 0.6
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
@@ -89,7 +89,6 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         
         print('took ', sw.getAndReset(), ' seconds for getting tree entries')
         
-        
         # split for convolutional network
         x_global = MeanNormZeroPad(filename,TupleMeanStd,
                                    [self.branches[0]],
@@ -101,7 +100,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         # sum o stack -- max to stack/zero pad        
         x_cpf = MeanNormZeroPadBinned(
             filename, TupleMeanStd, self.branches[1], 
-            self.charged_per_bin, #per-bin # of particles to be kept. Hardoced here for the moment FIXME
+            self.charged_per_bin, #per-bin # of particles to be kept. 
             self.nsamples, 
             ('Cpfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Cpfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
@@ -110,7 +109,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         
         x_npf = MeanNormZeroPadBinned(
             filename, TupleMeanStd, self.branches[1], 
-            self.charged_per_bin, #per-bin # of particles to be kept. Hardoced here for the moment FIXME
+            self.neutral_per_bin, #per-bin # of particles to be kept. 
             self.nsamples, 
             ('Npfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Npfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
@@ -126,7 +125,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
         Tuple = self.readTreeFromRootToTuple(filename)
-        
+
         if self.remove:
             notremoves=weighter.createNotRemoveIndices(Tuple)
             undef=Tuple['isUndefined']

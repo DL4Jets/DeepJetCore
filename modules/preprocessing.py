@@ -276,10 +276,8 @@ def MeanNormZeroPadBinned(
     means=[]
     norms=[]
     for b in inbranches:
-        means.append(0)
-        norms.append(1)
-        #means.append(MeanNormTuple[b][0]) FIXME
-        #norms.append(MeanNormTuple[b][1])
+        means.append(MeanNormTuple[b][0])
+        norms.append(MeanNormTuple[b][1])
 
     x_branch, x_center, x_bins, x_width = dimension1
     y_branch, y_center, y_bins, y_width = dimension2
@@ -354,8 +352,8 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
         means=[]
         norms=[]
         for b in inbranches:
-            means.append(0) ## MeanNormTuple[b][0]) FIXME
-            norms.append(1) ## MeanNormTuple[b][1])
+            means.append(MeanNormTuple[b][0])
+            norms.append(MeanNormTuple[b][1])
         meanslist.append(means)
         normslist.append(norms)
     

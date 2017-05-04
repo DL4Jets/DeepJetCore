@@ -139,15 +139,10 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
 	//std::cout << "looping over events: "<< stopw.RealTime () <<std::endl;
 	//stopw.Reset();
 	//stopw.Start();
-	const int nevents=tree->GetEntries();
+	const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
 	const int datasize=datacollection.size();
 
 	for(int jet=0;jet<nevents;jet++){
-		if(jet % 100 == 0) {
-			std::cout << "filling jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
-			stopw.Reset();
-			stopw.Start();
-		}
 		for(auto& d:datacollection)
 			d.allZero();
 		for(auto& d:datacollection)
@@ -222,8 +217,8 @@ void particle_binner(
 	__hidden::indata counter;
 	counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
-	TFile* tfile=new TFile(filename.c_str(), "READ");
-	TTree* tree=(TTree*)tfile->Get("deepntuplizer/tree");
+	TFile* tfile= new TFile(filename.c_str(), "READ");
+	TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
 
 	//connect all branches
 	branches.setup(tree);
@@ -231,32 +226,29 @@ void particle_binner(
 	xy_center.setup(tree);
 	counter.setup(tree);
 
-	std::cout << "looping over events: "<<std::endl;
-	const int nevents=tree->GetEntries();
+	// std::cout << "looping over events for " << counter_branch <<std::endl;
+	const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
 	TStopwatch stopw;
 	for(int jet=0;jet<nevents;jet++){
-		if(jet % 100 == 0) {
-			std::cout << "filling binned jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
-			stopw.Reset();
-			stopw.Start();
-		}
+		// if(jet % 100 == 0) {
+		// 	std::cout << "filling binned jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
+		// 	stopw.Reset();
+		// 	stopw.Start();
+		// }
 		//get values
 		branches.zeroAndGet(jet);
 		xy.zeroAndGet(jet);
 		xy_center.zeroAndGet(jet);
 		counter.zeroAndGet(jet);
 
+		//std::cout << "jet #" << jet << ": " << xy_center.getData(0, 0) << ", " << xy_center.getData(1, 0) << std::endl; 
+
 		//map filled indices
 		int current_indexes[xbins][ybins];
-		for(size_t x=0; x<xbins; x++) {
-			for(size_t y=0; y<ybins; y++) {
-				current_indexes[x][y] = 0;
-			}
-		}
-
 		//now, pad with defaults every bin (for safety up here)
 		for(size_t x=0; x<xbins; x++) {
 			for(size_t y=0; y<ybins; y++) {
+				current_indexes[x][y] = 0;
 				for(size_t idx=0; idx<nmax; idx++) {
 					for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
 						numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
@@ -278,9 +270,22 @@ void particle_binner(
 			current_indexes[xidx][yidx]++;
 			
 			for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
-				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= branches.getData(ifeat, elem);
+				double feature_value = branches.getData(ifeat, elem);
+				// if(ifeat == 0)
+				// 	std::cout << "Jet: " << jet << " Candidate: " << elem << ", bin (" << xidx << ", " << yidx << ", " << particle_idx
+				// 						<< ") feat #"<< ifeat <<": " << feature_value << std::endl;
+				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= feature_value;
 			}			
 		}
+
+		//BUG HUNTING
+		//int filled = 0;
+		//for(size_t x=0; x<xbins; x++) {
+		//	for(size_t y=0; y<ybins; y++) {
+		//		filled += current_indexes[x][y];
+		//	}
+		//}
+		//std::cout << "jet #" << jet << " had " << ncharged << " candidates. I filled " << filled << std::endl;
 	}	
 
 	tfile->Close();
