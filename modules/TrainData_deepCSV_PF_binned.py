@@ -37,7 +37,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
                           'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass'
                               ],
-                             20)
+                             5)
         
         
         self.addBranches(['Npfcan_erel',
@@ -46,7 +46,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
                               'Npfcan_HadFrac',
                               'Npfcan_drminsv',
                               ],
-                             15)
+                             5)
         
         
         self.addBranches(['sv_pt',
@@ -67,7 +67,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
                               'sv_costhetasvpv',
                               'sv_enratio',
                               ],
-                             4)
+                             2)
 
         
         
@@ -94,31 +94,39 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
                                    [self.branches[0]],
                                    [self.branchcutoffs[0]],self.nsamples)
         
-        # Needed
+        # needed
         # (dimension #1, center #1, nbins 1, half width 1)
         # (dimension #2, center #2, nbins 2, half width 2)
         # sum o stack -- max to stack/zero pad        
         x_cpf = MeanNormZeroPadBinned(
             filename, TupleMeanStd, self.branches[1], 
-            self.charged_per_bin, #per-bin # of particles to be kept. 
-            self.nsamples, 
+            self.branchcutoffs[1], #per-bin # of particles to be kept. 
+            self.nsamples,
             ('Cpfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Cpfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
             'nCpfcand'
         )
         
         x_npf = MeanNormZeroPadBinned(
-            filename, TupleMeanStd, self.branches[1], 
-            self.neutral_per_bin, #per-bin # of particles to be kept. 
-            self.nsamples, 
+            filename, TupleMeanStd, self.branches[2], 
+            self.branchcutoffs[2], #per-bin # of particles to be kept. 
+            self.nsamples,
             ('Npfcan_eta', 'jet_eta', self.nbins, self.jet_radius), 
             ('Npfcan_phi', 'jet_phi', self.nbins, self.jet_radius), 
             'nNpfcand'
         )
         
-        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
-                                   self.branches[3],
-                                   self.branchcutoffs[3],self.nsamples)
+        x_sv = MeanNormZeroPadBinned(
+            filename, TupleMeanStd, self.branches[3], 
+            self.branchcutoffs[3], #per-bin # of particles to be kept. 
+            self.nsamples, 
+            ('sv_eta', 'jet_eta', self.nbins, self.jet_radius), 
+            ('sv_phi', 'jet_phi', self.nbins, self.jet_radius), 
+            'nsv'
+        )
+        ## meannormzeropadparticles(filename,TupleMeanStd,
+        ##                          self.branches[3],
+        ##                          self.branchcutoffs[3],self.nsamples)
         
         
         
@@ -160,8 +168,6 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
-        print(x_global.shape,self.nsamples)
-
         self.w=[weights]
         self.x=[x_global,x_cpf,x_npf,x_sv]
         self.y=[alltruth]
