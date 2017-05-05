@@ -5,7 +5,7 @@ import numpy
 author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
 """
 from array import array
-
+import logging
 
 def setDefaultsZero(inarray):
     inarray[inarray == -999] = 0
@@ -109,14 +109,14 @@ def meanNormProd(Tuple):
             chainsize = chain.size
             chain = chain[numpy.invert( numpy.isinf( chain[:] )) ]
             if chainsize != chain.size:
-                print (' There are Inf in the tuple !!! Removed infinities to keep going, but PLEASE CHECK where the fuck they are comming from ')
+                logging.warning(' There are Inf in the tuple !!! Removed infinities to keep going, but PLEASE CHECK where the fuck they are comming from ')
             mean = mean + (chain.mean(),)
             addstddev=chain.std()
             if not addstddev:
                 addstddev=1
             stddev = stddev+(addstddev,)
-            print ('name: ', name, ' ' , chain.shape)
-            print (chain.mean(), ' ' ,chain.std(),'\n')
+            logging.info('name: %s --> %s' % (name, chain.shape))
+            logging.info('%s %s' % (chain.mean(), chain.std()))
             dTypeList.append((name, float ))
         else:
             array = Tuple[name].view(numpy.ndarray)
@@ -129,8 +129,8 @@ def meanNormProd(Tuple):
             if not addstddev:
                 addstddev=1
             stddev = stddev+(addstddev,)
-            print ('name: ', name, ' ' , array.shape)
-            print (array.mean(), ' ' ,array.std(),'\n')
+            logging.info('name: %s --> %s' % (name, array.shape))
+            logging.info('%s %s' % (array.mean(), array.std()))
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
@@ -265,6 +265,36 @@ def MeanNormApply(Tuple,MeanNormTuple):
         arrayList.append(array)
     return numpy.asarray(arrayList).transpose()
  
+
+def MeanNormZeroPadBinned(
+    Filename_in, MeanNormTuple, inbranches, 
+    nMax, nevents, dimension1, dimension2, 
+    counter, makeSum = False
+    ):
+    import c_meanNormZeroPad
+    
+    means=[]
+    norms=[]
+    for b in inbranches:
+        means.append(MeanNormTuple[b][0])
+        norms.append(MeanNormTuple[b][1])
+
+    x_branch, x_center, x_bins, x_width = dimension1
+    y_branch, y_center, y_bins, y_width = dimension2
+    
+    if makeSum:
+        raise RuntimeError('To be implemented')
+    else:
+        array = numpy.zeros(
+            (nevents,x_bins,y_bins,nMax,len(inbranches)) , dtype='float32')
+
+    c_meanNormZeroPad.particle_binner(
+        array, norms, means, inbranches, nMax, Filename_in, counter,
+        x_branch, x_center, x_bins, x_width,
+        y_branch, y_center, y_bins, y_width
+        )
+    return array
+        
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
   

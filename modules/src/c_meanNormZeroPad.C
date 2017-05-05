@@ -139,7 +139,7 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
 	//std::cout << "looping over events: "<< stopw.RealTime () <<std::endl;
 	//stopw.Reset();
 	//stopw.Start();
-	const int nevents=tree->GetEntries();
+	const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
 	const int datasize=datacollection.size();
 
 	for(int jet=0;jet<nevents;jet++){
@@ -177,6 +177,122 @@ void priv_particlecluster(boost::python::numeric::array& numpyarray,
 
 }
 
+int square_bins(
+	double xval, double xcenter, 
+	int nbins, double half_width) {
+	double bin_width = (2*half_width)/nbins;
+	double low_edge = xcenter - half_width;
+	int ibin = std::floor((xval - low_edge)/bin_width);
+	return (ibin >= 0 && ibin < nbins) ? ibin : -1;
+}
+
+void particle_binner(
+	boost::python::numeric::array numpyarray,
+	const boost::python::list inl_norms,
+	const boost::python::list inl_means ,
+	const boost::python::list inl_branches,
+	int nmax, std::string filename, std::string counter_branch,
+	std::string xbranch, std::string xcenter, int xbins, float xwidth, 
+	std::string ybranch, std::string ycenter, int ybins, float ywidth
+	) {
+	std::vector<TString> s_branches = toSTLVector<TString>(inl_branches);
+	std::vector<double>  s_norms    = toSTLVector<double>(inl_norms);
+	std::vector<double>  s_means    = toSTLVector<double>(inl_means);	
+
+	//get the branch handlers
+  //pick all the objects in the collection cut off and zero padding is done per bin
+	__hidden::indata branches;
+	branches.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH); 
+
+	//get x,y (eta, phi but could be something else) branches
+	//mean =0  norm = 1 to avoid scaling
+	__hidden::indata xy;
+	xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+
+	//get jet center
+	__hidden::indata xy_center;
+	xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
+
+	//get particle counter
+	__hidden::indata counter;
+	counter.createFrom({counter_branch}, {1.}, {0.}, 1);
+
+	TFile* tfile= new TFile(filename.c_str(), "READ");
+	TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+
+	//connect all branches
+	branches.setup(tree);
+	xy.setup(tree);
+	xy_center.setup(tree);
+	counter.setup(tree);
+
+	// std::cout << "looping over events for " << counter_branch <<std::endl;
+	const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
+	TStopwatch stopw;
+	for(int jet=0;jet<nevents;jet++){
+		// if(jet % 100 == 0) {
+		// 	std::cout << "filling binned jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
+		// 	stopw.Reset();
+		// 	stopw.Start();
+		// }
+		//get values
+		branches.zeroAndGet(jet);
+		xy.zeroAndGet(jet);
+		xy_center.zeroAndGet(jet);
+		counter.zeroAndGet(jet);
+
+		//std::cout << "jet #" << jet << ": " << xy_center.getData(0, 0) << ", " << xy_center.getData(1, 0) << std::endl; 
+
+		//map filled indices
+		int current_indexes[xbins][ybins];
+		//now, pad with defaults every bin (for safety up here)
+		for(size_t x=0; x<xbins; x++) {
+			for(size_t y=0; y<ybins; y++) {
+				current_indexes[x][y] = 0;
+				for(size_t idx=0; idx<nmax; idx++) {
+					for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+						numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
+					}
+				}
+			}
+		}
+
+		//loop over all candidates
+		int ncharged = counter.getData(0, 0);
+		for(size_t elem=0; elem < ncharged; elem++) {
+			//get bin id
+			int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
+			int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+			if(xidx == -1 || yidx == -1) continue;
+			//if bin is full skip
+			if(current_indexes[xidx][yidx] == nmax) continue;
+			int particle_idx = current_indexes[xidx][yidx];
+			current_indexes[xidx][yidx]++;
+			
+			for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+				double feature_value = branches.getData(ifeat, elem);
+				// if(ifeat == 0)
+				// 	std::cout << "Jet: " << jet << " Candidate: " << elem << ", bin (" << xidx << ", " << yidx << ", " << particle_idx
+				// 						<< ") feat #"<< ifeat <<": " << feature_value << std::endl;
+				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= feature_value;
+			}			
+		}
+
+		//BUG HUNTING
+		//int filled = 0;
+		//for(size_t x=0; x<xbins; x++) {
+		//	for(size_t y=0; y<ybins; y++) {
+		//		filled += current_indexes[x][y];
+		//	}
+		//}
+		//std::cout << "jet #" << jet << " had " << ncharged << " candidates. I filled " << filled << std::endl;
+	}	
+
+	tfile->Close();
+	delete tfile;
+}
+
+
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
@@ -185,5 +301,5 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
 	//anyway, it doesn't hurt, just leave this here
 	def("process", &process);
 	def("particlecluster", &particlecluster);
-
+	def("particle_binner", &particle_binner);
 }

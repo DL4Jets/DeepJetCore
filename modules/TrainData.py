@@ -88,7 +88,7 @@ class TrainData(object):
         self.w=[numpy.array([])]
         
         
-        self.nsamples=0
+        self.nsamples=None
     
         
     def getInputShapes(self):
@@ -380,21 +380,21 @@ class TrainData(object):
         import ROOT
         from root_numpy import tree2array, root2array
         isalist =  not hasattr(filenames, "split")
-        
         if isalist:
             raise Exception('readTreeFromRootToTuple: reading from list does not work, yet')
             for f in filenames:
                 fileTimeOut(f,120)
             print('add files')
-            Tuple = root2array(filenames, treename="deepntuplizer/tree")
+            Tuple = root2array(filenames, treename="deepntuplizer/tree", Dstop=self.nsamples)
             print('done add files')
             return Tuple
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile(filenames)
             tree = rfile.Get("deepntuplizer/tree")
-            self.nsamples=tree.GetEntries()
-            Tuple = tree2array(tree)
+            if not self.nsamples:
+                self.nsamples=tree.GetEntries()
+            Tuple = tree2array(tree, stop=self.nsamples)
             return Tuple
         
         

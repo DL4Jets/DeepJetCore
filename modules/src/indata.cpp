@@ -52,6 +52,10 @@ float indata::getData(const size_t& b,const size_t& i){
 	return ret;
 }
 
+float indata::getDefault(const size_t& b) {
+	return (0 - means.at(b)) / norms.at(b);
+}
+
 void indata::allZero(){
 	for(auto& c:buffer)
 		for(int i=0;i<max;i++)
