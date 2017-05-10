@@ -267,12 +267,14 @@ def MeanNormApply(Tuple,MeanNormTuple):
  
 
 def MeanNormZeroPadBinned(
-    Filename_in, MeanNormTuple, inbranches, 
-    nMax, nevents, dimension1, dimension2, 
-    counter, makeSum = False
-    ):
+        Filename_in, counter, nevents,
+        dimension1, dimension2,
+        binned_info, summed_info
+        ):
+    '''Takes too long to run the binning twice, run it only once and compute at the same time
+    both the binned and the summed variables'''
     import c_meanNormZeroPad
-    
+    MeanNormTuple, inbranches, nMax = binned_info
     means=[]
     norms=[]
     for b in inbranches:
@@ -282,18 +284,30 @@ def MeanNormZeroPadBinned(
     x_branch, x_center, x_bins, x_width = dimension1
     y_branch, y_center, y_bins, y_width = dimension2
     
-    if makeSum:
-        raise RuntimeError('To be implemented')
-    else:
-        array = numpy.zeros(
-            (nevents,x_bins,y_bins,nMax,len(inbranches)) , dtype='float32')
+    mean_std_list, summed_branches = summed_info
+    sum_mean = []
+    sum_std  = []
+    for name in mean_std_list:
+        sum_mean.append(MeanNormTuple[name][0])
+        sum_std.append( MeanNormTuple[name][1])
+    
+    summed = numpy.zeros(
+        (nevents,x_bins,y_bins, len(summed_branches)+1),
+        dtype='float32'
+    )
+    binned = numpy.zeros(
+        (nevents,x_bins,y_bins,nMax,len(inbranches)) , 
+        dtype='float32'
+    )
 
     c_meanNormZeroPad.particle_binner(
-        array, norms, means, inbranches, nMax, Filename_in, counter,
+        Filename_in, counter,
         x_branch, x_center, x_bins, x_width,
-        y_branch, y_center, y_bins, y_width
+        y_branch, y_center, y_bins, y_width,
+        binned, norms, means, inbranches, nMax, 
+        summed, sum_std, sum_mean, summed_branches
         )
-    return array
+    return binned, summed
         
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):

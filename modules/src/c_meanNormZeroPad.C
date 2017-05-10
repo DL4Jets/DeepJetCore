@@ -1,3 +1,5 @@
+//allows functions with 18 or less paramenters
+#define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
 #include "boost/python/numeric.hpp"
@@ -187,22 +189,38 @@ int square_bins(
 }
 
 void particle_binner(
+	std::string filename, std::string counter_branch,
+	std::string xbranch, std::string xcenter, int xbins, float xwidth, 
+	std::string ybranch, std::string ycenter, int ybins, float ywidth,
+	//binned variables
 	boost::python::numeric::array numpyarray,
 	const boost::python::list inl_norms,
 	const boost::python::list inl_means ,
 	const boost::python::list inl_branches,
-	int nmax, std::string filename, std::string counter_branch,
-	std::string xbranch, std::string xcenter, int xbins, float xwidth, 
-	std::string ybranch, std::string ycenter, int ybins, float ywidth
+	int nmax, 
+	//summed variables
+	boost::python::numeric::array sum_npy_array,
+	const boost::python::list sum_inl_norms,
+	const boost::python::list sum_inl_means ,
+	const boost::python::list summed_branches
 	) {
 	std::vector<TString> s_branches = toSTLVector<TString>(inl_branches);
 	std::vector<double>  s_norms    = toSTLVector<double>(inl_norms);
 	std::vector<double>  s_means    = toSTLVector<double>(inl_means);	
+	std::vector<TString> s_sum_branches = toSTLVector<TString>(summed_branches);
+	std::vector<double>  s_sum_stds     = toSTLVector<double>(sum_inl_norms);
+	std::vector<double>  s_sum_means    = toSTLVector<double>(sum_inl_means);	
+
 
 	//get the branch handlers
   //pick all the objects in the collection cut off and zero padding is done per bin
 	__hidden::indata branches;
 	branches.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH); 
+
+	//pick branches to be summed by bin
+	std::vector<double> dummy(s_sum_branches.size(), 0.);
+	__hidden::indata sum_branches;
+	sum_branches.createFrom(s_sum_branches, dummy, dummy, MAXBRANCHLENGTH);
 
 	//get x,y (eta, phi but could be something else) branches
 	//mean =0  norm = 1 to avoid scaling
@@ -222,6 +240,7 @@ void particle_binner(
 
 	//connect all branches
 	branches.setup(tree);
+	sum_branches.setup(tree);
 	xy.setup(tree);
 	xy_center.setup(tree);
 	counter.setup(tree);
@@ -237,18 +256,24 @@ void particle_binner(
 		// }
 		//get values
 		branches.zeroAndGet(jet);
+		sum_branches.zeroAndGet(jet);
 		xy.zeroAndGet(jet);
 		xy_center.zeroAndGet(jet);
 		counter.zeroAndGet(jet);
 
-		//std::cout << "jet #" << jet << ": " << xy_center.getData(0, 0) << ", " << xy_center.getData(1, 0) << std::endl; 
-
+		//map summed features, for some reasons getting a value out of a numpy array is tough (or so I was told)
+		double summed_values[xbins][ybins][sum_branches.nfeatures()+1];
 		//map filled indices
 		int current_indexes[xbins][ybins];
 		//now, pad with defaults every bin (for safety up here)
 		for(size_t x=0; x<xbins; x++) {
 			for(size_t y=0; y<ybins; y++) {
 				current_indexes[x][y] = 0;
+
+				for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+					summed_values[x][y][ifeat] = 0;
+				}
+
 				for(size_t idx=0; idx<nmax; idx++) {
 					for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
 						numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
@@ -264,6 +289,15 @@ void particle_binner(
 			int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
 			int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
 			if(xidx == -1 || yidx == -1) continue;
+
+			//bin summing
+			summed_values[xidx][yidx][0]++;
+			for(size_t ifeat=1; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+				double feat_val = sum_branches.getRaw(ifeat-1, elem);
+				summed_values[xidx][yidx][ifeat] += feat_val;
+			}
+
+			//single values
 			//if bin is full skip
 			if(current_indexes[xidx][yidx] == nmax) continue;
 			int particle_idx = current_indexes[xidx][yidx];
@@ -276,6 +310,15 @@ void particle_binner(
 				// 						<< ") feat #"<< ifeat <<": " << feature_value << std::endl;
 				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= feature_value;
 			}			
+		}
+
+		for(size_t x=0; x<xbins; x++) {
+			for(size_t y=0; y<ybins; y++) {
+				for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+					//hardcoded scaling! to change if zero padding method changes!
+					sum_npy_array[jet][x][y][ifeat] = (summed_values[x][y][ifeat] - s_sum_means.at(ifeat)) / s_sum_stds.at(ifeat); 
+				}
+			}
 		}
 
 		//BUG HUNTING
