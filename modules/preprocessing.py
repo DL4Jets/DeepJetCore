@@ -295,6 +295,28 @@ def MeanNormZeroPadBinned(
         )
     return array
         
+        
+def createDensityMap(Filename_in, MeanNormTuple, inbranch,nevents, dimension1, dimension2, 
+    counter, offset=0,weightbranch=""
+        ):
+    
+    import c_meanNormZeroPad
+    
+    norm=1.#MeanNormTuple[inbranch][1]
+
+    x_branch, x_center, x_bins, x_width = dimension1
+    y_branch, y_center, y_bins, y_width = dimension2
+    
+    array = numpy.zeros((nevents,x_bins,y_bins) , dtype='float32')
+    
+    c_meanNormZeroPad.fillDensityMap(
+        array, norm, inbranch,weightbranch, Filename_in, counter,
+        x_branch, x_center, x_bins, x_width,
+        y_branch, y_center, y_bins, y_width,
+        offset
+        )
+    
+    return array
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
   

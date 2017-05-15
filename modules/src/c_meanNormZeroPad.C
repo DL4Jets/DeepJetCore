@@ -292,6 +292,102 @@ void particle_binner(
     delete tfile;
 }
 
+void fillDensityMap(boost::python::numeric::array numpyarray,
+        double norm,
+        std::string in_branch,
+        std::string in_weightbranch,
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        double offset
+        ){
+
+
+    TString branchstr=in_branch;
+    TString weightstr=in_weightbranch;
+
+    __hidden::indata branch;
+    branch.createFrom({branchstr}, {norm}, {0.}, MAXBRANCHLENGTH);
+    //only normalisation, no mean substr.
+
+    bool useweights=false;
+    if(weightstr.Length())
+        useweights=true;
+
+    __hidden::indata weight;
+    if(useweights)
+        weight.createFrom({weightstr}, {1.}, {0.}, MAXBRANCHLENGTH);
+
+    //get x,y (eta, phi but could be something else) branches
+    //mean =0  norm = 1 to avoid scaling
+    __hidden::indata xy;
+    xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+
+    //get jet center
+    __hidden::indata xy_center;
+    xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
+
+    //get particle counter
+    __hidden::indata counter;
+    counter.createFrom({counter_branch}, {1.}, {0.}, 1);
+
+    TFile* tfile= new TFile(filename.c_str(), "READ");
+    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+
+    //connect all branches
+    branch.setup(tree);
+    if(useweights)
+        weight.setup(tree);
+    xy.setup(tree);
+    xy_center.setup(tree);
+    counter.setup(tree);
+
+    const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
+    for(int jet=0;jet<nevents;jet++){
+
+        branch.zeroAndGet(jet);
+        if(useweights)
+            weight.zeroAndGet(jet);
+        xy.zeroAndGet(jet);
+        xy_center.zeroAndGet(jet);
+        counter.zeroAndGet(jet);
+
+        std::vector<std::vector<float> > densemap(xbins,std::vector<float>(ybins,0));
+
+        int ncharged = counter.getData(0, 0);
+        for(size_t elem=0; elem < ncharged; elem++) {
+            //get bin id
+            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
+            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+            if(xidx == -1 || yidx == -1) continue;
+
+            float feature_value = branch.getData(0, elem)-offset;
+            //std::cout << elem << xidx << "  " << yidx << " "<< feature_value <<std::endl;
+            float weight_value =1;
+            if(useweights)
+                weight_value = weight.getData(0, elem);
+
+            densemap.at(xidx).at(yidx)+=feature_value*weight_value;
+
+        }
+
+        //seems to need burte-force way because of boost:numpy
+        for(int i=0;i<xbins;i++){
+            for(int j=0;j<ybins;j++){
+                numpyarray[jet][i][j]=densemap.at(i).at(j);
+            }
+        }
+
+
+    }
+
+    tfile->Close();
+    delete tfile;
+
+
+
+}
+
 
 
 // Expose classes and methods to Python
@@ -302,4 +398,5 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("process", &process);
     def("particlecluster", &particlecluster);
     def("particle_binner", &particle_binner);
+    def("fillDensityMap", &fillDensityMap);
 }
