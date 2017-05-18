@@ -87,6 +87,10 @@ def main(argv=None):
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
+    from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map
+    
+    from TrainData_test import TrainData_test
+    
     dc = DataCollection(1 if args.nothreads else -1)
     
     
@@ -116,6 +120,12 @@ def main(argv=None):
         traind=TrainData_deepCMVA
     elif Class == 'TrainData_deepCSV_PF_Binned':
         traind=TrainData_deepCSV_PF_Binned
+        
+    elif Class == 'TrainData_deepFlavour_FT':
+        traind=TrainData_deepFlavour_FT
+    elif Class == 'TrainData_deepFlavour_FT_map':
+        traind=TrainData_deepFlavour_FT_map
+        
     elif len(Recover)<1 and len(testdatafor)<1:
         raise Exception('wrong class selecton')
     
