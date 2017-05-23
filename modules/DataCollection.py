@@ -290,13 +290,15 @@ class DataCollection(object):
         
         
         if redo_meansandweights and (td.remove or td.weight):
-            logging.info('producing weights')
+            logging.info('producing weights and remove indices')
             weighter=Weighter()
-            weighter=td.produceBinWeighter(self.originRoots[0])
+            weighter=td.produceBinWeighter(self.originRoots)
             self.weighter=weighter
+            
+            weighter.printHistos(outputDir)
         
         if redo_meansandweights:
-            logging.info('producing means')
+            logging.info('producing means and norms')
             self.means=td.produceMeansFromRootFile(self.originRoots[0])
         
         
@@ -415,6 +417,7 @@ class DataCollection(object):
         if nchilds<1: 
             nchilds=1
         
+        #nchilds=10
         
         index=0
         alldone=False

@@ -7,6 +7,7 @@ Created on 20 Feb 2017
 from __future__ import print_function
 
 from Weighter import Weighter
+import logging
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -61,12 +62,21 @@ class TrainData(object):
         
         self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
         
+        self.allbranchestoberead=[]
+        
+        #standard branches
+        self.registerBranches(self.undefTruth)
+        self.registerBranches(self.truthclasses)
+        self.registerBranches(['jet_pt','jet_eta'])
+        
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
         
         self.flatbranches=[]
         self.branches=[]
         self.branchcutoffs=[]
+        
+        
         
         self.readthread=None
         self.readdone=None
@@ -117,7 +127,11 @@ class TrainData(object):
         
     def addBranches(self, blist, cutoff=1):
         self.branches.append(blist)
+        self.registerBranches(blist)
         self.branchcutoffs.append(cutoff)
+        
+    def registerBranches(self,blist):
+        self.allbranchestoberead.extend(blist)
         
     def getUsedTruth(self):
         if len(self.reducedtruthclasses) > 0:
@@ -369,7 +383,7 @@ class TrainData(object):
         self.readthread=None
         
         
-    def readTreeFromRootToTuple(self,filenames):
+    def readTreeFromRootToTuple(self,filenames,branches=None):
         '''
         To be used to get the initial tupel for further processing in inherting classes
         Makes sure the number of entries is properly set
@@ -377,6 +391,13 @@ class TrainData(object):
         can also read a list of files (e.g. to produce weights/removes from larger statistics
         (not fully tested, yet)
         '''
+        if  branches==None:
+            branches=self.allbranchestoberead
+            
+        #print(branches)
+        #remove duplicates
+        branches=list(set(branches))
+            
         import ROOT
         from root_numpy import tree2array, root2array
         isalist =  not hasattr(filenames, "split")
@@ -394,7 +415,7 @@ class TrainData(object):
             tree = rfile.Get("deepntuplizer/tree")
             if not self.nsamples:
                 self.nsamples=tree.GetEntries()
-            Tuple = tree2array(tree, stop=self.nsamples)
+            Tuple = tree2array(tree, branches=branches)
             return Tuple
         
         
@@ -406,21 +427,27 @@ class TrainData(object):
         return means
     
     #overload if necessary
-    def produceBinWeighter(self,filename):
+    def produceBinWeighter(self,filenames):
         from Weighter import Weighter
         weighter=Weighter() 
         weighter.undefTruth=self.undefTruth
-        Tuple = self.readTreeFromRootToTuple(filename)
-        weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
+        weight_binXPt = numpy.array([10,25,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
                                      400,500,600,2000],dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
-        
-        if self.remove:
-            weighter.createRemoveProbabilities(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],
-                                               classes=self.truthclasses)
+        weight_binYEta = numpy.array([0,.5,1,1.5,2.,2.5],dtype=float)
+        branches=["jet_pt","jet_eta"]
+        branches.extend(self.truthclasses)
+        if self.remove or self.weight:
+            weighter.setBinningAndClasses([weight_binXPt,weight_binYEta],"jet_pt","jet_eta",self.truthclasses)
+            for i in range(len(filenames)):
+                Tuple = self.readTreeFromRootToTuple(filenames[i],branches)
+                weighter.addDistributions(Tuple)
+                #frac=float(i)/float(len(filenames))
+                del Tuple
+            weighter.createRemoveProbabilitiesAndWeights()
+            
        
-        weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
-        del Tuple
+        #weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
+        #exit()
         return weighter
           
         

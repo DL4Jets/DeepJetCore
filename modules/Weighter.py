@@ -6,6 +6,10 @@ Created on 26 Feb 2017
 
 from __future__ import print_function
 
+import matplotlib
+#if no X11 use below
+matplotlib.use('Agg')
+
 class Weighter(object):
     '''
     contains the histograms/input to calculate jet-wise weights
@@ -17,95 +21,113 @@ class Weighter(object):
         self.axisY=[]
         self.hists =[]
         self.removeProbabilties=[]
+        self.binweights=[]
+        self.distributions=[]
+        self.xedges=[]
+        self.yedges=[]
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
-    
-    def createRemoveProbabilities(self,Tuple,nameX,nameY,bins,classes,referenceclass='isB'):
-        import numpy
         
-        referenceidx=0
-        try:
-            referenceidx=classes.index(referenceclass)
-        except:
-            print('createRemoveProbabilities: reference index not found in class list')
-            raise Exception('createRemoveProbabilities: reference index not found in class list')
-               
-        
+    def setBinningAndClasses(self,bins,nameX,nameY,classes):
         self.axisX= bins[0]
         self.axisY= bins[1]
         self.nameX=nameX
         self.nameY=nameY
-        if len(classes) > 0:
-            self.Axixandlabel = [nameX, nameY]+ classes
-        else:
-            self.Axixandlabel = [nameX, nameY]
-        self.bins=bins
         self.classes=classes
+        
+    def addDistributions(self,Tuple):
+        import numpy
+        selidxs=[]
+        labeltuple=Tuple[self.classes]
+        ytuple=Tuple[self.nameY]
+        xtuple=Tuple[self.nameX]
+        
+        for c in self.classes:
+            selidxs.append(labeltuple[c]>0)
+            
+        for i in range(len(self.classes)):
+            tmphist,xe,ye=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
+            self.xedges=xe
+            self.yedges=ye
+            if len(self.distributions)==len(self.classes):
+                self.distributions[i]=self.distributions[i]+tmphist
+            else:
+                self.distributions.append(tmphist)
+            
+    def printHistos(self,outdir):
+        import numpy
+        def plotHist(hist,outname):
+            import matplotlib.pyplot as plt
+            H=hist.T
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            X, Y = numpy.meshgrid(self.xedges, self.yedges)
+            ax.pcolormesh(X, Y, H)
+            ax.set_xscale("log", nonposx='clip')
+            #plt.colorbar()
+            fig.savefig(outname)
+            plt.close()
+            
+        for i in range(len(self.classes)):
+            if len(self.distributions):
+                plotHist(self.distributions[i],outdir+"/dist_"+self.classes[i]+".pdf")
+                plotHist(self.removeProbabilties[i] ,outdir+"/remprob_"+self.classes[i]+".pdf")
+                plotHist(self.binweights[i],outdir+"/weights_"+self.classes[i]+".pdf")
+                reshaped=self.distributions[i]*self.binweights[i]
+                plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
+            
+        
+    def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
+        import numpy
+        referenceidx=0
+        try:
+            referenceidx=self.classes.index(referenceclass)
+        except:
+            print('createRemoveProbabilities: reference index not found in class list')
+            raise Exception('createRemoveProbabilities: reference index not found in class list')
+        
+        if len(self.classes) > 0:
+            self.Axixandlabel = [self.nameX, self.nameY]+ self.classes
+        else:
+            self.Axixandlabel = [self.nameX, self.nameY]
+        
         self.refclassidx=referenceidx
         
         
-        def getScaler(histo,refhisto):
-            scaler=0.
-            for indexx,binx in enumerate(self.axisX):
-                if not indexx:  continue
-                for indexy,biny in enumerate(self.axisY):
-                    if not indexy:  continue
-                    #print(indexx,indexy)
-                    refval=refhisto[indexx-1][indexy-1]
-                    thisval=histo[indexx-1][indexy-1]
-                    ratio=1.
-                    if thisval:
-                        ratio=float(refval)/float(thisval)
-                    if ratio>scaler: scaler=ratio
-            return scaler
+       
+        refhist=self.distributions[referenceidx]
+        refhist=refhist/numpy.amax(refhist)
         
-        def getProbHisto(scaledhisto,refhisto,classname):
-            out=numpy.copy(refhisto)
-            for indexx,binx in enumerate(self.axisX):
-                if not indexx:
-                    continue
-                for indexy,biny in enumerate(self.axisY):
-                    if not indexy:
-                        continue
-                    refval=refhisto[indexx-1][indexy-1]
-                    thisval=scaledhisto[indexx-1][indexy-1]
-                    prob=0
-                    if thisval+refval:
-                        prob=float(thisval-refval)/float(thisval+refval) 
-                    if classname in self.undefTruth:
-                        prob=1
-                    out[indexx-1][indexy-1]=prob
+    
+        def divideHistos(a,b):
+            out=numpy.array(a)
+            for i in range(a.shape[0]):
+                for j in range(a.shape[1]):
+                    if b[i][j]:
+                        out[i][j]=a[i][j]/b[i][j]
+                    else:
+                        out[i][j]=-10
             return out
-        
-
-        labeltuple=Tuple[classes]
-        ytuple=Tuple[nameY]
-        xtuple=Tuple[nameX]
-        
-        selidxs=[]
-        for c in classes:
-            selidxs.append(labeltuple[c]>0)
-        
-    
-        refx=xtuple[selidxs[referenceidx]]
-        refy=ytuple[selidxs[referenceidx]]
-       
-        refhist,_,_=numpy.histogram2d(refx,refy,bins)
-       
+                
         probhists=[]
-        
-    
-        for i in range(len(classes)):
-            tmphist,_,_=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],bins)
-            scaler=getScaler(tmphist,refhist)
-            tmphist*=scaler
-            probhist=getProbHisto(tmphist,refhist,classes[i])
-            probhists.append(probhist)
+        weighthists=[]
+        for i in range(len(self.classes)):
+            tmphist=self.distributions[i]
+            tmphist=tmphist/numpy.amax(tmphist)
+            ratio=divideHistos(refhist,tmphist)
+            ratio=ratio/numpy.amax(ratio)#norm to 1
+            ratio[ratio<0]=1
+            weighthists.append(ratio)
+            ratio=1-ratio#make it a remove probability
+            probhists.append(ratio)
         
         self.removeProbabilties=probhists
-        
-        
+        self.binweights=weighthists
+        for h in self.binweights:
+            h=h/numpy.average(h)
+    
+    
         
         
     def createNotRemoveIndices(self,Tuple):
@@ -145,36 +167,7 @@ class Weighter(object):
                         norm[index]+=1
             
                         
-        allxav=0
-        validclasses=0            
-        for c in range(len(xaverage)):
-            if norm[c]:
-                allxav+=xaverage[c]/norm[c]
-                validclasses+=1
-            #print(self.classes[c], c, xaverage[c]/norm[c])
-        allxav/=float(validclasses) 
         
-        allyav=0  
-          
-        for c in range(len(yaverage)):
-            if norm[c]:
-                allyav+=yaverage[c]/norm[c]
-        allyav/=float(validclasses)   
-             
-        for c in range(len(xaverage)):
-            if norm[c]:
-                reldiff=abs(xaverage[c]/norm[c] - allxav)/allxav
-                if reldiff >0.15:
-                    print('warning (x) ',self.classes[c],xaverage[c]/norm[c])
-                    
-         
-        for c in range(len(yaverage)):
-            if norm[c]:
-                reldiff=abs(yaverage[c]/norm[c] - allyav)/allyav
-                if reldiff >0.15:
-                    print('warning (y) ',self.classes[c],yaverage[c]/norm[c])
-                    
-            #print(self.classes[c], c, yaverage[c]/norm[c])
             
         if not len(notremove) == tuplelength:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")
