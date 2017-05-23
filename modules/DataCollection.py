@@ -12,6 +12,7 @@ from TrainData import TrainData, fileTimeOut
 #for convenience
 import logging
 from pdb import set_trace
+import copy
 
 class DataCollection(object):
     '''
@@ -19,13 +20,14 @@ class DataCollection(object):
     '''
 
 
-    def __init__(self, nprocs = -1):
+    def __init__(self, infile = None, nprocs = -1):
         '''
         Constructor
         '''
         self.clear()
-        self.nprocs = nprocs
-        
+        self.nprocs = nprocs        
+        if infile:
+            self.readFromFile(infile)
         
     def clear(self):
         self.samples=[]
@@ -44,6 +46,60 @@ class DataCollection(object):
         self.maxFilesOpen=5
         self.means=None
         self.classweights={}
+
+    def __iadd__(self, other):
+        'A += B'
+        if not isinstance(other, DataCollection):
+            raise ValueError("I don't know how to add DataCollection and %s" % type(other))
+        def _extend_(a, b, name):
+            getattr(a, name).extend(getattr(b, name))
+        _extend_(self, other, 'samples')
+        if len(set(self.samples)) != len(self.samples):
+            raise ValueError('The two DataCollections being summed contain the same files!')
+        _extend_(self, other, 'sampleentries')
+        _extend_(self, other, 'originRoots')
+        self.nsamples += other.nsamples
+        if self.dataDir != other.dataDir:
+            raise ValueError('The two DataCollections have different data directories, still to be implemented!')
+        self.useweights = self.useweights and self.useweights
+        self.filesPreRead = min(self.filesPreRead, other.filesPreRead)
+        self.isTrain = self.isTrain and other.isTrain #arbitrary choice, could also raise exception
+        if type(self.dataclass) != type(other.dataclass):
+            raise ValueError(
+                'The two DataCollections were made with a'
+                ' different data class type! (%s, and %s)' % (type(self.dataclass), type(other.dataclass))
+                )
+        if self.weighter != other.weighter:
+            raise ValueError(
+                'The two DataCollections have different weights'
+                )
+        if self.weightsfraction != other.weightsfraction:
+            raise ValueError('The two DataCollections have different weight fractions')
+        self.maxConvertThreads = min(self.maxConvertThreads, other.maxConvertThreads)
+        self.maxFilesOpen = min(self.maxFilesOpen, other.maxFilesOpen)
+        if not all(self.means == other.means):
+            raise ValueError(
+                'The two DataCollections head different means'
+                )
+        self.classweights.update(other.classweights)
+        return self
+
+    def __add__(self, other):
+        'A+B'
+        if not isinstance(other, DataCollection):
+            raise ValueError("I don't know how to add DataCollection and %s" % type(other))
+        ret = copy.deepcopy(self)
+        ret += other
+        return ret
+
+    def __radd__(self, other):
+        'B+A to work with sum'
+        if other == 0:
+            return copy.deepcopy(self)
+        elif isinstance(other, DataCollection):
+            return self + other #we use the __add__ method
+        else:
+            raise ValueError("I don't know how to add DataCollection and %s" % type(other))
         
     def removeLast(self):
         self.samples.pop()
@@ -62,7 +118,6 @@ class DataCollection(object):
         '''
         gets the input shapes from the data class description
         '''
-        import copy
         if len(self.samples)<1:
             return []
         self.dataclass.filelock=None
@@ -233,15 +288,20 @@ class DataCollection(object):
         return out
     
     
-    def createTestDataForDataCollection(self,collectionfile,inputfile,outputDir):
+    def createTestDataForDataCollection(
+            self, collectionfile, inputfile, 
+            outputDir, outname = 'dataCollection.dc',
+            batch_mode = False):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
         self.dataclass.weight=False
         self.readRootListFromFile(inputfile)
-        self.createDataFromRoot(self.dataclass, outputDir,False)
-        self.writeToFile(outputDir+'/dataCollection.dc')
-        
+        self.createDataFromRoot(
+            self.dataclass, outputDir, False,
+            dir_check = not batch_mode
+        )
+        self.writeToFile(outputDir+'/'+outname)
         
     
     def recoverCreateDataFromRootFromSnapshot(self, snapshotfile):
@@ -261,7 +321,10 @@ class DataCollection(object):
         self.__writeData_async_andCollect(finishedsamples,outputDir)
         
     
-    def createDataFromRoot(self,dataclass, outputDir, redo_meansandweights=True):
+    def createDataFromRoot(
+                    self, dataclass, outputDir, 
+                    redo_meansandweights=True, means_only=False, dir_check=True
+                    ):
         '''
         Also creates a file list of the output files
         After the operation, the object will point to the already processed
@@ -276,9 +339,10 @@ class DataCollection(object):
         
         import os
         outputDir+='/'
-        if os.path.isdir(outputDir):
+        if os.path.isdir(outputDir) and dir_check:
             raise Exception('output dir must not exist')
-        os.mkdir(outputDir)
+        elif not os.path.isdir(outputDir):
+            os.mkdir(outputDir)
         self.dataDir=outputDir
         self.nsamples=0
         self.samples=[]
@@ -288,18 +352,16 @@ class DataCollection(object):
         td=self.dataclass
         ##produce weighter from a larger dataset as one file
         
-        
-        if redo_meansandweights and (td.remove or td.weight):
-            logging.info('producing weights')
-            weighter=Weighter()
-            weighter=td.produceBinWeighter(self.originRoots[0])
-            self.weighter=weighter
-        
         if redo_meansandweights:
             logging.info('producing means')
-            self.means=td.produceMeansFromRootFile(self.originRoots[0])
+            nparray  = td.readTreeFromRootToTuple(self.originRoots, limit=500000)
+            self.means = td.make_means(nparray)
+            if (td.remove or td.weight):
+                logging.info('producing weights')
+                self.weighter = td.make_weight(nparray)
+            del nparray        
         
-        
+        if means_only: return
         self.__writeData_async_andCollect(0,outputDir)
         
         
@@ -461,14 +523,21 @@ class DataCollection(object):
             raise 
         os.system('rm -rf '+tempstoragepath)
         
-    def convertListOfRootFiles(self, inputfile, dataclass, outputDir, takemeansfrom=''):
+    def convertListOfRootFiles(
+                    self, inputfile, dataclass, outputDir, 
+                    takemeansfrom='', means_only = False,
+                    output_name = 'dataCollection.dc', batch_mode = False):
         newmeans=True
-        if len(takemeansfrom)>0:
+        if takemeansfrom:
             self.readFromFile(takemeansfrom)
             newmeans=False
         self.readRootListFromFile(inputfile)
-        self.createDataFromRoot(dataclass, outputDir,newmeans)
-        self.writeToFile(outputDir+'/dataCollection.dc')
+        self.createDataFromRoot(
+                    dataclass, outputDir, 
+                    newmeans, means_only = means_only, 
+                    dir_check= not batch_mode
+                    )
+        self.writeToFile(outputDir+'/'+output_name)
         
     def getAllLabels(self):
         return self.__stackData(self.dataclass,'y')
