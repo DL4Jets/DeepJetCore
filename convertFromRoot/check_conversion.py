@@ -33,11 +33,21 @@ proc_lines = ''.join(proc_lines)
 outputs = glob.glob('%s/batch/con_out.*.out' % args.indir)
 failed = [i for i in outputs if grep(i, 'JOBSUB::FAIL')]
 
-keep_going = raw_input('%d/%d jobs have failed, should I recover them? [yY/nN]   ' % (len(failed), len(outputs)))
-if keep_going.lower() == 'n': exit(0)
+if len(failed) == 0:
+   print 'All jobs successfully completed, merging...'
+   from DataCollection import DataCollection
+   from glob import glob
+   batch_args = [i for i in open('%s/submit.sub' % args.indir) if 'arguments' in i][0]
+   batch_args = batch_args.split('=')[1].split('-')
+   output_dir = [i for i in batch_args if i.startswith('o ')][0].split(' ')[1]
+   merged = sum(DataCollection(i) for i in glob('%s/conversion.*.dc' % output_dir))
+   merged.writeToFile('%s/dataCollection.dc' % output_dir)
+else:
+   keep_going = raw_input('%d/%d jobs have failed, should I recover them? [yY/nN]   ' % (len(failed), len(outputs)))
+   if keep_going.lower() == 'n': exit(0)
 
-idxs = [os.path.basename(i).split('.')[1] for i in failed]
-with open('%s/rescue.sub' % args.indir, 'w') as jdl:
-   jdl.write(''.join(general_lines))   
-   jdl.write('\n'.join([proc_lines.format(IDX=i) for i in idxs]))
-print 'rescue file created'
+   idxs = [os.path.basename(i).split('.')[1] for i in failed]
+   with open('%s/rescue.sub' % args.indir, 'w') as jdl:
+      jdl.write(''.join(general_lines))   
+      jdl.write('\n'.join([proc_lines.format(IDX=i) for i in idxs]))
+   print 'rescue file created'

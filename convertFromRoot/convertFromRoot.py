@@ -88,7 +88,7 @@ def main(argv=None):
     testdatafor=args.testdatafor
     usemeansfrom=args.usemeansfrom
 
-    if args.batch and not args.usemeansfrom:
+    if args.batch and not (args.usemeansfrom or args.testdatafor):
         raise ValueError(
             'When running in batch mode you should also '
             'provide a means source through the --usemeansfrom option'
@@ -115,7 +115,11 @@ def main(argv=None):
         raise Exception('wrong class selecton') #should never really happen as we catch it in the parser        
     if testdatafor:
         logging.info('converting test data, no weights applied')
-        dc.createTestDataForDataCollection(testdatafor,infile,outPath)    
+        dc.createTestDataForDataCollection(
+            testdatafor, infile, outPath, 
+            outname = args.batch if args.batch else 'dataCollection.dc',
+            batch_mode = bool(args.batch)
+        )    
     elif recover:
         dc.recoverCreateDataFromRootFromSnapshot(recover)        
     elif args.means:

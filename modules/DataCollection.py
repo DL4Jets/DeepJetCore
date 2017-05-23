@@ -288,15 +288,20 @@ class DataCollection(object):
         return out
     
     
-    def createTestDataForDataCollection(self,collectionfile,inputfile,outputDir):
+    def createTestDataForDataCollection(
+            self, collectionfile, inputfile, 
+            outputDir, outname = 'dataCollection.dc',
+            batch_mode = False):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
         self.dataclass.weight=False
         self.readRootListFromFile(inputfile)
-        self.createDataFromRoot(self.dataclass, outputDir,False)
-        self.writeToFile(outputDir+'/dataCollection.dc')
-        
+        self.createDataFromRoot(
+            self.dataclass, outputDir, False,
+            dir_check = not batch_mode
+        )
+        self.writeToFile(outputDir+'/'+outname)
         
     
     def recoverCreateDataFromRootFromSnapshot(self, snapshotfile):

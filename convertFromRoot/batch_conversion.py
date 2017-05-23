@@ -23,7 +23,10 @@ deep_jet_base = os.path.realpath(deep_jet_base[0].split('environment')[0])
 if not os.path.isdir(args.batch_dir):
    os.mkdir(args.batch_dir)
 
-if not args.nomeans:
+if not os.path.isdir('%s/batch' % args.batch_dir):
+   os.mkdir('%s/batch' % args.batch_dir)
+
+if not (args.nomeans or args.testdatafor):
    #Run a fisrt round of root conversion to get the means/std and weights
    cmd = [
       './convertFromRoot.py', 
@@ -61,6 +64,7 @@ for idx, chunk in enumerate(chunkify(inputs, len(inputs)/args.nchunks)):
    nchunks = idx
 
 batch_template = '''#!/bin/bash
+sleep $(shuf -i1-600 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
 echo "JOBSUB::RUN job running"
 trap "echo JOBSUB::FAIL job killed" SIGTERM
 cd {DJ}/environment/
@@ -79,10 +83,12 @@ batch_script = '%s/batch.sh' % args.batch_dir
 with open(batch_script, 'w') as bb:
    bb.write(batch_template)
 
+means_file = '%s/batch_template.dc' % os.path.realpath(args.out) if not args.testdatafor else args.testdatafor
+option = '--usemeansfrom' if not args.testdatafor else '--testdatafor'
 with open('%s/submit.sub' % args.batch_dir, 'w') as bb:
    bb.write('''
 executable            = {EXE}
-arguments             = -i {INFILE} -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc --usemeansfrom {MEANS}
+arguments             = -i {INFILE} -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc {OPTION} {MEANS}
 output                = batch/con_out.$(ProcId).out
 error                 = batch/con_out.$(ProcId).err
 log                   = batch/con_out.$(ProcId).log
@@ -91,11 +97,12 @@ getenv = True
 use_x509userproxy = True
 queue {NJOBS}
 '''.format(
-         EXE = os.path.realpath(batch_script),
-         NJOBS = nchunks,
-         INFILE = txt_template % '$(ProcId)',
-         CLASS = args.c,
-         OUT = os.path.realpath(args.out),
-         MEANS = '%s/batch_template.dc' % os.path.realpath(args.out)
-         )
-            )
+   EXE = os.path.realpath(batch_script),
+   NJOBS = nchunks,
+   INFILE = txt_template % '$(ProcId)',
+   CLASS = args.c,
+   OUT = os.path.realpath(args.out),
+   OPTION = option,
+   MEANS = means_file,
+)
+   )
