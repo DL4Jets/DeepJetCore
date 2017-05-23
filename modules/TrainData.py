@@ -9,6 +9,7 @@ from __future__ import print_function
 from Weighter import Weighter
 from pdb import set_trace
 import numpy
+import logging
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -63,12 +64,21 @@ class TrainData(object):
         
         self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
         
+        self.allbranchestoberead=[]
+        
+        #standard branches
+        self.registerBranches(self.undefTruth)
+        self.registerBranches(self.truthclasses)
+        self.registerBranches(['jet_pt','jet_eta'])
+        
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
         
         self.flatbranches=[]
         self.branches=[]
         self.branchcutoffs=[]
+        
+        
         
         self.readthread=None
         self.readdone=None
@@ -118,7 +128,11 @@ class TrainData(object):
         
     def addBranches(self, blist, cutoff=1):
         self.branches.append(blist)
+        self.registerBranches(blist)
         self.branchcutoffs.append(cutoff)
+        
+    def registerBranches(self,blist):
+        self.allbranchestoberead.extend(blist)
         
     def getUsedTruth(self):
         if len(self.reducedtruthclasses) > 0:
@@ -364,7 +378,7 @@ class TrainData(object):
         self.readthread=None
         
         
-    def readTreeFromRootToTuple(self, filenames, limit=-1):
+    def readTreeFromRootToTuple(self, filenames, limit=None, branches=None):
         '''
         To be used to get the initial tupel for further processing in inherting classes
         Makes sure the number of entries is properly set
@@ -372,13 +386,25 @@ class TrainData(object):
         can also read a list of files (e.g. to produce weights/removes from larger statistics
         (not fully tested, yet)
         '''
+        if  branches==None:
+            branches=self.allbranchestoberead
+            
+        #print(branches)
+        #remove duplicates
+        branches=list(set(branches))
+            
         import ROOT
         from root_numpy import tree2array, root2array
         if isinstance(filenames, list):
             for f in filenames:
                 fileTimeOut(f,120)
             print('add files')
-            nparray = root2array(filenames, treename="deepntuplizer/tree", stop=limit if limit > 0 else None)
+            nparray = root2array(
+                filenames, 
+                treename = "deepntuplizer/tree", 
+                stop = limit,
+                branches = branches
+                )
             print('done add files')
             return nparray
             print('add files')
@@ -388,7 +414,7 @@ class TrainData(object):
             tree = rfile.Get("deepntuplizer/tree")
             if not self.nsamples:
                 self.nsamples=tree.GetEntries()
-            nparray = tree2array(tree, stop=limit if limit > 0 else self.nsamples)
+            nparray = tree2array(tree, stop=limit, branches=branches)
             return nparray
         
     def make_means(self, nparray):
@@ -403,28 +429,37 @@ class TrainData(object):
         return means
     
     #overload if necessary
-    def make_weight(self, nparray):
+    def make_empty_weighter():
         from Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
         weight_binXPt = numpy.array([
-                10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
-                400,500,600,2000], dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4], dtype=float)
-        
-        if self.remove:
-            weighter.createRemoveProbabilities(nparray, "jet_pt", "jet_eta", [weight_binXPt, weight_binYEta],
-                                               classes=self.truthclasses)
-       
-        weighter.createBinWeights(nparray, "jet_pt", "jet_eta", [weight_binXPt, weight_binYEta], classes=self.truthclasses)
+                10,25,30,35,40,45,50,60,75,100,
+                125,150,175,200,250,300,400,500,
+                600,2000],dtype=float)
+        weight_binYEta = numpy.array(
+            [0,.5,1,1.5,2.,2.5],
+            dtype=float
+            )
+        if self.remove or self.weight:
+            weighter.setBinningAndClasses(
+                [weight_binXPt,weight_binYEta],
+                "jet_pt","jet_eta",
+                self.truthclasses
+                )
         return weighter
 
-
-    #overload if necessary
-    def produceBinWeighter(self, filename, limit=500000):
-        nparray = self.readTreeFromRootToTuple(filename, limit=limit)
-        weighter = self.make_weight(nparray)
-        del nparray
+       
+    def produceBinWeighter(self,filenames):
+        weighter = self.make_empty_weighter()
+        branches = ["jet_pt","jet_eta"]
+        branches.extend(self.truthclasses)
+        if self.remove or self.weight:
+            for fname in filenames:
+                nparray = self.readTreeFromRootToTuple(fname, branches)
+                weighter.addDistributions(nparray)
+                del nparray
+            weighter.createRemoveProbabilitiesAndWeights()
         return weighter
     
         

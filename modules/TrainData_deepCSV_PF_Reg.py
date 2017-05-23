@@ -79,6 +79,8 @@ class TrainData_deepCSV_PF_Reg(TrainData_simpleTruth):
         self.regtruth='gen_pt_WithNu'
         self.regreco='jet_corr_pt'
         
+        self.registerBranches([self.regtruth,self.regreco])
+        
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles

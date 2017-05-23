@@ -169,7 +169,10 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         '''
         TrainData_deepFlavour_FT.__init__(self)
         
-        
+        self.registerBranches(['Cpfcan_erel','Cpfcan_eta','Cpfcan_phi',
+                               'Npfcan_erel','Npfcan_eta','Npfcan_phi',
+                               'nCpfcand','nNpfcand',
+                               'jet_eta','jet_phi'])
         
 
         
