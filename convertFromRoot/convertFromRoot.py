@@ -50,6 +50,7 @@ def main(argv=None):
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
+    from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map
     class_options = [
         TrainData_deepCSV,
         TrainData_deepConvCSV,
@@ -62,7 +63,9 @@ def main(argv=None):
         TrainData_deepCSV_PF_Reg,
         TrainData_deepJet_Reg, 
         TrainData_PF_Reg,
-        TrainData_deepCSV_PF_Binned
+        TrainData_deepCSV_PF_Binned,
+        TrainData_deepFlavour_FT,
+        TrainData_deepFlavour_FT_map
         ]
     class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 
@@ -106,8 +109,7 @@ def main(argv=None):
 
     # MAIN BODY #
     from DataCollection import DataCollection
-    dc = DataCollection(nprocs = (1 if args.nothreads else -1))
-    
+    dc = DataCollection(nprocs = (1 if args.nothreads else -1))    
     
     if class_name in class_options:
         traind = class_options[class_name]

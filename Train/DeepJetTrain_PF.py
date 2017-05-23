@@ -118,6 +118,10 @@ from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
 #model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
 model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
+
+#from keras.utils import plot_model
+#plot_model(model, to_file=outputDir+'model.svg')
+
 print('compiling')
 
 

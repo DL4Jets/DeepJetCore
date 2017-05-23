@@ -560,4 +560,36 @@ class TrainData_leptTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             l = g + uds
             
-            return numpy.vstack((allb,bb,lepb,c,l)).transpose()    
+            return numpy.vstack((allb,bb,lepb,c,l)).transpose()  
+        
+        
+        
+
+class TrainData_fullTruth(TrainData):
+    def __init__(self):
+        TrainData.__init__(self)
+        self.clear()
+        
+    def reduceTruth(self, tuple_in):
+        
+        self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDS','isG']
+        if tuple_in is not None:
+            b = tuple_in['isB'].view(numpy.ndarray)
+            bb = tuple_in['isBB'].view(numpy.ndarray)
+            allb = b+bb
+            
+            bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            lepb=bl+blc
+           
+            c = tuple_in['isC'].view(numpy.ndarray)
+           
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
+            uds=ud+s
+            
+            g = tuple_in['isG'].view(numpy.ndarray)
+            
+            
+            return numpy.vstack((allb,bb,lepb,c,uds,g)).transpose()    
+  
