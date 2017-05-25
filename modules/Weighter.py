@@ -21,6 +21,21 @@ class Weighter(object):
         self.refclassidx=0
         self.undefTruth=[]
     
+    def __eq__(self, other):
+        'A == B'
+        return self.Axixandlabel == other.Axixandlabel and \
+           all(self.axisX == other.axisX) and \
+           all(self.axisY == other.axisY) and \
+           all((i == j).all() for i,j in zip(self.hists, other.hists)) and \
+           all((i == j).all() for i,j in zip(self.removeProbabilties, other.removeProbabilties)) and \
+           self.classes == other.classes and \
+           self.refclassidx == other.refclassidx and \
+           self.undefTruth == other.undefTruth           
+    
+    def __ne__(self, other):
+        'A != B'
+        return not (self == other)
+
     def createRemoveProbabilities(self,Tuple,nameX,nameY,bins,classes,referenceclass='isB'):
         import numpy
         

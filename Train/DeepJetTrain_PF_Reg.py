@@ -123,11 +123,7 @@ model = Dense_model_broad_reg2(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 print('compiling')
 
-def loss_NLL(y_true, x):
-    x_pred = x[:,1:]
-    x_sig = x[:,:1]
-    return K.mean(0.5* K.log(K.square(x_sig))  + K.square(x_pred - y_true)/K.square(x_sig)/2.,    axis=-1)
-
+from Losses import loss_NLL
 
 from keras.optimizers import Adam
 adam = Adam(lr=startlearnrate)
