@@ -321,7 +321,7 @@ def createDensityMap(Filename_in, MeanNormTuple, inbranch,nevents, dimension1, d
     x_branch, x_center, x_bins, x_width = dimension1
     y_branch, y_center, y_bins, y_width = dimension2
     
-    array = numpy.zeros((nevents,x_bins,y_bins) , dtype='float32')
+    array = numpy.zeros((nevents,x_bins,y_bins,1) , dtype='float32')
     
     c_meanNormZeroPad.fillDensityMap(
         array, norm, inbranch,weightbranch, Filename_in, counter,
