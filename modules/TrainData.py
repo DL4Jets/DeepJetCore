@@ -423,13 +423,13 @@ class TrainData(object):
         
     def produceMeansFromRootFile(self,filename, limit=500000):
         from preprocessing import meanNormProd
-        nparray = self.readTreeFromRootToTuple(filename, limit)
+        nparray = self.readTreeFromRootToTuple(filename, limit=limit)
         means = self.make_means(nparray)
         del nparray
         return means
     
     #overload if necessary
-    def make_empty_weighter():
+    def make_empty_weighter(self):
         from Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
@@ -456,7 +456,7 @@ class TrainData(object):
         branches.extend(self.truthclasses)
         if self.remove or self.weight:
             for fname in filenames:
-                nparray = self.readTreeFromRootToTuple(fname, branches)
+                nparray = self.readTreeFromRootToTuple(fname, branches=branches)
                 weighter.addDistributions(nparray)
                 del nparray
             weighter.createRemoveProbabilitiesAndWeights()

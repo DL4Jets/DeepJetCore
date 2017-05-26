@@ -20,6 +20,15 @@ if len(deep_jet_base) != 1:
    raise RuntimeError('I cannot find the project root directory')
 deep_jet_base = os.path.realpath(deep_jet_base[0].split('environment')[0])
 
+proc = subprocess.Popen(
+   'voms-proxy-info', 
+   stdout=subprocess.PIPE, 
+   stderr=subprocess.PIPE
+)
+if proc.wait() <> 0:
+   print "You should have a valid grid proxy to run this!"
+   exit()
+
 if not os.path.isdir(args.batch_dir):
    os.mkdir(args.batch_dir)
 

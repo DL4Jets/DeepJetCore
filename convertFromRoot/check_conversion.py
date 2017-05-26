@@ -41,6 +41,8 @@ if len(failed) == 0:
    batch_args = batch_args.split('=')[1].split('-')
    output_dir = [i for i in batch_args if i.startswith('o ')][0].split(' ')[1]
    merged = sum(DataCollection(i) for i in glob('%s/conversion.*.dc' % output_dir))
+   print 'you should make sure that all the files in the input directory have been converted!'
+   set_trace()
    merged.writeToFile('%s/dataCollection.dc' % output_dir)
 else:
    keep_going = raw_input('%d/%d jobs have failed, should I recover them? [yY/nN]   ' % (len(failed), len(outputs)))

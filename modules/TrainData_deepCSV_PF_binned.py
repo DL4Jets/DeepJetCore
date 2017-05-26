@@ -24,6 +24,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         self.nbins = 9
         self.jet_radius = 0.6
         self.regtruth='gen_pt_WithNu'        
+        self.registerBranches([self.regtruth])
         
         self.addBranches(['jet_pt', 'jet_eta', 'nCpfcand', 'nNpfcand', 'nsv', 'rho'])
        
