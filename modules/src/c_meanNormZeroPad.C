@@ -417,7 +417,7 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
         //seems to need burte-force way because of boost:numpy
         for(int i=0;i<xbins;i++){
             for(int j=0;j<ybins;j++){
-                numpyarray[jet][i][j]=densemap.at(i).at(j);
+                numpyarray[jet][i][j][0]=densemap.at(i).at(j);
             }
         }
 

@@ -352,14 +352,18 @@ class DataCollection(object):
         td=self.dataclass
         ##produce weighter from a larger dataset as one file
         
+        if redo_meansandweights and (td.remove or td.weight):
+            logging.info('producing weights and remove indices')
+            self.weighter = td.produceBinWeighter(
+                self.originRoots
+                )            
+            self.weighter.printHistos(outputDir)
+        
         if redo_meansandweights:
-            logging.info('producing means')
-            nparray  = td.readTreeFromRootToTuple(self.originRoots, limit=500000)
-            self.means = td.make_means(nparray)
-            if (td.remove or td.weight):
-                logging.info('producing weights')
-                self.weighter = td.make_weight(nparray)
-            del nparray        
+            logging.info('producing means and norms')
+            self.means = td.produceMeansFromRootFile(
+                self.originRoots, limit=500000
+                )
         
         if means_only: return
         self.__writeData_async_andCollect(0,outputDir)
@@ -477,6 +481,7 @@ class DataCollection(object):
         if nchilds<1: 
             nchilds=1
         
+        #nchilds=10
         
         index=0
         alldone=False
