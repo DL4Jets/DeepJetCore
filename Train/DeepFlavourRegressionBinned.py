@@ -4,9 +4,10 @@ from pdb import set_trace
 from argparse import ArgumentParser
 # argument parsing and bookkeeping
 parser = ArgumentParser('Run the training')
-parser.add_argument('inputDir')
+parser.add_argument('inputfile')
 parser.add_argument('outputDir')
 parser.add_argument('-f','--force', action='store_true', help='overwrite the directory if there')
+parser.add_argument('--class_only', action='store_true', help='run only classification')
 parser.add_argument('--warm', help='pre-trained model')
 args = parser.parse_args()
 
@@ -31,7 +32,6 @@ import sys
 print 'got command: %s' % ' '.join(sys.argv)
 
 from glob import glob
-inputData = glob('%s/conversion.*.dc' % os.path.abspath(args.inputDir))
 outputDir = args.outputDir
 # create output dir
 
@@ -83,8 +83,8 @@ callbacks = DeepJet_callbacks(
 from DataCollection import DataCollection
 from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
 
-traind = sum(DataCollection(i) for i in inputData)
-traind.useweights=config_args['useweights']
+traind = DataCollection(args.inputfile)
+traind.useweights = config_args['useweights']
 
 if config_args['testrun']:
    traind.split(0.02)
@@ -110,7 +110,8 @@ inputs = (
 
 from DeepJet_models import binned3D_convolutional_classification_regression
 model = binned3D_convolutional_classification_regression(
-    inputs, output_shapes, config_args['conv_dropout']
+    inputs, output_shapes, config_args['conv_dropout'],
+    run_regression=(not args.class_only)
 )
 
 ####################################################
@@ -120,20 +121,21 @@ model = binned3D_convolutional_classification_regression(
 ####################################################
 
 print 'compiling'
-
-def loss_NLL(y_true, x):
-    x_pred = x[:,1:]
-    x_sig = x[:,:1]
-    return K.mean(0.5* K.log(K.square(x_sig))  + K.square(x_pred - y_true)/K.square(x_sig)/2.,    axis=-1)
-
+from Losses import loss_NLL
 
 from keras.optimizers import Adam
 adam = Adam(lr = config_args['startlearnrate'])
-model.compile(
-   loss = ['categorical_crossentropy', loss_NLL], #apply xentropy to the first output (flavour) and NLL to the pt regression
-   optimizer = adam, metrics = ['accuracy','accuracy'],
-   loss_weights = config_args['loss_weights']
-   )
+if args.class_only:
+    model.compile(
+        loss = 'categorical_crossentropy',
+        optimizer = adam, metrics = ['accuracy']
+        )
+else:
+    model.compile(
+        loss = ['categorical_crossentropy', loss_NLL], #apply xentropy to the first output (flavour) and NLL to the pt regression
+        optimizer = adam, metrics = ['accuracy','accuracy'],
+        loss_weights = config_args['loss_weights']
+        )
 
 ntrainepoch = traind.getSamplesPerEpoch()
 nvalepoch   = testd.getSamplesPerEpoch()
@@ -173,15 +175,20 @@ print 'training'
 #                                                  #
 ####################################################
 
+def flav_only(generator):
+    for X, Y in generator:
+        yield X, Y[0]
+
 model.fit_generator(
-   traind.generator() , verbose=1,
+   flav_only(traind.generator()) if args.class_only else traind.generator(), 
+   verbose=1,
    steps_per_epoch = traind.getNBatchesPerEpoch(), 
    epochs = config_args['nepochs'],
    callbacks = callbacks.callbacks,
    validation_data = testd.generator(),
    validation_steps = testd.getNBatchesPerEpoch(),
    max_q_size = config_args['maxqsize'], #maximum size for the generator queue
-   #class_weight = ['auto', 'auto']
+   class_weight = 'auto' if args.class_only else None,
    )
 
 #Loss for classification should be < 0.48 regression loss < 2.8
@@ -209,9 +216,9 @@ plt.savefig(outputDir+'learningcurve.pdf')
 #plt.show()
 
 plt.figure(2)
-plt.plot(callbacks.history.history['dense_10_acc'])
+plt.plot(callbacks.history.history['dense_acc'])
 #print(callbacks.history.history['val_loss'],history.history['loss'])
-plt.plot(callbacks.history.history['val_dense_10_acc'])
+plt.plot(callbacks.history.history['val_dense_acc'])
 plt.title('model accuracy')
 plt.ylabel('acc')
 plt.xlabel('epoch')

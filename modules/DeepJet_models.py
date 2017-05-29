@@ -538,7 +538,7 @@ def Dense_model_ConvCSV(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
-def binned3D_convolutional_classification_regression(inputs, output_shapes, dropout_rate=0.1): 
+def binned3D_convolutional_classification_regression(inputs, output_shapes, dropout_rate=0.1, run_regression=True): 
     'Binned development output in [flavour, regression]'
     from keras.layers import Dense, Dropout, Flatten, Convolution2D, concatenate, \
        Convolution1D, Convolution3D, Reshape, LocallyConnected2D
@@ -635,9 +635,12 @@ def binned3D_convolutional_classification_regression(inputs, output_shapes, drop
     )
     X = Dropout(dropout_rate)(X)
     
-    # regression
-    pt_sigma = Dense(2, activation='linear', kernel_initializer='lecun_uniform')(X)
-    # classification
     flavour = Dense(output_shapes[0], activation='softmax',kernel_initializer='lecun_uniform')(X)
-    model = Model(inputs=list(inputs), outputs=[flavour, pt_sigma])
-    return model
+    if run_regression:
+        # regression
+        pt_sigma = Dense(2, activation='linear', kernel_initializer='lecun_uniform')(X)
+        # classification
+        return Model(inputs=list(inputs), outputs=[flavour, pt_sigma])
+    else:
+        return Model(inputs=list(inputs), outputs=flavour)
+    
