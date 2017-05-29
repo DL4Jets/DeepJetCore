@@ -109,10 +109,30 @@ class DataCollection(object):
         
         
     def getClassWeights(self):
-        return 0 #TBI
+        if not len(self.classweights):
+            self.__computeClassWeights()
+        return self.classweights
         
     def __computeClassWeights(self,truthclassesarray):
-        return 0 #TBI
+        if not len(self.samples):
+            raise Exception("DataCollection:computeClassWeights: no sample files associated")
+        import copy
+        td=copy.deepcopy(self.dataclass)
+        td.readIn(self.getSamplePath(self.samples[0]))
+        arr=td.y[0]
+        average=0
+        allist=[]
+        for i in range(arr.shape[1]):
+            entries=float((arr[:,i]>0).sum())
+            average=average+entries
+            allist.append(entries)
+        
+        outdict={}
+        average=average/float((arr.shape[1]))
+        for i in range(len(allist)):
+            l=average/allist[i] 
+            outdict[i]=l
+        self.classweights=outdict
         
     def getInputShapes(self):
         '''
