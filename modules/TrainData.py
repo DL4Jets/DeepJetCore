@@ -45,6 +45,29 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
             h5f[idstr].read_direct(arl[i])
     doneVal.value=True
     h5f.close()
+    
+    
+    
+class ShowProgress(object):
+    def __init__(self,nsteps,total):
+        self.nsteps=nsteps
+        self.total=total
+        self._stepvec=[]
+        for i in range(nsteps):
+            self._stepvec.append(float(i+1)*float(total)/float(nsteps))
+            
+        self._counter=0
+        
+    def show(self,index):
+        if index==0:
+            print('0%')
+        if index>self._stepvec[self._counter]:
+            print(str(int(float(index)/float(self.total)*100))+'%')
+            self._counter=self._counter+1
+        
+    def reset(self):
+        self._counter=0
+        
 
 class TrainData(object):
     '''
@@ -454,11 +477,15 @@ class TrainData(object):
         weighter = self.make_empty_weighter()
         branches = ["jet_pt","jet_eta"]
         branches.extend(self.truthclasses)
+        showprog=ShowProgress(5,len(filenames))
+        counter=0
         if self.remove or self.weight:
             for fname in filenames:
                 nparray = self.readTreeFromRootToTuple(fname, branches=branches)
                 weighter.addDistributions(nparray)
                 del nparray
+                showprog.show(counter)
+                counter=counter+1
             weighter.createRemoveProbabilitiesAndWeights()
         return weighter
     

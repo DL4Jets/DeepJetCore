@@ -150,7 +150,7 @@ class Weighter(object):
         
         #make it an average 1
         for i in range(len(self.binweights)):
-            self.binweights[i]=self.binweights[i]/numpy.average(self.binweights[h])
+            self.binweights[i]=self.binweights[i]/numpy.average(self.binweights[i])
     
     
         
