@@ -60,9 +60,9 @@ class ShowProgress(object):
         
     def show(self,index):
         if index==0:
-            print('0%')
+            logging.info('0%')
         if index>self._stepvec[self._counter]:
-            print(str(int(float(index)/float(self.total)*100))+'%')
+            logging.info(str(int(float(index)/float(self.total)*100))+'%')
             self._counter=self._counter+1
         
     def reset(self):

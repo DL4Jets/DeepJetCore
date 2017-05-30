@@ -430,6 +430,8 @@ class DataCollection(object):
         wo_queue = Queue()
         import os
         thispid=str(os.getpid())
+        if not os.path.isfile(outputDir+'/snapshot.dc'):
+            self.writeToFile(outputDir+'/snapshot.dc')
         
         tempstoragepath='/dev/shm/'+thispid
         
