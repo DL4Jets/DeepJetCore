@@ -45,7 +45,7 @@ def main(argv=None):
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
-    from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF
+    from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF,  TrainData_deepCSV_PF_rec
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
@@ -65,7 +65,8 @@ def main(argv=None):
         TrainData_PF_Reg,
         TrainData_deepCSV_PF_Binned,
         TrainData_deepFlavour_FT,
-        TrainData_deepFlavour_FT_map
+        TrainData_deepFlavour_FT_map,
+        TrainData_deepCSV_PF_rec
         ]
     class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 
