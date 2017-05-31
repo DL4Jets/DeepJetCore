@@ -435,6 +435,7 @@ class DataCollection(object):
         
         tempstoragepath='/dev/shm/'+thispid
         
+        print('creating dir '+tempstoragepath)
         os.system('mkdir -p '+tempstoragepath)
         
         def writeData_async(index,woq):
@@ -496,7 +497,7 @@ class DataCollection(object):
         for i in range(startindex,len(self.originRoots)):
             processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
         
-        nchilds = int(cpu_count()/2) if self.nprocs <= 0 else self.nprocs
+        nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
         #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
         #    nchilds=cpu_count()-5
@@ -509,14 +510,14 @@ class DataCollection(object):
         alldone=False
         try:
             while not alldone:
-                if index+nchilds >= len(self.originRoots):
-                    nchilds=len(self.originRoots)-index
+                if index+nchilds >= len(processes):
+                    nchilds=len(processes)-index
                     alldone=True
                 
                 
                 logging.info('starting %d child processes' % nchilds)
                 for i in range(nchilds):
-                    logging.info('starting %s...' % self.originRoots[i+index])
+                    logging.info('starting %s...' % self.originRoots[startindex+i+index])
                     processes[i+index].start()
                         
                 results=[]
