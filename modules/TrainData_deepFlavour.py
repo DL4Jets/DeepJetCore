@@ -19,14 +19,26 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
        
         self.addBranches(['Cpfcan_BtagPf_trackEtaRel',
                           'Cpfcan_BtagPf_trackPtRel',
+                          'Cpfcan_BtagPf_trackPPar',
                           'Cpfcan_BtagPf_trackDeltaR',
                           'Cpfcan_BtagPf_trackPtRatio',
+                          'Cpfcan_BtagPf_trackPParRatio',
+                          'Cpfcan_BtagPf_trackSip2dVal',
                           'Cpfcan_BtagPf_trackSip2dSig',
+                          'Cpfcan_BtagPf_trackSip3dVal',
                           'Cpfcan_BtagPf_trackSip3dSig',
                           'Cpfcan_BtagPf_trackJetDistVal',
                           'Cpfcan_BtagPf_trackJetDistSig',
                           
+                          'Cpfcan_ptrel', #not the same as btv ptrel!
                           'Cpfcan_erel',
+                          'Cpfcan_phirel',
+                          'Cpfcan_etarel',
+                          'Cpfcan_pt',
+                          'Cpfcan_dxy',
+                          'Cpfcan_dxyerrinv',
+                          'Cpfcan_dz',
+                          
                           'Cpfcan_drminsv',
                           'Cpfcan_chi2',
                           'Cpfcan_fromPV',
@@ -40,7 +52,10 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
         
         
         self.addBranches(['Npfcan_erel',
+                          'Npfcan_ptrel',
                           'Npfcan_deltaR',
+                          'Npfcan_phirel',
+                          'Npfcan_etarel',
                               'Npfcan_isGamma',
                               'Npfcan_HadFrac',
                               'Npfcan_drminsv',
@@ -169,10 +184,10 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         '''
         TrainData_deepFlavour_FT.__init__(self)
         
-        self.registerBranches(['Cpfcan_erel','Cpfcan_eta','Cpfcan_phi',
-                               'Npfcan_erel','Npfcan_eta','Npfcan_phi',
+        self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
+                               'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
-                               'jet_eta','jet_phi'])
+                               'jet_eta','jet_phi','jet_pt'])
         
 
         
@@ -217,17 +232,17 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         
         #here the difference starts
         x_chmap = createDensityMap(filename,TupleMeanStd,
-                                   'Cpfcan_erel',
+                                   'Cpfcan_ptrel',
                                    self.nsamples,
-                                   ['Cpfcan_eta','jet_eta',7,0.5],
-                                   ['Cpfcan_phi','jet_phi',7,0.5],
+                                   ['Cpfcan_eta','jet_eta',20,0.5],
+                                   ['Cpfcan_phi','jet_phi',20,0.5],
                                    'nCpfcand',-1)
         
         x_neumap = createDensityMap(filename,TupleMeanStd,
-                                   'Npfcan_erel',
+                                   'Npfcan_ptrel',
                                    self.nsamples,
-                                   ['Npfcan_eta','jet_eta',7,0.5],
-                                   ['Npfcan_phi','jet_phi',7,0.5],
+                                   ['Npfcan_eta','jet_eta',20,0.5],
+                                   ['Npfcan_phi','jet_phi',20,0.5],
                                    'nNpfcand',-1)
         
         
