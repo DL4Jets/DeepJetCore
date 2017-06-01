@@ -294,4 +294,100 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         self.x=[x_global,x_cpf,x_npf,x_sv,x_chmap,x_neumap]
         self.y=[alltruth]
         
-                
+class TrainData_image(TrainData_deepFlavour_FT):
+    '''
+    This class is for simple jetimiging
+    '''
+
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        TrainData_deepFlavour_FT.__init__(self)
+        
+        self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
+                               'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
+                               'nCpfcand','nNpfcand',
+                               'jet_eta','jet_phi','jet_pt'])
+       
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
+        import numpy
+        from stopwatch import stopwatch
+        
+        sw=stopwatch()
+        swall=stopwatch()
+        
+        import ROOT
+        
+        fileTimeOut(filename,120) #give eos a minute to recover
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        
+        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        
+        # split for convolutional network
+        
+        x_global = MeanNormZeroPad(filename,TupleMeanStd,
+                                   [self.branches[0]],
+                                   [self.branchcutoffs[0]],self.nsamples)    
+        
+        #here the difference starts
+        x_chmap = createDensityMap(filename,TupleMeanStd,
+                                   'Cpfcan_ptrel',
+                                   self.nsamples,
+                                   ['Cpfcan_eta','jet_eta',20,0.5],
+                                   ['Cpfcan_phi','jet_phi',20,0.5],
+                                   'nCpfcand',-1)
+        
+        x_neumap = createDensityMap(filename,TupleMeanStd,
+                                   'Npfcan_ptrel',
+                                   self.nsamples,
+                                   ['Npfcan_eta','jet_eta',20,0.5],
+                                   ['Npfcan_phi','jet_phi',20,0.5],
+                                   'nNpfcand',-1)
+        
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+        
+        Tuple = self.readTreeFromRootToTuple(filename)
+        
+        if self.remove:
+            notremoves=weighter.createNotRemoveIndices(Tuple)
+            undef=Tuple['isUndefined']
+            notremoves-=undef
+            print('took ', sw.getAndReset(), ' to create remove indices')
+        
+        if self.weight:
+            weights=weighter.getJetWeights(Tuple)
+        elif self.remove:
+            weights=notremoves
+        else:
+            print('neither remove nor weight')
+            weights=numpy.empty(self.nsamples)
+            weights.fill(1.)
+        
+        
+        truthtuple =  Tuple[self.truthclasses]
+        #print(self.truthclasses)
+        alltruth=self.reduceTruth(truthtuple)
+        
+        #print(alltruth.shape)
+        if self.remove:
+            print('remove')
+            weights=weights[notremoves > 0]
+            x_global=x_global[notremoves > 0]
+            x_chmap=x_chmap[notremoves > 0]
+            x_neumap=x_neumap[notremoves > 0]            
+            alltruth=alltruth[notremoves > 0]
+        x_map = numpy.concatenate((x_chmap,x_neumap), axis=2)
+        newnsamp=x_global.shape[0]
+        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
+        self.nsamples = newnsamp
+        print(x_global.shape,self.nsamples)
+
+        self.w=[weights]
+        self.x=[x_global,x_map]
+        self.y=[alltruth]
+        
