@@ -235,8 +235,10 @@ class TrainData(object):
             return sharedlist, shapeinfos
         
         
-            
-        self.h5f = h5py.File(fileprefix,'r')
+        try:
+            self.h5f = h5py.File(fileprefix,'r')
+        except:
+            raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
         self.nsamples=self.h5f['n']
         self.nsamples=self.nsamples[0]
         if True or not hasattr(self, 'w_shapes'):
