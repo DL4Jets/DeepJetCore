@@ -85,6 +85,8 @@ class TrainData(object):
         
         self.undefTruth=['isUndefined']
         
+        self.referenceclass='isB'
+        
         self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
         
         self.allbranchestoberead=[]
@@ -488,7 +490,7 @@ class TrainData(object):
                 del nparray
                 showprog.show(counter)
                 counter=counter+1
-            weighter.createRemoveProbabilitiesAndWeights()
+            weighter.createRemoveProbabilitiesAndWeights(self.referenceclass)
         return weighter
     
         

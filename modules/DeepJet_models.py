@@ -9,6 +9,26 @@ from keras.layers.pooling import MaxPooling2D
 #from tensorflow.python.ops import control_flow_ops 
 #tensorflow.python.control_flow_ops = control_flow_ops
 
+
+def Model_FatJet(Inputs,nclasses,dropoutRate=-1):
+
+    cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
+    cpf = Dropout(dropoutRate)(cpf)
+    cpf = Flatten()(cpf)
+    
+    cmap = Conv2D(4, 3, 3, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
+    cmap =  Dropout(dropoutRate)(cmap)
+    cmap = Flatten()(cmap)
+        
+    #merge with the flobals
+    x = merge( [Inputs[0],cpf, cmap] , mode='concat')
+    x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+    
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+    
+
 def Schwartz_gluon_model(Inputs,nclasses,dropoutRate=-1):
      x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
      x = MaxPooling2D(pool_size=(2, 2))(x)
