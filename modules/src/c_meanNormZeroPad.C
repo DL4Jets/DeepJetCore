@@ -334,6 +334,15 @@ void particle_binner(
 	tfile->Close();
 	delete tfile;
 }
+void priv_fillDensityMap(boost::python::numeric::array numpyarray,
+        double norm,
+        std::string in_branch,
+        std::string in_weightbranch,
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        double offset, bool count=false
+        );
 
 void fillDensityMap(boost::python::numeric::array numpyarray,
         double norm,
@@ -344,13 +353,41 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         double offset
         ){
+    priv_fillDensityMap(numpyarray,norm,in_branch,in_weightbranch,filename,counter_branch,
+            xbranch,xcenter,xbins,xwidth,
+            ybranch,ycenter,ybins,ywidth,false);
+}
+void fillCountMap(boost::python::numeric::array numpyarray,
+        double norm,
+        std::string in_weightbranch,
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        double offset
+        ){
+    std::string in_branch="";
+    priv_fillDensityMap(numpyarray,norm,in_branch,in_weightbranch,filename,counter_branch,
+            xbranch,xcenter,xbins,xwidth,
+            ybranch,ycenter,ybins,ywidth,offset,true);
+}
+
+void priv_fillDensityMap(boost::python::numeric::array numpyarray,
+        double norm,
+        std::string in_branch,
+        std::string in_weightbranch,
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        double offset, bool count
+        ){
 
 
     TString branchstr=in_branch;
     TString weightstr=in_weightbranch;
 
     __hidden::indata branch;
-    branch.createFrom({branchstr}, {norm}, {0.}, MAXBRANCHLENGTH);
+    if(!count)
+        branch.createFrom({branchstr}, {norm}, {0.}, MAXBRANCHLENGTH);
     //only normalisation, no mean substr.
 
     bool useweights=false;
@@ -378,7 +415,8 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
     TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
 
     //connect all branches
-    branch.setup(tree);
+    if(!count)
+        branch.setup(tree);
     if(useweights)
         weight.setup(tree);
     xy.setup(tree);
@@ -387,8 +425,8 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
 
     const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
     for(int jet=0;jet<nevents;jet++){
-
-        branch.zeroAndGet(jet);
+        if(!count)
+            branch.zeroAndGet(jet);
         if(useweights)
             weight.zeroAndGet(jet);
         xy.zeroAndGet(jet);
@@ -403,8 +441,9 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
             int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
             int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
             if(xidx == -1 || yidx == -1) continue;
-
-            float feature_value = branch.getData(0, elem)-offset;
+            float feature_value = 1;
+            if(!count)
+                feature_value = branch.getData(0, elem)-offset;
             //std::cout << elem << xidx << "  " << yidx << " "<< feature_value <<std::endl;
             float weight_value =1;
             if(useweights)
@@ -439,4 +478,5 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("particlecluster", &particlecluster);
     def("particle_binner", &particle_binner);
     def("fillDensityMap", &fillDensityMap);
+    def("fillCountMap", &fillCountMap);
 }
