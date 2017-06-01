@@ -12,7 +12,7 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
         '''
         Constructor
         '''
-        TrainData.__init__(self)
+        TrainData_fullTruth.__init__(self)
         
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
@@ -341,12 +341,24 @@ class TrainData_image(TrainData_deepFlavour_FT):
                                    ['Cpfcan_phi','jet_phi',20,0.5],
                                    'nCpfcand',-1)
         
+        x_chcount = createCountMap(filename,TupleMeanStd,
+                                   self.nsamples,
+                                   ['Cpfcan_eta','jet_eta',20,0.5],
+                                   ['Cpfcan_phi','jet_phi',20,0.5],
+                                   'nCpfcand')
+        
         x_neumap = createDensityMap(filename,TupleMeanStd,
                                    'Npfcan_ptrel',
                                    self.nsamples,
                                    ['Npfcan_eta','jet_eta',20,0.5],
                                    ['Npfcan_phi','jet_phi',20,0.5],
                                    'nNpfcand',-1)
+        
+        x_neucount = createCountMap(filename,TupleMeanStd,
+                                   self.nsamples,
+                                   ['Npfcan_eta','jet_eta',20,0.5],
+                                   ['Npfcan_phi','jet_phi',20,0.5],
+                                   'nNpfcand')
         
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
