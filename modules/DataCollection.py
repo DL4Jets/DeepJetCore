@@ -791,6 +791,9 @@ class DataCollection(object):
                         wout.append([])
                         
                 else:
+                    if td.x[0].shape == 0:
+                        print('Found empty (corrupted?) file, skipping')
+                        continue
                     #print('dc:append read sample') #DEBUG
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
