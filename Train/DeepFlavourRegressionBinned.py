@@ -11,6 +11,9 @@ parser.add_argument('--class_only', action='store_true', help='run only classifi
 parser.add_argument('--warm', help='pre-trained model')
 args = parser.parse_args()
 
+import sys
+print 'Command issued:'
+print ' '.join(sys.argv)
 
 import matplotlib
 #if no X11 use below
@@ -60,7 +63,7 @@ config_args = { #we might want to move it to an external file
    'startlearnrate' : 0.0005,
    'useweights' : False,
    'splittrainandtest' : 0.8,
-   'maxqsize' : 10, #sufficient
+   'maxqsize' : 50, #sufficient
    'conv_dropout' : 0.1,
    'loss_weights' : [1., .025] ,
 }
@@ -185,7 +188,7 @@ model.fit_generator(
    steps_per_epoch = traind.getNBatchesPerEpoch(), 
    epochs = config_args['nepochs'],
    callbacks = callbacks.callbacks,
-   validation_data = testd.generator(),
+   validation_data = flav_only(testd.generator()) if args.class_only else testd.generator(),
    validation_steps = testd.getNBatchesPerEpoch(),
    max_q_size = config_args['maxqsize'], #maximum size for the generator queue
    class_weight = 'auto' if args.class_only else None,
