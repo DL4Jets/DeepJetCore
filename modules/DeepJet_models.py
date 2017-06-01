@@ -1,12 +1,47 @@
 #from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM
+from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM, LocallyConnected2D
 from keras.models import Model
 from keras.layers.core import Reshape, Masking, Permute
+from keras.layers.pooling import MaxPooling2D
 #fix for dropout on gpus
 
 #import tensorflow
 #from tensorflow.python.ops import control_flow_ops 
 #tensorflow.python.control_flow_ops = control_flow_ops
+
+def Schwartz_gluon_model(Inputs,nclasses,dropoutRate=-1):
+     x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Flatten()(x)
+     x = merge( [x, Inputs[1]] , mode='concat')
+    # linear activation for regression and softmax for classification
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)     
+     predictions = [Dense(2, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)]
+     model = Model(inputs=Inputs, outputs=predictions)
+     return model
+
+def Serious_gluon_model(Inputs,nclasses,dropoutRate=-1):
+     x =   LocallyConnected2D(64, (8,8) ,stride= (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+#     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+    # x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Flatten()(x)
+     x = merge( [x, Inputs[0]] , mode='concat')
+    # linear activation for regression and softmax for classification
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     
+     predictions = [Dense(2, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)]
+     model = Model(inputs=Inputs, outputs=predictions)
+     return model
 
 
 def Incept_model(Inputs,dropoutRate=0.25):
