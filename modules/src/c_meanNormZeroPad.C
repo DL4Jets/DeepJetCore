@@ -24,6 +24,7 @@
 #include "../interface/indata.h"
 #include "../interface/pythonToSTL.h"
 #include "../interface/helper.h"
+#include <cmath>
 
 using namespace boost::python; //for some reason....
 
@@ -189,150 +190,150 @@ int square_bins(
 }
 
 void particle_binner(
-	std::string filename, std::string counter_branch,
-	std::string xbranch, std::string xcenter, int xbins, float xwidth, 
-	std::string ybranch, std::string ycenter, int ybins, float ywidth,
-	//binned variables
-	boost::python::numeric::array numpyarray,
-	const boost::python::list inl_norms,
-	const boost::python::list inl_means ,
-	const boost::python::list inl_branches,
-	int nmax, 
-	//summed variables
-	boost::python::numeric::array sum_npy_array,
-	const boost::python::list sum_inl_norms,
-	const boost::python::list sum_inl_means ,
-	const boost::python::list summed_branches
-	) {
-	std::vector<TString> s_branches = toSTLVector<TString>(inl_branches);
-	std::vector<double>  s_norms    = toSTLVector<double>(inl_norms);
-	std::vector<double>  s_means    = toSTLVector<double>(inl_means);	
-	std::vector<TString> s_sum_branches = toSTLVector<TString>(summed_branches);
-	std::vector<double>  s_sum_stds     = toSTLVector<double>(sum_inl_norms);
-	std::vector<double>  s_sum_means    = toSTLVector<double>(sum_inl_means);	
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        //binned variables
+        boost::python::numeric::array numpyarray,
+        const boost::python::list inl_norms,
+        const boost::python::list inl_means ,
+        const boost::python::list inl_branches,
+        int nmax,
+        //summed variables
+        boost::python::numeric::array sum_npy_array,
+        const boost::python::list sum_inl_norms,
+        const boost::python::list sum_inl_means ,
+        const boost::python::list summed_branches
+) {
+    std::vector<TString> s_branches = toSTLVector<TString>(inl_branches);
+    std::vector<double>  s_norms    = toSTLVector<double>(inl_norms);
+    std::vector<double>  s_means    = toSTLVector<double>(inl_means);
+    std::vector<TString> s_sum_branches = toSTLVector<TString>(summed_branches);
+    std::vector<double>  s_sum_stds     = toSTLVector<double>(sum_inl_norms);
+    std::vector<double>  s_sum_means    = toSTLVector<double>(sum_inl_means);
 
 
-	//get the branch handlers
-  //pick all the objects in the collection cut off and zero padding is done per bin
-	__hidden::indata branches;
-	branches.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH); 
+    //get the branch handlers
+    //pick all the objects in the collection cut off and zero padding is done per bin
+    __hidden::indata branches;
+    branches.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH);
 
-	//pick branches to be summed by bin
-	std::vector<double> dummy(s_sum_branches.size(), 0.);
-	__hidden::indata sum_branches;
-	sum_branches.createFrom(s_sum_branches, dummy, dummy, MAXBRANCHLENGTH);
+    //pick branches to be summed by bin
+    std::vector<double> dummy(s_sum_branches.size(), 0.);
+    __hidden::indata sum_branches;
+    sum_branches.createFrom(s_sum_branches, dummy, dummy, MAXBRANCHLENGTH);
 
-	//get x,y (eta, phi but could be something else) branches
-	//mean =0  norm = 1 to avoid scaling
-	__hidden::indata xy;
-	xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+    //get x,y (eta, phi but could be something else) branches
+    //mean =0  norm = 1 to avoid scaling
+    __hidden::indata xy;
+    xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
 
-	//get jet center
-	__hidden::indata xy_center;
-	xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
+    //get jet center
+    __hidden::indata xy_center;
+    xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
 
-	//get particle counter
-	__hidden::indata counter;
-	counter.createFrom({counter_branch}, {1.}, {0.}, 1);
+    //get particle counter
+    __hidden::indata counter;
+    counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
-	TFile* tfile= new TFile(filename.c_str(), "READ");
-	TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TFile* tfile= new TFile(filename.c_str(), "READ");
+    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
 
-	//connect all branches
-	branches.setup(tree);
-	sum_branches.setup(tree);
-	xy.setup(tree);
-	xy_center.setup(tree);
-	counter.setup(tree);
+    //connect all branches
+    branches.setup(tree);
+    sum_branches.setup(tree);
+    xy.setup(tree);
+    xy_center.setup(tree);
+    counter.setup(tree);
 
-	// std::cout << "looping over events for " << counter_branch <<std::endl;
-	const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
-	TStopwatch stopw;
-	for(int jet=0;jet<nevents;jet++){
-		// if(jet % 100 == 0) {
-		// 	std::cout << "filling binned jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
-		// 	stopw.Reset();
-		// 	stopw.Start();
-		// }
-		//get values
-		branches.zeroAndGet(jet);
-		sum_branches.zeroAndGet(jet);
-		xy.zeroAndGet(jet);
-		xy_center.zeroAndGet(jet);
-		counter.zeroAndGet(jet);
+    // std::cout << "looping over events for " << counter_branch <<std::endl;
+    const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
+    TStopwatch stopw;
+    for(int jet=0;jet<nevents;jet++){
+        // if(jet % 100 == 0) {
+        // 	std::cout << "filling binned jet: " << jet << " (" << stopw.RealTime()/100. << " sec./evt)" << std::endl;
+        // 	stopw.Reset();
+        // 	stopw.Start();
+        // }
+        //get values
+        branches.zeroAndGet(jet);
+        sum_branches.zeroAndGet(jet);
+        xy.zeroAndGet(jet);
+        xy_center.zeroAndGet(jet);
+        counter.zeroAndGet(jet);
 
-		//map summed features, for some reasons getting a value out of a numpy array is tough (or so I was told)
-		double summed_values[xbins][ybins][sum_branches.nfeatures()+1];
-		//map filled indices
-		int current_indexes[xbins][ybins];
-		//now, pad with defaults every bin (for safety up here)
-		for(size_t x=0; x<xbins; x++) {
-			for(size_t y=0; y<ybins; y++) {
-				current_indexes[x][y] = 0;
+        //map summed features, for some reasons getting a value out of a numpy array is tough (or so I was told)
+        double summed_values[xbins][ybins][sum_branches.nfeatures()+1];
+        //map filled indices
+        int current_indexes[xbins][ybins];
+        //now, pad with defaults every bin (for safety up here)
+        for(size_t x=0; x<xbins; x++) {
+            for(size_t y=0; y<ybins; y++) {
+                current_indexes[x][y] = 0;
 
-				for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
-					summed_values[x][y][ifeat] = 0;
-				}
+                for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+                    summed_values[x][y][ifeat] = 0;
+                }
 
-				for(size_t idx=0; idx<nmax; idx++) {
-					for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
-						numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
-					}
-				}
-			}
-		}
+                for(size_t idx=0; idx<nmax; idx++) {
+                    for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+                        numpyarray[jet][x][y][idx][ifeat] = branches.getDefault(ifeat);
+                    }
+                }
+            }
+        }
 
-		//loop over all candidates
-		int ncharged = counter.getData(0, 0);
-		for(size_t elem=0; elem < ncharged; elem++) {
-			//get bin id
-			int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
-			int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
-			if(xidx == -1 || yidx == -1) continue;
+        //loop over all candidates
+        int ncharged = counter.getData(0, 0);
+        for(size_t elem=0; elem < ncharged; elem++) {
+            //get bin id
+            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
+            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+            if(xidx == -1 || yidx == -1) continue;
 
-			//bin summing
-			summed_values[xidx][yidx][0]++;
-			for(size_t ifeat=1; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
-				double feat_val = sum_branches.getRaw(ifeat-1, elem);
-				summed_values[xidx][yidx][ifeat] += feat_val;
-			}
+            //bin summing
+            summed_values[xidx][yidx][0]++;
+            for(size_t ifeat=1; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+                double feat_val = sum_branches.getRaw(ifeat-1, elem);
+                summed_values[xidx][yidx][ifeat] += feat_val;
+            }
 
-			//single values
-			//if bin is full skip
-			if(current_indexes[xidx][yidx] == nmax) continue;
-			int particle_idx = current_indexes[xidx][yidx];
-			current_indexes[xidx][yidx]++;
-			
-			for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
-				double feature_value = branches.getData(ifeat, elem);
-				// if(ifeat == 0)
-				// 	std::cout << "Jet: " << jet << " Candidate: " << elem << ", bin (" << xidx << ", " << yidx << ", " << particle_idx
-				// 						<< ") feat #"<< ifeat <<": " << feature_value << std::endl;
-				numpyarray[jet][xidx][yidx][particle_idx][ifeat]= feature_value;
-			}			
-		}
+            //single values
+            //if bin is full skip
+            if(current_indexes[xidx][yidx] == nmax) continue;
+            int particle_idx = current_indexes[xidx][yidx];
+            current_indexes[xidx][yidx]++;
 
-		for(size_t x=0; x<xbins; x++) {
-			for(size_t y=0; y<ybins; y++) {
-				for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
-					//hardcoded scaling! to change if zero padding method changes!
-					sum_npy_array[jet][x][y][ifeat] = (summed_values[x][y][ifeat] - s_sum_means.at(ifeat)) / s_sum_stds.at(ifeat); 
-				}
-			}
-		}
+            for(size_t ifeat=0; ifeat<branches.nfeatures(); ifeat++) {
+                double feature_value = branches.getData(ifeat, elem);
+                // if(ifeat == 0)
+                // 	std::cout << "Jet: " << jet << " Candidate: " << elem << ", bin (" << xidx << ", " << yidx << ", " << particle_idx
+                // 						<< ") feat #"<< ifeat <<": " << feature_value << std::endl;
+                numpyarray[jet][xidx][yidx][particle_idx][ifeat]= feature_value;
+            }
+        }
 
-		//BUG HUNTING
-		//int filled = 0;
-		//for(size_t x=0; x<xbins; x++) {
-		//	for(size_t y=0; y<ybins; y++) {
-		//		filled += current_indexes[x][y];
-		//	}
-		//}
-		//std::cout << "jet #" << jet << " had " << ncharged << " candidates. I filled " << filled << std::endl;
-	}	
+        for(size_t x=0; x<xbins; x++) {
+            for(size_t y=0; y<ybins; y++) {
+                for(size_t ifeat=0; ifeat < (sum_branches.nfeatures()+1); ifeat++) {
+                    //hardcoded scaling! to change if zero padding method changes!
+                    sum_npy_array[jet][x][y][ifeat] = (summed_values[x][y][ifeat] - s_sum_means.at(ifeat)) / s_sum_stds.at(ifeat);
+                }
+            }
+        }
 
-	tfile->Close();
-	delete tfile;
+        //BUG HUNTING
+        //int filled = 0;
+        //for(size_t x=0; x<xbins; x++) {
+        //	for(size_t y=0; y<ybins; y++) {
+        //		filled += current_indexes[x][y];
+        //	}
+        //}
+        //std::cout << "jet #" << jet << " had " << ncharged << " candidates. I filled " << filled << std::endl;
+    }
+
+    tfile->Close();
+    delete tfile;
 }
 void priv_fillDensityMap(boost::python::numeric::array numpyarray,
         double norm,
@@ -342,7 +343,7 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
         std::string xbranch, std::string xcenter, int xbins, float xwidth,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         double offset, bool count=false
-        );
+);
 
 void fillDensityMap(boost::python::numeric::array numpyarray,
         double norm,
@@ -352,7 +353,7 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
         std::string xbranch, std::string xcenter, int xbins, float xwidth,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         double offset
-        ){
+){
     priv_fillDensityMap(numpyarray,norm,in_branch,in_weightbranch,filename,counter_branch,
             xbranch,xcenter,xbins,xwidth,
             ybranch,ycenter,ybins,ywidth,offset,false);
@@ -364,11 +365,79 @@ void fillCountMap(boost::python::numeric::array numpyarray,
         std::string xbranch, std::string xcenter, int xbins, float xwidth,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         double offset
-        ){
+){
     std::string in_branch="";
     priv_fillDensityMap(numpyarray,norm,in_branch,in_weightbranch,filename,counter_branch,
             xbranch,xcenter,xbins,xwidth,
             ybranch,ycenter,ybins,ywidth,offset,true);
+}
+
+void fillDensityLayers(boost::python::numeric::array numpyarray,
+        double norm,
+        std::string in_branch,
+        std::string layer_branch,
+        int maxlayers,
+        int layer_offset,
+        std::string filename, std::string counter_branch,
+        std::string xbranch, std::string xcenter, int xbins, float xwidth,
+        std::string ybranch, std::string ycenter, int ybins, float ywidth,
+        double offset
+){
+
+    __hidden::indata branch;
+    branch.createFrom({in_branch,layer_branch}, {norm,1}, {0.,0.}, MAXBRANCHLENGTH);
+
+    __hidden::indata xy;
+    xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+
+    __hidden::indata xy_center;
+    xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
+
+    __hidden::indata counter;
+    counter.createFrom({counter_branch}, {1.}, {0.}, 1);
+
+    TFile* tfile= new TFile(filename.c_str(), "READ");
+    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+
+    branch.setup(tree);
+    xy.setup(tree);
+    xy_center.setup(tree);
+    counter.setup(tree);
+
+    const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
+    for(int jet=0;jet<nevents;jet++){
+        branch.zeroAndGet(jet);
+        xy.zeroAndGet(jet);
+        xy_center.zeroAndGet(jet);
+        counter.zeroAndGet(jet);
+
+        std::vector<std::vector<std::vector<float> > >
+        densemap(xbins,std::vector<std::vector<float> >(ybins,std::vector<float>(maxlayers,0)));
+
+        int ncharged = counter.getData(0, 0);
+        for(size_t elem=0; elem < ncharged; elem++) {
+            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
+            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+            if(xidx == -1 || yidx == -1) continue;
+            float featval=branch.getData(0, elem)-offset;
+            int layer=round(branch.getData(1, elem))-layer_offset;
+            if(layer>maxlayers)
+                layer=maxlayers;
+            densemap.at(xidx).at(yidx).at(layer)+=featval;
+        }
+
+
+        //fill back
+        for(int i=0;i<xbins;i++){
+            for(int j=0;j<ybins;j++){
+                for(int l=0;l<maxlayers;l++){
+                    numpyarray[jet][i][j][l]=densemap[i][j][l];
+                }
+            }
+        }
+
+    }
+
 }
 
 void priv_fillDensityMap(boost::python::numeric::array numpyarray,
@@ -379,7 +448,7 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
         std::string xbranch, std::string xcenter, int xbins, float xwidth,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         double offset, bool count
-        ){
+){
 
 
     TString branchstr=in_branch;
@@ -479,4 +548,6 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("particle_binner", &particle_binner);
     def("fillDensityMap", &fillDensityMap);
     def("fillCountMap", &fillCountMap);
+    def("fillDensityLayers", &fillDensityLayers);
+
 }
