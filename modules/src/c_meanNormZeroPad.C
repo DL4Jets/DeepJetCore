@@ -355,7 +355,7 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
         ){
     priv_fillDensityMap(numpyarray,norm,in_branch,in_weightbranch,filename,counter_branch,
             xbranch,xcenter,xbins,xwidth,
-            ybranch,ycenter,ybins,ywidth,false);
+            ybranch,ycenter,ybins,ywidth,offset,false);
 }
 void fillCountMap(boost::python::numeric::array numpyarray,
         double norm,
