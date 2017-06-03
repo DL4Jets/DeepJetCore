@@ -11,6 +11,7 @@ BOOST_INC = ${CONDA_PREFIX}/include
 BOOST_LIB = ${CONDA_PREFIX}/lib
 LINUXADD=-Wl,--export-dynamic
 ROOTSTUFF=`root-config --cflags --libs --glibs` -g
+CFLAGS=
 
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
@@ -25,7 +26,7 @@ all: $(MODULES_SHARED_LIBS)
 #helpers
 
 obj/%.o: src/%.cpp
-	g++ $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
+	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
     
 #pack helpers in lib
 libdeepjethelpers.so: $(OBJ_FILES)
