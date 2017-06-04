@@ -421,8 +421,10 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
             if(xidx == -1 || yidx == -1) continue;
             float featval=branch.getData(0, elem)-offset;
             int layer=round(branch.getData(1, elem))-layer_offset;
-            if(layer>maxlayers)
-                layer=maxlayers;
+            if(layer>=maxlayers)
+                layer=maxlayers-1;
+            if(layer<0)
+                layer=0;
             densemap.at(xidx).at(yidx).at(layer)+=featval;
         }
 
