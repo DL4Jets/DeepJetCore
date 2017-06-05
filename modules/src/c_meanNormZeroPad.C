@@ -433,7 +433,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
         for(int i=0;i<xbins;i++){
             for(int j=0;j<ybins;j++){
                 for(int l=0;l<maxlayers;l++){
-                    numpyarray[jet][i][j][l]=densemap[i][j][l];
+                    numpyarray[jet][i][j][l][0]=densemap[i][j][l];
                 }
             }
         }
