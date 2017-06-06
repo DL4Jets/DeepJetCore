@@ -596,7 +596,7 @@ def binned3D_convolutional_classification_regression(inputs, output_shapes, drop
     nentries_per_bin = int(binned_info.shape[-1])
     k = (1,1)
     binned_info = make_layers(
-        Convolution2D, [[nentries_per_bin//2, k], [10, k]], 
+        Convolution2D, [[nentries_per_bin, k], [25, k]],
         dropout_rate, binned_info, 
         dropout_at_first=True, **kwargs
         )

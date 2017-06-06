@@ -131,12 +131,12 @@ adam = Adam(lr = config_args['startlearnrate'])
 if args.class_only:
     model.compile(
         loss = 'categorical_crossentropy',
-        optimizer = adam, metrics = ['accuracy']
+        optimizer = adam, metrics = ['categorical_accuracy']
         )
 else:
     model.compile(
         loss = ['categorical_crossentropy', loss_NLL], #apply xentropy to the first output (flavour) and NLL to the pt regression
-        optimizer = adam, metrics = ['accuracy','accuracy'],
+        optimizer = adam, metrics = ['categorical_accuracy','accuracy'],
         loss_weights = config_args['loss_weights']
         )
 
@@ -166,6 +166,7 @@ if args.warm:
 print 'split to %d train samples and %d test samples' % (ntrainepoch, nvalepoch)
 #for bookkeeping
 traind.setBatchSize(config_args['batchsize'])
+testd.setBatchSize(500)
 traind.writeToFile(outputDir+'trainsamples.dc')
 testd.writeToFile( outputDir+'valsamples.dc')
 
@@ -180,7 +181,8 @@ print 'training'
 
 def flav_only(generator):
     for X, Y in generator:
-        yield X, Y[0]
+        yield X, Y[0]#.astype(int)
+
 
 model.fit_generator(
    flav_only(traind.generator()) if args.class_only else traind.generator(), 
@@ -219,11 +221,12 @@ plt.savefig(outputDir+'learningcurve.pdf')
 #plt.show()
 
 plt.figure(2)
-plt.plot(callbacks.history.history['dense_acc'])
+plt.plot(callbacks.history.history['acc'])
 #print(callbacks.history.history['val_loss'],history.history['loss'])
-plt.plot(callbacks.history.history['val_dense_acc'])
+plt.plot(callbacks.history.history['val_acc'])
 plt.title('model accuracy')
 plt.ylabel('acc')
 plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'accuracycurve.pdf')
+
