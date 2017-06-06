@@ -3,7 +3,7 @@
 from TrainData import TrainData_fullTruth
 from TrainData import TrainData,fileTimeOut
 
-class TrainData_deepFlavour_FT(TrainData_fullTruth):
+class TrainData_PT_recur(TrainData_fullTruth):
     '''
     classdocs
     '''
