@@ -22,7 +22,7 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
                           'Cpfcan_etarel',
                           'Cpfcan_pt', 
                           'Cpfcan_puppiw',
-                          'Cpfcan_quality'
+#                          'Cpfcan_quality'
                               ],
                              25)
         
@@ -33,7 +33,7 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
                           'Npfcan_etarel',
                           'Npfcan_pt', 
                           'Npfcan_puppiw',
-                          'Npfcan_quality'
+ #                         'Npfcan_quality'
                               ],
                              25)
         
@@ -97,28 +97,40 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
-        
+        NPfCands = Tuple[['nCpfcand','nNpfcand']]
+     #   print(x_cpf.shape)
+        allpf = numpy.concatenate((x_cpf,x_npf),axis=1)
+      #  print ('and now ', allpf.shape)
+     
+        for i in range (0,allpf.shape[0]):
+            myI = allpf[i][:]
+     #       print( myI, ' this is the initial row, the shape is ',myI.shape)
+            myI = myI[myI[:,0].argsort()]
+      #      print( myI, ' this is the initial PT sorted row, the shape is ',myI.shape, ' ' , NPfCands[i][0], ' ' , NPfCands[i][1])
+            
+            nPF = int(NPfCands[i][0]+NPfCands[i][1])
+            # 50 is hardcoded, it is the maximun number of candidates
+            if (nPF>50): nPF=50
+            myI = myI[0:nPF]
+            zeroI = numpy.zeros(((50-nPF),5))
+       #     print (myI.shape, ' ' , zeroI.shape)
+            thisJet = numpy.concatenate((myI,zeroI))
+        #    print ('concated' ,thisJet.shape )
+        #    print( thisJet, ' this is the initial PT sorted row with zeros padded, the shape is ',thisJet.shape)
+            allpf[i]= thisJet
+
+
+
         #print(alltruth.shape)
         if self.remove:
             print('remove')
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
-            x_cpf=x_cpf[notremoves > 0]
-            x_npf=x_npf[notremoves > 0]
+            x_allpf=x_cpf[notremoves > 0]
+           # x_npf=x_npf[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
    
-        allpf = numpy.concatenate((x_cpf,x_npf),axis=2)
-     #   allpf_resorted = numpy.zeros(allpf.shape)
-        for i in range (0,allpf.shape[0]):
-            myI = allpf[i][:]
-            print( allpf, ' this is the initial row, the shape is ',myI.shape)
-            myI = myI[myI[:,0].argsort()]
-            print( allpf, ' this is the initial PT sorted row, the shape is ',myI.shape)
-            myI = myI[0,x_global[2]+x_global[2]]
-            zeroI = numpy.zeros(50-x_global[2]+x_global[2])
-            thisJet = numpy.concatenate((myI,zeroI))
-            print( allpf, ' this is the initial PT sorted row with zeros padded, the shape is ',myI.shape)
-            allpf[i]= thisJet
+      
         
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
