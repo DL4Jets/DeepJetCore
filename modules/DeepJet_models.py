@@ -32,9 +32,9 @@ def Model_FatJet(Inputs,nclasses,dropoutRate=-1):
 def Schwartz_gluon_model(Inputs,nclasses,dropoutRate=-1):
      x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
      x = MaxPooling2D(pool_size=(2, 2))(x)
-     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x =   Convolution2D(64, (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
      x = MaxPooling2D(pool_size=(2, 2))(x)
-     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x =   Convolution2D(64, (4,4)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
      x = MaxPooling2D(pool_size=(2, 2))(x)
      x = Flatten()(x)
      x = merge( [x, Inputs[1]] , mode='concat')
