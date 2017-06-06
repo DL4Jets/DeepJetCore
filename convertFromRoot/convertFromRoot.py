@@ -39,20 +39,22 @@ def main(argv=None):
     program_license = "Copyright 2017 user_name (organization_name) Licensed under the Apache License 2.0\nhttp://www.apache.org/licenses/LICENSE-2.0"
 
     
-    #try:
+    #try: 
         # setup option parser
     from TrainData import TrainData
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
     from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF,  TrainData_deepCSV_PF_rec
-    from TrainData_deepConvCSV import TrainData_deepConvCSV
+    from TrainData_deepConvCSV import TrainData_deepConvCSV, TrainData_PT_recur_Test
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
     from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map
     from TrainData_FatJet import TrainData_FatJet_Test
-    from TrainData_PT_recur import TrainData_PT_recur
+    from TrainData_PT_recur import TrainData_PT_recur_Test
+
+    print (' la la ',TrainData_PT_recur_Test.help())
     class_options = [
         TrainData_deepCSV,
         TrainData_deepConvCSV,
@@ -69,8 +71,8 @@ def main(argv=None):
         TrainData_deepFlavour_FT,
         TrainData_deepFlavour_FT_map,
         TrainData_deepCSV_PF_rec,
+        TrainData_PT_recur_Test,
         TrainData_FatJet_Test,
-        TrainData_PT_recur
         ]
     class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 
