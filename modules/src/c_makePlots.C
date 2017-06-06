@@ -19,6 +19,7 @@
 #include "TLegend.h"
 #include "TFile.h"
 #include "TStyle.h"
+#include <algorithm>
 
 using namespace boost::python; //for some reason....
 
@@ -41,6 +42,13 @@ void makePlots(
     std::vector<TString>  s_names = toSTLVector<TString>(names);
     std::vector<TString>  s_colors = toSTLVector<TString>(colors);
     std::vector<TString>  s_cuts = toSTLVector<TString>(cuts);
+
+    //reverse to make the first be on top
+    std::reverse(s_intextfiles.begin(),s_intextfiles.end());
+    std::reverse(s_vars.begin(),s_vars.end());
+    std::reverse(s_names.begin(),s_names.end());
+    std::reverse(s_colors.begin(),s_colors.end());
+    std::reverse(s_cuts.begin(),s_cuts.end());
 
     TString toutfile=outfile;
     if(!toutfile.EndsWith(".pdf"))
@@ -133,7 +141,10 @@ void makePlots(
 
         histo->Write();
 
-        leg->AddEntry(histo,s_names.at(i),"l");
+
+    }
+    for(size_t i=allhistos.size();i;i--){
+        leg->AddEntry(allhistos.at(i-1),s_names.at(i-1),"l");
     }
 
     TCanvas cv("plots");

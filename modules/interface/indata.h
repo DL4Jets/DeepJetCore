@@ -17,7 +17,9 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#ifndef MAXBRANCHLENGTH
 #define MAXBRANCHLENGTH 200
+#endif
 
 namespace __hidden{
 class indata{

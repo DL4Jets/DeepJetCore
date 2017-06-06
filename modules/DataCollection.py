@@ -109,10 +109,30 @@ class DataCollection(object):
         
         
     def getClassWeights(self):
-        return 0 #TBI
+        if not len(self.classweights):
+            self.__computeClassWeights()
+        return self.classweights
         
     def __computeClassWeights(self,truthclassesarray):
-        return 0 #TBI
+        if not len(self.samples):
+            raise Exception("DataCollection:computeClassWeights: no sample files associated")
+        import copy
+        td=copy.deepcopy(self.dataclass)
+        td.readIn(self.getSamplePath(self.samples[0]))
+        arr=td.y[0]
+        average=0
+        allist=[]
+        for i in range(arr.shape[1]):
+            entries=float((arr[:,i]>0).sum())
+            average=average+entries
+            allist.append(entries)
+        
+        outdict={}
+        average=average/float((arr.shape[1]))
+        for i in range(len(allist)):
+            l=average/allist[i] 
+            outdict[i]=l
+        self.classweights=outdict
         
     def getInputShapes(self):
         '''
@@ -410,9 +430,12 @@ class DataCollection(object):
         wo_queue = Queue()
         import os
         thispid=str(os.getpid())
+        if not os.path.isfile(outputDir+'/snapshot.dc'):
+            self.writeToFile(outputDir+'/snapshot.dc')
         
         tempstoragepath='/dev/shm/'+thispid
         
+        print('creating dir '+tempstoragepath)
         os.system('mkdir -p '+tempstoragepath)
         
         def writeData_async(index,woq):
@@ -474,7 +497,7 @@ class DataCollection(object):
         for i in range(startindex,len(self.originRoots)):
             processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
         
-        nchilds = int(cpu_count()/2) if self.nprocs <= 0 else self.nprocs
+        nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
         #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
         #    nchilds=cpu_count()-5
@@ -487,14 +510,14 @@ class DataCollection(object):
         alldone=False
         try:
             while not alldone:
-                if index+nchilds >= len(self.originRoots):
-                    nchilds=len(self.originRoots)-index
+                if index+nchilds >= len(processes):
+                    nchilds=len(processes)-index
                     alldone=True
                 
                 
                 logging.info('starting %d child processes' % nchilds)
                 for i in range(nchilds):
-                    logging.info('starting %s...' % self.originRoots[i+index])
+                    logging.info('starting %s...' % self.originRoots[startindex+i+index])
                     processes[i+index].start()
                         
                 results=[]

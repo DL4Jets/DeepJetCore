@@ -1,14 +1,70 @@
 #from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D
+from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM, LocallyConnected2D
 from keras.models import Model
 import warnings
 warnings.warn("DeepJet_models.py is deprecated and will be removed! Please move to the models directory", DeprecationWarning)
 
+from keras.layers.core import Reshape, Masking, Permute
+from keras.layers.pooling import MaxPooling2D
 #fix for dropout on gpus
 
 #import tensorflow
 #from tensorflow.python.ops import control_flow_ops 
 #tensorflow.python.control_flow_ops = control_flow_ops
+
+
+def Model_FatJet(Inputs,nclasses,dropoutRate=-1):
+
+    cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
+    cpf = Dropout(dropoutRate)(cpf)
+    cpf = Flatten()(cpf)
+    
+    cmap = Conv2D(4, 3, 3, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
+    cmap =  Dropout(dropoutRate)(cmap)
+    cmap = Flatten()(cmap)
+        
+    #merge with the flobals
+    x = merge( [Inputs[0],cpf, cmap] , mode='concat')
+    x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+    
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+    
+
+def Schwartz_gluon_model(Inputs,nclasses,dropoutRate=-1):
+     x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Flatten()(x)
+     x = merge( [x, Inputs[1]] , mode='concat')
+    # linear activation for regression and softmax for classification
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)     
+     predictions = [Dense(2, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)]
+     model = Model(inputs=Inputs, outputs=predictions)
+     return model
+
+def Serious_gluon_model(Inputs,nclasses,dropoutRate=-1):
+     x =   LocallyConnected2D(64, (8,8) ,stride= (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+#     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+    # x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x = MaxPooling2D(pool_size=(2, 2))(x)
+     x = Flatten()(x)
+     x = merge( [x, Inputs[0]] , mode='concat')
+    # linear activation for regression and softmax for classification
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     x = Dense(64, activation='relu',kernel_initializer='lecun_uniform')(x) 
+     
+     predictions = [Dense(2, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)]
+     model = Model(inputs=Inputs, outputs=predictions)
+     return model
 
 
 def Incept_model(Inputs,dropoutRate=0.25):
@@ -152,7 +208,180 @@ def Dense_model_broad_flat(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
+   
+from keras import backend as K
+from keras.layers.core import Lambda 
+
+def mult_zeros(a):
+    #zeros = K.reshape(a[1],(a[1].shape[0],a[1].shape[1],1))
+    a0 = a[0]*a[1]
+    return a0
+
+def Dense_model_broad_rec_zeros(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+    """
+    reference 1x1 convolutional model for 'deepFlavour' using recurrent layers with zero masking, very very slow due to masking?
+    """  
     
+    UseConv=True
+
+    cpf=Inputs[1]
+    if UseConv:
+        cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+    
+        zeros_cpf = Inputs[4]
+        # 
+        # in case only one zero per vector
+        #    zeros_cpf = Reshape((25,1))(zeros_cpf)
+        #    cpf = Lambda(mult_zeros)([cpf,zeros_cpf])
+        # in case of vectors of os.
+        cpf = merge([cpf, Permute((2,1))(zeros_cpf)],mode='mul')
+        cpf = Masking()(cpf)
+
+    cpf  = LSTM(150,go_backwards=True)(cpf)
+     
+    #cpf  = LSTM(50,go_backwards=True)(cpf)
+#    cpf = Flatten()(cpf)
+    
+
+    npf=Inputs[2]
+    if UseConv:
+        npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+        print ('sahe', ' ' , npf.shape)
+    #npf = Flatten()(npf)
+
+    zeros_npf = Inputs[5]
+    # 
+    # in case only one zero per vector
+#    zeros_npf = Reshape((25,1))(zeros_npf)
+ #   npf = Lambda(mult_zeros)([npf,zeros_npf])
+
+    # in case of vectors of os.
+#    npf = merge([npf,Permute((2,1))(zeros_npf)],mode='mul')
+
+    npf = Masking()(npf)
+    npf = LSTM(50,go_backwards=True)(npf)
+
+    vtx = Inputs[3]
+    if UseConv:
+        vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+
+
+   
+#    vtx = Flatten()(vtx)
+    zeros_vtx = Inputs[6]
+    # 
+    # in case only one zero per vector
+#    zeros_vtx = Reshape((4,1))(zeros_vtx)
+#    vtx = Lambda(mult_zeros)([npf,zeros_vtx])
+    # in case of vectors of os.
+    vtx = merge([vtx,Permute((2,1))(zeros_vtx)],mode='mul')
+    vtx = Masking()(vtx)
+    vtx = LSTM(50,go_backwards=True,unroll=True)(vtx)
+
+    x = merge( [Inputs[0],cpf,npf,vtx ] , mode='concat')
+    
+
+    x=  Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+
+
+def Dense_model_broad_rec(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+    """
+    reference 1x1 convolutional model for 'deepFlavour' using recurrent layers with zero masking, very very slow due to masking?
+    """  
+    
+    UseConv=True
+
+    cpf=Inputs[1]
+    if UseConv:
+        cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+        cpf = Dropout(dropoutRate)(cpf)
+        cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(cpf)
+    
+    cpf  = LSTM(150,go_backwards=True)(cpf)
+    npf=Inputs[2]
+    if UseConv:
+        npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+        npf = Dropout(dropoutRate)(npf)
+        npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
+
+    npf = LSTM(50,go_backwards=True)(npf)
+
+    vtx = Inputs[3]
+    if UseConv:
+        vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+        vtx = Dropout(dropoutRate)(vtx)
+        vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
+
+
+    vtx = LSTM(50,go_backwards=True,unroll=True)(vtx)
+
+    x = merge( [Inputs[0],cpf,npf,vtx ] , mode='concat')
+    
+
+    x=  Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+
 
 def Dense_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     """

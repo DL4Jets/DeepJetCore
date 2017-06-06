@@ -331,6 +331,61 @@ def createDensityMap(Filename_in, MeanNormTuple, inbranch,nevents, dimension1, d
         )
     
     return array
+
+def createCountMap(Filename_in, MeanNormTuple,nevents, dimension1, dimension2, 
+    counter, offset=0,weightbranch=""
+        ):
+    
+    import c_meanNormZeroPad
+    
+    
+    norm=1.#MeanNormTuple[inbranch][1]
+
+    x_branch, x_center, x_bins, x_width = dimension1
+    y_branch, y_center, y_bins, y_width = dimension2
+    
+    array = numpy.zeros((nevents,x_bins,y_bins,1) , dtype='float32')
+    
+    c_meanNormZeroPad.fillCountMap(
+        array, norm,weightbranch, Filename_in, counter,
+        x_branch, x_center, x_bins, x_width,
+        y_branch, y_center, y_bins, y_width,
+        offset
+        )
+    
+    return array
+
+
+def createDensityLayers(Filename_in,
+                        MeanNormTuple, 
+                        inbranch,
+                        layerbranch,
+                        maxlayers,
+                        layeroffset,
+                        nevents, 
+                        dimension1, 
+                        dimension2, 
+                        counterbranch, offset=0):
+    
+    import c_meanNormZeroPad
+    
+    norm=1.#MeanNormTuple[inbranch][1]
+
+    x_branch, x_center, x_bins, x_width = dimension1
+    y_branch, y_center, y_bins, y_width = dimension2
+    
+    array = numpy.zeros((nevents,x_bins,y_bins,maxlayers,1) , dtype='float32')
+    
+    c_meanNormZeroPad.fillDensityLayers(
+        array, norm, inbranch,layerbranch,
+        maxlayers,layeroffset,
+        Filename_in, counterbranch,
+        x_branch, x_center, x_bins, x_width,
+        y_branch, y_center, y_bins, y_width,
+        offset
+        )
+    
+    return array
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
   

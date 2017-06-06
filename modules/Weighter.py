@@ -147,8 +147,10 @@ class Weighter(object):
         
         self.removeProbabilties=probhists
         self.binweights=weighthists
-        for h in self.binweights:
-            h=h/numpy.average(h)
+        
+        #make it an average 1
+        for i in range(len(self.binweights)):
+            self.binweights[i]=self.binweights[i]/numpy.average(self.binweights[i])
     
     
         
@@ -198,53 +200,7 @@ class Weighter(object):
         
         return numpy.array(notremove)
 
-    def createBinWeights(self,Tuple,nameX,nameY,bins,classes=[],normed=False):
-        
-       
-        
-        import numpy
-        self.Axixandlabel=[]
-        self.axisX=[]
-        self.axisY=[]
-        self.hists =[]
-        self.nameX=''
-        self.nameY=''
-        self.bins=[]
-        self.classes=[]
-        self.normed=True
-        self.hists=[]
-        
-        if len(classes) > 0:
-            self.Axixandlabel = [nameX, nameY]+ classes
-        else:
-            self.Axixandlabel = [nameX, nameY]
-        self.axisX= bins[0]
-        self.axisY= bins[1]
-        self.nameX=nameX
-        self.nameY=nameY
-        self.bins=bins
-        self.classes=classes
-        self.normed=normed
-        
-    # if no classes are present just flatten everthing 
-        if classes == []:
-            self.hists.append( numpy.histogram2d(Tuple[nameX],Tuple[nameY],bins, normed=True))
-        # if classes present, loop ober them and make 2d histogram for each class
-        else:
-            for label in classes:
-                #print 'the labe is ', label
-                nameXvec = Tuple[nameX]
-                nameYvec = Tuple[nameY]
-                valid = Tuple[label] > 0.
-                # print  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True) 
-                # lease check out numpy.histogram2d for more info
-                # hists += numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True)
-                w_,_,_ =  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=normed)
-                self.hists.append( w_ )
-                
-        # collect only the fileds we actually need
-        
-        
+    
         
     def getJetWeights(self,Tuple):
         import numpy
@@ -253,39 +209,20 @@ class Weighter(object):
             print('weight bins not initialised. Cannot create weights per jet')
             raise Exception('weight bins not initialised. Cannot create weights per jet')
         
-        weight = []
+        weight = numpy.zeros(len(Tuple))
+        jetcount=0
         for jet in iter(Tuple[self.Axixandlabel]):
-        # get bins, use first histogram axis
+
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
-            if self.classes == []:
-                weight.append(1./self.hists[0][binX][binY])
-            else:
-                # count if a class was true (should be in one-hot-encoding, but better not trust anyone!
-                didappend =0 
             
-                for index, classs in enumerate(self.classes):
-                    # print ('ha ',classs , ' ' , 'jet[classs] is ', jet[classs])
-                    if 1 == jet[classs]:
-                        # print ('is one')
-                        weight.append(1./self.hists[index][binX][binY])
-                        #if 1./self.hists[index][binX][binY] > 10.*0.0002646:
-                        #    print (classs, ' ' , jet[self.nameX], ' ' , jet[self.nameY], ' weight ',  1./self.hists[index][binX][binY]/0.0002646)
-                        didappend=1
-                if  didappend == 0:
-                    #print ' WARNING, event found that had no TRUE label '
-                    # should not happen, but rather kill jet (weight=0) than everything
-                    # less verbose
-                    countMissedJets+=1
-                    weight.append(0)
-        if countMissedJets>0:
-            print ('WARNING from weight calculator: ', countMissedJets,'/', len(weight), ' had no valid label and got weight 0 (i.e. are ignore, but eat up space and time')
-        weight =  numpy.asarray(weight)
-        # to get on average weight one
+            for index, classs in enumerate(self.classes):
+                if 1 == jet[classs]:
+                    weight[jetcount]=(self.binweights[index][binX][binY])
+                    
+            jetcount=jetcount+1        
+
         print ('weight average: ',weight.mean())
-        weight = weight / weight.mean()
-        print ('rescaled weight average: ',weight.mean())
-        print ('rescaled weight stddev: ',weight.std())
         return weight
         
         

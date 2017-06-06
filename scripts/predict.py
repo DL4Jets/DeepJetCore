@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from keras.models import load_model
 from testing import testDescriptor
 from argparse import ArgumentParser
