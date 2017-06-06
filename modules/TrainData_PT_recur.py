@@ -109,7 +109,7 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
    
         allpf = numpy.concatenate((x_cpf,x_npf),axis=2)
      #   allpf_resorted = numpy.zeros(allpf.shape)
-        for i in range (0,allpf.shape{0]):
+        for i in range (0,allpf.shape[0]):
             myI = allpf[i][:]
             print( allpf, ' this is the initial row, the shape is ',myI.shape)
             myI = myI[myI[:,0].argsort()]
