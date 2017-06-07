@@ -39,17 +39,53 @@ def main(argv=None):
     program_license = "Copyright 2017 user_name (organization_name) Licensed under the Apache License 2.0\nhttp://www.apache.org/licenses/LICENSE-2.0"
 
     
-    #try:
+    #try: 
         # setup option parser
+    from TrainData import TrainData
+    from TrainData_deepCSV import TrainData_deepCSV
+    from TrainData_deepConvCSV import TrainData_deepConvCSV
+    from TrainData_deepCMVA import TrainData_deepCMVA
+    from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF,  TrainData_deepCSV_PF_rec
+    from TrainData_deepConvCSV import TrainData_deepConvCSV
+    from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
+    from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
+    from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
+    from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map
+    from TrainData_FatJet import TrainData_FatJet_Test
+    from TrainData_PT_recur import TrainData_PT_recur_Test
+
+    
+    class_options = [
+        TrainData_deepCSV,
+        TrainData_deepConvCSV,
+        TrainData_deepCMVA,
+        TrainData_deepCSV_PF,
+        TrainData_deepCSV_miniPF,
+        TrainData_deepCSV_microPF,
+        TrainData_deepCSV_softL_PF,
+        TrainData_deepConvCSV,
+        TrainData_deepCSV_PF_Reg,
+        TrainData_deepJet_Reg, 
+        TrainData_PF_Reg,
+        TrainData_deepCSV_PF_Binned,
+        TrainData_deepFlavour_FT,
+        TrainData_deepFlavour_FT_map,
+        TrainData_deepCSV_PF_rec,
+        TrainData_PT_recur_Test,
+        TrainData_FatJet_Test,
+        ]
+    class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 
     parser = ArgumentParser('program to convert root tuples to traindata format')
     parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
     parser.add_argument("-o",  help="set output path", metavar="PATH")
-    parser.add_argument("-c",  help="set output class [TrainData_deepCSV, TrainData_deepCMVA_ST, TrainData_deepCSV_ST, TrainData_veryDeepJet]", metavar="Class")
+    parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
     parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
     parser.add_argument("--testdatafor", default='')
     parser.add_argument("--usemeansfrom", default='')
     parser.add_argument("--nothreads", action='store_true')
+    parser.add_argument("--means", action='store_true', help='compute only means')
+    parser.add_argument("--batch", help='Provide a batch ID to be used')
     parser.add_argument("-v", action='store_true', help='verbose')
     parser.add_argument("-q", action='store_true', help='quiet')
     
@@ -57,10 +93,16 @@ def main(argv=None):
     args=parser.parse_args()
     infile=args.i
     outPath=args.o
-    Class=args.c
-    Recover=args.r
+    class_name=args.c    
+    recover=args.r
     testdatafor=args.testdatafor
     usemeansfrom=args.usemeansfrom
+
+    if args.batch and not (args.usemeansfrom or args.testdatafor):
+        raise ValueError(
+            'When running in batch mode you should also '
+            'provide a means source through the --usemeansfrom option'
+            )
 
     if args.v:
         logging.getLogger().setLevel(logging.DEBUG)
@@ -73,74 +115,33 @@ def main(argv=None):
         logging.info("outPath = %s" % outPath)
 
     # MAIN BODY #
-    
-    
-    
     from DataCollection import DataCollection
+    dc = DataCollection(nprocs = (1 if args.nothreads else -1))    
     
-    from TrainData import TrainData
-    from TrainData_deepCSV import TrainData_deepCSV
-    from TrainData_deepConvCSV import TrainData_deepConvCSV
-    from TrainData_deepCMVA import TrainData_deepCMVA
-    from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF
-    from TrainData_deepConvCSV import TrainData_deepConvCSV
-    from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
-    from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
-    from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
-    dc = DataCollection(1 if args.nothreads else -1)
-    
-    
-    traind=TrainData
-    if Class == 'TrainData_deepCSV':
-        traind=TrainData_deepCSV
-
-    elif Class == 'TrainData_PF_Reg':
-        traind=TrainData_PF_Reg
-    elif Class == 'TrainData_deepConvCSV':
-        traind=TrainData_deepConvCSV
-    elif Class == 'TrainData_deepJet_Reg':
-        traind=TrainData_deepJet_Reg
-    elif Class ==  'TrainData_deepCSV_PF':
-        traind=TrainData_deepCSV_PF
-    elif Class ==  'TrainData_deepCSV_PF_Reg':
-        traind=TrainData_deepCSV_PF_Reg
-    elif Class ==  'TrainData_deepCSV_softL_PF':
-        traind=TrainData_deepCSV_softL_PF
-    elif Class ==  'TrainData_deepConvCSV':
-        traind=TrainData_deepConvCSV
-    elif Class ==  'TrainData_deepCSV_miniPF':
-        traind=TrainData_deepCSV_miniPF
-    elif Class ==  'TrainData_deepCSV_microPF':
-        traind=TrainData_deepCSV_microPF
-    elif Class == 'TrainData_deepCMVA':
-        traind=TrainData_deepCMVA
-    elif Class == 'TrainData_deepCSV_PF_Binned':
-        traind=TrainData_deepCSV_PF_Binned
-    elif len(Recover)<1 and len(testdatafor)<1:
-        raise Exception('wrong class selecton')
-    
-    
-    
-    if len(testdatafor):
+    if class_name in class_options:
+        traind = class_options[class_name]
+    elif not recover and not testdatafor:
+        raise Exception('wrong class selecton') #should never really happen as we catch it in the parser        
+    if testdatafor:
         logging.info('converting test data, no weights applied')
-        dc.createTestDataForDataCollection(testdatafor,infile,outPath)
-    
-    elif len(Recover)>0:
-        dc.recoverCreateDataFromRootFromSnapshot(Recover)
-        
+        dc.createTestDataForDataCollection(
+            testdatafor, infile, outPath, 
+            outname = args.batch if args.batch else 'dataCollection.dc',
+            batch_mode = bool(args.batch)
+        )    
+    elif recover:
+        dc.recoverCreateDataFromRootFromSnapshot(recover)        
+    elif args.means:
+        dc.convertListOfRootFiles(
+            infile, traind(), outPath, 
+            means_only=True, output_name='batch_template.dc'
+            )
     else:
-        notdone=True
-        while notdone:
-            
-            # testdata for.. and then pass DataCollection (for means and norms)
-            
-            dc.convertListOfRootFiles(infile, traind(), outPath,usemeansfrom)
-            notdone=False
-            #except Exception as e:
-            #    print('for recovering run: convertFromRoot.py -r '+outPath+'/snapshot.dc')
-            #    raise e
-   
-
+        dc.convertListOfRootFiles(
+            infile, traind(), outPath, 
+            usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
+            batch_mode = bool(args.batch)
+            )
     
 
 

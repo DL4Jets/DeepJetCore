@@ -7,6 +7,9 @@ Created on 20 Feb 2017
 from __future__ import print_function
 
 from Weighter import Weighter
+from pdb import set_trace
+import numpy
+import logging
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -42,6 +45,29 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
             h5f[idstr].read_direct(arl[i])
     doneVal.value=True
     h5f.close()
+    
+    
+    
+class ShowProgress(object):
+    def __init__(self,nsteps,total):
+        self.nsteps=nsteps
+        self.total=total
+        self._stepvec=[]
+        for i in range(nsteps):
+            self._stepvec.append(float(i+1)*float(total)/float(nsteps))
+            
+        self._counter=0
+        
+    def show(self,index):
+        if index==0:
+            logging.info('0%')
+        if index>self._stepvec[self._counter]:
+            logging.info(str(int(float(index)/float(self.total)*100))+'%')
+            self._counter=self._counter+1
+        
+    def reset(self):
+        self._counter=0
+        
 
 class TrainData(object):
     '''
@@ -59,7 +85,16 @@ class TrainData(object):
         
         self.undefTruth=['isUndefined']
         
+        self.referenceclass='isB'
+        
         self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
+        
+        self.allbranchestoberead=[]
+        
+        #standard branches
+        self.registerBranches(self.undefTruth)
+        self.registerBranches(self.truthclasses)
+        self.registerBranches(['jet_pt','jet_eta'])
         
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
@@ -67,6 +102,8 @@ class TrainData(object):
         self.flatbranches=[]
         self.branches=[]
         self.branchcutoffs=[]
+        
+        
         
         self.readthread=None
         self.readdone=None
@@ -79,7 +116,6 @@ class TrainData(object):
         self.reduceTruth(None)
 
     def clear(self):
-        import numpy
         self.samplename=''
         self.readthread=None
         self.readdone=None
@@ -117,7 +153,11 @@ class TrainData(object):
         
     def addBranches(self, blist, cutoff=1):
         self.branches.append(blist)
+        self.registerBranches(blist)
         self.branchcutoffs.append(cutoff)
+        
+    def registerBranches(self,blist):
+        self.allbranchestoberead.extend(blist)
         
     def getUsedTruth(self):
         if len(self.reducedtruthclasses) > 0:
@@ -137,12 +177,10 @@ class TrainData(object):
     def reduceTruth(self, tuple_in=None):
         self.reducedtruthclasses=self.truthclasses
         if tuple_in is not None:
-            import numpy
             return numpy.array(tuple_in.tolist())
 
     def writeOut(self,fileprefix):
         import h5py
-        import numpy
         fileTimeOut(fileprefix,120)
         h5f = h5py.File(fileprefix, 'w')
         
@@ -199,7 +237,6 @@ class TrainData(object):
             
         #print('read')
         import h5py
-        import numpy
         import multiprocessing
         
         #print('\ninit async read\n')
@@ -223,8 +260,10 @@ class TrainData(object):
             return sharedlist, shapeinfos
         
         
-            
-        self.h5f = h5py.File(fileprefix,'r')
+        try:
+            self.h5f = h5py.File(fileprefix,'r')
+        except:
+            raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
         self.nsamples=self.h5f['n']
         self.nsamples=self.nsamples[0]
         if True or not hasattr(self, 'w_shapes'):
@@ -294,8 +333,6 @@ class TrainData(object):
         if not self.readthread and wasasync:
             print('\nreadIn_join:read never started\n')
         
-        import numpy
-        
         counter=0
         while not self.readdone.value and wasasync: 
             self.readthread.join(1)
@@ -343,7 +380,6 @@ class TrainData(object):
         self.readdone=None
         
     def readIn(self,fileprefix):
-        import numpy
         self.readIn_async(fileprefix,False)
         self.w=(self.w_list)
         self.x=(self.x_list)
@@ -369,7 +405,7 @@ class TrainData(object):
         self.readthread=None
         
         
-    def readTreeFromRootToTuple(self,filenames):
+    def readTreeFromRootToTuple(self, filenames, limit=None, branches=None):
         '''
         To be used to get the initial tupel for further processing in inherting classes
         Makes sure the number of entries is properly set
@@ -377,54 +413,86 @@ class TrainData(object):
         can also read a list of files (e.g. to produce weights/removes from larger statistics
         (not fully tested, yet)
         '''
+        if  branches==None:
+            branches=self.allbranchestoberead
+            
+        #print(branches)
+        #remove duplicates
+        branches=list(set(branches))
+            
         import ROOT
         from root_numpy import tree2array, root2array
-        isalist =  not hasattr(filenames, "split")
-        if isalist:
-            raise Exception('readTreeFromRootToTuple: reading from list does not work, yet')
+        if isinstance(filenames, list):
             for f in filenames:
                 fileTimeOut(f,120)
             print('add files')
-            Tuple = root2array(filenames, treename="deepntuplizer/tree", Dstop=self.nsamples)
+            nparray = root2array(
+                filenames, 
+                treename = "deepntuplizer/tree", 
+                stop = limit,
+                branches = branches
+                )
             print('done add files')
-            return Tuple
+            return nparray
+            print('add files')
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile(filenames)
             tree = rfile.Get("deepntuplizer/tree")
             if not self.nsamples:
                 self.nsamples=tree.GetEntries()
-            Tuple = tree2array(tree, stop=self.nsamples)
-            return Tuple
+            nparray = tree2array(tree, stop=limit, branches=branches)
+            return nparray
         
-        
-    def produceMeansFromRootFile(self,filename):
+    def make_means(self, nparray):
         from preprocessing import meanNormProd
-        Tuple=self.readTreeFromRootToTuple(filename)
-        means= meanNormProd(Tuple)
-        del Tuple
+        return meanNormProd(nparray)
+        
+    def produceMeansFromRootFile(self,filename, limit=500000):
+        from preprocessing import meanNormProd
+        nparray = self.readTreeFromRootToTuple(filename, limit=limit)
+        means = self.make_means(nparray)
+        del nparray
         return means
     
     #overload if necessary
-    def produceBinWeighter(self,filename):
+    def make_empty_weighter(self):
         from Weighter import Weighter
-        weighter=Weighter() 
-        weighter.undefTruth=self.undefTruth
-        Tuple = self.readTreeFromRootToTuple(filename)
-        weight_binXPt = numpy.array([10,25,27.5,30,35,40,45,50,60,75,100,125,150,175,200,250,300,
-                                     400,500,600,2000],dtype=float)
-        weight_binYEta = numpy.array([0,.4,.8,1.2,1.6,2.,2.4],dtype=float)
-        
-        if self.remove:
-            weighter.createRemoveProbabilities(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],
-                                               classes=self.truthclasses)
-       
-        weighter.createBinWeights(Tuple,"jet_pt","jet_eta",[weight_binXPt,weight_binYEta],classes=self.truthclasses)
-        del Tuple
+        weighter = Weighter() 
+        weighter.undefTruth = self.undefTruth
+        weight_binXPt = numpy.array([
+                10,25,30,35,40,45,50,60,75,100,
+                125,150,175,200,250,300,400,500,
+                600,2000],dtype=float)
+        weight_binYEta = numpy.array(
+            [0,.5,1,1.5,2.,2.5],
+            dtype=float
+            )
+        if self.remove or self.weight:
+            weighter.setBinningAndClasses(
+                [weight_binXPt,weight_binYEta],
+                "jet_pt","jet_eta",
+                self.truthclasses
+                )
         return weighter
-          
-        
-        
+
+       
+    def produceBinWeighter(self,filenames):
+        weighter = self.make_empty_weighter()
+        branches = ["jet_pt","jet_eta"]
+        branches.extend(self.truthclasses)
+        showprog=ShowProgress(5,len(filenames))
+        counter=0
+        if self.remove or self.weight:
+            for fname in filenames:
+                nparray = self.readTreeFromRootToTuple(fname, branches=branches)
+                weighter.addDistributions(nparray)
+                del nparray
+                showprog.show(counter)
+                counter=counter+1
+            weighter.createRemoveProbabilitiesAndWeights(self.referenceclass)
+        return weighter
+    
         
     def getFlavourClassificationData(self,filename,TupleMeanStd, weighter):
         from stopwatch import stopwatch
@@ -486,7 +554,6 @@ class TrainData(object):
         
 
 from preprocessing import MeanNormApply, MeanNormZeroPad
-import numpy
 
 class TrainData_Flavour(TrainData):
     '''
@@ -559,4 +626,36 @@ class TrainData_leptTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             l = g + uds
             
-            return numpy.vstack((allb,bb,lepb,c,l)).transpose()    
+            return numpy.vstack((allb,bb,lepb,c,l)).transpose()  
+        
+        
+        
+
+class TrainData_fullTruth(TrainData):
+    def __init__(self):
+        TrainData.__init__(self)
+        self.clear()
+        
+    def reduceTruth(self, tuple_in):
+        
+        self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDS','isG']
+        if tuple_in is not None:
+            b = tuple_in['isB'].view(numpy.ndarray)
+            bb = tuple_in['isBB'].view(numpy.ndarray)
+            allb = b+bb
+            
+            bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            lepb=bl+blc
+           
+            c = tuple_in['isC'].view(numpy.ndarray)
+           
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
+            uds=ud+s
+            
+            g = tuple_in['isG'].view(numpy.ndarray)
+            
+            
+            return numpy.vstack((allb,bb,lepb,c,uds,g)).transpose()    
+  

@@ -1,7 +1,7 @@
 
 
 
-from testing import makeROCs,makeROCs_async,testDescriptor
+from testing import makeROCs_async, testDescriptor
 #from keras.models import load_model
 from DataCollection import DataCollection
 from argparse import ArgumentParser

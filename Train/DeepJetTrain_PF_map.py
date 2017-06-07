@@ -99,6 +99,8 @@ shapes=traind.getInputShapes()
 #    print(s)
 #        
 
+shapes[4]=[7,7,1]
+shapes[5]=[7,7,1]
 print(shapes)
 
 print(traind.getTruthShape()[0])
@@ -109,14 +111,16 @@ from keras.layers import Input
 inputs = [Input(shape=shapes[0]),
           Input(shape=shapes[1]),
           Input(shape=shapes[2]),
-          Input(shape=shapes[3])]
+          Input(shape=shapes[3]),
+          Input(shape=shapes[4]),
+          Input(shape=shapes[5])]
 
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
+from DeepJet_models import Dense_model_broad, Dense_model_broad_flat, Dense_model_broad_map
 #model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
+model = Dense_model_broad_map(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 
 #from keras.utils import plot_model

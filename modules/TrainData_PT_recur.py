@@ -1,84 +1,44 @@
-'''
-Created on 21 Feb 2017
+from TrainData import TrainData_fullTruth
+from TrainData import TrainData,fileTimeOut
 
-@author: jkiesele
-'''
-
-from TrainData import TrainData, fileTimeOut
-from TrainData import TrainData_simpleTruth
-import numpy
-
-class TrainData_deepCSV_PF_Reg(TrainData_simpleTruth):
+class TrainData_PT_recur_Test(TrainData_fullTruth):
     '''
     classdocs
     '''
-
 
     def __init__(self):
         '''
         Constructor
         '''
-        TrainData.__init__(self)
+        TrainData_fullTruth.__init__(self)
         
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
-        self.addBranches(['Cpfcan_BtagPf_trackEtaRel',
-                          'Cpfcan_BtagPf_trackPtRel',
-                          'Cpfcan_BtagPf_trackDeltaR',
-                          'Cpfcan_BtagPf_trackPtRatio',
-                          'Cpfcan_BtagPf_trackSip2dSig',
-                          'Cpfcan_BtagPf_trackSip3dSig',
-                          'Cpfcan_BtagPf_trackJetDistVal',
-                          
-                          'Cpfcan_BtagPf_trackJetDistSig',
-                          
-                          'Cpfcan_erel',
-                          'Cpfcan_drminsv',
-                          'Cpfcan_chi2',
-                          'Cpfcan_fromPV',
-                          'Cpfcan_VTX_ass',
-                          
-                          #new
-                          #'Cpfcan_puppiw'
+        self.addBranches([
+                          'Cpfcan_ptrel', #not the same as btv ptrel!
+                          #'Cpfcan_erel',
+                          'Cpfcan_phirel',
+                          'Cpfcan_etarel',
+                          'Cpfcan_pt', 
+                          'Cpfcan_puppiw',
+#                          'Cpfcan_quality'
                               ],
-                             20)
+                             25)
         
         
-        self.addBranches(['Npfcan_erel',
-                          'Npfcan_deltaR',
-                              'Npfcan_isGamma',
-                              'Npfcan_HadFrac',
-                              'Npfcan_drminsv',
+        self.addBranches(['Npfcan_ptrel', #not the same as btv ptrel!
+                          #'Cpfcan_erel',
+                          'Npfcan_phirel',
+                          'Npfcan_etarel',
+                          'Npfcan_pt', 
+                          'Npfcan_puppiw',
+ #                         'Npfcan_quality'
                               ],
-                             15)
-        
-        
-        self.addBranches(['sv_pt',
-                              'sv_etarel',
-                              'sv_phirel',
-                              'sv_deltaR',
-                              'sv_mass',
-                              'sv_ntracks',
-                              'sv_chi2',
-                              'sv_ndf',
-                              'sv_normchi2',
-                              'sv_dxy',
-                              'sv_dxyerr',
-                              'sv_dxysig',
-                              'sv_d3d',
-                              'sv_d3derr',
-                              'sv_d3dsig',
-                              'sv_costhetasvpv',
-                              'sv_enratio',
-                              ],
-                             4)
-
-    
+                             25)
         
         self.regtruth='gen_pt_WithNu'
         self.regreco='jet_corr_pt'
-        
         self.registerBranches([self.regtruth,self.regreco])
         
        
@@ -114,11 +74,7 @@ class TrainData_deepCSV_PF_Reg(TrainData_simpleTruth):
                                    self.branches[2],
                                    self.branchcutoffs[2],self.nsamples)
         
-        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
-                                   self.branches[3],
-                                   self.branchcutoffs[3],self.nsamples)
-        
-        
+     
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
@@ -141,32 +97,54 @@ class TrainData_deepCSV_PF_Reg(TrainData_simpleTruth):
         
         pttruth=Tuple[self.regtruth]
         ptreco=Tuple[self.regreco]
-        
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
-        
+        NPfCands = Tuple[['nCpfcand','nNpfcand']]
+     #   print(x_cpf.shape)
+        allpf = numpy.concatenate((x_cpf,x_npf),axis=1)
+      #  print ('and now ', allpf.shape)
+     
+        for i in range (0,allpf.shape[0]):
+            myI = allpf[i][:]
+     #       print( myI, ' this is the initial row, the shape is ',myI.shape)
+            myI = myI[myI[:,0].argsort()]
+      #      print( myI, ' this is the initial PT sorted row, the shape is ',myI.shape, ' ' , NPfCands[i][0], ' ' , NPfCands[i][1])
+            
+            nPF = int(NPfCands[i][0]+NPfCands[i][1])
+            # 50 is hardcoded, it is the maximun number of candidates
+            if (nPF>50): nPF=50
+            myI = myI[0:nPF]
+            zeroI = numpy.zeros(((50-nPF),5))
+       #     print (myI.shape, ' ' , zeroI.shape)
+            thisJet = numpy.concatenate((myI,zeroI))
+        #    print ('concated' ,thisJet.shape )
+        #    print( thisJet, ' this is the initial PT sorted row with zeros padded, the shape is ',thisJet.shape)
+            allpf[i]= thisJet
+
+
+
         #print(alltruth.shape)
         if self.remove:
             print('remove')
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
-            x_cpf=x_cpf[notremoves > 0]
-            x_npf=x_npf[notremoves > 0]
-            x_sv=x_sv[notremoves > 0]
+            x_allpf=x_cpf[notremoves > 0]
+           # x_npf=x_npf[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
             pttruth=pttruth[notremoves > 0]
             ptreco=ptreco[notremoves > 0]
-       
+                        
+      
+        
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
         print(x_global.shape,self.nsamples)
 
-
-        
-        self.w=[weights,weights]
-        self.x=[x_global,x_cpf,x_npf,x_sv,ptreco]
+        self.w=[weights]
+        self.x=[x_global,x_allpf,ptreco]
         self.y=[alltruth,pttruth]
-    
+        
+

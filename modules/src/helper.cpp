@@ -21,3 +21,6 @@ TString prependXRootD(const TString& path){
     }
     return path;
 }
+bool isApprox(const float& a , const float& b, float eps){
+    return fabs(a-b)<eps;
+}

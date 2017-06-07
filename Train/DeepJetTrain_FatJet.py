@@ -1,4 +1,5 @@
 
+#input part - no need for modifications
 
 from __future__ import absolute_import
 from __future__ import division
@@ -47,7 +48,7 @@ outputDir+='/'
 shutil.copyfile(sys.argv[0],outputDir+sys.argv[0])
 shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
-
+######################### K######################### K
 ######################### KERAS PART ######################
 
 # configure the in/out/split etc
@@ -88,36 +89,21 @@ if testrun:
     
 testd=traind.split(splittrainandtest)
 shapes=traind.getInputShapes()
-#shapes=[]
-#for s in shapesin:
-#    _sl=[]
-#    for i in range(len(s)):
-#        if i:
-#            _sl.append(s[i])
-#    s=(_sl)
-#    shapes.append(s)
-#    print(s)
-#        
 
-print(shapes)
-
-print(traind.getTruthShape()[0])
 
 #from from keras.models import Sequential
 
 from keras.layers import Input
 inputs = [Input(shape=shapes[0]),
           Input(shape=shapes[1]),
-          Input(shape=shapes[2]),
-          Input(shape=shapes[3])]
+          Input(shape=shapes[2])]
+# these are all the inputs that are filled in the list on the bottom
+# of the TrainData_FatJet_Test 
+# [x_global,x_cpf,x_chmap]
 
-#model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
-print(traind.getTruthShape()[0])
-from DeepJet_models import Dense_model_broad, Dense_model_broad_flat
-#model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
+from DeepJet_models import Model_FatJet
 model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
-#model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 
 #from keras.utils import plot_model
 #plot_model(model, to_file=outputDir+'model.svg')

@@ -6,6 +6,10 @@ Created on 26 Feb 2017
 
 from __future__ import print_function
 
+import matplotlib
+#if no X11 use below
+matplotlib.use('Agg')
+
 class Weighter(object):
     '''
     contains the histograms/input to calculate jet-wise weights
@@ -17,95 +21,138 @@ class Weighter(object):
         self.axisY=[]
         self.hists =[]
         self.removeProbabilties=[]
+        self.binweights=[]
+        self.distributions=[]
+        self.xedges=[]
+        self.yedges=[]
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
     
-    def createRemoveProbabilities(self,Tuple,nameX,nameY,bins,classes,referenceclass='isB'):
-        import numpy
+    def __eq__(self, other):
+        'A == B'
+        def comparator(this, that):
+            'compares lists of np arrays'
+            return all((i == j).all() for i,j in zip(this, that))
         
-        referenceidx=0
-        try:
-            referenceidx=classes.index(referenceclass)
-        except:
-            print('createRemoveProbabilities: reference index not found in class list')
-            raise Exception('createRemoveProbabilities: reference index not found in class list')
-               
+        return self.Axixandlabel == other.Axixandlabel and \
+           all(self.axisX == other.axisX) and \
+           all(self.axisY == other.axisY) and \
+           comparator(self.hists, other.hists) and \
+           comparator(self.removeProbabilties, other.removeProbabilties) and \
+           self.classes == other.classes and \
+           self.refclassidx == other.refclassidx and \
+           self.undefTruth == other.undefTruth and \
+           comparator(self.binweights, other.binweights) and \
+           comparator(self.distributions, other.distributions) and \
+           (self.xedges == other.xedges).all() and \
+           (self.yedges == other.yedges).all()
+    
+    def __ne__(self, other):
+        'A != B'
+        return not (self == other)
         
+    def setBinningAndClasses(self,bins,nameX,nameY,classes):
         self.axisX= bins[0]
         self.axisY= bins[1]
         self.nameX=nameX
         self.nameY=nameY
-        if len(classes) > 0:
-            self.Axixandlabel = [nameX, nameY]+ classes
-        else:
-            self.Axixandlabel = [nameX, nameY]
-        self.bins=bins
         self.classes=classes
+        
+    def addDistributions(self,Tuple):
+        import numpy
+        selidxs=[]
+        labeltuple=Tuple[self.classes]
+        ytuple=Tuple[self.nameY]
+        xtuple=Tuple[self.nameX]
+        
+        for c in self.classes:
+            selidxs.append(labeltuple[c]>0)
+            
+        for i in range(len(self.classes)):
+            tmphist,xe,ye=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
+            self.xedges=xe
+            self.yedges=ye
+            if len(self.distributions)==len(self.classes):
+                self.distributions[i]=self.distributions[i]+tmphist
+            else:
+                self.distributions.append(tmphist)
+            
+    def printHistos(self,outdir):
+        import numpy
+        def plotHist(hist,outname):
+            import matplotlib.pyplot as plt
+            H=hist.T
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            X, Y = numpy.meshgrid(self.xedges, self.yedges)
+            ax.pcolormesh(X, Y, H)
+            ax.set_xscale("log", nonposx='clip')
+            #plt.colorbar()
+            fig.savefig(outname)
+            plt.close()
+            
+        for i in range(len(self.classes)):
+            if len(self.distributions):
+                plotHist(self.distributions[i],outdir+"/dist_"+self.classes[i]+".pdf")
+                plotHist(self.removeProbabilties[i] ,outdir+"/remprob_"+self.classes[i]+".pdf")
+                plotHist(self.binweights[i],outdir+"/weights_"+self.classes[i]+".pdf")
+                reshaped=self.distributions[i]*self.binweights[i]
+                plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
+            
+        
+    def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
+        import numpy
+        referenceidx=0
+        try:
+            referenceidx=self.classes.index(referenceclass)
+        except:
+            print('createRemoveProbabilities: reference index not found in class list')
+            raise Exception('createRemoveProbabilities: reference index not found in class list')
+        
+        if len(self.classes) > 0:
+            self.Axixandlabel = [self.nameX, self.nameY]+ self.classes
+        else:
+            self.Axixandlabel = [self.nameX, self.nameY]
+        
         self.refclassidx=referenceidx
         
         
-        def getScaler(histo,refhisto):
-            scaler=0.
-            for indexx,binx in enumerate(self.axisX):
-                if not indexx:  continue
-                for indexy,biny in enumerate(self.axisY):
-                    if not indexy:  continue
-                    #print(indexx,indexy)
-                    refval=refhisto[indexx-1][indexy-1]
-                    thisval=histo[indexx-1][indexy-1]
-                    ratio=1.
-                    if thisval:
-                        ratio=float(refval)/float(thisval)
-                    if ratio>scaler: scaler=ratio
-            return scaler
+       
+        refhist=self.distributions[referenceidx]
+        refhist=refhist/numpy.amax(refhist)
         
-        def getProbHisto(scaledhisto,refhisto,classname):
-            out=numpy.copy(refhisto)
-            for indexx,binx in enumerate(self.axisX):
-                if not indexx:
-                    continue
-                for indexy,biny in enumerate(self.axisY):
-                    if not indexy:
-                        continue
-                    refval=refhisto[indexx-1][indexy-1]
-                    thisval=scaledhisto[indexx-1][indexy-1]
-                    prob=0
-                    if thisval+refval:
-                        prob=float(thisval-refval)/float(thisval+refval) 
-                    if classname in self.undefTruth:
-                        prob=1
-                    out[indexx-1][indexy-1]=prob
+    
+        def divideHistos(a,b):
+            out=numpy.array(a)
+            for i in range(a.shape[0]):
+                for j in range(a.shape[1]):
+                    if b[i][j]:
+                        out[i][j]=a[i][j]/b[i][j]
+                    else:
+                        out[i][j]=-10
             return out
-        
-
-        labeltuple=Tuple[classes]
-        ytuple=Tuple[nameY]
-        xtuple=Tuple[nameX]
-        
-        selidxs=[]
-        for c in classes:
-            selidxs.append(labeltuple[c]>0)
-        
-    
-        refx=xtuple[selidxs[referenceidx]]
-        refy=ytuple[selidxs[referenceidx]]
-       
-        refhist,_,_=numpy.histogram2d(refx,refy,bins)
-       
+                
         probhists=[]
-        
-    
-        for i in range(len(classes)):
-            tmphist,_,_=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],bins)
-            scaler=getScaler(tmphist,refhist)
-            tmphist*=scaler
-            probhist=getProbHisto(tmphist,refhist,classes[i])
-            probhists.append(probhist)
+        weighthists=[]
+        for i in range(len(self.classes)):
+            tmphist=self.distributions[i]
+            tmphist=tmphist/numpy.amax(tmphist)
+            ratio=divideHistos(refhist,tmphist)
+            ratio=ratio/numpy.amax(ratio)#norm to 1
+            ratio[ratio<0]=1
+            weighthists.append(ratio)
+            ratio=1-ratio#make it a remove probability
+            probhists.append(ratio)
         
         self.removeProbabilties=probhists
+        self.binweights=weighthists
         
-        
+        #make it an average 1
+        for i in range(len(self.binweights)):
+            self.binweights[i]=self.binweights[i]/numpy.average(self.binweights[i])
+    
+    
         
         
     def createNotRemoveIndices(self,Tuple):
@@ -145,36 +192,7 @@ class Weighter(object):
                         norm[index]+=1
             
                         
-        allxav=0
-        validclasses=0            
-        for c in range(len(xaverage)):
-            if norm[c]:
-                allxav+=xaverage[c]/norm[c]
-                validclasses+=1
-            #print(self.classes[c], c, xaverage[c]/norm[c])
-        allxav/=float(validclasses) 
         
-        allyav=0  
-          
-        for c in range(len(yaverage)):
-            if norm[c]:
-                allyav+=yaverage[c]/norm[c]
-        allyav/=float(validclasses)   
-             
-        for c in range(len(xaverage)):
-            if norm[c]:
-                reldiff=abs(xaverage[c]/norm[c] - allxav)/allxav
-                if reldiff >0.15:
-                    print('warning (x) ',self.classes[c],xaverage[c]/norm[c])
-                    
-         
-        for c in range(len(yaverage)):
-            if norm[c]:
-                reldiff=abs(yaverage[c]/norm[c] - allyav)/allyav
-                if reldiff >0.15:
-                    print('warning (y) ',self.classes[c],yaverage[c]/norm[c])
-                    
-            #print(self.classes[c], c, yaverage[c]/norm[c])
             
         if not len(notremove) == tuplelength:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")
@@ -182,53 +200,7 @@ class Weighter(object):
         
         return numpy.array(notremove)
 
-    def createBinWeights(self,Tuple,nameX,nameY,bins,classes=[],normed=False):
-        
-       
-        
-        import numpy
-        self.Axixandlabel=[]
-        self.axisX=[]
-        self.axisY=[]
-        self.hists =[]
-        self.nameX=''
-        self.nameY=''
-        self.bins=[]
-        self.classes=[]
-        self.normed=True
-        self.hists=[]
-        
-        if len(classes) > 0:
-            self.Axixandlabel = [nameX, nameY]+ classes
-        else:
-            self.Axixandlabel = [nameX, nameY]
-        self.axisX= bins[0]
-        self.axisY= bins[1]
-        self.nameX=nameX
-        self.nameY=nameY
-        self.bins=bins
-        self.classes=classes
-        self.normed=normed
-        
-    # if no classes are present just flatten everthing 
-        if classes == []:
-            self.hists.append( numpy.histogram2d(Tuple[nameX],Tuple[nameY],bins, normed=True))
-        # if classes present, loop ober them and make 2d histogram for each class
-        else:
-            for label in classes:
-                #print 'the labe is ', label
-                nameXvec = Tuple[nameX]
-                nameYvec = Tuple[nameY]
-                valid = Tuple[label] > 0.
-                # print  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True) 
-                # lease check out numpy.histogram2d for more info
-                # hists += numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=True)
-                w_,_,_ =  numpy.histogram2d(nameXvec[valid],nameYvec[valid],bins, normed=normed)
-                self.hists.append( w_ )
-                
-        # collect only the fileds we actually need
-        
-        
+    
         
     def getJetWeights(self,Tuple):
         import numpy
@@ -237,39 +209,20 @@ class Weighter(object):
             print('weight bins not initialised. Cannot create weights per jet')
             raise Exception('weight bins not initialised. Cannot create weights per jet')
         
-        weight = []
+        weight = numpy.zeros(len(Tuple))
+        jetcount=0
         for jet in iter(Tuple[self.Axixandlabel]):
-        # get bins, use first histogram axis
+
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
-            if self.classes == []:
-                weight.append(1./self.hists[0][binX][binY])
-            else:
-                # count if a class was true (should be in one-hot-encoding, but better not trust anyone!
-                didappend =0 
             
-                for index, classs in enumerate(self.classes):
-                    # print ('ha ',classs , ' ' , 'jet[classs] is ', jet[classs])
-                    if 1 == jet[classs]:
-                        # print ('is one')
-                        weight.append(1./self.hists[index][binX][binY])
-                        #if 1./self.hists[index][binX][binY] > 10.*0.0002646:
-                        #    print (classs, ' ' , jet[self.nameX], ' ' , jet[self.nameY], ' weight ',  1./self.hists[index][binX][binY]/0.0002646)
-                        didappend=1
-                if  didappend == 0:
-                    #print ' WARNING, event found that had no TRUE label '
-                    # should not happen, but rather kill jet (weight=0) than everything
-                    # less verbose
-                    countMissedJets+=1
-                    weight.append(0)
-        if countMissedJets>0:
-            print ('WARNING from weight calculator: ', countMissedJets,'/', len(weight), ' had no valid label and got weight 0 (i.e. are ignore, but eat up space and time')
-        weight =  numpy.asarray(weight)
-        # to get on average weight one
+            for index, classs in enumerate(self.classes):
+                if 1 == jet[classs]:
+                    weight[jetcount]=(self.binweights[index][binX][binY])
+                    
+            jetcount=jetcount+1        
+
         print ('weight average: ',weight.mean())
-        weight = weight / weight.mean()
-        print ('rescaled weight average: ',weight.mean())
-        print ('rescaled weight stddev: ',weight.std())
         return weight
         
         

@@ -17,7 +17,9 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#ifndef MAXBRANCHLENGTH
 #define MAXBRANCHLENGTH 200
+#endif
 
 namespace __hidden{
 class indata{
@@ -40,6 +42,9 @@ public:
 	}
 
 	float getData(const size_t& b,const size_t& i);
+	float getRaw(const size_t& b,const size_t& i) const {return buffer.at(b)[i];}
+	float mean(const size_t& b) const {return means.at(b);}
+	float std(const size_t& b) const {return norms.at(b);}
 	float getDefault(const size_t& b);
 
 	void allZero();

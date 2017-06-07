@@ -15,4 +15,7 @@
 
 TString prependXRootD(const TString& path);
 
+bool isApprox(const float& a , const float& b, float eps=0.001);
+
+
 #endif /* DEEPJET_MODULES_INTERFACE_HELPER_H_ */
