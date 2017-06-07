@@ -8,7 +8,8 @@ from __future__ import print_function
 from ReduceLROnPlateau import ReduceLROnPlateau
 from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
-
+from time import time
+from pdb import set_trace
 
 class newline_callbacks_begin(Callback):
     
@@ -37,6 +38,16 @@ class newline_callbacks_end(Callback):
         print('\n***callbacks end***\n')
         
         
+class Losstimer(Callback):
+    def __init__(self):
+        self.points = []
+
+    def on_train_begin(self, logs):
+        self.start = time()
+
+    def on_batch_end(self, batch, logs):
+        set_trace()
+
         
 class DeepJet_callbacks(object):
     def __init__(self,
@@ -67,5 +78,10 @@ class DeepJet_callbacks(object):
         self.modelcheck=ModelCheckpoint(outputDir+"/KERAS_check_last_model.h5", verbose=1)
   
         self.history=History()
+        self.timer = Losstimer()
   
-        self.callbacks=[self.nl_begin,self.modelbestcheck,self.modelcheck,self.reduce_lr, self.stopping,self.nl_end,self.history]
+        self.callbacks=[
+            self.nl_begin, self.modelbestcheck, self.modelcheck,
+            self.reduce_lr, self.stopping, self.nl_end, self.history,
+            self.timer
+        ]
