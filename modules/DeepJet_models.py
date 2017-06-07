@@ -32,12 +32,28 @@ def Model_FatJet(Inputs,nclasses,dropoutRate=-1):
     return model
     
 
+def RecurrenPT(Inputs,nclasses,dropoutRate=-1):
+
+    x_pt = Masking()(Inputs[1])
+    x_pt = LSTM(100)(x_pt)
+    x = merge( [x_pt, Inputs[0]] , mode='concat')
+    x = Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = merge( [x, Inputs[2]] , mode='concat')
+    predictions = [Dense(2, activation='linear',init='normal')(x),Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)]
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+
 def Schwartz_gluon_model(Inputs,nclasses,dropoutRate=-1):
      x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
      x = MaxPooling2D(pool_size=(2, 2))(x)
-     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x =   Convolution2D(64, (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
      x = MaxPooling2D(pool_size=(2, 2))(x)
-     x =   Convolution2D(64, (4,4) , 1 , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+     x =   Convolution2D(64, (4,4)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
      x = MaxPooling2D(pool_size=(2, 2))(x)
      x = Flatten()(x)
      x = merge( [x, Inputs[1]] , mode='concat')
