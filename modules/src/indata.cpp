@@ -10,6 +10,8 @@
 
 namespace __hidden{
 
+bool indata::meanPadding = true;
+
 void indata::setSize(size_t i){
 	norms.resize(i,1);
 	means.resize(i,0);
@@ -53,13 +55,15 @@ float indata::getData(const size_t& b,const size_t& i){
 }
 
 float indata::getDefault(const size_t& b) {
-	return (0 - means.at(b)) / norms.at(b);
+	float zero = (meanPadding) ? 0 : means.at(b);
+	return (zero - means.at(b)) / norms.at(b);
 }
 
 void indata::allZero(){
-	for(auto& c:buffer)
+	//for(auto& c:buffer)
+	for(size_t idx=0; idx < buffer.size(); ++idx)
 		for(int i=0;i<max;i++)
-			c[i]=0;
+			buffer.at(idx)[i] = (meanPadding) ? 0 : means.at(idx);
 }
 
 void indata::getEntry(size_t entry){
