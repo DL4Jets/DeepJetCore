@@ -21,7 +21,7 @@ import os
 from argparse import ArgumentParser
 import shutil
 
-from DeepJet_models import Dense_model_reg
+from DeepJet_models import RecurrenPT
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
 
 # argument parsing and bookkeeping
@@ -58,11 +58,11 @@ print ('start')
 testrun=False
 
 nepochs=20
-batchsize=10000
+batchsize=500
 startlearnrate=0.009
 useweights=False
 splittrainandtest=0.8
-maxqsize=10 #sufficient
+maxqsize=25 #sufficient
 
 from DataCollection import DataCollection
 from TrainData_deepCSV_ST import TrainData_deepCSV_ST
@@ -100,21 +100,21 @@ print(traind.getTruthShape())
 
 from keras.layers import Input
 
-inputs = [Input(shape=shapes[0]),Input(shape=shapes[1])]
-
-#model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
+inputs = [Input(shape=shapes[0]),Input(shape=shapes[1]),Input(shape=shapes[2])]
 
 print(traind.getTruthShape()[0])
-model = Dense_model_reg(inputs,traind.getTruthShape()[0],shapes,0.1)
+model = RecurrenPT(inputs,traind.getTruthShape()[0])
 print('compiling')
 
 
 from keras.optimizers import Adam
 adam = Adam(lr=startlearnrate)
-model.compile(loss=['categorical_crossentropy','mean_absolute_percentage_error'], 
+from Losses import loss_NLL
+
+model.compile(loss=['categorical_crossentropy',loss_NLL], 
               optimizer=adam,
               metrics=['accuracy','accuracy'],
-              loss_weights=[1., 0.05])#strong focus on flavour
+              loss_weights=[1., 0.1])#strong focus on flavour
 
 # This stores the history of the training to e.g. allow to plot the learning curve
 from keras.callbacks import Callback,History, LearningRateScheduler, EarlyStopping, LambdaCallback,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
@@ -192,42 +192,3 @@ plt.legend(['train', 'test'], loc='upper left')
 plt.savefig(outputDir+'learningcurve.pdf') 
 #plt.show()
 
-#plt.figure(2)
-#plt.plot(history.history['acc'])
-#print(history.history['val_loss'],history.history['loss'])
-#plt.plot(history.history['val_acc'])
-#plt.title('model accuracy')
-#plt.ylabel('acc')
-#plt.xlabel('epoch')
-#plt.legend(['train', 'test'], loc='upper left')
-#plt.savefig(outputDir+'accuracycurve.pdf')
-
-#exit()
-
-features_val=testd.getAllFeatures()
-labels_val=testd.getAllLabels()
-
-print('making rocs',len(labels_val))
-
-#weights_val=testd.getAllWeights()[0]
-#names='probB, probC, probUDSG'
-#formats='float32,float32,float32'
-#predictAndMakeRoc(features_val, labels_val, outputDir+"all_val", names,formats,model)
-#labelsandweights = labels_val[0] #np.concatenate((labels_val,weights_val.T),axis=1)
-
-from root_numpy import array2root
-
-savePTREC = features_val[1]
-
-predict_test = model.predict(features_val)
-# to add back to raw root for more detaiel ROCS and debugging
-all_write = np.core.records.fromarrays(  np.hstack((predict_test[0],predict_test[1],labels_val[0],labels_val[1],savePTREC)).transpose(), 
-                                             names='isB,isLeptonicB,isLeptonicB_C,isC,isUDSG,PTtruth,TisB,TisLeptonicB,TisLeptonicB_C,TisC,TisUDSG,TPTtruth,PTREC',
-                                             formats = 'float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32,float32')#,float32')
-#labels_val
-print(all_write.shape)
-
-array2root(all_write,outputDir+"KERAS_result_val.root",mode="recreate")
-
-
-#from keras.models import load_model

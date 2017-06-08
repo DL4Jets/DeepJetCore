@@ -15,6 +15,7 @@
 #include "TROOT.h"
 #include "colorToTColor.h"
 #include "TH1F.h"
+#include "TProfile.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TFile.h"
@@ -34,7 +35,10 @@ void makePlots(
         std::string outfile,
         std::string xaxis,
         std::string yaxis,
-        bool normalized) {
+        bool normalized,
+        bool makeProfile=false,
+        float OverrideMin=-1e100,
+        float OverrideMax=1e100) {
 
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -110,6 +114,8 @@ void makePlots(
     TString addstr="";
     if(normalized)
         addstr="normalized";
+    if(makeProfile)
+        addstr+="prof";
     float max=-1e100;
     float min=1e100;
 
@@ -137,6 +143,13 @@ void makePlots(
         float tmin=histo->GetMinimum();
         if(tmax>max)max=tmax;
         if(tmin<min)min=tmin;
+        if(makeProfile &&OverrideMin!=-1e100){
+          //std::cout << "overriding min/max"<< std::endl;
+          max = OverrideMax;
+          min = OverrideMin;
+        }
+        //std::cout << "min" << min << " max" << max << std::endl;
+
         allhistos.push_back(histo);
 
         histo->Write();
@@ -169,6 +182,32 @@ void makePlots(
 }
 
 
+void makeProfiles(
+        const boost::python::list intextfiles,
+        const boost::python::list names,
+        const boost::python::list variables,
+        const boost::python::list cuts,
+        const boost::python::list colors,
+        std::string outfile,
+        std::string xaxis,
+        std::string yaxis,
+        bool normalized,float minimum, float maximum) {
+
+  makePlots(
+        intextfiles,
+        names,
+        variables,
+        cuts,
+        colors,
+        outfile,
+        xaxis,
+        yaxis,
+        normalized,
+        true,
+        minimum,
+        maximum);
+}  
+
 
 
 // Expose classes and methods to Python
@@ -176,5 +215,7 @@ BOOST_PYTHON_MODULE(c_makePlots) {
     //__hidden::indata();//for some reason exposing the class prevents segfaults. garbage collector?
     //anyway, it doesn't hurt, just leave this here
     def("makePlots", &makePlots);
+    def("makeProfiles", &makeProfiles);
 
 }
+
