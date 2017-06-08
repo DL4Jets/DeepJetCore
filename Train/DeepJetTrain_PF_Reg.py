@@ -102,6 +102,7 @@ shapes=traind.getInputShapes()
 #        
 
 print(shapes)
+print("anna")
 
 print(traind.getTruthShape()[0])
 
@@ -109,18 +110,19 @@ print(traind.getTruthShape()[0])
 
 from keras.layers import Input
 inputs = [Input(shape=shapes[0]),
-          Input(shape=shapes[1]),
-          Input(shape=shapes[2]),
-          Input(shape=shapes[3]),
-          Input(shape=shapes[4])]
+          Input(shape=shapes[1])]
+#          Input(shape=shapes[2]),
+#          Input(shape=shapes[3]),
+#          Input(shape=shapes[4])]
 
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-from DeepJet_models import Dense_model_broad_reg2,Dense_model_broad, Dense_model_broad_flat
+from DeepJet_models import Dense_model_broad_reg2,Dense_model_broad, Dense_model_broad_flat, Schwartz_gluon_model
 #model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-model = Dense_model_broad_reg2(inputs,traind.getTruthShape()[0],shapes,0.1)
+#model = Dense_model_broad_reg2(inputs,traind.getTruthShape()[0],shapes,0.1)
 #model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
+model = Schwartz_gluon_model(inputs,traind.getTruthShape()[0])
 print('compiling')
 
 from Losses import loss_NLL

@@ -308,9 +308,14 @@ class TrainData_image(TrainData_deepFlavour_FT):
                                'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
                                'jet_eta','jet_phi','jet_pt'])
+
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
+        
+        self.registerBranches([self.regtruth,self.regreco])
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
-        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
+        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles, createCountMap
         import numpy
         from stopwatch import stopwatch
         
@@ -378,7 +383,9 @@ class TrainData_image(TrainData_deepFlavour_FT):
             print('neither remove nor weight')
             weights=numpy.empty(self.nsamples)
             weights.fill(1.)
-        
+
+        pttruth=Tuple[self.regtruth]
+        ptreco=Tuple[self.regreco]         
         
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
@@ -392,6 +399,8 @@ class TrainData_image(TrainData_deepFlavour_FT):
             x_chmap=x_chmap[notremoves > 0]
             x_neumap=x_neumap[notremoves > 0]            
             alltruth=alltruth[notremoves > 0]
+            pttruth=pttruth[notremoves > 0]
+            ptreco=ptreco[notremoves > 0]
         x_map = numpy.concatenate((x_chmap,x_neumap), axis=2)
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
@@ -400,5 +409,5 @@ class TrainData_image(TrainData_deepFlavour_FT):
 
         self.w=[weights]
         self.x=[x_global,x_map]
-        self.y=[alltruth]
+        self.y=[alltruth,pttruth]
         
