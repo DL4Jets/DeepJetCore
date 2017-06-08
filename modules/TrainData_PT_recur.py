@@ -37,7 +37,9 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
                               ],
                              25)
         
-  
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
+        self.registerBranches([self.regtruth,self.regreco])
         
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
@@ -93,7 +95,8 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
             weights=numpy.empty(self.nsamples)
             weights.fill(1.)
         
-        
+        pttruth=Tuple[self.regtruth]
+        ptreco=Tuple[self.regreco]
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
@@ -129,7 +132,9 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
             x_allpf=x_cpf[notremoves > 0]
            # x_npf=x_npf[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
-   
+            pttruth=pttruth[notremoves > 0]
+            ptreco=ptreco[notremoves > 0]
+                        
       
         
         newnsamp=x_global.shape[0]
@@ -139,7 +144,7 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
         print(x_global.shape,self.nsamples)
 
         self.w=[weights]
-        self.x=[x_global,x_allpf]
-        self.y=[alltruth]
+        self.x=[x_global,x_allpf,ptreco]
+        self.y=[alltruth,pttruth]
         
 
