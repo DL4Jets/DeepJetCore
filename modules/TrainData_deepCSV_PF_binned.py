@@ -111,6 +111,8 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
         from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, MeanNormZeroPadBinned
         import numpy
         from stopwatch import stopwatch
+        import c_meanNormZeroPad
+        c_meanNormZeroPad.zeroPad()
         
         sw=stopwatch()
         swall=stopwatch()
