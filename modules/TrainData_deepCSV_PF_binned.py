@@ -49,7 +49,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
             'Cpfcan_dz',
             #for regression
             'Cpfcan_pt',
-        ], 6)
+        ], 3)
         
         
         self.addBranches([
@@ -61,7 +61,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
             'Npfcan_drminsv',
             #for regression
             'Npfcan_pt',
-        ], 5)
+        ], 2)
         
         
         self.addBranches([
@@ -82,7 +82,7 @@ class TrainData_deepCSV_PF_Binned(TrainData_simpleTruth):
             'sv_d3dsig',
             'sv_costhetasvpv',
             'sv_enratio',
-        ], 2)
+        ], 1)
 
         self.binned_sums = {
             'charged' : ['Cpfcan_pt'], #of objects already set by default
