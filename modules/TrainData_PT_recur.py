@@ -1,7 +1,10 @@
 from TrainData import TrainData_fullTruth
 from TrainData import TrainData,fileTimeOut
+from keras.layers import Dense, Dropout, LSTM
+from keras.layers.merge import concatenate
+from keras.models import Model
 
-class TrainData_PT_recur_Test(TrainData_fullTruth):
+class TrainData_PT_recur(TrainData_fullTruth):
     '''
     classdocs
     '''
@@ -10,42 +13,43 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
         '''
         Constructor
         '''
-        TrainData_fullTruth.__init__(self)
+        super(TrainData_PT_recur, self).__init__()
         
         
         self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
        
         self.addBranches([
-                          'Cpfcan_ptrel', #not the same as btv ptrel!
-                          #'Cpfcan_erel',
-                          'Cpfcan_phirel',
-                          'Cpfcan_etarel',
-                          'Cpfcan_pt', 
-                          'Cpfcan_puppiw',
-#                          'Cpfcan_quality'
-                              ],
-                             25)
+            'Cpfcan_ptrel', #not the same as btv ptrel!
+            #'Cpfcan_erel',
+            'Cpfcan_phirel',
+            'Cpfcan_etarel',
+            #'Cpfcan_pt', 
+            'Cpfcan_puppiw',
+            #'Cpfcan_quality'
+        ], 25)
         
         
-        self.addBranches(['Npfcan_ptrel', #not the same as btv ptrel!
-                          #'Cpfcan_erel',
-                          'Npfcan_phirel',
-                          'Npfcan_etarel',
-                          'Npfcan_pt', 
-                          'Npfcan_puppiw',
- #                         'Npfcan_quality'
-                              ],
-                             25)
+        self.addBranches([
+            'Npfcan_ptrel', #not the same as btv ptrel!
+            #'Cpfcan_erel',
+            'Npfcan_phirel',
+            'Npfcan_etarel',
+            #'Npfcan_pt', 
+            'Npfcan_puppiw',
+            #'Npfcan_quality'
+        ], 25)
         
         self.regtruth='gen_pt_WithNu'
         self.regreco='jet_corr_pt'
-        self.registerBranches([self.regtruth,self.regreco])
+        self.registerBranches([self.regtruth, self.regreco])
         
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
         import numpy
         from stopwatch import stopwatch
+        import c_meanNormZeroPad
+        c_meanNormZeroPad.zeroPad()
         
         sw=stopwatch()
         swall=stopwatch()
@@ -78,73 +82,126 @@ class TrainData_PT_recur_Test(TrainData_fullTruth):
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
-        Tuple = self.readTreeFromRootToTuple(filename)
-        
+        nparray = self.readTreeFromRootToTuple(filename)        
         if self.remove:
-            notremoves=weighter.createNotRemoveIndices(Tuple)
-            undef=Tuple['isUndefined']
+            notremoves=weighter.createNotRemoveIndices(nparray)
+            undef=nparray['isUndefined']
             notremoves-=undef
             print('took ', sw.getAndReset(), ' to create remove indices')
         
         if self.weight:
-            weights=weighter.getJetWeights(Tuple)
+            weights=weighter.getJetWeights(nparray)
         elif self.remove:
             weights=notremoves
         else:
             print('neither remove nor weight')
-            weights=numpy.empty(self.nsamples)
-            weights.fill(1.)
+            weights=numpy.ones(self.nsamples)
         
-        pttruth=Tuple[self.regtruth]
-        ptreco=Tuple[self.regreco]
-        truthtuple =  Tuple[self.truthclasses]
+        pttruth = nparray[self.regtruth]
+        ptreco  = nparray[self.regreco]        
+        truthtuple =  nparray[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
-        NPfCands = Tuple[['nCpfcand','nNpfcand']]
-     #   print(x_cpf.shape)
-        allpf = numpy.concatenate((x_cpf,x_npf),axis=1)
-      #  print ('and now ', allpf.shape)
-     
-        for i in range (0,allpf.shape[0]):
-            myI = allpf[i][:]
-     #       print( myI, ' this is the initial row, the shape is ',myI.shape)
-            myI = myI[myI[:,0].argsort()]
-      #      print( myI, ' this is the initial PT sorted row, the shape is ',myI.shape, ' ' , NPfCands[i][0], ' ' , NPfCands[i][1])
-            
-            nPF = int(NPfCands[i][0]+NPfCands[i][1])
-            # 50 is hardcoded, it is the maximun number of candidates
-            if (nPF>50): nPF=50
-            myI = myI[0:nPF]
-            zeroI = numpy.zeros(((50-nPF),5))
-       #     print (myI.shape, ' ' , zeroI.shape)
-            thisJet = numpy.concatenate((myI,zeroI))
-        #    print ('concated' ,thisJet.shape )
-        #    print( thisJet, ' this is the initial PT sorted row with zeros padded, the shape is ',thisJet.shape)
-            allpf[i]= thisJet
 
+        #
+        # sort vectors (according to pt at the moment)
+        #
+        idxs = x_cpf[:,:,0].argsort() #0 is pt ratio
+        xshape = x_cpf.shape
+        static_idxs = numpy.indices(xshape)
+        idxs = idxs.reshape((xshape[0], xshape[1], 1))
+        idxs = numpy.repeat(idxs, xshape[2], axis=2)
+        x_cpf = x_cpf[static_idxs[0], idxs, static_idxs[2]]
 
+        idxs = x_npf[:,:,0].argsort() #0 is pt ratio
+        xshape = x_npf.shape
+        static_idxs = numpy.indices(xshape)
+        idxs = idxs.reshape((xshape[0], xshape[1], 1))
+        idxs = numpy.repeat(idxs, xshape[2], axis=2)
+        x_npf = x_npf[static_idxs[0], idxs, static_idxs[2]]
 
         #print(alltruth.shape)
         if self.remove:
             print('remove')
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
-            x_allpf=x_cpf[notremoves > 0]
+            x_cpf = x_cpf[notremoves > 0]
+            x_npf = x_npf[notremoves > 0]
            # x_npf=x_npf[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
             pttruth=pttruth[notremoves > 0]
             ptreco=ptreco[notremoves > 0]
                         
-      
-        
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
-        print(x_global.shape,self.nsamples)
-
         self.w=[weights]
-        self.x=[x_global,x_allpf,ptreco]
+        self.x=[x_global,x_cpf,x_npf,ptreco]
         self.y=[alltruth,pttruth]
         
+    @staticmethod
+    def base_model(input_shapes):
+        from keras.layers import Input
+        from keras.layers.core import Masking
+        x_global  = Input(shape=input_shapes[0])
+        x_charged = Input(shape=input_shapes[1])
+        x_neutral = Input(shape=input_shapes[2])
+        x_ptreco  = Input(shape=input_shapes[3])
+        lstm_c = Masking()(x_charged)
+        lstm_c = LSTM(100)(lstm_c)
+        lstm_n = Masking()(x_neutral)
+        lstm_n = LSTM(100)(lstm_n)
+        x = concatenate( [lstm_c, lstm_n, x_global] )
+        x = Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = concatenate([x, x_ptreco])
+        return [x_global, x_charged, x_neutral, x_ptreco], x
+
+    @staticmethod
+    def regression_generator(generator):
+        for X, Y in generator:
+            yield X, Y[1]#.astype(int)
+
+    @staticmethod
+    def regression_model(input_shapes):
+        inputs, x = TrainData_PT_recur.base_model(input_shapes)
+        predictions = Dense(2, activation='linear',init='normal')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def classification_generator(generator):
+        for X, Y in generator:
+            yield X, Y[0]#.astype(int)
+
+    @staticmethod
+    def classification_model(input_shapes, nclasses):
+        inputs, x = TrainData_PT_recur.base_model(input_shapes)
+        predictions = Dense(
+            nclasses, activation='softmax',
+            kernel_initializer='lecun_uniform'
+        )(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def model(input_shapes, nclasses):
+        inputs, x = TrainData_PT_recur.base_model(input_shapes)
+        predictions = [
+            Dense(
+                nclasses, 
+                activation='softmax', kernel_initializer='lecun_uniform'
+            )(x),
+            Dense(2, activation='linear', init='normal')(x),
+        ]
+        return Model(inputs=inputs, outputs=predictions)
+
+
+
+
+
+
 
