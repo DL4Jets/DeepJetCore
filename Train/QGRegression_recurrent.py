@@ -48,12 +48,12 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 # configure the in/out/split etc
 config_args = { #we might want to move it to an external file
    'testrun'   : False,
-   'nepochs'   : 2,
-   'batchsize' : 2000,
+   'nepochs'   : 3,
+   'batchsize' : 10000,
    'startlearnrate' : 0.0005,
    'useweights' : False,
    'splittrainandtest' : 0.8,
-   'maxqsize' : 50, #sufficient
+   'maxqsize' : 100, #sufficient
    'conv_dropout' : 0.1,
    'loss_weights' : [1., .025] ,
 }
@@ -131,17 +131,22 @@ traind.writeToFile(outputDir+'trainsamples.dc')
 testd.writeToFile( outputDir+'valsamples.dc')
 
 print 'training'
-model.fit_generator(
-   modifier(traind.generator()),
-   verbose=1,
-   steps_per_epoch = traind.getNBatchesPerEpoch(), 
-   epochs = config_args['nepochs'],
-   callbacks = callbacks.callbacks,
-   validation_data = modifier(testd.generator()),
-   validation_steps = testd.getNBatchesPerEpoch(),
-   max_q_size = config_args['maxqsize'], #maximum size for the generator queue
-   class_weight = class_weight,
-   )
+try:
+    model.fit_generator(
+        modifier(traind.generator()),
+        verbose=1,
+        steps_per_epoch = traind.getNBatchesPerEpoch(), 
+        epochs = config_args['nepochs'],
+        callbacks = callbacks.callbacks,
+        validation_data = modifier(testd.generator()),
+        validation_steps = testd.getNBatchesPerEpoch(),
+        max_q_size = config_args['maxqsize'], #maximum size for the generator queue
+        class_weight = class_weight,
+    )
+except KeyboardInterrupt:
+    print "\n\nEarly manual stopping received!\n\n"
+except Exception as d:
+    raise d
 
 ####################################################
 #                                                  #

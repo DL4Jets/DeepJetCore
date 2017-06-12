@@ -39,7 +39,7 @@ class newline_callbacks_end(Callback):
         
         
 class Losstimer(Callback):
-    def __init__(self, every = 10):
+    def __init__(self, every = 100):
         self.points = [
             [],
             []
