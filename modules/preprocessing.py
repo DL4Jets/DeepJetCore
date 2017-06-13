@@ -358,31 +358,41 @@ def createCountMap(Filename_in, MeanNormTuple,nevents, dimension1, dimension2,
 
 def createDensityLayers(Filename_in,
                         MeanNormTuple, 
-                        inbranch,
+                        inbranches,
+                        modes,
                         layerbranch,
                         maxlayers,
                         layeroffset,
                         nevents, 
                         dimension1, 
                         dimension2, 
-                        counterbranch, offset=0):
+                        counterbranch):
     
     import c_meanNormZeroPad
     
-    norm=1.#MeanNormTuple[inbranch][1]
-
+    
+    norms = [1 for x in range(len(inbranches))]
+    means = [0 for x in range(len(inbranches))]
+    
     x_branch, x_center, x_bins, x_width = dimension1
     y_branch, y_center, y_bins, y_width = dimension2
     
-    array = numpy.zeros((nevents,x_bins,y_bins,maxlayers,1) , dtype='float32')
+    array = numpy.zeros((nevents,x_bins,y_bins,maxlayers,len(inbranches)) , dtype='float32')
+    
     
     c_meanNormZeroPad.fillDensityLayers(
-        array, norm, inbranch,layerbranch,
-        maxlayers,layeroffset,
-        Filename_in, counterbranch,
+        array, 
+        norms,
+        means, 
+        inbranches,
+        modes,
+        layerbranch,
+        maxlayers,
+        layeroffset,
+        Filename_in,
+        counterbranch,
         x_branch, x_center, x_bins, x_width,
         y_branch, y_center, y_bins, y_width,
-        offset
         )
     
     return array
