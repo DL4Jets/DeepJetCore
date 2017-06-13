@@ -193,7 +193,7 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
-        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
+        from preprocessing import MeanNormApply,createCountMap, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
         import numpy
         from stopwatch import stopwatch
         
@@ -244,6 +244,19 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
                                    ['Npfcan_phi','jet_phi',20,0.5],
                                    'nNpfcand',-1)
         
+        x_chcount = createCountMap(filename,TupleMeanStd,
+                                   self.nsamples,
+                                   ['Cpfcan_eta','jet_eta',20,0.5],
+                                   ['Cpfcan_phi','jet_phi',20,0.5],
+                                   'nCpfcand')
+        
+        x_neucount = createCountMap(filename,TupleMeanStd,
+                                   self.nsamples,
+                                   ['Npfcan_eta','jet_eta',20,0.5],
+                                   ['Npfcan_phi','jet_phi',20,0.5],
+                                   'nNpfcand')
+        
+        
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
@@ -281,16 +294,22 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
             x_chmap=x_chmap[notremoves > 0]
             x_neumap=x_neumap[notremoves > 0]
             
+            x_chcount=x_chcount[notremoves > 0]
+            x_neucount=x_neucount[notremoves > 0]
+            
             alltruth=alltruth[notremoves > 0]
        
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
+        
+        x_map = numpy.concatenate((x_chmap,x_neumap,x_chcount,x_neucount), axis=2)
+        
         print(x_global.shape,self.nsamples)
 
         self.w=[weights]
-        self.x=[x_global,x_cpf,x_npf,x_sv,x_chmap,x_neumap]
+        self.x=[x_global,x_cpf,x_npf,x_sv,x_map]
         self.y=[alltruth]
         
 class TrainData_image(TrainData_deepFlavour_FT):
@@ -310,7 +329,7 @@ class TrainData_image(TrainData_deepFlavour_FT):
                                'jet_eta','jet_phi','jet_pt'])
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
-        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
+        from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap,createCountMap, MeanNormZeroPadParticles
         import numpy
         from stopwatch import stopwatch
         
