@@ -463,7 +463,7 @@ class TrainData(object):
                 125,150,175,200,250,300,400,500,
                 600,2000],dtype=float)
         weight_binYEta = numpy.array(
-            [0,.5,1,1.5,2.,2.5],
+            [-2.5,-2.,-1.5,-1.,-0.5,0.5,1,1.5,2.,2.5],
             dtype=float
             )
         if self.remove or self.weight:
