@@ -448,4 +448,56 @@ class TrainData_image(TrainData_fullTruth):
         self.w=[weights]
         self.x=[x_global,x_map,ptreco]
         self.y=[alltruth,pttruth]
+
+    @staticmethod
+    def base_model(input_shapes):
+        from keras.layers import Input
+        from keras.layers.core import Masking
+        x_global  = Input(shape=input_shapes[0])
+        x_map = Input(shape=input_shapes[1])
+        x_ptreco  = Input(shape=input_shapes[2])
+
+        x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x =   Convolution2D(64, (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x =   Convolution2D(64, (4,4)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x = Flatten()(x)
+        x = merge( [x, Inputs[1]] , mode='concat')
+        # linear activation for regression and softmax for classification
+        x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)
+
+        return [x_global, x_map, x_ptreco], x
+
+    @staticmethod
+    def regression_generator(generator):
+        for X, Y in generator:
+            yield X, Y[1]#.astype(int)
+
+    @staticmethod
+    def regression_model(input_shapes):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = Dense(2, activation='linear',init='normal')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def classification_generator(generator):
+        for X, Y in generator:
+            yield X, Y[0]#.astype(int)
+
+    @staticmethod
+    def classification_model(input_shapes, nclasses):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def model(input_shapes, nclasses):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = [
+            Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x),
+            Dense(2, activation='linear',init='normal')(x)
+        ]
+        return Model(inputs=inputs, outputs=predictions)
         
