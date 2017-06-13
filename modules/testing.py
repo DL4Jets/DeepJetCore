@@ -67,11 +67,11 @@ class testDescriptor(object):
                 all_write = prediction
             else:
                 formatstring += "reg_uncPt,reg_Pt" if prediction.shape[1] == 2 else 'reg_Pt'
-                if prediction[1].shape[1] > 2:
+                if prediction.shape[1] > 2:
                     raise ValueError('Regression (2nd prediction output) can only have up to two values!')
                 all_write = prediction
 
-            all_write = np.core.records.fromarrays(np.transpose(prediction), names= formatstring)
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= formatstring)
             array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
             
             #self.metrics.append(metric)
