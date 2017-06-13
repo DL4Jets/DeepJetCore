@@ -46,7 +46,6 @@ def main(argv=None):
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
     from TrainData_deepCSV_PF import TrainData_deepCSV_PF,TrainData_deepCSV_miniPF,TrainData_deepCSV_microPF,TrainData_deepCSV_softL_PF,  TrainData_deepCSV_PF_rec
-    from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
@@ -63,7 +62,6 @@ def main(argv=None):
         TrainData_deepCSV_miniPF,
         TrainData_deepCSV_microPF,
         TrainData_deepCSV_softL_PF,
-        TrainData_deepConvCSV,
         TrainData_deepCSV_PF_Reg,
         TrainData_deepJet_Reg, 
         TrainData_PF_Reg,

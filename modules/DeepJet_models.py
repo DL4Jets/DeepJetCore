@@ -1,6 +1,9 @@
 #from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM, LocallyConnected2D
 from keras.models import Model
+import warnings
+warnings.warn("DeepJet_models.py is deprecated and will be removed! Please move to the models directory", DeprecationWarning)
+
 from keras.layers.core import Reshape, Masking, Permute
 from keras.layers.pooling import MaxPooling2D
 #fix for dropout on gpus
@@ -838,7 +841,7 @@ def binned3D_convolutional_classification_regression(inputs, output_shapes, drop
     nentries_per_bin = int(binned_info.shape[-1])
     k = (1,1)
     binned_info = make_layers(
-        Convolution2D, [[nentries_per_bin//2, k], [10, k]], 
+        Convolution2D, [[nentries_per_bin, k], [25, k]],
         dropout_rate, binned_info, 
         dropout_at_first=True, **kwargs
         )

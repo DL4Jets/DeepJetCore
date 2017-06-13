@@ -31,7 +31,7 @@ proc_lines.append('queue\n')
 proc_lines = ''.join(proc_lines)
 
 outputs = glob.glob('%s/batch/con_out.*.out' % args.indir)
-failed = [i for i in outputs if grep(i, 'JOBSUB::FAIL')]
+failed = [i for i in outputs if not grep(i, 'JOBSUB::SUCC')]
 
 if len(failed) == 0:
    print 'All jobs successfully completed, merging...'

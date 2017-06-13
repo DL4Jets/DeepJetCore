@@ -102,9 +102,7 @@ class TrainData(object):
         self.flatbranches=[]
         self.branches=[]
         self.branchcutoffs=[]
-        
-        
-        
+                
         self.readthread=None
         self.readdone=None
         
@@ -659,3 +657,27 @@ class TrainData_fullTruth(TrainData):
             
             return numpy.vstack((allb,bb,lepb,c,uds,g)).transpose()    
   
+
+
+class TrainData_quarkGluon(TrainData):
+    def __init__(self):
+        super(TrainData_quarkGluon, self).__init__(self)
+        self.reducedtruthclasses=['isQ', 'isG']
+        self.clear()
+        
+    def reduceTruth(self, tuple_in):
+        if tuple_in is not None:
+            b = tuple_in['isB'].view(numpy.ndarray)
+            #bb = tuple_in['isBB'].view(numpy.ndarray) #this should be gluon?
+            
+            bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            c = tuple_in['isC'].view(numpy.ndarray)
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
+            q = ud+s+c+blc+bl+b
+            
+            g = tuple_in['isG'].view(numpy.ndarray)
+            return numpy.vstack((q, g)).transpose()    
+        else:
+            print('I got an empty tuple?')

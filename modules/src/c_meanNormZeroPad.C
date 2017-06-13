@@ -212,7 +212,6 @@ void particle_binner(
     std::vector<double>  s_sum_stds     = toSTLVector<double>(sum_inl_norms);
     std::vector<double>  s_sum_means    = toSTLVector<double>(sum_inl_means);
 
-
     //get the branch handlers
     //pick all the objects in the collection cut off and zero padding is done per bin
     __hidden::indata branches;
@@ -538,6 +537,15 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
     delete tfile;
 }
 
+void zeroPad() {
+	//make real zero pad
+	__hidden::indata::meanPadding = false;
+}
+
+void meanPad() {
+	//make real zero pad
+	__hidden::indata::meanPadding = true;
+}
 
 
 // Expose classes and methods to Python
@@ -551,5 +559,6 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("fillDensityMap", &fillDensityMap);
     def("fillCountMap", &fillCountMap);
     def("fillDensityLayers", &fillDensityLayers);
-
+		def("meanPad", &meanPad);
+		def("zeroPad", &zeroPad);
 }

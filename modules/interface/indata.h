@@ -24,6 +24,8 @@
 namespace __hidden{
 class indata{
 public:
+	static bool meanPadding;
+
 	indata():max(0),offset_(0){
 
 	}
