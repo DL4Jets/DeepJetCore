@@ -149,9 +149,9 @@ class TrainData_PT_recur(TrainData_fullTruth):
         x_neutral = Input(shape=input_shapes[2])
         x_ptreco  = Input(shape=input_shapes[3])
         lstm_c = Masking()(x_charged)
-        lstm_c = LSTM(100)(lstm_c)
+        lstm_c = LSTM(100,go_backwards=True,implementation=2)(lstm_c)
         lstm_n = Masking()(x_neutral)
-        lstm_n = LSTM(100)(lstm_n)
+        lstm_n = LSTM(100,go_backwards=True,implementation=2)(lstm_n)
         x = concatenate( [lstm_c, lstm_n, x_global] )
         x = Dense(200, activation='relu',kernel_initializer='lecun_uniform')(x)
         x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
@@ -171,6 +171,12 @@ class TrainData_PT_recur(TrainData_fullTruth):
     def regression_model(input_shapes):
         inputs, x = TrainData_PT_recur.base_model(input_shapes)
         predictions = Dense(2, activation='linear',init='normal')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def mse_regression_model(input_shapes):
+        inputs, x = TrainData_PT_recur.base_model(input_shapes)
+        predictions = Dense(1, activation='linear',init='normal')(x)
         return Model(inputs=inputs, outputs=predictions)
 
     @staticmethod
@@ -196,6 +202,18 @@ class TrainData_PT_recur(TrainData_fullTruth):
                 activation='softmax', kernel_initializer='lecun_uniform'
             )(x),
             Dense(2, activation='linear', init='normal')(x),
+        ]
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def mse_model(input_shapes, nclasses):
+        inputs, x = TrainData_PT_recur.base_model(input_shapes)
+        predictions = [
+            Dense(
+                nclasses, 
+                activation='softmax', kernel_initializer='lecun_uniform'
+            )(x),
+            Dense(1, activation='linear', init='normal')(x),
         ]
         return Model(inputs=inputs, outputs=predictions)
 

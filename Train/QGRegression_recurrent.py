@@ -7,7 +7,9 @@ parser = ArgumentParser('Run the training')
 parser.add_argument('mode', choices=['class', 'reg', 'both'], help='What to run (classification, regression, both)')
 parser.add_argument('inputfile')
 parser.add_argument('outputDir')
+parser.add_argument('testfile')
 parser.add_argument('-f','--force', action='store_true', help='overwrite the directory if there')
+parser.add_argument('--mse', action='store_true', help='use mean-square error as loss')
 parser.add_argument('--warm', help='pre-trained model')
 args = parser.parse_args()
 
@@ -55,7 +57,7 @@ config_args = { #we might want to move it to an external file
    'splittrainandtest' : 0.8,
    'maxqsize' : 100, #sufficient
    'conv_dropout' : 0.1,
-   'loss_weights' : [1., .025] ,
+   'loss_weights' : [1., .25] ,
 }
 
 from DeepJet_callbacks import DeepJet_callbacks
@@ -102,20 +104,35 @@ if args.mode == 'class':
     modifier = TrainData_PT_recur.classification_generator
     class_weight = 'auto'
 elif args.mode == 'reg':
-    model = TrainData_PT_recur.regression_model(input_shapes)
-    model.compile(
-        loss = loss_NLL, optimizer = adam, 
-        metrics = ['MSE'],
-        )
     modifier = TrainData_PT_recur.regression_generator
+    if args.mse:
+        model = TrainData_PT_recur.mse_regression_model(input_shapes)
+        model.compile(
+            loss = 'mse', optimizer = adam, 
+            metrics = ['MSE'],
+        )
+    else:
+        model = TrainData_PT_recur.regression_model(input_shapes)
+        model.compile(
+            loss = loss_NLL, optimizer = adam, 
+            metrics = ['MSE'],
+        )
 else:
-    model = TrainData_PT_recur.model(input_shapes, output_shapes[0])
-    model.compile(
-        loss = ['categorical_crossentropy', loss_NLL], #apply xentropy to the first output (flavour) and NLL to the pt regression
-        optimizer = adam, metrics = ['categorical_accuracy','MSE'],
-        loss_weights = config_args['loss_weights']
-    )
     modifier = identity
+    if args.mse:
+        model = TrainData_PT_recur.mse_model(input_shapes, output_shapes[0])
+        model.compile(
+            loss = ['categorical_crossentropy', 'MSE'], #apply xentropy to the first output (flavour) and NLL to the pt regression
+            optimizer = adam, metrics = ['categorical_accuracy','MSE'],
+            loss_weights = config_args['loss_weights']
+        )
+    else:
+        model = TrainData_PT_recur.model(input_shapes, output_shapes[0])
+        model.compile(
+            loss = ['categorical_crossentropy', loss_NLL], #apply xentropy to the first output (flavour) and NLL to the pt regression
+            optimizer = adam, metrics = ['categorical_accuracy','MSE'],
+            loss_weights = config_args['loss_weights']
+        )
 
 ntrainepoch = traind.getSamplesPerEpoch()
 nvalepoch   = testd.getSamplesPerEpoch()
@@ -150,7 +167,7 @@ except Exception as d:
 
 ####################################################
 #                                                  #
-#           Plots, still to be fixed               #
+#           Plots and jsons to make them           #
 #                                                  #
 ####################################################
 
@@ -191,3 +208,33 @@ with open(outputDir+'loss_vs_time.json', 'w') as timeloss:
         'loss' : callbacks.timer.points[1]
     }
     timeloss.write(json.dumps(normalize(jmap)))
+
+
+####################################################
+#                                                  #
+#         Testing, because it takes ages           #
+#                                                  #
+####################################################
+
+from subprocess import Popen, PIPE
+
+parser.add_argument('inputfile')
+parser.add_argument('outputDir')
+parser.add_argument('testfile')
+cmd = [
+    'predict.py', 
+    '%s/KERAS_check_best_model.h5' % args.outputDir,
+    args.testfile,
+    '%s/testing' % args.outputDir
+    ]
+if (args.mode == 'reg' or args.mode == 'both') and not args.mse:
+    cmd.append('--NLLloss')
+
+print 'Executing command:'
+print ' '.join(cmd)
+proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+out, err = proc.communicate()
+code = proc.wait()
+
+if code:
+    raise RuntimeError('Command failed with error message: \n\n%s\n\n' % err)
