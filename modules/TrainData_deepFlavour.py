@@ -183,6 +183,7 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         '''
         TrainData_deepFlavour_FT.__init__(self)
         
+        
         self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
                                'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
@@ -193,7 +194,7 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
-        from preprocessing import MeanNormApply,createCountMap, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
+        from preprocessing import MeanNormApply,createCountMap,createDensity, MeanNormZeroPad, createDensityMap, MeanNormZeroPadParticles
         import numpy
         from stopwatch import stopwatch
         
@@ -211,6 +212,9 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         
         
         # split for convolutional network
+        
+        
+        
         
         x_global = MeanNormZeroPad(filename,TupleMeanStd,
                                    [self.branches[0]],
@@ -230,30 +234,45 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         
         
         #here the difference starts
-        x_chmap = createDensityMap(filename,TupleMeanStd,
-                                   'Cpfcan_ptrel',
-                                   self.nsamples,
-                                   ['Cpfcan_eta','jet_eta',20,0.5],
-                                   ['Cpfcan_phi','jet_phi',20,0.5],
-                                   'nCpfcand',-1)
+        nbins=8
         
-        x_neumap = createDensityMap(filename,TupleMeanStd,
-                                   'Npfcan_ptrel',
-                                   self.nsamples,
-                                   ['Npfcan_eta','jet_eta',20,0.5],
-                                   ['Npfcan_phi','jet_phi',20,0.5],
-                                   'nNpfcand',-1)
+        x_chmap = createDensity (filename,
+                              inbranches=['Cpfcan_ptrel',
+                                          'Cpfcan_etarel',
+                                          'Cpfcan_phirel'], 
+                              modes=['sum',
+                                     'average',
+                                     'average',],
+                              nevents=self.nsamples,
+                              dimension1=['Cpfcan_eta','jet_eta',nbins,0.45], 
+                              dimension2=['Cpfcan_phi','jet_phi',nbins,0.45],
+                              counterbranch='nCpfcand',
+                              offsets=[-1,-0.5,-0.5])
+        
+        x_neumap = createDensity (filename,
+                              inbranches=['Npfcan_ptrel',
+                                          'Npfcan_etarel',
+                                          'Npfcan_phirel'], 
+                              modes=['sum',
+                                     'average',
+                                     'average',],
+                              nevents=self.nsamples,
+                              dimension1=['Npfcan_eta','jet_eta',nbins,0.45], 
+                              dimension2=['Npfcan_phi','jet_phi',nbins,0.45],
+                              counterbranch='nCpfcand',
+                              offsets=[-1,-0.5,-0.5])
+        
         
         x_chcount = createCountMap(filename,TupleMeanStd,
                                    self.nsamples,
-                                   ['Cpfcan_eta','jet_eta',20,0.5],
-                                   ['Cpfcan_phi','jet_phi',20,0.5],
-                                   'nCpfcand')
-        
-        x_neucount = createCountMap(filename,TupleMeanStd,
-                                   self.nsamples,
-                                   ['Npfcan_eta','jet_eta',20,0.5],
-                                   ['Npfcan_phi','jet_phi',20,0.5],
+                                   ['Cpfcan_eta','jet_eta',nbins,0.45],
+                                   ['Cpfcan_phi','jet_phi',nbins,0.45],
+                                   'nCpfcand')                  
+                                                                
+        x_neucount = createCountMap(filename,TupleMeanStd,      
+                                   self.nsamples,               
+                                   ['Npfcan_eta','jet_eta',nbins,0.45],
+                                   ['Npfcan_phi','jet_phi',nbins,0.45],
                                    'nNpfcand')
         
         
@@ -303,11 +322,9 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
-        
-        x_map = numpy.concatenate((x_chmap,x_neumap,x_chcount,x_neucount), axis=2)
-        
-        print(x_global.shape,self.nsamples)
 
+        x_map = numpy.concatenate((x_chmap,x_neumap,x_chcount,x_neucount), axis=3)
+        
         self.w=[weights]
         self.x=[x_global,x_cpf,x_npf,x_sv,x_map]
         self.y=[alltruth]

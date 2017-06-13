@@ -423,8 +423,15 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
     branch.createFrom(s_branches, s_norms, s_means, MAXBRANCHLENGTH);
 
 
+    bool uselayers=false;
+    if(layer_branch.length())
+        uselayers=true;
+    else
+        maxlayers=1;
+
     __hidden::indata layerbranch;
-    layerbranch.createFrom({layer_branch}, {1.}, {0.}, MAXBRANCHLENGTH);
+    if(uselayers)
+        layerbranch.createFrom({layer_branch}, {1.}, {0.}, MAXBRANCHLENGTH);
 
     __hidden::indata xy;
     xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
@@ -441,7 +448,8 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
 
     //the order is important!
     branch.setup(tree);
-    layerbranch.setup(tree);
+    if(uselayers)
+        layerbranch.setup(tree);
     //
     xy.setup(tree);
     xy_center.setup(tree);
@@ -452,8 +460,8 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
     for(int jet=0;jet<nevents;jet++){
 
         branch.zeroAndGet(jet);
-
-        layerbranch.zeroAndGet(jet);
+        if(uselayers)
+            layerbranch.zeroAndGet(jet);
 
         xy.zeroAndGet(jet);
         xy_center.zeroAndGet(jet);
@@ -472,7 +480,9 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
             if(xidx == -1 || yidx == -1) continue;
 
 
-            int layer=round(layerbranch.getData(0, elem))-layer_offset;
+            int layer=0;
+            if(uselayers)
+                layer=round(layerbranch.getData(0, elem))-layer_offset;
 
             if(layer>=maxlayers)
                 layer=maxlayers-1;
@@ -486,15 +496,14 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
                 else
                     featval=branch.getData(i_feat, elem);
 
-                if(fillmodes.at(i_feat)==fm_sum || fillmodes.at(i_feat)==fm_average)
-                    numpyarray[jet][xidx][yidx][layer][i_feat]+=featval;
-                else if(fillmodes.at(i_feat) == fm_single)
+                if(fillmodes.at(i_feat) == fm_single)
                     numpyarray[jet][xidx][yidx][layer][i_feat]=featval;
                 else if(fillmodes.at(i_feat) == fm_relXsingle)
                     numpyarray[jet][xidx][yidx][layer][i_feat]=featval-xcentre;
                 else if(fillmodes.at(i_feat) == fm_relYsingle)
                     numpyarray[jet][xidx][yidx][layer][i_feat]=featval-ycentre;
-
+                else //(fillmodes.at(i_feat)==fm_sum || fillmodes.at(i_feat)==fm_average)
+                    numpyarray[jet][xidx][yidx][layer][i_feat]+=featval;
 
             }
 
@@ -502,7 +511,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
         }
 
 
-        //fill back
+        //average
         for(size_t i_feat=0;i_feat<branch.nfeatures();i_feat++){
             if(fillmodes.at(i_feat)!=fm_average)
                 continue;
