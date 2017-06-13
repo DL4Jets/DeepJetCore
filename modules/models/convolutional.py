@@ -18,7 +18,7 @@ def convolutional_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     npf = Flatten()(npf)
     vtx = Flatten()(vtx)
     
-    x = Concatenate( [Inputs[0],cpf,npf,vtx ])
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
 
@@ -45,7 +45,7 @@ def convolutional_model_broad_map(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
     
-    x = Concatenate( [Inputs[0],cpf,npf,vtx,image ])
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx,image ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
@@ -71,7 +71,7 @@ def convolutional_model_broad_map_reg(Inputs,nclasses,Inputshapes,dropoutRate,np
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
     
-    x = Concatenate( [Inputs[0],cpf,npf,vtx,image ])
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx,image ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
@@ -101,7 +101,7 @@ def convolutional_model_broad_reg(Inputs,nclasses,Inputshapes,dropoutRate=-1, np
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
-    x = merge( [Inputs[4], x ] , mode='concat')
+    x = Concatenate()( [Inputs[4], x ] )
     predictions = Dense(npred, activation='linear',kernel_initializer='he_normal')(x),
                    
     model = Model(inputs=Inputs, outputs=predictions)
@@ -139,7 +139,7 @@ def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     vtx = Flatten()(vtx)
     
     
-    x = merge( [Inputs[0],cpf,npf,vtx ] , mode='concat')
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx ] )
     
 
     x=  Dense(350, activation='relu',kernel_initializer='lecun_uniform')(x)
@@ -164,7 +164,7 @@ def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     ptnpf = Dropout(dropoutRate)(ptnpf)
     ptnpf = Flatten()(ptnpf)
    
-    xx=merge( [Inputs[4],flav,ptcpf,ptnpf] , mode='concat')
+    xx=Concatenate()( [Inputs[4],flav,ptcpf,ptnpf] )
     xx=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(xx)
     
     ptandsigma=Dense(2, activation='linear',kernel_initializer='lecun_uniform')(xx)
@@ -207,7 +207,7 @@ def convolutional_model_lessbroad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     vtx = Dropout(dropoutRate)(vtx)
     vtx = Flatten()(vtx)
     
-    x = merge( [Inputs[0],cpf,npf,vtx ] , mode='concat')
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx ] )
     x = Dropout(dropoutRate)(x)
 
     x=  Dense(600, activation='relu',kernel_initializer='lecun_uniform')(x)
@@ -246,7 +246,7 @@ def convolutional_model_ConvCSV(Inputs,nclasses,Inputshape,dropoutRate=0.25):
     c = Dropout(dropoutRate)(c)
     c=Flatten()(c)
     
-    x = merge( [Inputs[0],a,c] , mode='concat')
+    x = Concatenate()( [Inputs[0],a,c] )
     
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)
