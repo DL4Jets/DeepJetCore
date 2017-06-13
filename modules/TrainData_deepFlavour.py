@@ -1,4 +1,16 @@
+#from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM, LocallyConnected2D
+from keras.models import Model
+import warnings
+warnings.warn("DeepJet_models.py is deprecated and will be removed! Please move to the models directory", DeprecationWarning)
 
+from keras.layers.core import Reshape, Masking, Permute
+from keras.layers.pooling import MaxPooling2D
+#fix for dropout on gpus
+
+#import tensorflow
+#from tensorflow.python.ops import control_flow_ops 
+#tensorflow.python.control_flow_ops = control_flow_ops
 
 from TrainData import TrainData_fullTruth
 from TrainData import TrainData,fileTimeOut
@@ -457,14 +469,14 @@ class TrainData_image(TrainData_fullTruth):
         x_map = Input(shape=input_shapes[1])
         x_ptreco  = Input(shape=input_shapes[2])
 
-        x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(Inputs[1])
+        x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x_map)
         x = MaxPooling2D(pool_size=(2, 2))(x)
         x =   Convolution2D(64, (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
         x = MaxPooling2D(pool_size=(2, 2))(x)
         x =   Convolution2D(64, (4,4)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
         x = MaxPooling2D(pool_size=(2, 2))(x)
         x = Flatten()(x)
-        x = merge( [x, Inputs[1]] , mode='concat')
+        x = merge( [x, x_global] , mode='concat')
         # linear activation for regression and softmax for classification
         x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)
 
