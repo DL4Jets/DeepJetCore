@@ -329,7 +329,7 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         self.x=[x_global,x_cpf,x_npf,x_sv,x_map]
         self.y=[alltruth]
         
-class TrainData_image(TrainData_deepFlavour_FT):
+class TrainData_image(TrainData_fullTruth):
     '''
     This class is for simple jetimiging
     '''
@@ -338,12 +338,19 @@ class TrainData_image(TrainData_deepFlavour_FT):
         '''
         Constructor
         '''
-        TrainData_deepFlavour_FT.__init__(self)
+        super(TrainData_image,self).__init__()
+
+        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
         
         self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
                                'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
                                'jet_eta','jet_phi','jet_pt'])
+
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
+        
+        self.registerBranches([self.regtruth,self.regreco])
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap,createCountMap, MeanNormZeroPadParticles
@@ -412,29 +419,33 @@ class TrainData_image(TrainData_deepFlavour_FT):
             weights=notremoves
         else:
             print('neither remove nor weight')
-            weights=numpy.empty(self.nsamples)
-            weights.fill(1.)
-        
-        
+            weights=numpy.ones(self.nsamples)
+       
+        pttruth=Tuple[self.regtruth]
+        ptreco=Tuple[self.regreco]
+ 
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
         
+        x_map = numpy.concatenate((x_chmap,x_chcount,x_neumap,x_neucount), axis=3)
+
         #print(alltruth.shape)
         if self.remove:
             print('remove')
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
-            x_chmap=x_chmap[notremoves > 0]
-            x_neumap=x_neumap[notremoves > 0]            
+            x_map=x_map[notremoves > 0]            
             alltruth=alltruth[notremoves > 0]
-        x_map = numpy.concatenate((x_chmap,x_neumap), axis=2)
+            pttruth=pttruth[notremoves > 0]
+            ptreco=ptreco[notremoves > 0]            
+
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         print(x_global.shape,self.nsamples)
 
         self.w=[weights]
-        self.x=[x_global,x_map]
-        self.y=[alltruth]
+        self.x=[x_global,x_map,ptreco]
+        self.y=[alltruth,pttruth]
         
