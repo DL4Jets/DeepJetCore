@@ -479,7 +479,7 @@ class TrainData_image(TrainData_fullTruth):
         x = merge( [x, x_global] , mode='concat')
         # linear activation for regression and softmax for classification
         x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)
-
+        x = merge([x, x_ptreco], mode='concat')
         return [x_global, x_map, x_ptreco], x
 
     @staticmethod
