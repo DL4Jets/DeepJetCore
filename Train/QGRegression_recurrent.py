@@ -57,7 +57,7 @@ config_args = { #we might want to move it to an external file
    'splittrainandtest' : 0.8,
    'maxqsize' : 100, #sufficient
    'conv_dropout' : 0.1,
-   'loss_weights' : [1., .25] ,
+   'loss_weights' : [1., .25] if not args.mse else [1., .00017],
 }
 
 from DeepJet_callbacks import DeepJet_callbacks
