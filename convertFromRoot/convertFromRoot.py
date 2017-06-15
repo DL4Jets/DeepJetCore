@@ -67,7 +67,7 @@ def main(argv=None):
         TrainData_deepCSV_PF_Binned,
         TrainData_deepFlavour_FT,
         TrainData_deepFlavour_FT_map,
-	TrainData_image,
+        TrainData_image,
         TrainData_deepCSV_PF_rec,
         TrainData_PT_recur,
         TrainData_FatJet_Test,
@@ -79,6 +79,7 @@ def main(argv=None):
     parser.add_argument("-o",  help="set output path", metavar="PATH")
     parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
     parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
+    parser.add_argument("-n", default='', help="(optional) number of child processes")
     parser.add_argument("--testdatafor", default='')
     parser.add_argument("--usemeansfrom", default='')
     parser.add_argument("--nothreads", action='store_true')
@@ -95,6 +96,7 @@ def main(argv=None):
     recover=args.r
     testdatafor=args.testdatafor
     usemeansfrom=args.usemeansfrom
+    nchilds=args.n
 
     if args.batch and not (args.usemeansfrom or args.testdatafor):
         raise ValueError(
@@ -114,7 +116,9 @@ def main(argv=None):
 
     # MAIN BODY #
     from DataCollection import DataCollection
-    dc = DataCollection(nprocs = (1 if args.nothreads else -1))    
+    dc = DataCollection(nprocs = (1 if args.nothreads else -1))  
+    if len(nchilds):
+        dc.nprocs=int(nchilds)  
     
     if class_name in class_options:
         traind = class_options[class_name]

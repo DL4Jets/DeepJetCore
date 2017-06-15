@@ -25,7 +25,8 @@ class DataCollection(object):
         Constructor
         '''
         self.clear()
-        self.nprocs = nprocs        
+        self.nprocs = nprocs       
+        self.meansnormslimit=500000 
         if infile:
             self.readFromFile(infile)
         
@@ -382,7 +383,7 @@ class DataCollection(object):
         if redo_meansandweights:
             logging.info('producing means and norms')
             self.means = td.produceMeansFromRootFile(
-                self.originRoots, limit=500000
+                self.originRoots, limit=self.meansnormslimit
                 )
         
         if means_only: return

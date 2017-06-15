@@ -26,7 +26,7 @@ class indata{
 public:
 	static bool meanPadding;
 
-	indata():max(0),offset_(0){
+	indata():max(0),offset_(0),mask_(-1){
 
 	}
 
@@ -76,6 +76,9 @@ public:
 	std::vector<float> norms,means;
 	std::vector<TString> branches;
 	int max;
+    void setMask(int m){mask_=m;}
+private:
+    int mask_;
 };
 
 

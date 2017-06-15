@@ -71,7 +71,7 @@ callbacks=DeepJet_callbacks(stop_patience=300,
                             outputDir=outputDir)
 useweights=False
 splittrainandtest=0.8
-maxqsize=10 #sufficient
+maxqsize=100 #sufficient
 
 
 
@@ -116,13 +116,9 @@ inputs = [Input(shape=shapes[0]),
 
 print(traind.getTruthShape()[0])
 from models import convolutional_model_broad_map
-#from DeepJet_models import Dense_model_broad, Dense_model_broad_flat, Dense_model_broad_map
-#model = Dense_model_Rec(inputs,traind.getTruthShape()[0],shapes,0.3)
-model = convolutional_model_broad_map(inputs,traind.getTruthShape()[0],shapes,0.1)
-#model = Dense_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 
-#from keras.utils import plot_model
-#plot_model(model, to_file=outputDir+'model.svg')
+model = convolutional_model_broad_map(inputs,traind.getTruthShape()[0],shapes,0.1)
+
 
 print('compiling')
 
@@ -158,9 +154,9 @@ model.fit_generator(traind.generator() , verbose=1,
         callbacks=callbacks.callbacks,
         validation_data=testd.generator(),
         validation_steps=testd.getNBatchesPerEpoch(), #)#,
-        max_q_size=maxqsize,
+        max_q_size=maxqsize)
         #class_weight = classweights)#,
-        class_weight = 'auto')
+        
 
 
 

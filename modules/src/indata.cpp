@@ -67,21 +67,26 @@ void indata::allZero(){
 }
 
 void indata::getEntry(size_t entry){
-	for(auto& b:tbranches)
-		b->GetEntry(entry);
+    for(size_t i=0;i<branches.size();i++){
+        if(mask_ != (int)i)
+            tbranches.at(i)->GetEntry(entry);
+
+    }
 }
 
 void indata::setup(TTree* tree){
-	if(MAXBRANCHLENGTH<max)
-		throw std::runtime_error("max larger than buffer! (clean up here needed: TBI)");
+    if(MAXBRANCHLENGTH<max)
+        throw std::runtime_error("max larger than buffer! (clean up here needed: TBI)");
 
-	for(auto& b: buffer)
-		b=new float[MAXBRANCHLENGTH];
+    for(auto& b: buffer)
+        b=new float[MAXBRANCHLENGTH];
 
-	for(size_t i=0;i<branches.size();i++){
-		tbranches.at(i)=new TBranch();
-		tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
-	}
+    for(size_t i=0;i<branches.size();i++){
+        if(mask_ != (int)i){
+            tbranches.at(i)=new TBranch();
+            tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
+        }
+    }
 }
 
 
