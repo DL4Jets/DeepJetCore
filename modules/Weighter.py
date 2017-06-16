@@ -87,7 +87,11 @@ class Weighter(object):
             ax = fig.add_subplot(111)
             X, Y = numpy.meshgrid(self.xedges, self.yedges)
             ax.pcolormesh(X, Y, H)
-            ax.set_xscale("log", nonposx='clip')
+            if self.axisX[0]>0:
+                ax.set_xscale("log", nonposx='clip')
+            else:
+                ax.set_xlim([self.axisX[1],self.axisX[-1]])
+                ax.set_xscale("log", nonposx='mask')
             #plt.colorbar()
             fig.savefig(outname)
             plt.close()
@@ -140,14 +144,14 @@ class Weighter(object):
         weighthists=[]
         
         for i in range(len(self.classes)):
+            #print(self.classes[i])
             tmphist=self.distributions[i]
+            #print(tmphist)
+            #print(refhist)
             tmphist=tmphist/numpy.amax(tmphist)
-            ratio=numpy.array([])
-            if referenceidx >= 0:
-                ratio=divideHistos(refhist,tmphist)
-            else:
-                ratio= 1/tmphist
+            ratio=divideHistos(refhist,tmphist)
             ratio=ratio/numpy.amax(ratio)#norm to 1
+            #print(ratio)
             ratio[ratio<0]=1
             ratio[ratio==numpy.nan]=1
             weighthists.append(ratio)
@@ -244,7 +248,7 @@ class Weighter(object):
             # assumes bins in increasing order
             if value < bin:
                 return index-1            
-        print (' overflow ! ', value , ' out of range ' , bins)
+        #print (' overflow ! ', value , ' out of range ' , bins)
         return bins.size-2
 
         
