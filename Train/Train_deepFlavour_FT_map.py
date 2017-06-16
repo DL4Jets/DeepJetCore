@@ -56,7 +56,7 @@ testrun=False
 
 
 nepochs=100
-batchsize=2500
+batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
 
@@ -115,9 +115,9 @@ inputs = [Input(shape=shapes[0]),
 #model = Dense_model2(inputs,traind.getTruthShape()[0],(traind.getInputShapes()[0],))
 
 print(traind.getTruthShape()[0])
-from models import convolutional_model_broad_map
+from models import convolutional_model_broad_map, convolutional_model_broad
 
-model = convolutional_model_broad_map(inputs,traind.getTruthShape()[0],shapes,0.1)
+model = convolutional_model_broad(inputs,traind.getTruthShape()[0],shapes,0.1)
 
 
 print('compiling')
@@ -146,6 +146,7 @@ print('training')
 traind.writeToFile(outputDir+'trainsamples.dc')
 testd.writeToFile(outputDir+'valsamples.dc')
 
+print(model.summary())
 
 # the actual training
 model.fit_generator(traind.generator() , verbose=1,

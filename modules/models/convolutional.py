@@ -14,11 +14,18 @@ def convolutional_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
                                                 dropoutRate=dropoutRate)
     
     
-    cpf = Flatten()(cpf)
-    npf = Flatten()(npf)
-    vtx = Flatten()(vtx)
+    cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf = Dropout(dropoutRate)(cpf)
     
-    x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
+    npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = Dropout(dropoutRate)(npf)
+    
+    vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    
+    image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate,active=False)
+    
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx,image ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
 
@@ -40,8 +47,13 @@ def convolutional_model_broad_map(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     
     
     cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf = Dropout(dropoutRate)(cpf)
+    
     npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = Dropout(dropoutRate)(npf)
+    
     vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
     
@@ -66,8 +78,13 @@ def convolutional_model_broad_map_reg(Inputs,nclasses,Inputshapes,dropoutRate,np
     
     
     cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf = Dropout(dropoutRate)(cpf)
+    
     npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = Dropout(dropoutRate)(npf)
+    
     vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
     
