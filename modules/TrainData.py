@@ -96,6 +96,19 @@ class TrainData(object):
         self.registerBranches(self.truthclasses)
         self.registerBranches(['jet_pt','jet_eta'])
         
+        self.weightbranchX='jet_pt'
+        self.weightbranchY='jet_eta'
+        
+        self.weight_binX = numpy.array([
+                10,25,30,35,40,45,50,60,75,100,
+                125,150,175,200,250,300,400,500,
+                600,2000],dtype=float)
+        
+        self.weight_binY = numpy.array(
+            [-2.5,-2.,-1.5,-1.,-0.5,0.5,1,1.5,2.,2.5],
+            dtype=float
+            )
+        
         self.reducedtruthclasses=[]
         self.regressionclasses=[]
         
@@ -112,6 +125,7 @@ class TrainData(object):
         self.clear()
         
         self.reduceTruth(None)
+        
 
     def clear(self):
         self.samplename=''
@@ -458,18 +472,11 @@ class TrainData(object):
         from Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
-        weight_binXPt = numpy.array([
-                10,25,30,35,40,45,50,60,75,100,
-                125,150,175,200,250,300,400,500,
-                600,2000],dtype=float)
-        weight_binYEta = numpy.array(
-            [-2.5,-2.,-1.5,-1.,-0.5,0.5,1,1.5,2.,2.5],
-            dtype=float
-            )
+        
         if self.remove or self.weight:
             weighter.setBinningAndClasses(
-                [weight_binXPt,weight_binYEta],
-                "jet_pt","jet_eta",
+                [self.weight_binX,self.weight_binY],
+                self.weightbranchX,self.weightbranchY,
                 self.truthclasses
                 )
         return weighter
@@ -477,7 +484,7 @@ class TrainData(object):
        
     def produceBinWeighter(self,filenames):
         weighter = self.make_empty_weighter()
-        branches = ["jet_pt","jet_eta"]
+        branches = [self.weightbranchX,self.weightbranchY]
         branches.extend(self.truthclasses)
         showprog=ShowProgress(5,len(filenames))
         counter=0

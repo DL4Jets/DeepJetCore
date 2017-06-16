@@ -103,13 +103,14 @@ class Weighter(object):
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
         import numpy
-        referenceidx=0
-        try:
-            referenceidx=self.classes.index(referenceclass)
-        except:
-            print('createRemoveProbabilities: reference index not found in class list')
-            raise Exception('createRemoveProbabilities: reference index not found in class list')
-        
+        referenceidx=-1
+        if not referenceclass=='flatten':
+            try:
+                referenceidx=self.classes.index(referenceclass)
+            except:
+                print('createRemoveProbabilities: reference index not found in class list')
+                raise Exception('createRemoveProbabilities: reference index not found in class list')
+            
         if len(self.classes) > 0:
             self.Axixandlabel = [self.nameX, self.nameY]+ self.classes
         else:
@@ -117,10 +118,12 @@ class Weighter(object):
         
         self.refclassidx=referenceidx
         
+        refhist=numpy.zeros((len(self.axisX)-1,len(self.axisY)-1), dtype='float32')
+        refhist += 1
         
-       
-        refhist=self.distributions[referenceidx]
-        refhist=refhist/numpy.amax(refhist)
+        if referenceidx >= 0:
+            refhist=self.distributions[referenceidx]
+            refhist=refhist/numpy.amax(refhist)
         
     
         def divideHistos(a,b):
@@ -135,12 +138,18 @@ class Weighter(object):
                 
         probhists=[]
         weighthists=[]
+        
         for i in range(len(self.classes)):
             tmphist=self.distributions[i]
             tmphist=tmphist/numpy.amax(tmphist)
-            ratio=divideHistos(refhist,tmphist)
+            ratio=numpy.array([])
+            if referenceidx >= 0:
+                ratio=divideHistos(refhist,tmphist)
+            else:
+                ratio= 1/tmphist
             ratio=ratio/numpy.amax(ratio)#norm to 1
             ratio[ratio<0]=1
+            ratio[ratio==numpy.nan]=1
             weighthists.append(ratio)
             ratio=1-ratio#make it a remove probability
             probhists.append(ratio)
