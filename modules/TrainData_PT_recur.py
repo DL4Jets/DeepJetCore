@@ -170,13 +170,17 @@ class TrainData_PT_recur(TrainData_fullTruth):
     @staticmethod
     def regression_model(input_shapes):
         inputs, x = TrainData_PT_recur.base_model(input_shapes)
-        predictions = Dense(2, activation='linear',init='normal')(x)
+        predictions = Dense(
+            2, activation='linear', 
+            init='normal', name='regression_out')(x)
         return Model(inputs=inputs, outputs=predictions)
 
     @staticmethod
     def mse_regression_model(input_shapes):
         inputs, x = TrainData_PT_recur.base_model(input_shapes)
-        predictions = Dense(1, activation='linear',init='normal')(x)
+        predictions = Dense(
+            1, activation='linear',
+            init='normal', name='regression_out')(x)
         return Model(inputs=inputs, outputs=predictions)
 
     @staticmethod
@@ -189,7 +193,8 @@ class TrainData_PT_recur(TrainData_fullTruth):
         inputs, x = TrainData_PT_recur.base_model(input_shapes)
         predictions = Dense(
             nclasses, activation='softmax',
-            kernel_initializer='lecun_uniform'
+            kernel_initializer='lecun_uniform',
+            name='classification_out'
         )(x)
         return Model(inputs=inputs, outputs=predictions)
 
@@ -199,9 +204,11 @@ class TrainData_PT_recur(TrainData_fullTruth):
         predictions = [
             Dense(
                 nclasses, 
-                activation='softmax', kernel_initializer='lecun_uniform'
+                activation='softmax', kernel_initializer='lecun_uniform',
+                name='classification_out'
             )(x),
-            Dense(2, activation='linear', init='normal')(x),
+            Dense(2, activation='linear', 
+                  init='normal', name='regression_out')(x),
         ]
         return Model(inputs=inputs, outputs=predictions)
 
@@ -211,9 +218,11 @@ class TrainData_PT_recur(TrainData_fullTruth):
         predictions = [
             Dense(
                 nclasses, 
-                activation='softmax', kernel_initializer='lecun_uniform'
+                activation='softmax', kernel_initializer='lecun_uniform',
+                name='classification_out'
             )(x),
-            Dense(1, activation='linear', init='normal')(x),
+            Dense(1, activation='linear', 
+                  init='normal', name='regression_out')(x),
         ]
         return Model(inputs=inputs, outputs=predictions)
 
