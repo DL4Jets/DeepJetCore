@@ -39,7 +39,7 @@ class newline_callbacks_end(Callback):
         
         
 class Losstimer(Callback):
-    def __init__(self, every = 100):
+    def __init__(self, every = 5):
         self.points = []
         self.every = every
 
@@ -49,7 +49,9 @@ class Losstimer(Callback):
     def on_batch_end(self, batch, logs):
         if (batch % self.every) != 0: return
         elapsed = time() - self.start
-        cop = logs.copy()
+        cop = {}
+        for i, j in logs.iteritems():
+            cop[i] = float(j)
         cop['elapsed'] = elapsed
         self.points.append(cop)
         

@@ -174,15 +174,15 @@ except Exception as d:
 model.save(outputDir+"KERAS_model.h5")
 
 # summarize history for loss for trainin and test sample
-plt.plot(callbacks.history.history['loss'])
-#print(callbacks.history.history['val_loss'],history.history['loss'])
-plt.plot(callbacks.history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.savefig(outputDir+'learningcurve.pdf') 
-plt.clf()
+## plt.plot(callbacks.history.history['loss'])
+## #print(callbacks.history.history['val_loss'],history.history['loss'])
+## plt.plot(callbacks.history.history['val_loss'])
+## plt.title('model loss')
+## plt.ylabel('loss')
+## plt.xlabel('epoch')
+## plt.legend(['train', 'test'], loc='upper left')
+## plt.savefig(outputDir+'learningcurve.pdf') 
+## plt.clf()
 #plt.show()
 
 import json
@@ -195,19 +195,15 @@ def normalize(inmap):
 with open(outputDir+'history.json', 'w') as history:
     history.write(json.dumps(normalize(callbacks.history.history)))
 
-plt.plot(*callbacks.timer.points)
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('time [s]')
-plt.savefig(outputDir+'loss_vs_time.pdf')
-plt.clf()
+## plt.plot(*callbacks.timer.points)
+## plt.title('model loss')
+## plt.ylabel('loss')
+## plt.xlabel('time [s]')
+## plt.savefig(outputDir+'loss_vs_time.pdf')
+## plt.clf()
 
 with open(outputDir+'loss_vs_time.json', 'w') as timeloss:
-    jmap = {
-        'elapsed' : callbacks.timer.points[0],
-        'loss' : callbacks.timer.points[1]
-    }
-    timeloss.write(json.dumps(normalize(jmap)))
+    timeloss.write(json.dumps(callbacks.timer.points))
 
 
 ####################################################
