@@ -12,7 +12,7 @@ parser = ArgumentParser('Apply a model to a (test) sample and create friend tree
 parser.add_argument('inputModel')
 parser.add_argument('inputDataCollection')
 parser.add_argument('outputDir')
-parser.add_argument('loss', nargs='?', default='keras_loss')
+parser.add_argument('--NLLloss', action='store_true')
 
 args = parser.parse_args()
 
@@ -21,7 +21,7 @@ if os.path.isdir(args.outputDir):
     print('output directory must not exists yet')
     raise Exception('output directory must not exists yet')
 
-if(args.loss=='loss_NLL'):
+if(args.NLLloss):
     print ('using custom loss loss_NLL')
     model=load_model(args.inputModel, custom_objects={'loss_NLL':loss_NLL})
 else:

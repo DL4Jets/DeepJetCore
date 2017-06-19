@@ -20,6 +20,7 @@ Created on 21 Mar 2017
 #
 
 from __future__ import print_function
+from pdb import set_trace
 
 class testDescriptor(object):
     
@@ -28,10 +29,8 @@ class testDescriptor(object):
         self.__predictroots=[]
         self.metrics=[]
         
-    def makePrediction(self,model,testdatacollection,outputDir,ident=''):
-        
-        import numpy as np
-        
+    def makePrediction(self, model, testdatacollection, outputDir, ident=''): 
+        import numpy as np        
         from root_numpy import array2root
         import os
         
@@ -52,28 +51,27 @@ class testDescriptor(object):
             fullpath=testdatacollection.getSamplePath(sample)
             td=testdatacollection.dataclass
             
-            pt_regression_activate=hasattr(td, 'regtruth')
-            
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            formatstring=''
-            for tc in truthclasses:
-                formatstring+='prob_'+tc+ident+','
-            formatstring=formatstring[0:-1] #remove last comma
-            print(formatstring)
+            formatstring=','.join(['prob_%s%s' % (i, ident) for i in truthclasses])
             features=td.x
             labels=td.y
             #metric=model.evaluate(features, labels, batch_size=10000)
-            
             prediction = model.predict(features)
-            if not pt_regression_activate:
-                all_write = np.core.records.fromarrays(np.transpose(prediction), names= formatstring)
-            else :
-                flavour_pred=prediction[0]
-                pt_pred=prediction[1]
-                all_write=np.concatenate((flavour_pred,pt_pred),axis=1)
-                all_write = np.core.records.fromarrays(np.transpose(all_write), names= formatstring+",reg_uncPt,reg_Pt")
-        
+            if isinstance(prediction, list):
+                formatstring += ",reg_uncPt,reg_Pt" if prediction[1].shape[1] == 2 else ',reg_Pt'
+                if prediction[1].shape[1] > 2:
+                    raise ValueError('Regression (2nd prediction output) can only have up to two values!')
+                all_write = np.concatenate(prediction, axis=1)
+            elif prediction.shape[1] == len(truthclasses):
+                all_write = prediction
+            else:
+                formatstring = "reg_uncPt,reg_Pt" if prediction.shape[1] == 2 else 'reg_Pt'
+                if prediction.shape[1] > 2:
+                    raise ValueError('Regression (2nd prediction output) can only have up to two values!')
+                all_write = prediction
+
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= formatstring)
             array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
             
             #self.metrics.append(metric)
@@ -162,6 +160,41 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
     p = multiprocessing.Process(target=worker)
     p.start()
     return p     
+
+
+
+def make_association(txtfiles, input_branches=None, output_branches=None, limit=None):
+    from root_numpy import root2array
+    from pandas import DataFrame
+    
+    #parse associations
+    def association(fname):
+        return dict(tuple(i.strip().split()) for i in open(fname))
+    associations = [association(i) for i in txtfiles]
+
+    #check that the input files are the same
+    keys = set(associations[0].keys())
+    for i in associations:
+        if set(i.keys()) != keys:
+            raise ValueError('Association files with different inputs')
+    
+    #make input lists
+    file_lists = [[] for _ in range(len(associations))]
+    input_files = []
+    for idx, infile in enumerate(associations[0]):
+        if limit and idx >= limit: break
+        input_files.append(infile)
+        for i, association in enumerate(associations):
+            file_lists[i].append(association[infile])
+
+    truth = DataFrame(root2array(input_files, branches=input_branches, treename='deepntuplizer/tree'))
+    models = [
+        DataFrame(root2array(i, branches=output_branches)) for i in file_lists
+        ]
+    return truth, models
+    
+    
+
     
 ######### old part - keep for reference, might be useful some day 
 

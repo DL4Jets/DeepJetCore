@@ -1,4 +1,16 @@
+#from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D, LSTM, LocallyConnected2D
+from keras.models import Model
+import warnings
+warnings.warn("DeepJet_models.py is deprecated and will be removed! Please move to the models directory", DeprecationWarning)
 
+from keras.layers.core import Reshape, Masking, Permute
+from keras.layers.pooling import MaxPooling2D
+#fix for dropout on gpus
+
+#import tensorflow
+#from tensorflow.python.ops import control_flow_ops 
+#tensorflow.python.control_flow_ops = control_flow_ops
 
 from TrainData import TrainData_fullTruth
 from TrainData import TrainData,fileTimeOut
@@ -329,7 +341,7 @@ class TrainData_deepFlavour_FT_map(TrainData_deepFlavour_FT):
         self.x=[x_global,x_cpf,x_npf,x_sv,x_map]
         self.y=[alltruth]
         
-class TrainData_image(TrainData_deepFlavour_FT):
+class TrainData_image(TrainData_fullTruth):
     '''
     This class is for simple jetimiging
     '''
@@ -338,12 +350,18 @@ class TrainData_image(TrainData_deepFlavour_FT):
         '''
         Constructor
         '''
-        TrainData_deepFlavour_FT.__init__(self)
-        
+        super(TrainData_image,self).__init__()
+
+        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
         self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
                                'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
                                'jet_eta','jet_phi','jet_pt'])
+
+        self.regtruth='gen_pt_WithNu'
+        self.regreco='jet_corr_pt'
+        
+        self.registerBranches([self.regtruth,self.regreco])
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         from preprocessing import MeanNormApply, MeanNormZeroPad, createDensityMap,createCountMap, MeanNormZeroPadParticles
@@ -412,29 +430,85 @@ class TrainData_image(TrainData_deepFlavour_FT):
             weights=notremoves
         else:
             print('neither remove nor weight')
-            weights=numpy.empty(self.nsamples)
-            weights.fill(1.)
-        
+            weights=numpy.ones(self.nsamples)
+
+        pttruth=Tuple[self.regtruth]
+        ptreco=Tuple[self.regreco]         
         
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
+        
+        x_map = numpy.concatenate((x_chmap,x_chcount,x_neumap,x_neucount), axis=3)
         
         #print(alltruth.shape)
         if self.remove:
             print('remove')
             weights=weights[notremoves > 0]
             x_global=x_global[notremoves > 0]
-            x_chmap=x_chmap[notremoves > 0]
-            x_neumap=x_neumap[notremoves > 0]            
+            x_map=x_map[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
-        x_map = numpy.concatenate((x_chmap,x_neumap), axis=2)
+            pttruth=pttruth[notremoves > 0]
+            ptreco=ptreco[notremoves > 0]
+
         newnsamp=x_global.shape[0]
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         print(x_global.shape,self.nsamples)
 
         self.w=[weights]
-        self.x=[x_global,x_map]
-        self.y=[alltruth]
+        self.x=[x_global,x_map,ptreco]
+        self.y=[alltruth,pttruth]
+
+    @staticmethod
+    def base_model(input_shapes):
+        from keras.layers import Input
+        from keras.layers.core import Masking
+        x_global  = Input(shape=input_shapes[0])
+        x_map = Input(shape=input_shapes[1])
+        x_ptreco  = Input(shape=input_shapes[2])
+
+        x =   Convolution2D(64, (8,8)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x_map)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x =   Convolution2D(64, (4,4) , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x =   Convolution2D(64, (4,4)  , border_mode='same', activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x = Flatten()(x)
+        x = merge( [x, x_global] , mode='concat')
+        # linear activation for regression and softmax for classification
+        x = Dense(128, activation='relu',kernel_initializer='lecun_uniform')(x)
+        x = merge([x, x_ptreco], mode='concat')
+        return [x_global, x_map, x_ptreco], x
+
+    @staticmethod
+    def regression_generator(generator):
+        for X, Y in generator:
+            yield X, Y[1]#.astype(int)
+
+    @staticmethod
+    def regression_model(input_shapes):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = Dense(2, activation='linear',init='normal')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def classification_generator(generator):
+        for X, Y in generator:
+            yield X, Y[0]#.astype(int)
+
+    @staticmethod
+    def classification_model(input_shapes, nclasses):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+        return Model(inputs=inputs, outputs=predictions)
+
+    @staticmethod
+    def model(input_shapes, nclasses):
+        inputs, x = TrainData_image.base_model(input_shapes)
+        predictions = [
+            Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x),
+            Dense(2, activation='linear',init='normal')(x)
+        ]
+        return Model(inputs=inputs, outputs=predictions)
         

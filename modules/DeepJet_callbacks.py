@@ -39,11 +39,8 @@ class newline_callbacks_end(Callback):
         
         
 class Losstimer(Callback):
-    def __init__(self, every = 10):
-        self.points = [
-            [],
-            []
-        ]
+    def __init__(self, every = 5):
+        self.points = []
         self.every = every
 
     def on_train_begin(self, logs):
@@ -52,9 +49,11 @@ class Losstimer(Callback):
     def on_batch_end(self, batch, logs):
         if (batch % self.every) != 0: return
         elapsed = time() - self.start
-        self.points[0].append(elapsed)
-        self.points[1].append(logs['loss'])
-
+        cop = {}
+        for i, j in logs.iteritems():
+            cop[i] = float(j)
+        cop['elapsed'] = elapsed
+        self.points.append(cop)
         
 class DeepJet_callbacks(object):
     def __init__(self,
