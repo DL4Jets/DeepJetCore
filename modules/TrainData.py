@@ -164,6 +164,8 @@ class TrainData(object):
     
     
     def getNRegressionTargets(self):
+        if not self.regressiontargetclasses:
+            return 0
         return len(self.regressiontargetclasses)
     
     def getNClassificationTargets(self):

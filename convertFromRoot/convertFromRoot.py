@@ -49,7 +49,7 @@ def main(argv=None):
     from TrainData_deepCSV_PF_Reg import TrainData_deepCSV_PF_Reg
     from TrainData_deepJet_Reg import TrainData_deepJet_Reg, TrainData_PF_Reg
     from TrainData_deepCSV_PF_binned import TrainData_deepCSV_PF_Binned
-    from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map,TrainData_image
+    from TrainData_deepFlavour import TrainData_deepFlavour_FT,TrainData_deepFlavour_FT_map,TrainData_deepFlavour_FT_map_reg,TrainData_image
     from TrainData_FatJet import TrainData_FatJet_Test
     from TrainData_PT_recur import TrainData_PT_recur
     
@@ -71,6 +71,7 @@ def main(argv=None):
         TrainData_deepCSV_PF_rec,
         TrainData_PT_recur,
         TrainData_FatJet_Test,
+        TrainData_deepFlavour_FT_map_reg,
         ]
     class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 

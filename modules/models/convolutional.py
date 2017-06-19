@@ -3,7 +3,7 @@ from keras.models import Model
  
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage
 
-def convolutional_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+def convolutional_model_broad(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     reference 1x1 convolutional model for 'deepFlavour', as for DPS note
     """  
@@ -34,7 +34,7 @@ def convolutional_model_broad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     return model
 
 
-def convolutional_model_broad_map(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+def convolutional_model_broad_map(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     reference 1x1 convolutional model for 'deepFlavour'
     """  
@@ -65,7 +65,7 @@ def convolutional_model_broad_map(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
-def convolutional_model_broad_map_reg(Inputs,nclasses,Inputshapes,dropoutRate,npred):
+def convolutional_model_broad_map_reg(Inputs,nclasses,nregclasses,dropoutRate):
     """
     reference 1x1 convolutional model for 'deepFlavour'
     """  
@@ -88,19 +88,19 @@ def convolutional_model_broad_map_reg(Inputs,nclasses,Inputshapes,dropoutRate,np
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
     
-    x = Concatenate()( [Inputs[0],cpf,npf,vtx,image ])
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx,image,Inputs[5] ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
-    predictions = [Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x),
-                   Dense(npred, activation='linear',kernel_initializer='ones')(x)]
+    predictions = [Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x),
+                   Dense(nregclasses, activation='linear',kernel_initializer='ones',name='E_pred')(x)]
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
 
 
 
-def convolutional_model_broad_reg(Inputs,nclasses,Inputshapes,dropoutRate=-1, npred = 1):
+def convolutional_model_broad_reg(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     the inputs are really not working as they are. need a reshaping well before
     """  
@@ -119,13 +119,13 @@ def convolutional_model_broad_reg(Inputs,nclasses,Inputshapes,dropoutRate=-1, np
     x  = block_deepFlavourDense(x,dropoutRate)
     
     x = Concatenate()( [Inputs[4], x ] )
-    predictions = Dense(npred, activation='linear',kernel_initializer='he_normal')(x),
+    predictions = Dense(nregclasses, activation='linear',kernel_initializer='he_normal')(x),
                    
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
 
-def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+def convolutional_model_broad_reg2(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     Flavour tagging and regression in one model. Fully working
     """
@@ -139,14 +139,14 @@ def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     cpf = Flatten()(cpf)
     
     
-    npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
+    npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
     npf = Dropout(dropoutRate)(npf)
     npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Dropout(dropoutRate)(npf)
     npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Flatten()(npf)
     
-    vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(Inputs[3])
+    vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[3])
     vtx = Dropout(dropoutRate)(vtx)
     vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
@@ -177,7 +177,7 @@ def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     ptcpf  = Convolution1D(2, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[1])
     ptcpf = Dropout(dropoutRate)(ptcpf)
     ptcpf = Flatten()(ptcpf)
-    ptnpf  = Convolution1D(2, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
+    ptnpf  = Convolution1D(2, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
     ptnpf = Dropout(dropoutRate)(ptnpf)
     ptnpf = Flatten()(ptnpf)
    
@@ -191,7 +191,7 @@ def convolutional_model_broad_reg2(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     return model
 
 
-def convolutional_model_lessbroad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
+def convolutional_model_lessbroad(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     the inputs are really not working as they are. need a reshaping well before
     """
@@ -210,13 +210,13 @@ def convolutional_model_lessbroad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     cpf = Flatten()(cpf)
     
     
-    npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[2])(Inputs[2])
+    npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[2])
     npf = Dropout(dropoutRate)(npf)
     npf = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu')(npf)
     npf = Dropout(dropoutRate)(npf)
     npf = Flatten()(npf)
     
-    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu',input_shape=Inputshapes[3])(Inputs[3])
+    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(Inputs[3])
     vtx = Dropout(dropoutRate)(vtx)
     vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
@@ -242,7 +242,7 @@ def convolutional_model_lessbroad(Inputs,nclasses,Inputshapes,dropoutRate=-1):
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
-def convolutional_model_ConvCSV(Inputs,nclasses,Inputshape,dropoutRate=0.25):
+def convolutional_model_ConvCSV(Inputs,nclasses,nregclasses,dropoutRate=0.25):
     """
     Inputs similar to 2016 training, but with covolutional layers on each track and sv
     """

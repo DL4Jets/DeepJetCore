@@ -1,0 +1,6 @@
+
+
+Models are defined in functions returning the model
+Require parameters for the functions are:
+
+your-model(Inputs,n_classificationclasses,n_regressionclasses, .... )

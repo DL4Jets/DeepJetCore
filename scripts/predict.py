@@ -4,7 +4,7 @@ from keras.models import load_model
 from testing import testDescriptor
 from argparse import ArgumentParser
 from keras import backend as K
-from Losses import loss_NLL
+from Losses import * #needed!
 import os
 
 
@@ -12,7 +12,7 @@ parser = ArgumentParser('Apply a model to a (test) sample and create friend tree
 parser.add_argument('inputModel')
 parser.add_argument('inputDataCollection')
 parser.add_argument('outputDir')
-parser.add_argument('--NLLloss', action='store_true')
+#parser.add_argument('--NLLloss', action='store_true')
 
 args = parser.parse_args()
 
@@ -21,11 +21,9 @@ if os.path.isdir(args.outputDir):
     print('output directory must not exists yet')
     raise Exception('output directory must not exists yet')
 
-if(args.NLLloss):
-    print ('using custom loss loss_NLL')
-    model=load_model(args.inputModel, custom_objects={'loss_NLL':loss_NLL})
-else:
-    model=load_model(args.inputModel)
+
+model=load_model(args.inputModel, custom_objects=global_loss_list)
+
 
 td=testDescriptor()
 

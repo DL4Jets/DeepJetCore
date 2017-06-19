@@ -1,5 +1,11 @@
 from keras import backend as K
 
+
+global_loss_list={}
+
+#whenever a new loss function is created, please add it to the global_loss_list dictionary!
+
+
 def loss_NLL(y_true, x):
     """
     This loss is the negative log likelyhood for gaussian pdf.
@@ -10,6 +16,10 @@ def loss_NLL(y_true, x):
     x_pred = x[:,1:]
     x_sig = x[:,:1]
     return K.mean(0.5* K.log(K.square(x_sig))  + K.square(x_pred - y_true)/K.square(x_sig)/2.,    axis=-1)
+
+#please always register the loss function here
+global_loss_list['loss_NLL']=loss_NLL
+
 
 
 # The below is to use multiple gaussians for regression
@@ -22,6 +32,9 @@ def log_sum_exp(x, axis=None):
     x_max = K.max(x, axis=axis, keepdims=True)
     return K.log(K.sum(K.exp(x - x_max), 
                        axis=axis, keepdims=True))+x_max
+                       
+
+global_loss_list['log_sum_exp']=log_sum_exp
 
 def mean_log_Gaussian_like(y_true, parameters):
     """Mean Log Gaussian Likelihood distribution
@@ -46,6 +59,9 @@ def mean_log_Gaussian_like(y_true, parameters):
     return res
 
 
+global_loss_list['mean_log_Gaussian_like']=mean_log_Gaussian_like
+
+
 def mean_log_LaPlace_like(y_true, parameters):
     """Mean Log Laplace Likelihood distribution
     Note: The 'c' variable is obtained as global variable
@@ -65,4 +81,6 @@ def mean_log_LaPlace_like(y_true, parameters):
     log_gauss = log_sum_exp(exponent, axis=1)
     res = - K.mean(log_gauss)
     return res
+
+global_loss_list['mean_log_LaPlace_like']=mean_log_LaPlace_like
 

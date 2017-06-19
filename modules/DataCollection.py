@@ -152,10 +152,10 @@ class DataCollection(object):
         return self.dataclass.getTruthShapes()
         
     def getNRegressionTargets(self):
-        return len(self.dataclass.getNRegressionTargets())
+        return (self.dataclass.getNRegressionTargets())
     
     def getNClassificationTargets(self):
-        return len(self.dataclass.getNClassificationTargets())
+        return (self.dataclass.getNClassificationTargets())
         
     def getUsedTruth(self):
         return self.dataclass.getUsedTruth()

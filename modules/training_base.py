@@ -25,15 +25,14 @@ from argparse import ArgumentParser
 import shutil
 
 # argument parsing and bookkeeping
-
+from Losses import *
 
 class training_base(object):
     
     def __init__(self, 
                  splittrainandtest=0.8,
                  useweights=False,
-                 testrun=False,
-                 modelfile='../modules/DeepJet_models.py'):
+                 testrun=False):
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
@@ -55,7 +54,7 @@ class training_base(object):
         
         isNewTraining=True
         if os.path.isdir(self.outputDir):
-            var = raw_input('output dir exists. To recover a training, plese type "yes"\n')
+            var = raw_input('output dir exists. To recover a training, please type "yes"\n')
             if not var == 'yes':
                 raise Exception('output directory must not exists yet')
             isNewTraining=False     
@@ -67,8 +66,9 @@ class training_base(object):
         from DataCollection import DataCollection
         #copy configuration to output dir
         if isNewTraining:
+            djsource= os.environ['DEEPJET']
+            shutil.copytree(djsource+'/modules/models', self.outputDir+'models')
             shutil.copyfile(sys.argv[0],self.outputDir+sys.argv[0])
-            shutil.copyfile(modelfile,self.outputDir+'models.py')
 
             
             
@@ -103,22 +103,18 @@ class training_base(object):
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') #can't happen
-        hasregression=len(self.train_data.getTruthShape())>1
-        if hasregression:
-            self.keras_model=model(self.keras_inputs,
-                               self.train_data.getNClassificationTargets(),
-                               self.train_data.getNRegressionTargets(),
-                               **modelargs)
-        else:
-            self.keras_model=model(self.keras_inputs,
+        self.keras_model=model(self.keras_inputs,
                                self.train_data.getNClassificationTargets(),
                                self.train_data.getNRegressionTargets(),
                                **modelargs)
             
         
     def loadModel(self,filename):
+        import h5py
+        f = h5py.File(filename, 'r+')
+        del f['optimizer_weights']
         from keras.models import load_model
-        self.keras_model=load_model(filename)
+        self.keras_model=load_model(filename, custom_objects=global_loss_list)
         
     def compileModel(self,
                      learningrate,
@@ -131,6 +127,12 @@ class training_base(object):
         self.keras_model.compile(optimizer=adam,**compileargs)
         self.compiled=True
         
+    def saveModel(self,outfile):
+        self.keras_model.save(self.outputDir+outfile)
+        import h5py
+        f = h5py.File(self.outputDir+outfile, 'r+')
+        del f['optimizer_weights']
+        f.close()
         
     def trainModel(self,
                    nepochs,
@@ -147,6 +149,8 @@ class training_base(object):
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
+        
+        self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         
         from DeepJet_callbacks import DeepJet_callbacks
         
@@ -168,7 +172,7 @@ class training_base(object):
                             max_q_size=maxqsize,**trainargs)
         
         
-        self.keras_model.save(self.outputDir+"KERAS_model.h5")
+        self.saveModel("KERAS_model.h5")
         
         return self.keras_model, callbacks.history
             
