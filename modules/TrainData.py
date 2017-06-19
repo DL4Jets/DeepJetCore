@@ -110,7 +110,7 @@ class TrainData(object):
             )
         
         self.reducedtruthclasses=[]
-        self.regressionclasses=[]
+        self.regressiontargetclasses=[]
         
         self.flatbranches=[]
         self.branches=[]
@@ -151,7 +151,6 @@ class TrainData(object):
             _sl=[]
             for i in range(len(s)):
                 if i:
-                    print(s[i])
                     _sl.append(s[i])
             s=(_sl)
             if len(s)==0:
@@ -162,6 +161,13 @@ class TrainData(object):
     def getTruthShapes(self):
         outl=[len(self.getUsedTruth())]
         return outl
+    
+    
+    def getNRegressionTargets(self):
+        return len(self.regressiontargetclasses)
+    
+    def getNClassificationTargets(self):
+        return len(self.getUsedTruth())
         
     def addBranches(self, blist, cutoff=1):
         self.branches.append(blist)

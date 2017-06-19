@@ -149,10 +149,13 @@ class DataCollection(object):
         return shapes
     
     def getTruthShape(self):
-        td=self.dataclass
-        return td.getTruthShapes()
+        return self.dataclass.getTruthShapes()
         
+    def getNRegressionTargets(self):
+        return len(self.dataclass.getNRegressionTargets())
     
+    def getNClassificationTargets(self):
+        return len(self.dataclass.getNClassificationTargets())
         
     def getUsedTruth(self):
         return self.dataclass.getUsedTruth()
