@@ -146,16 +146,22 @@ def convolutional_model_broad_reg(Inputs,nclasses,nregclasses,dropoutRate=-1):
                                                 dropoutRate=dropoutRate)
     
     
-    cpf = Flatten()(cpf)
-    npf = Flatten()(npf)
-    vtx = Flatten()(vtx)
+    cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
+    cpf = Dropout(dropoutRate)(cpf)
     
-    x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
+    npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
+    npf = Dropout(dropoutRate)(npf)
+    
+    vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx,Inputs[4] ])
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
-    x = Concatenate()( [Inputs[4], x ] )
-    predictions = Dense(nregclasses, activation='linear',kernel_initializer='he_normal')(x),
+    
+    predictions = [Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x),
+                   Dense(nregclasses, activation='linear',kernel_initializer='ones',name='E_pred')(x)]
                    
     model = Model(inputs=Inputs, outputs=predictions)
     return model

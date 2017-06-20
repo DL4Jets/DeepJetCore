@@ -4,6 +4,15 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import imp
+try:
+    imp.find_module('setGPU')
+    print('running on CMG-GPU1080')
+    import setGPU
+except ImportError:
+    found = False
+    
 # some private extra plots
 #from  NBatchLogger import NBatchLogger
 

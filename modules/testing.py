@@ -59,10 +59,12 @@ class testDescriptor(object):
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
             if isinstance(prediction, list):
+                ######CHANGE FOR NEW FORMAT
                 formatstring += ",reg_uncPt,reg_Pt" if prediction[1].shape[1] == 2 else ',reg_Pt'
                 if prediction[1].shape[1] > 2:
                     raise ValueError('Regression (2nd prediction output) can only have up to two values!')
                 all_write = np.concatenate(prediction, axis=1)
+                
             elif prediction.shape[1] == len(truthclasses):
                 all_write = prediction
             else:
