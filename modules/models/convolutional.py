@@ -3,6 +3,42 @@ from keras.models import Model
  
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage
 
+
+
+def convolutional_model_deepcsv(Inputs,nclasses,nregclasses,dropoutRate=-1):
+    
+    cpf=Inputs[1]
+    vtx=Inputs[2]
+    
+    cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv0')(cpf)
+    cpf = Dropout(dropoutRate)(cpf)                                                   
+    cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv1')(cpf)
+    cpf = Dropout(dropoutRate)(cpf)                                                   
+    cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv2')(cpf)
+    cpf = Dropout(dropoutRate)(cpf)                                                   
+    cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu' , name='cpf_conv3')(cpf)
+    
+    
+    vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv0')(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv1')(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv2')(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv3')(vtx)
+    
+    cpf=Flatten()(cpf)
+    vtx=Flatten()(vtx)
+        
+    x = Concatenate()( [Inputs[0],cpf,vtx ])
+        
+    x  = block_deepFlavourDense(x,dropoutRate)
+
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+
+
 def convolutional_model_broad(Inputs,nclasses,nregclasses,dropoutRate=-1):
     """
     reference 1x1 convolutional model for 'deepFlavour', as for DPS note
@@ -14,13 +50,13 @@ def convolutional_model_broad(Inputs,nclasses,nregclasses,dropoutRate=-1):
                                                 dropoutRate=dropoutRate)
     
     
-    cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
     
-    npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
     npf = Dropout(dropoutRate)(npf)
     
-    vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate,active=False)
@@ -29,7 +65,7 @@ def convolutional_model_broad(Inputs,nclasses,nregclasses,dropoutRate=-1):
     
     x  = block_deepFlavourDense(x,dropoutRate)
 
-    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
@@ -46,13 +82,13 @@ def convolutional_model_broad_map(Inputs,nclasses,nregclasses,dropoutRate=-1):
     
     
     
-    cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
     
-    npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
     npf = Dropout(dropoutRate)(npf)
     
-    vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)
@@ -61,7 +97,7 @@ def convolutional_model_broad_map(Inputs,nclasses,nregclasses,dropoutRate=-1):
     
     x  = block_deepFlavourDense(x,dropoutRate)
     
-    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+    predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
@@ -77,13 +113,13 @@ def convolutional_model_broad_map_reg(Inputs,nclasses,nregclasses,dropoutRate):
     
     
     
-    cpf  = LSTM(150,go_backwards=True,implementation=2)(cpf)
+    cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
     
-    npf = LSTM(50,go_backwards=True,implementation=2)(npf)
+    npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
     npf = Dropout(dropoutRate)(npf)
     
-    vtx = LSTM(50,go_backwards=True,implementation=2)(vtx)
+    vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
     
     image = block_SchwartzImage(image=Inputs[4],dropoutRate=dropoutRate)

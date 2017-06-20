@@ -4,7 +4,7 @@ from training_base import training_base
 from Losses import loss_NLL
 
 #also dows all the parsing
-train=training_base()
+train=training_base(testrun=True)
 
 from models import convolutional_model_broad_map_reg
 
