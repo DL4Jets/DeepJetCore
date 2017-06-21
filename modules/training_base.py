@@ -8,7 +8,7 @@ from __future__ import print_function
 import imp
 try:
     imp.find_module('setGPU')
-    print('running on CMG-GPU1080')
+    print('running on GPU')
     import setGPU
 except ImportError:
     found = False
@@ -158,6 +158,12 @@ class training_base(object):
                    maxqsize=20, 
                    **trainargs):
         
+        #make sure tokens don't expire
+        from tokenTools import checkTokens, renew_token_process
+        from thread import start_new_thread
+        
+        checkTokens()
+        start_new_thread(renew_token_process,())
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
@@ -187,5 +193,12 @@ class training_base(object):
         self.saveModel("KERAS_model.h5")
         
         return self.keras_model, callbacks.history
+    
+    
+        
+
+        
+        
+        
             
     

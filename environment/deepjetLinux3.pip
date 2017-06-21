@@ -13,3 +13,4 @@ pytz==2016.10
 PyYAML==3.12
 subprocess32==3.2.7
 tensorflow==1.0.1
+setGPU==0.0.7
