@@ -265,7 +265,7 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
 
         self.registerBranches(['jet_corr_pt','gen_pt_WithNu'])
         
-        self.regressiontargetclasses=['reg_uncPt','reg_Pt']
+        self.regressiontargetclasses=['uncPt','Pt']
         
        
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
@@ -530,7 +530,7 @@ class TrainData_deepFlavour_FT_map_reg(TrainData_deepFlavour_FT_map):
         '''
         TrainData_deepFlavour_FT_map.__init__(self)
         
-        self.regressiontargetclasses=['reg_uncPt','reg_Pt']
+        self.regressiontargetclasses=['uncPt','Pt']
 
         self.registerBranches(['jet_corr_pt'])
         
