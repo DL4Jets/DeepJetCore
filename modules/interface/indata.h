@@ -54,7 +54,7 @@ public:
 	void getEntry(size_t entry);
 
 	void zeroAndGet(size_t entry) {
-		allZero(); 
+		allZero();
 		getEntry(entry);
 	}
 
@@ -68,6 +68,7 @@ public:
 	size_t nelements() {return buffer.size();}
 
 	std::vector<float* > buffer;
+	std::vector<std::vector<float>*> buffervec;
 
 	std::vector<TBranch* > tbranches;
 
