@@ -343,6 +343,7 @@ class DataCollection(object):
         finishedsamples=len(self.samples)
         
         self.__writeData_async_andCollect(finishedsamples,outputDir)
+        self.writeToFile(outputDir+'/dataCollection.dc')
         
     
     def createDataFromRoot(
