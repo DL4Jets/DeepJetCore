@@ -62,7 +62,9 @@ class testDescriptor(object):
             
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            regressionclasses=td.regressiontargetclasses
+            regressionclasses=[]
+            if hasattr(td, 'regressiontargetclasses'):
+                regressionclasses=td.regressiontargetclasses
             
             formatstring=','.join(['prob_%s%s' % (i, ident) for i in truthclasses])
             features=td.x
@@ -70,7 +72,6 @@ class testDescriptor(object):
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
             if isinstance(prediction, list):
-                ######CHANGE FOR NEW FORMAT
                 formatstring+=','
                 formatstring += ','.join(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 all_write = np.concatenate(prediction, axis=1)

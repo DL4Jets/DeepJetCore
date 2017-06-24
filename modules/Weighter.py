@@ -176,7 +176,8 @@ class Weighter(object):
         
         tuplelength=len(Tuple)
         
-        notremove=[]
+        notremove=numpy.zeros(tuplelength)
+        counter=0
         xaverage=[]
         norm=[]
         yaverage=[]
@@ -196,22 +197,22 @@ class Weighter(object):
 
                     if rand < prob and index != self.refclassidx:
                         #print('rm  ',index,self.refclassidx,jet[classs],classs)
-                        notremove.append(0)
+                        notremove[counter]=0
                     else:
                         #print('keep',index,self.refclassidx,jet[classs],classs)
-                        notremove.append(1)
+                        notremove[counter]=1
                         xaverage[index]+=jet[self.nameX]
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
             
-                        
+                    counter=counter+1            
         
             
-        if not len(notremove) == tuplelength:
+        if not len(notremove) == counter:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")
         
         
-        return numpy.array(notremove)
+        return notremove
 
     
         

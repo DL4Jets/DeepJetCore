@@ -4,7 +4,7 @@ def renew_token_process():
     while True:
         logstr=""
         try:
-            logstr=subprocess.check_call(['krenew'])
+            logstr=subprocess.check_call(['kinit', '-R'])
             logstr+=subprocess.check_call(['aklog'])
         except:
             print(logstr)
@@ -17,7 +17,7 @@ def checkTokens(cutofftime_hours=48):
     try:
         klist=str(subprocess.check_output(['klist'],stderr=subprocess.STDOUT))
     except subprocess.CalledProcessError as inst:
-        print(' ')#just ignore
+        print('klist failed - no token?')#just ignore
         klist=""
         del inst
         
