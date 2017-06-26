@@ -4,6 +4,87 @@ from keras.layers import Dense, Dropout, LSTM
 from keras.layers.merge import concatenate
 from keras.models import Model
 
+class TrainData_QG_simple(TrainData_fullTruth):
+    def __init__(self):
+        super(TrainData_QG_simple, self).__init__()
+        self.addBranches(['QG_ptD', 'QG_axis2', 'QG_mult'])
+
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        from preprocessing import MeanNormZeroPad
+        import numpy
+        from stopwatch import stopwatch
+        import c_meanNormZeroPad
+        c_meanNormZeroPad.zeroPad()
+        
+        sw=stopwatch()
+        swall=stopwatch()
+        
+        import ROOT
+        
+        fileTimeOut(filename,120) #give eos a minute to recover
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        
+        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        
+        
+        # split for convolutional network
+        
+        x_global = MeanNormZeroPad(filename,TupleMeanStd,
+                                   [self.branches[0]],
+                                   [self.branchcutoffs[0]],self.nsamples)
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+        
+        nparray = self.readTreeFromRootToTuple(filename)        
+        if self.remove:
+            notremoves=weighter.createNotRemoveIndices(nparray)
+            undef=nparray['isUndefined']
+            notremoves-=undef
+            print('took ', sw.getAndReset(), ' to create remove indices')
+        
+        if self.weight:
+            weights=weighter.getJetWeights(nparray)
+        elif self.remove:
+            weights=notremoves
+        else:
+            print('neither remove nor weight')
+            weights=numpy.ones(self.nsamples)
+        
+        truthtuple =  nparray[self.truthclasses]
+        alltruth=self.reduceTruth(truthtuple)
+
+        if self.remove:
+            print('remove')
+            weights=weights[notremoves > 0]
+            x_global=x_global[notremoves > 0]
+            alltruth=alltruth[notremoves > 0]
+                        
+        newnsamp=x_global.shape[0]
+        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
+        self.nsamples = newnsamp
+        
+        self.w=[weights]
+        self.x=[x_global]
+        self.y=[alltruth]
+        
+    @staticmethod
+    def model(input_shapes, nclasses):
+        from keras.layers import Input
+        from keras.layers.core import Masking
+        x_global  = Input(shape=input_shapes[0])
+        x = Dense(10, activation='relu',kernel_initializer='lecun_uniform')(x_global)
+        for _ in range(6):
+            x = Dense(10, activation='relu',kernel_initializer='lecun_uniform')(x)
+
+        predictions = Dense(
+            nclasses, activation='softmax',
+            kernel_initializer='lecun_uniform',
+            name='classification_out'
+        )(x)
+        return Model(inputs=x_global, outputs=predictions)
+
 class TrainData_PT_recur(TrainData_fullTruth):
     '''
     classdocs
@@ -16,7 +97,12 @@ class TrainData_PT_recur(TrainData_fullTruth):
         super(TrainData_PT_recur, self).__init__()
         
         
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
+        self.addBranches([
+            #base
+            'jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv',
+            #q/g enhancements
+            'QG_ptD', 'QG_axis2', 'QG_mult',
+        ])
        
         self.addBranches([
             'Cpfcan_ptrel', #not the same as btv ptrel!
