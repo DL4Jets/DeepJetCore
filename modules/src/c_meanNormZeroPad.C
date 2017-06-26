@@ -182,11 +182,21 @@ void priv_particlecluster(boost::python::numeric::array& numpyarray,
 
 int square_bins(
         double xval, double xcenter,
-        int nbins, double half_width) {
+        int nbins, double half_width,
+        bool isPhi=false) {
     double bin_width = (2*half_width)/nbins;
     double low_edge = xcenter - half_width;
-    int ibin = std::floor((xval - low_edge)/bin_width);
+    int ibin = 0;
+    if(isPhi)
+        ibin=std::floor((double)deltaPhi(xval,low_edge)/bin_width);
+    else
+        ibin=std::floor((xval - low_edge)/bin_width);
     return (ibin >= 0 && ibin < nbins) ? ibin : -1;
+}
+bool branchIsPhi(std::string branchname){
+    TString bn=branchname;
+    bn.ToLower();
+    return bn.Contains("phi");
 }
 
 void particle_binner(
@@ -226,6 +236,8 @@ void particle_binner(
     //mean =0  norm = 1 to avoid scaling
     __hidden::indata xy;
     xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+    bool XisPhi=branchIsPhi(xbranch);
+    bool YisPhi=branchIsPhi(ybranch);
 
     //get jet center
     __hidden::indata xy_center;
@@ -286,8 +298,8 @@ void particle_binner(
         int ncharged = counter.getData(0, 0);
         for(size_t elem=0; elem < ncharged; elem++) {
             //get bin id
-            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
-            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth,XisPhi);
+            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth,YisPhi);
             if(xidx == -1 || yidx == -1) continue;
 
             //bin summing
@@ -435,6 +447,8 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
 
     __hidden::indata xy;
     xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+    bool XisPhi=branchIsPhi(xbranch);
+    bool YisPhi=branchIsPhi(ybranch);
 
     __hidden::indata xy_center;
     xy_center.createFrom({xcenter, ycenter}, {1., 1.}, {0., 0.}, 1);
@@ -475,8 +489,8 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
         double ycentre=xy_center.getData(1, 0);
         int ncharged = counter.getData(0, 0);
         for(size_t elem=0; elem < ncharged; elem++) {
-            int xidx = square_bins(xy.getData(0, elem), xcentre, xbins, xwidth);
-            int yidx = square_bins(xy.getData(1, elem), ycentre, ybins, ywidth);
+            int xidx = square_bins(xy.getData(0, elem), xcentre, xbins, xwidth,XisPhi);
+            int yidx = square_bins(xy.getData(1, elem), ycentre, ybins, ywidth,YisPhi);
             if(xidx == -1 || yidx == -1) continue;
 
 
@@ -560,6 +574,8 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
     //mean =0  norm = 1 to avoid scaling
     __hidden::indata xy;
     xy.createFrom({xbranch, ybranch}, {1., 1.}, {0., 0.}, MAXBRANCHLENGTH);
+    bool XisPhi=branchIsPhi(xbranch);
+    bool YisPhi=branchIsPhi(ybranch);
 
     //get jet center
     __hidden::indata xy_center;
@@ -596,8 +612,8 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
         int ncharged = counter.getData(0, 0);
         for(size_t elem=0; elem < ncharged; elem++) {
             //get bin id
-            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth);
-            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth);
+            int xidx = square_bins(xy.getData(0, elem), xy_center.getData(0, 0), xbins, xwidth,XisPhi);
+            int yidx = square_bins(xy.getData(1, elem), xy_center.getData(1, 0), ybins, ywidth,YisPhi);
             if(xidx == -1 || yidx == -1) continue;
             float feature_value = 1;
             if(!count)

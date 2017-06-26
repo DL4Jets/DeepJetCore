@@ -73,8 +73,7 @@ void indata::getEntry(size_t entry){
         if(mask_ != (int)i){
             tbranches.at(i)->GetEntry(entry);
 
-            auto leaf = (TLeaf*)tbranches.at(i)->GetListOfLeaves()->At(0);
-        	if (leaf->GetTypeName() == "vector<float>"){
+        	if (buffervec.at(i)){
         		for (unsigned k=0; k<MAXBRANCHLENGTH; ++k){
         			buffer.at(i)[k] = (k < buffervec.at(i)->size() ? buffervec.at(i)->at(k) : 0);
         		}
