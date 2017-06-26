@@ -185,7 +185,11 @@ int square_bins(
         int nbins, double half_width,
         bool isPhi=false) {
     double bin_width = (2*half_width)/nbins;
-    double low_edge = xcenter - half_width;
+    double low_edge = 0;
+    if(isPhi)
+        low_edge =deltaPhi( xcenter, half_width);
+    else
+        low_edge = xcenter - half_width;
     int ibin = 0;
     if(isPhi)
         ibin=std::floor((double)deltaPhi(xval,low_edge)/bin_width);
@@ -469,9 +473,9 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
     xy_center.setup(tree);
     counter.setup(tree);
 
-
     const int nevents=std::min( (int) tree->GetEntries(), (int) boost::python::len(numpyarray));
     for(int jet=0;jet<nevents;jet++){
+
 
         branch.zeroAndGet(jet);
         if(uselayers)
@@ -484,15 +488,15 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
         std::vector<std::vector<std::vector<float> > >
         entriesperpixel(xbins,std::vector<std::vector<float> >(ybins,std::vector<float>(maxlayers,0)));
 
-
         double xcentre=xy_center.getData(0, 0);
         double ycentre=xy_center.getData(1, 0);
         int ncharged = counter.getData(0, 0);
+
         for(size_t elem=0; elem < ncharged; elem++) {
             int xidx = square_bins(xy.getData(0, elem), xcentre, xbins, xwidth,XisPhi);
             int yidx = square_bins(xy.getData(1, elem), ycentre, ybins, ywidth,YisPhi);
-            if(xidx == -1 || yidx == -1) continue;
 
+            if(xidx == -1 || yidx == -1) continue;
 
             int layer=0;
             if(uselayers)
