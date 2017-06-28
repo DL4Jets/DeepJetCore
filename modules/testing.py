@@ -29,10 +29,16 @@ class testDescriptor(object):
         self.__predictroots=[]
         self.metrics=[]
         
-    def makePrediction(self, model, testdatacollection, outputDir, ident=''): 
+    def makePrediction(self, model, testdatacollection, outputDir, 
+                       ident='', store_labels = False, monkey_class=''): 
         import numpy as np        
         from root_numpy import array2root
         import os
+        monkey_class_obj = None
+        if monkey_class:
+            module, classname = tuple(monkey_class.split(':'))
+            _temp = __import__(module, globals(), locals(), [classname], -1) 
+            monkey_class_obj = getattr(_temp, classname)
         
         outputDir=os.path.abspath(outputDir)
         
@@ -49,29 +55,49 @@ class testDescriptor(object):
             outrootfilename=os.path.basename(originroot).split('.')[0]+'_predict'+ident+'.root'
             
             fullpath=testdatacollection.getSamplePath(sample)
+            if monkey_class_obj is not None:
+                testdatacollection.dataclass = monkey_class_obj()
             td=testdatacollection.dataclass
             
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            formatstring=','.join(['prob_%s%s' % (i, ident) for i in truthclasses])
+            formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
             features=td.x
             labels=td.y
+            weights=td.w[0]
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
             if isinstance(prediction, list):
-                formatstring += ",reg_uncPt,reg_Pt" if prediction[1].shape[1] == 2 else ',reg_Pt'
+                formatstring.extend(
+                    ['reg_uncPt','reg_Pt'] if prediction[1].shape[1] == 2 else ['reg_Pt']
+                )
                 if prediction[1].shape[1] > 2:
                     raise ValueError('Regression (2nd prediction output) can only have up to two values!')
                 all_write = np.concatenate(prediction, axis=1)
+                if store_labels:
+                    all_write = np.concatenate((all_write, labels[0], labels[1]), axis=1)
+                    formatstring.extend(truthclasses)
+                    formatstring.append('truePt')
             elif prediction.shape[1] == len(truthclasses):
                 all_write = prediction
+                if store_labels:
+                    all_write = np.concatenate((all_write, labels if not isinstance(labels, list) else labels[0]), axis=1)
+                    formatstring.extend(truthclasses)
             else:
-                formatstring = "reg_uncPt,reg_Pt" if prediction.shape[1] == 2 else 'reg_Pt'
+                formatstring.extend(
+                    ['reg_uncPt','reg_Pt'] if prediction.shape[1] == 2 else ['reg_Pt']
+                )
                 if prediction.shape[1] > 2:
                     raise ValueError('Regression (2nd prediction output) can only have up to two values!')
                 all_write = prediction
+                if store_labels:
+                    all_write = np.concatenate((all_write, labels), axis=1)
+                    formatstring.append('truePt')
 
-            all_write = np.core.records.fromarrays(np.transpose(all_write), names= formatstring)
+            all_write = np.concatenate([all_write, weights], axis=1)
+            formatstring.append('weight')
+                
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
             array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
             
             #self.metrics.append(metric)
