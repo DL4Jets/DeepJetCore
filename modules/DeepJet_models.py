@@ -115,12 +115,51 @@ def Incept_model(Inputs,dropoutRate=0.25):
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
-def Dense_model(Inputs,nclasses,Inputshape,dropoutRate=0.25):
+def Test_model(Inputs,
+               nclasses,
+               nregclasses,
+               dropoutRate=0.25):
+    """
+    Dense matrix, defaults similat to 2016 training
+    """
+    allflat=[]
+    for i in range(len(Inputs)):
+        if i:
+            x=Flatten()(Inputs[i])
+        else:
+            x=Inputs[i]
+        allflat.append(x)
+    
+    x = merge( allflat , mode='concat')
+    
+    #  Here add e.g. the normal dense stuff from DeepCSV
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    x = Dropout(dropoutRate)(x)
+    x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+    predictions=None
+    if nregclasses and nclasses:
+        predictions=[Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x),
+                     Dense(nregclasses, activation='linear',kernel_initializer='ones')(x)]
+    elif nregclasses:
+        predictions=Dense(nregclasses, activation='linear',kernel_initializer='ones')(x)
+    else:
+        predictions=Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
+
+def Dense_model(Inputs,nclasses,nregclasses,dropoutRate=0.25):
     """
     Dense matrix, defaults similat to 2016 training
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform',input_shape=Inputshape)(Inputs)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(Inputs)
     x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)

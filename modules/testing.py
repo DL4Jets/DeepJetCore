@@ -20,6 +20,15 @@ Created on 21 Mar 2017
 #
 
 from __future__ import print_function
+
+import imp
+try:
+    imp.find_module('setGPU')
+    print('running on GPU')
+    import setGPU
+except ImportError:
+    found = False
+    
 from pdb import set_trace
 
 class testDescriptor(object):
@@ -62,17 +71,19 @@ class testDescriptor(object):
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
             formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
+            regressionclasses=[]
+            if hasattr(td, 'regressiontargetclasses'):
+                regressionclasses=td.regressiontargetclasses
+            
             features=td.x
             labels=td.y
             weights=td.w[0]
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
             if isinstance(prediction, list):
-                formatstring.extend(
-                    ['reg_uncPt','reg_Pt'] if prediction[1].shape[1] == 2 else ['reg_Pt']
-                )
-                if prediction[1].shape[1] > 2:
-                    raise ValueError('Regression (2nd prediction output) can only have up to two values!')
+                formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
+                if prediction[1].shape[1] > len(regressionclasses):
+                    raise ValueError('Regression (2nd prediction output) does not match with the provided targets!')
                 all_write = np.concatenate(prediction, axis=1)
                 if store_labels:
                     all_write = np.concatenate((all_write, labels[0], labels[1]), axis=1)
@@ -84,11 +95,9 @@ class testDescriptor(object):
                     all_write = np.concatenate((all_write, labels if not isinstance(labels, list) else labels[0]), axis=1)
                     formatstring.extend(truthclasses)
             else:
-                formatstring.extend(
-                    ['reg_uncPt','reg_Pt'] if prediction.shape[1] == 2 else ['reg_Pt']
-                )
+                formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 if prediction.shape[1] > 2:
-                    raise ValueError('Regression (2nd prediction output) can only have up to two values!')
+                    raise ValueError('Regression output does not match with the provided targets!')
                 all_write = prediction
                 if store_labels:
                     all_write = np.concatenate((all_write, labels), axis=1)
@@ -103,7 +112,7 @@ class testDescriptor(object):
             #self.metrics.append(metric)
             self.__sourceroots.append(originroot)
             self.__predictroots.append(outputDir+'/'+outrootfilename)
-            
+            print(formatstring)
             print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
 
     def writeToTextFile(self, outfile):

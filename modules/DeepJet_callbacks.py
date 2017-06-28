@@ -63,6 +63,17 @@ class Losstimer(Callback):
         cop['elapsed'] = elapsed
         self.points.append(cop)
         
+        
+class checkTokens_callback(Callback):
+    
+    def __init__(self,cutofftime_hours=48):
+        self.cutofftime_hours=cutofftime_hours
+        
+    def on_epoch_begin(self, epoch, logs=None):
+        from tokenTools import checkTokens
+        checkTokens(self.cutofftime_hours)
+        
+        
 class DeepJet_callbacks(object):
     def __init__(self,
                  stop_patience=10,
@@ -71,7 +82,8 @@ class DeepJet_callbacks(object):
                  lr_epsilon=0.001,
                  lr_cooldown=4,
                  lr_minimum=1e-5,
-                 outputDir=''):
+                 outputDir='',
+                 minTokenLifetime=5):
         
 
         
@@ -94,9 +106,12 @@ class DeepJet_callbacks(object):
   
         self.history=History()
         self.timer = Losstimer()
+        
+        self.tokencheck=checkTokens_callback(minTokenLifetime)
   
         self.callbacks=[
-            self.nl_begin, self.modelbestcheck, self.modelcheck,
+            self.nl_begin, self.tokencheck,
+            self.modelbestcheck, self.modelcheck,
             self.reduce_lr, self.stopping, self.nl_end, self.history,
             self.timer
         ]

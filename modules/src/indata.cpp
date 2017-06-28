@@ -7,6 +7,7 @@
 
 #include "../interface/indata.h"
 
+#include "TLeaf.h"
 
 namespace __hidden{
 
@@ -18,6 +19,7 @@ void indata::setSize(size_t i){
 	branches.resize(i);
 	tbranches.resize(i,0);
 	buffer.resize(i,0);
+	buffervec.resize(i,0);
 }
 
 
@@ -67,9 +69,16 @@ void indata::allZero(){
 }
 
 void indata::getEntry(size_t entry){
+
     for(size_t i=0;i<branches.size();i++){
-        if(mask_ != (int)i)
+        if(mask_ != (int)i){
             tbranches.at(i)->GetEntry(entry);
+        	if (buffervec.at(i)){
+        		for (unsigned k=0; k<MAXBRANCHLENGTH; ++k){
+        			buffer.at(i)[k] = (k < buffervec.at(i)->size() ? buffervec.at(i)->at(k) : 0);
+        		}
+        	}
+        }
 
     }
 }
@@ -84,7 +93,15 @@ void indata::setup(TTree* tree){
     for(size_t i=0;i<branches.size();i++){
         if(mask_ != (int)i){
             tbranches.at(i)=new TBranch();
-            tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
+
+        	auto leaf = (TLeaf*)tree->GetBranch(branches.at(i))->GetListOfLeaves()->At(0);
+        	if (TString(leaf->GetTypeName()).Contains("vector<float>")){
+        		buffervec.at(i) = new std::vector<float>;
+        		tree->SetBranchAddress(branches.at(i), &buffervec.at(i), &tbranches.at(i));
+        	}else{
+        	    buffervec.at(i)=0;
+        		tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
+        	}
         }
     }
 }

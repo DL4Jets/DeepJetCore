@@ -87,7 +87,11 @@ class Weighter(object):
             ax = fig.add_subplot(111)
             X, Y = numpy.meshgrid(self.xedges, self.yedges)
             ax.pcolormesh(X, Y, H)
-            ax.set_xscale("log", nonposx='clip')
+            if self.axisX[0]>0:
+                ax.set_xscale("log", nonposx='clip')
+            else:
+                ax.set_xlim([self.axisX[1],self.axisX[-1]])
+                ax.set_xscale("log", nonposx='mask')
             #plt.colorbar()
             fig.savefig(outname)
             plt.close()
@@ -103,13 +107,14 @@ class Weighter(object):
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
         import numpy
-        referenceidx=0
-        try:
-            referenceidx=self.classes.index(referenceclass)
-        except:
-            print('createRemoveProbabilities: reference index not found in class list')
-            raise Exception('createRemoveProbabilities: reference index not found in class list')
-        
+        referenceidx=-1
+        if not referenceclass=='flatten':
+            try:
+                referenceidx=self.classes.index(referenceclass)
+            except:
+                print('createRemoveProbabilities: reference index not found in class list')
+                raise Exception('createRemoveProbabilities: reference index not found in class list')
+            
         if len(self.classes) > 0:
             self.Axixandlabel = [self.nameX, self.nameY]+ self.classes
         else:
@@ -117,10 +122,12 @@ class Weighter(object):
         
         self.refclassidx=referenceidx
         
+        refhist=numpy.zeros((len(self.axisX)-1,len(self.axisY)-1), dtype='float32')
+        refhist += 1
         
-       
-        refhist=self.distributions[referenceidx]
-        refhist=refhist/numpy.amax(refhist)
+        if referenceidx >= 0:
+            refhist=self.distributions[referenceidx]
+            refhist=refhist/numpy.amax(refhist)
         
     
         def divideHistos(a,b):
@@ -135,12 +142,18 @@ class Weighter(object):
                 
         probhists=[]
         weighthists=[]
+        
         for i in range(len(self.classes)):
+            #print(self.classes[i])
             tmphist=self.distributions[i]
+            #print(tmphist)
+            #print(refhist)
             tmphist=tmphist/numpy.amax(tmphist)
             ratio=divideHistos(refhist,tmphist)
             ratio=ratio/numpy.amax(ratio)#norm to 1
+            #print(ratio)
             ratio[ratio<0]=1
+            ratio[ratio==numpy.nan]=1
             weighthists.append(ratio)
             ratio=1-ratio#make it a remove probability
             probhists.append(ratio)
@@ -163,7 +176,8 @@ class Weighter(object):
         
         tuplelength=len(Tuple)
         
-        notremove=[]
+        notremove=numpy.zeros(tuplelength)
+        counter=0
         xaverage=[]
         norm=[]
         yaverage=[]
@@ -183,22 +197,22 @@ class Weighter(object):
 
                     if rand < prob and index != self.refclassidx:
                         #print('rm  ',index,self.refclassidx,jet[classs],classs)
-                        notremove.append(0)
+                        notremove[counter]=0
                     else:
                         #print('keep',index,self.refclassidx,jet[classs],classs)
-                        notremove.append(1)
+                        notremove[counter]=1
                         xaverage[index]+=jet[self.nameX]
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
             
-                        
+                    counter=counter+1            
         
             
-        if not len(notremove) == tuplelength:
+        if not len(notremove) == counter:
             raise Exception("tuple length must match remove indices length. Probably a problem with the definition of truth classes in the ntuple and the TrainData class")
         
         
-        return numpy.array(notremove)
+        return notremove
 
     
         
@@ -234,7 +248,7 @@ class Weighter(object):
             # assumes bins in increasing order
             if value < bin:
                 return index-1            
-        print (' overflow ! ', value , ' out of range ' , bins)
+        #print (' overflow ! ', value , ' out of range ' , bins)
         return bins.size-2
 
         

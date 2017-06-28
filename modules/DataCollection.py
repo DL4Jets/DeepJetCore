@@ -149,10 +149,13 @@ class DataCollection(object):
         return shapes
     
     def getTruthShape(self):
-        td=self.dataclass
-        return td.getTruthShapes()
+        return self.dataclass.getTruthShapes()
         
+    def getNRegressionTargets(self):
+        return (self.dataclass.getNRegressionTargets())
     
+    def getNClassificationTargets(self):
+        return (self.dataclass.getNClassificationTargets())
         
     def getUsedTruth(self):
         return self.dataclass.getUsedTruth()
@@ -340,6 +343,7 @@ class DataCollection(object):
         finishedsamples=len(self.samples)
         
         self.__writeData_async_andCollect(finishedsamples,outputDir)
+        self.writeToFile(outputDir+'/dataCollection.dc')
         
     
     def createDataFromRoot(

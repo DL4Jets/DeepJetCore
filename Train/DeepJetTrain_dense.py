@@ -56,7 +56,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 
 testrun=False
 
-nepochs=500
+nepochs=100
 batchsize=10000
 startlearnrate=0.0005
 from DeepJet_callbacks import DeepJet_callbacks
@@ -72,7 +72,7 @@ callbacks=DeepJet_callbacks(stop_patience=400,
                             outputDir=outputDir)
 useweights=False
 splittrainandtest=0.8
-maxqsize=20 #sufficient
+maxqsize=100 #sufficient
 
 
 
