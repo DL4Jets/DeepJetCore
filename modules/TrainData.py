@@ -676,7 +676,8 @@ class TrainData_fullTruth(TrainData):
 
 class TrainData_quarkGluon(TrainData):
     def __init__(self):
-        super(TrainData_quarkGluon, self).__init__(self)
+        super(TrainData_quarkGluon, self).__init__()
+        self.referenceclass = 'isG'
         self.reducedtruthclasses=['isQ', 'isG']
         self.clear()
         
@@ -690,7 +691,7 @@ class TrainData_quarkGluon(TrainData):
             c = tuple_in['isC'].view(numpy.ndarray)
             ud = tuple_in['isUD'].view(numpy.ndarray)
             s = tuple_in['isS'].view(numpy.ndarray)
-            q = ud+s+c+blc+bl+b
+            q = ud+s#+c+blc+bl+b
             
             g = tuple_in['isG'].view(numpy.ndarray)
             return numpy.vstack((q, g)).transpose()    

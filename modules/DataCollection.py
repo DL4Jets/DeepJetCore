@@ -319,7 +319,7 @@ class DataCollection(object):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
-        self.dataclass.weight=False
+        self.dataclass.weight=True #False
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,

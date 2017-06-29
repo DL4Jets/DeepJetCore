@@ -10,6 +10,7 @@ from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, R
 # loss per epoch
 from time import time
 from pdb import set_trace
+import json
 
 class newline_callbacks_begin(Callback):
     
@@ -17,6 +18,7 @@ class newline_callbacks_begin(Callback):
         self.outputDir=outputDir
         self.loss=[]
         self.val_loss=[]
+        self.full_logs=[]
         
     def on_epoch_end(self,epoch, epoch_logs={}):
         import os
@@ -31,7 +33,13 @@ class newline_callbacks_begin(Callback):
             f.write(str(self.val_loss[i]))
             f.write("\n")
         f.close()    
-        
+        normed = {}
+        for vv in epoch_logs:
+            normed[vv] = float(epoch_logs[vv])
+        self.full_logs.append(normed)
+        lossfile=os.path.join( self.outputDir, 'full_info.log')
+        with open(lossfile, 'w') as out:
+            out.write(json.dumps(self.full_logs))
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, epoch_logs={}):

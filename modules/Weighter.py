@@ -219,8 +219,7 @@ class Weighter(object):
     def getJetWeights(self,Tuple):
         import numpy
         countMissedJets = 0  
-        if len(self.hists) <1:
-            print('weight bins not initialised. Cannot create weights per jet')
+        if len(self.binweights) <1:
             raise Exception('weight bins not initialised. Cannot create weights per jet')
         
         weight = numpy.zeros(len(Tuple))
