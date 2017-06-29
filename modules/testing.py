@@ -21,13 +21,7 @@ Created on 21 Mar 2017
 
 from __future__ import print_function
 
-import imp
-try:
-    imp.find_module('setGPU')
-    print('running on GPU')
-    import setGPU
-except ImportError:
-    found = False
+
     
 from pdb import set_trace
 

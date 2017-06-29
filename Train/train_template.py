@@ -3,16 +3,19 @@
 from training_base import training_base
 from Losses import loss_NLL
 
-#also dows all the parsing
+#also does all the parsing
 train=training_base(testrun=True)
 
-from models import convolutional_model_broad_map_reg
 
-train.setModel(convolutional_model_broad_map_reg,dropoutRate=0.1)
-
-train.compileModel(learningrate=0.005,
-                   loss=['categorical_crossentropy',loss_NLL],
-                   metrics=['accuracy'])
+if not train.modelSet():
+    from models import convolutional_model_broad_map_reg
+    
+    train.setModel(convolutional_model_broad_map_reg,dropoutRate=0.1)
+    
+    train.compileModel(learningrate=0.005,
+                       loss=['categorical_crossentropy',loss_NLL],
+                       metrics=['accuracy'],
+                       loss_weights=[1., 0.00001])
 
 
 model,history = train.trainModel(nepochs=5, 
@@ -23,4 +26,4 @@ model,history = train.trainModel(nepochs=5,
                                  lr_epsilon=0.0001, 
                                  lr_cooldown=2, 
                                  lr_minimum=0.0001, 
-                                 maxqsize=10)
+                                 maxqsize=100)

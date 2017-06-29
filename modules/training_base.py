@@ -5,27 +5,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import imp
-try:
-    imp.find_module('setGPU')
-    print('running on GPU')
-    import setGPU
-except ImportError:
-    found = False
-    
-# some private extra plots
-#from  NBatchLogger import NBatchLogger
-
-import matplotlib
-#if no X11 use below
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-from keras import backend as K
-import keras
-#zero padding done before
-#from keras.layers.convolutional import Cropping1D, ZeroPadding1D
-from keras.optimizers import SGD
 
 ## to call it from cammand lines
 import sys
@@ -43,6 +22,19 @@ class training_base(object):
                  useweights=False,
                  testrun=False):
         
+        import matplotlib
+        #if no X11 use below
+        matplotlib.use('Agg')
+        import imp
+        try:
+            imp.find_module('setGPU')
+            import setGPU
+        except ImportError:
+            found = False
+            
+        
+        import keras
+                
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         self.keras_model=None
@@ -107,7 +99,8 @@ class training_base(object):
             self.loadModel(self.outputDir+'KERAS_check_last_model.h5')
             self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
         
-    
+    def modelSet(self):
+        return not self.keras_model==None
         
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:

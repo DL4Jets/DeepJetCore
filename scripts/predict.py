@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+import imp
+try:
+    imp.find_module('setGPU')
+    import setGPU
+except ImportError:
+    found = False
+    
 from keras.models import load_model
 from testing import testDescriptor
 from argparse import ArgumentParser
