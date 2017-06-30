@@ -30,7 +30,10 @@ void makeROCs(
 		bool usecmsstyle,
 		std::string firstcomment,
 		std::string secondcomment,
-		const boost::python::list invalidate) {
+		const boost::python::list invalidate,
+		const boost::python::list extralegend,
+		bool logy
+		) {
 
 
 	std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -41,7 +44,7 @@ void makeROCs(
 	std::vector<TString>  s_colors = toSTLVector<TString>(colors);
 	std::vector<TString>  s_cuts = toSTLVector<TString>(cuts);
 	std::vector<TString>  s_invalidate =toSTLVector<TString>(invalidate);
-
+	std::vector<TString>  s_extralegend=toSTLVector<TString>(extralegend);
 	/*
 	 * Size checks!!!
 	 */
@@ -92,7 +95,7 @@ void makeROCs(
 
 	rocs.setCommentLine0(firstcomment.data());
     rocs.setCommentLine1(secondcomment.data());
-
+    rocs.setLogY(logy);
 	rocs.setCMSStyle(usecmsstyle);
 
 	for(size_t i=0;i<s_names.size();i++){
@@ -103,6 +106,8 @@ void makeROCs(
 			rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
 					s_vetos.at(i),s_colors.at(i),"",s_invalidate.at(i));
 	}
+	for(const auto& s:s_extralegend)
+	    rocs.addExtraLegendEntry(s);
 
 	rocs.printRocs(injector.getChain(),(TString)outfile);
 

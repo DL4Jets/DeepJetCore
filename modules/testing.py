@@ -21,7 +21,15 @@ Created on 21 Mar 2017
 
 from __future__ import print_function
 
-
+colormap=['red'
+ , 'blue'
+ , 'darkgreen'
+ , 'purple'
+ , 'darkred'
+ , 'darkblue'
+ , 'green'
+ , 'darkpurple'
+ , 'gray']
     
 from pdb import set_trace
 
@@ -128,7 +136,8 @@ def makeASequence(arg,length):
             hasattr(arg, "__iter__"))
     out=[]
     if isseq:
-        return arg
+        for i in range(length/len(arg)):
+            out.extend(arg)
     else:
         for i in range(length):
             out.append(arg)      
@@ -136,24 +145,71 @@ def makeASequence(arg,length):
         
     
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
-                    colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',invalidlist=''): 
+                    colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
+                    invalidlist='',
+                    extralegend=[],logY=True):#['solid?udsg','hatched?c']): 
     
+    
+    
+    if cmsstyle and len(extralegend)==0:
+        extralegend=['solid?udsg','dashed?c']
+        
+    nnames=len(name_list)
+    nextra=len(extralegend)
+           
+    if nextra>1 and  len(name_list[-1].strip(' ')) >0 :
+        extranames=['INVISIBLE']*(nnames)*(nextra-1)
+        name_list.extend(extranames)
+        
+    if colors_list=='auto':
+        newcolors=[]
+        if len(name_list) > len(colormap):
+            raise Exception('colors_list=auto: too many entries, color map too small')
+        stylecounter=0
+        colorcounter=0
+        for i in range(len(name_list)):     
+            if len(extralegend):
+                newcolors.append(colormap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
+            else:
+                newcolors.append(colormap[colorcounter])     
+            colorcounter=colorcounter+1
+            if colorcounter == nnames:
+                colorcounter=0
+                stylecounter=stylecounter+1
+        
+        colors_list=newcolors    
+        
+        
     files=makeASequence(intextfile,len(name_list))
     cuts=makeASequence(cuts,len(name_list))
     probabilities_list=makeASequence(probabilities_list,len(name_list))
     truths_list=makeASequence(truths_list,len(name_list))
     vetos_list=makeASequence(vetos_list,len(name_list))
     invalidlist=makeASequence(invalidlist,len(name_list))
+    
+    
+    
     import c_makeROCs
     
+    
     def worker():
-        
-        c_makeROCs.makeROCs(files,name_list,
+        try:
+            c_makeROCs.makeROCs(files,name_list,
                         probabilities_list,
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment,invalidlist)
+                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegend,logY)
+        
+        except Exception as e:
+            print('error for these inputs:')
+            print(files)
+            print(cuts)
+            print(probabilities_list)
+            print(truths_list)
+            print(vetos_list)
+            print(invalidlist)
+            raise e
     
     
     import multiprocessing

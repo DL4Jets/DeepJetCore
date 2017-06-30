@@ -17,7 +17,7 @@
 
 class rocCurveCollection{
 public:
-	rocCurveCollection():leg_(0),linewidth_(2),cmsstyle_(false){}
+	rocCurveCollection():leg_(0),linewidth_(2),cmsstyle_(false),logy_(true){}
 	~rocCurveCollection(){
 		if(leg_)
 			delete leg_;
@@ -36,7 +36,10 @@ public:
         comment1_=l;
     }
 
+    void addExtraLegendEntry(const TString& entr);
+
 	void setCMSStyle(bool cmsst){cmsstyle_=cmsst;}
+	void setLogY(bool logy){logy_=logy;}
 
 //	void addROC(const TString& name, const TString& probability, const TString& truth,
 //		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
@@ -51,8 +54,11 @@ private:
 	TLegend * leg_;
 	int linewidth_;
 	std::vector<rocCurve> roccurves_;
+	std::vector<TString> legentries_;
+    std::vector<TString> extralegendtries_;
 	bool cmsstyle_;
 	TString comment0_, comment1_;
+	bool logy_;
 };
 
 

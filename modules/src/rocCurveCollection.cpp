@@ -24,6 +24,10 @@
 //
 //}
 
+void rocCurveCollection::addExtraLegendEntry(const TString& entr){
+    extralegendtries_.push_back(entr);
+}
+
 void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
         const TString& vetotruth, const TString& linecol, const TString& cuts,const TString& invalidateif){
 
@@ -34,7 +38,7 @@ void rocCurveCollection::addROC(const TString& name, const TString& probability,
     if(lc.Contains("dummy"))
         rc.setLineWidth(0);
     roccurves_.push_back(rc);
-
+    legentries_.push_back(name);
 }
 
 
@@ -93,7 +97,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     haxis.GetYaxis()->SetTitleSize(0.05);
     //haxis.GetYaxis()->SetTitleOffset(0.9);
     haxis.GetYaxis()->SetLabelSize(0.045);
-    haxis.GetXaxis()->SetTitle("signal efficiency");
+    haxis.GetXaxis()->SetTitle("efficiency");
     haxis.GetXaxis()->SetTitleSize(0.05);
     haxis.GetXaxis()->SetLabelSize(0.045);
     //haxis.GetXaxis()->SetTitleOffset(0.95);
@@ -106,10 +110,16 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
 
     cv->cd();
-    cv->SetLogy();
+    if(logy_)
+        cv->SetLogy();
     gStyle->SetOptStat(0);
+    float nreallegends=0;
+    for(const auto& l:legentries_){
+        if(l!="INVISIBLE" && l!="")
+            nreallegends++;
+    }
 
-    leg_=new TLegend(0.18,0.5,0.37,0.85);
+    leg_=new TLegend(0.18,0.72-(0.08*nreallegends),0.39,0.72);
     leg_->SetBorderSize(1);
     leg_->SetFillColor(0);
 
@@ -117,8 +127,9 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
     std::vector<TGraph*> graphs;
     count=0;
-    for(auto& rc:roccurves_){
-        TGraph* g=rc.getROC();
+
+    for(size_t i=0;i<roccurves_.size();i++){
+        TGraph* g=roccurves_.at(i).getROC();
         graphs.push_back(g);
         g->SetLineWidth(linewidth_);
         for(double x=0;x<1;x+=0.01){
@@ -131,7 +142,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         }
         g->Draw("L,same");
         g->Write();
-        leg_->AddEntry(g,g->GetTitle(),"l");
+        if(legentries_.at(i)!="INVISIBLE" && legentries_.at(i)!="")
+            leg_->AddEntry(g,g->GetTitle(),"l");
         vetohistos.at(count)->SetName((TString)g->GetTitle()+"_veto");
         vetohistos.at(count)->Write();
         probhistos.at(count)->SetName((TString)g->GetTitle()+"_prob");
@@ -149,24 +161,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     haxis.GetXaxis()->SetRangeUser(xmin,1);
 
     if(cmsstyle_){
-        leg_->Clear();
-        leg_=new TLegend(0.18,0.52,0.37,0.73);
-        //interpret first half of roccurves_ as B
-        size_t firsts=roccurves_.size()/2;
-        for(size_t i=0;i<firsts;i++){
-            TGraph* g=graphs.at(i);
-            leg_->AddEntry(g,g->GetTitle(),"l");
-        }
 
-        TLegend* addleg=new TLegend(0.78,0.15,0.93,0.25);
-        TLegendEntry* e= addleg->AddEntry("udsg","udsg","l");
-        e->SetLineWidth(linewidth_);
-        e->SetLineStyle(1);
-        e= addleg->AddEntry("c","c","l");
-        e->SetLineWidth(linewidth_);
-        e->SetLineStyle(2);
-
-        addleg->Draw("same");
 
         //add CMS labels
         TLatex *tex = new TLatex(0.18,0.865,"CMS Simulation");
@@ -191,12 +186,31 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         tex->SetLineWidth(2);
         tex->Draw();
 
-        haxis.GetXaxis()->SetTitle("b-jet efficiency");
+        //haxis.GetXaxis()->SetTitle("b-jet efficiency");
 
         haxis.GetXaxis()->SetRangeUser(0,1);
     }
-
     leg_->Draw("same");
+    ///////
+    if(extralegendtries_.size()){
+        TLegend* addleg=new TLegend(0.78,0.15,0.93,0.15+0.06*((float)( extralegendtries_.size() )));
+        for(const auto& s:extralegendtries_){
+            TString leg=s;
+            if(! leg.Contains("?"))
+                leg="solid?INVALIDINPUT";
+
+            TString styledesc=leg(0, leg.First('?'));
+            TString legentr=leg(leg.First('?')+1,leg.Length());
+
+
+            TLegendEntry* e= addleg->AddEntry(legentr,legentr,"l");
+            e->SetLineWidth(linewidth_);
+            e->SetLineStyle(lineToTLineStyle(styledesc));
+        }
+        addleg->Draw("same");
+    }
+    //////
+
 
     //comment lines
     TLatex *tex = new TLatex(0.18,0.805,comment0_);
