@@ -86,6 +86,9 @@ class testDescriptor(object):
             regressionclasses=[]
             if hasattr(td, 'regressiontargetclasses'):
                 regressionclasses=td.regressiontargetclasses
+            ##DO NOT COMMIT
+            if False and hasattr(td,'regtruth'):
+               regressionclasses=['uncPt','Pt'] ###DO NOT COMMIT!
             
             features=td.x
             labels=td.y
@@ -156,6 +159,8 @@ def makeASequence(arg,length):
     return out      
    
 def createColours(colors_list,name_list,nnames=None,extralegend=[]):
+    if extralegend==None:
+        extralegend=[]
     if not nnames:
         nnames=len(name_list)
     if 'auto' in colors_list:
@@ -191,11 +196,15 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     if cmsstyle and extralegend==None:
         extralegend=['solid?udsg','dashed?c']
         
+    if extralegend==None:
+        extralegend=[]
+        
     nnames=len(name_list)
     nextra=0
     if extralegend:
         nextra=len(extralegend)
-           
+    
+
     if nextra>1 and  len(name_list[-1].strip(' ')) >0 :
         extranames=['INVISIBLE']*(nnames)*(nextra-1)
         name_list.extend(extranames)
