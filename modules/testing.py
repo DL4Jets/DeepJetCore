@@ -30,6 +30,16 @@ colormap=['red'
  , 'green'
  , 'darkpurple'
  , 'gray']
+
+dashedcolormap=['red','red,dashed'
+ , 'blue','blue,dashed'
+ , 'darkgreen','darkgreen,dashed'
+ , 'purple','purple,dashed'
+ , 'darkred','darkred,dashed'
+ , 'darkblue','darkblue,dashed'
+ , 'green','green,dashed'
+ , 'darkpurple','darkpurple,dashed'
+ , 'gray','gray,dashed']
     
 from pdb import set_trace
 
@@ -148,17 +158,20 @@ def makeASequence(arg,length):
 def createColours(colors_list,name_list,nnames=None,extralegend=[]):
     if not nnames:
         nnames=len(name_list)
-    if colors_list=='auto':
+    if 'auto' in colors_list:
         newcolors=[]
-        if len(name_list) > len(colormap):
+        usemap=colormap
+        if 'dashed' in colors_list and not len(extralegend):
+            usemap=dashedcolormap
+        if len(name_list) > len(usemap):
             raise Exception('colors_list=auto: too many entries, color map too small')
         stylecounter=0
         colorcounter=0
         for i in range(len(name_list)):     
             if len(extralegend):
-                newcolors.append(colormap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
+                newcolors.append(usemap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
             else:
-                newcolors.append(colormap[colorcounter])     
+                newcolors.append(usemap[colorcounter])     
             colorcounter=colorcounter+1
             if colorcounter == nnames:
                 colorcounter=0
