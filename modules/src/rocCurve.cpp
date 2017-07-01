@@ -26,8 +26,10 @@
 #include <iostream>
 #include "TCanvas.h"
 
-rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
+size_t rocCurve::nrocsCounter=0;
 
+rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
+    nrocsCounter++;
 }
 rocCurve::rocCurve(const TString& name):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
     name_=name;
@@ -102,19 +104,20 @@ void rocCurve::process(TChain *c){
     }
 
 
-
+    TString nrcc="";
+    nrcc+=nrocsCounter;
 
     TCanvas cv;//just a dummy
-    probh_=TH1D("prob","prob",nbins_,0,1);
-    vetoh_=TH1D("veto","veto",nbins_,0,1);
-    invalidate_=TH1D("invalid","invalid",nbins_,0,1);
-    invalidate_veto_=TH1D("invalid_veto","invalid_veto",nbins_,0,1);
+    probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1);
+    vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1);
+    invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1);
+    invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1);
 
 
-    c->Draw(probstr+">>prob",allcuts);//probcuts);
-    c->Draw(probstr+">>veto",vetostr);
-    c->Draw(probstr+">>invalid",allinvalid_truth);
-    c->Draw(probstr+">>invalid_veto",allinvalid_veto);
+    c->Draw(probstr+">>prob"+nrcc,allcuts);//probcuts);
+    c->Draw(probstr+">>veto"+nrcc,vetostr);
+    c->Draw(probstr+">>invalid"+nrcc,allinvalid_truth);
+    c->Draw(probstr+">>invalid_veto"+nrcc,allinvalid_veto);
 
 
     //remove from mem list
@@ -123,10 +126,10 @@ void rocCurve::process(TChain *c){
     invalidate_.SetDirectory(0);
     invalidate_veto_.SetDirectory(0);
 
-    probh_.SetName("probh_");
-    vetoh_.SetName("vetoh_");
-    invalidate_.SetName("invalidate_");
-    invalidate_veto_.SetName("invalidate_veto_");
+    probh_.SetName("probh_"+nrcc);
+    vetoh_.SetName("vetoh_"+nrcc);
+    invalidate_.SetName("invalidate_"+nrcc);
+    invalidate_veto_.SetName("invalidate_veto_"+nrcc);
 
     std::vector<double> p(nbins_),v(nbins_);
 
@@ -145,10 +148,15 @@ void rocCurve::process(TChain *c){
         p[i] = probh_.Integral(i,nbins_)/(probintegral);
         v[i] = vetoh_.Integral(i,nbins_)/vetointegral;
     }
+    TString compatname=name_;
+    compatname.ReplaceAll(" ","_");
+    compatname.ReplaceAll("/","_");
+    compatname.ReplaceAll(":","_");
+    compatname.ReplaceAll("!","_");
 
     roc_=TGraph(nbins_,&p.at(0),&v.at(0));
-    roc_.SetName(name_);
-    roc_.SetTitle(name_);
+    roc_.SetName(compatname+nrcc);
+    roc_.SetTitle(name_+nrcc);
     roc_.Draw("L");//necessary for some weird root reason
     roc_.SetLineColor(linecol_);
     roc_.SetLineStyle(linestyle_);

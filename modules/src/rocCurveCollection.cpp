@@ -59,7 +59,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     for(auto& rc:roccurves_){
         rc.setNBins(200);
         rc.process(c);
-        TString tempname="";
+        TString tempname="tmph_";
         tempname+=count;
         count++;
 
@@ -71,6 +71,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         tempname+=count;
         TH1D* hc=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
         invalidhistos.push_back(hc);
+        tempname+=count;
         TH1D* hd=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
         invalidvetohistos.push_back(hd);
     }
@@ -89,7 +90,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     cv->SetLeftMargin(0.15);
     cv->SetRightMargin(0.03);
 
-    TH1D haxis=TH1D("","",10,0,1);
+    TH1D haxis=TH1D("AXIS","AXIS",10,0,1);
     //haxis.Draw("AXIS");
     haxis.GetYaxis()->SetRangeUser(8e-4,1);
     //haxis.GetYaxis()->SetNdivisions(510);
@@ -130,6 +131,9 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
     for(size_t i=0;i<roccurves_.size();i++){
         TGraph* g=roccurves_.at(i).getROC();
+        TString tempname="roccurve_";
+        tempname+=i;
+        g->SetName(tempname);
         graphs.push_back(g);
         g->SetLineWidth(linewidth_);
         for(double x=0;x<1;x+=0.01){
@@ -143,14 +147,14 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         g->Draw("L,same");
         g->Write();
         if(legentries_.at(i)!="INVISIBLE" && legentries_.at(i)!="")
-            leg_->AddEntry(g,g->GetTitle(),"l");
-        vetohistos.at(count)->SetName((TString)g->GetTitle()+"_veto");
+            leg_->AddEntry(g,legentries_.at(i),"l");
+        vetohistos.at(count)->SetName((TString)g->GetName()+"_veto");
         vetohistos.at(count)->Write();
-        probhistos.at(count)->SetName((TString)g->GetTitle()+"_prob");
+        probhistos.at(count)->SetName((TString)g->GetName()+"_prob");
         probhistos.at(count)->Write();
-        invalidhistos.at(count)->SetName((TString)g->GetTitle()+"_invalid");
+        invalidhistos.at(count)->SetName((TString)g->GetName()+"_invalid");
         invalidhistos.at(count)->Write();
-        invalidvetohistos.at(count)->SetName((TString)g->GetTitle()+"_invalid_veto");
+        invalidvetohistos.at(count)->SetName((TString)g->GetName()+"_invalid_veto");
         invalidvetohistos.at(count)->Write();
         count++;
     }
@@ -230,6 +234,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     if(createCanvas){
         cv->Print(outpdf);
         cv->Write();
+        cv->Print(filename+".C");
         //if(cmsstyle_) //not working due to missing libraries
         //    cv->Print(filename+".png");
     }

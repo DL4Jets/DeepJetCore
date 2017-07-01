@@ -71,6 +71,7 @@ public:
 
 private:
 
+    static size_t nrocsCounter;
 	size_t nbins_;
 
 	TString name_;
