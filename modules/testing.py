@@ -188,7 +188,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     
     
-    if cmsstyle and not extralegend:
+    if cmsstyle and extralegend==None:
         extralegend=['solid?udsg','dashed?c']
         
     nnames=len(name_list)
