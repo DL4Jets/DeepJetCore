@@ -136,6 +136,8 @@ def makeASequence(arg,length):
             hasattr(arg, "__iter__"))
     out=[]
     if isseq:
+        if len(arg)==length:
+            return arg
         for i in range(length/len(arg)):
             out.extend(arg)
     else:

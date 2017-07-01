@@ -119,7 +119,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
             nreallegends++;
     }
 
-    leg_=new TLegend(0.18,0.72-(0.08*nreallegends),0.39,0.72);
+    leg_=new TLegend(0.18,0.72-(0.07*nreallegends),0.39,0.72);
     leg_->SetBorderSize(1);
     leg_->SetFillColor(0);
 
