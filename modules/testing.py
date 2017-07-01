@@ -183,15 +183,18 @@ def createColours(colors_list,name_list,nnames=None,extralegend=[]):
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
                     colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
                     invalidlist='',
-                    extralegend=[],logY=True):#['solid?udsg','hatched?c']): 
+                    extralegend=None,
+                    logY=True):#['solid?udsg','hatched?c']): 
     
     
     
-    if cmsstyle and len(extralegend)==0:
+    if cmsstyle and not extralegend:
         extralegend=['solid?udsg','dashed?c']
         
     nnames=len(name_list)
-    nextra=len(extralegend)
+    nextra=0
+    if extralegend:
+        nextra=len(extralegend)
            
     if nextra>1 and  len(name_list[-1].strip(' ')) >0 :
         extranames=['INVISIBLE']*(nnames)*(nextra-1)
