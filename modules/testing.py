@@ -144,7 +144,28 @@ def makeASequence(arg,length):
         for i in range(length):
             out.append(arg)      
     return out      
+   
+def createColours(colors_list,name_list,nnames=None,extralegend=[]):
+    if not nnames:
+        nnames=len(name_list)
+    if colors_list=='auto':
+        newcolors=[]
+        if len(name_list) > len(colormap):
+            raise Exception('colors_list=auto: too many entries, color map too small')
+        stylecounter=0
+        colorcounter=0
+        for i in range(len(name_list)):     
+            if len(extralegend):
+                newcolors.append(colormap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
+            else:
+                newcolors.append(colormap[colorcounter])     
+            colorcounter=colorcounter+1
+            if colorcounter == nnames:
+                colorcounter=0
+                stylecounter=stylecounter+1
         
+        colors_list=newcolors   
+    return   colors_list    
     
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
                     colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
@@ -163,23 +184,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
         extranames=['INVISIBLE']*(nnames)*(nextra-1)
         name_list.extend(extranames)
         
-    if colors_list=='auto':
-        newcolors=[]
-        if len(name_list) > len(colormap):
-            raise Exception('colors_list=auto: too many entries, color map too small')
-        stylecounter=0
-        colorcounter=0
-        for i in range(len(name_list)):     
-            if len(extralegend):
-                newcolors.append(colormap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
-            else:
-                newcolors.append(colormap[colorcounter])     
-            colorcounter=colorcounter+1
-            if colorcounter == nnames:
-                colorcounter=0
-                stylecounter=stylecounter+1
-        
-        colors_list=newcolors    
+    colors_list=createColours(colors_list,name_list,nnames,extralegend)   
         
         
     files=makeASequence(intextfile,len(name_list))
@@ -228,7 +233,9 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
     files_list=makeASequence(intextfile,len(name_list))
     variables_list=makeASequence(variables,len(name_list))
     cuts_list=makeASequence(cuts,len(name_list))
-    colours_list=makeASequence(colours,len(name_list))
+    
+    colours_list=createColours(colours, name_list)
+    
     
 
     import c_makePlots
