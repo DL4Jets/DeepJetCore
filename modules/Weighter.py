@@ -148,7 +148,10 @@ class Weighter(object):
             tmphist=self.distributions[i]
             #print(tmphist)
             #print(refhist)
-            tmphist=tmphist/numpy.amax(tmphist)
+            if numpy.amax(tmphist):
+                tmphist=tmphist/numpy.amax(tmphist)
+            else:
+                print('Warning: class '+self.classes[i]+' empty.')
             ratio=divideHistos(refhist,tmphist)
             ratio=ratio/numpy.amax(ratio)#norm to 1
             #print(ratio)
