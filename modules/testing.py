@@ -159,8 +159,11 @@ def makeASequence(arg,length):
     return out      
    
 def createColours(colors_list,name_list,nnames=None,extralegend=[]):
+    extramulti=1
     if extralegend==None:
         extralegend=[]
+    if len(extralegend):
+        extramulti=len(extralegend)
     if not nnames:
         nnames=len(name_list)
     if 'auto' in colors_list:
@@ -168,8 +171,8 @@ def createColours(colors_list,name_list,nnames=None,extralegend=[]):
         usemap=colormap
         if 'dashed' in colors_list and not len(extralegend):
             usemap=dashedcolormap
-        if len(name_list) > len(usemap):
-            raise Exception('colors_list=auto: too many entries, color map too small')
+        if len(name_list) > len(usemap)*extramulti:
+            raise Exception('colors_list=auto: too many entries, color map too small: '+str(len(name_list))+'/'+str(len(usemap)*extramulti))
         stylecounter=0
         colorcounter=0
         for i in range(len(name_list)):     
@@ -191,33 +194,36 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     extralegend=None,
                     logY=True):#['solid?udsg','hatched?c']): 
     
+    import copy
     
-    
-    if cmsstyle and extralegend==None:
-        extralegend=['solid?udsg','dashed?c']
+    namelistcopy= copy.deepcopy(name_list)
+    extralegcopy=copy.deepcopy(extralegend)
+    if cmsstyle and extralegcopy==None:
+        extralegcopy=['solid?udsg','dashed?c']
         
-    if extralegend==None:
-        extralegend=[]
+    if extralegcopy==None:
+        extralegcopy=[]
         
-    nnames=len(name_list)
+    nnames=len(namelistcopy)
     nextra=0
-    if extralegend:
-        nextra=len(extralegend)
+    if extralegcopy:
+        nextra=len(extralegcopy)
     
 
-    if nextra>1 and  len(name_list[-1].strip(' ')) >0 :
+    if nextra>1 and  len(namelistcopy[-1].strip(' ')) >0 :
         extranames=['INVISIBLE']*(nnames)*(nextra-1)
-        name_list.extend(extranames)
+        namelistcopy.extend(extranames)
         
-    colors_list=createColours(colors_list,name_list,nnames,extralegend)   
+    
+    colors_list=createColours(colors_list,namelistcopy,nnames,extralegcopy)   
         
         
-    files=makeASequence(intextfile,len(name_list))
-    cuts=makeASequence(cuts,len(name_list))
-    probabilities_list=makeASequence(probabilities_list,len(name_list))
-    truths_list=makeASequence(truths_list,len(name_list))
-    vetos_list=makeASequence(vetos_list,len(name_list))
-    invalidlist=makeASequence(invalidlist,len(name_list))
+    files=makeASequence(intextfile,len(namelistcopy))
+    allcuts=makeASequence(cuts,len(namelistcopy))
+    probabilities_list=makeASequence(probabilities_list,len(namelistcopy))
+    truths_list=makeASequence(truths_list,len(namelistcopy))
+    vetos_list=makeASequence(vetos_list,len(namelistcopy))
+    invalidlist=makeASequence(invalidlist,len(namelistcopy))
     
     
     
@@ -226,17 +232,17 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     def worker():
         try:
-            c_makeROCs.makeROCs(files,name_list,
+            c_makeROCs.makeROCs(files,namelistcopy,
                         probabilities_list,
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegend,logY)
+                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY)
         
         except Exception as e:
             print('error for these inputs:')
             print(files)
-            print(cuts)
+            print(allcuts)
             print(probabilities_list)
             print(truths_list)
             print(vetos_list)

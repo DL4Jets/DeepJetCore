@@ -27,13 +27,23 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
         TrainData_fullTruth.__init__(self)
         
         
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
+        self.addBranches(['jet_pt', 'jet_eta',
+                          'nCpfcand','nNpfcand',
+                          'nsv','npv',
+                          'TagVarCSV_trackSumJetEtRatio', 
+                          'TagVarCSV_trackSumJetDeltaR', 
+                          'TagVarCSV_vertexCategory', 
+                          'TagVarCSV_trackSip2dValAboveCharm', 
+                          'TagVarCSV_trackSip2dSigAboveCharm', 
+                          'TagVarCSV_trackSip3dValAboveCharm', 
+                          'TagVarCSV_trackSip3dSigAboveCharm', 
+                          'TagVarCSV_jetNSelectedTracks', 
+                          'TagVarCSV_jetNTracksEtaRel'])
        
         self.addBranches(['Cpfcan_BtagPf_trackEtaRel',
                           'Cpfcan_BtagPf_trackPtRel',
                           'Cpfcan_BtagPf_trackPPar',
                           'Cpfcan_BtagPf_trackDeltaR',
-                          #'Cpfcan_BtagPf_trackPtRatio',
                           'Cpfcan_BtagPf_trackPParRatio',
                           'Cpfcan_BtagPf_trackSip2dVal',
                           'Cpfcan_BtagPf_trackSip2dSig',
@@ -42,19 +52,10 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
                           'Cpfcan_BtagPf_trackJetDistVal',
                           'Cpfcan_BtagPf_trackJetDistSig',
                           
-                          'Cpfcan_ptrel', #not the same as btv ptrel!
-                          #'Cpfcan_erel',
-                          #'Cpfcan_phirel',
-                          #'Cpfcan_etarel',
-                          #'Cpfcan_pt',
-                          #'Cpfcan_dxy',
-                          #'Cpfcan_dxyerrinv',
-                          #'Cpfcan_dz',
-                          
+                          'Cpfcan_ptrel', 
                           'Cpfcan_drminsv',
                           'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass',
-                          
                           'Cpfcan_puppiw',
                           'Cpfcan_chi2',
                           'Cpfcan_quality'
@@ -62,39 +63,30 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
                              25)
         
         
-        self.addBranches([#'Npfcan_erel',
-                          'Npfcan_ptrel',
+        self.addBranches(['Npfcan_ptrel',
                           'Npfcan_deltaR',
-                          #'Npfcan_phirel',
-                          #'Npfcan_etarel',
-                              'Npfcan_isGamma',
-                              'Npfcan_HadFrac',
-                              'Npfcan_drminsv',
-                              
-                              'Npfcan_puppiw'
-                              ],
-                             25)
+                          'Npfcan_isGamma',
+                          'Npfcan_HadFrac',
+                          'Npfcan_drminsv',
+                          'Npfcan_puppiw'
+                          ],
+                         25)
         
         
         self.addBranches(['sv_pt',
-                              #'sv_etarel',
-                              #'sv_phirel',
-                              'sv_deltaR',
-                              'sv_mass',
-                              'sv_ntracks',
-                              'sv_chi2',
-                              #'sv_ndf',
-                              'sv_normchi2',
-                              'sv_dxy',
-                              #'sv_dxyerr',
-                              'sv_dxysig',
-                              'sv_d3d',
-                              #'sv_d3derr',
-                              'sv_d3dsig',
-                              'sv_costhetasvpv',
-                              'sv_enratio',
-                              ],
-                             4)
+                          'sv_deltaR',
+                          'sv_mass',
+                          'sv_ntracks',
+                          'sv_chi2',
+                          'sv_normchi2',
+                          'sv_dxy',
+                          'sv_dxysig',
+                          'sv_d3d',
+                          'sv_d3dsig',
+                          'sv_costhetasvpv',
+                          'sv_enratio',
+                          ],
+                          4)
 
         
         
@@ -194,13 +186,23 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
         TrainData_fullTruth.__init__(self)
         
         
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
+        self.addBranches(['jet_pt', 'jet_eta',
+                          'nCpfcand','nNpfcand',
+                          'nsv','npv',
+                          'TagVarCSV_trackSumJetEtRatio', 
+                          'TagVarCSV_trackSumJetDeltaR', 
+                          'TagVarCSV_vertexCategory', 
+                          'TagVarCSV_trackSip2dValAboveCharm', 
+                          'TagVarCSV_trackSip2dSigAboveCharm', 
+                          'TagVarCSV_trackSip3dValAboveCharm', 
+                          'TagVarCSV_trackSip3dSigAboveCharm', 
+                          'TagVarCSV_jetNSelectedTracks', 
+                          'TagVarCSV_jetNTracksEtaRel'])
        
         self.addBranches(['Cpfcan_BtagPf_trackEtaRel',
                           'Cpfcan_BtagPf_trackPtRel',
                           'Cpfcan_BtagPf_trackPPar',
                           'Cpfcan_BtagPf_trackDeltaR',
-                          #'Cpfcan_BtagPf_trackPtRatio',
                           'Cpfcan_BtagPf_trackPParRatio',
                           'Cpfcan_BtagPf_trackSip2dVal',
                           'Cpfcan_BtagPf_trackSip2dSig',
@@ -209,19 +211,10 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
                           'Cpfcan_BtagPf_trackJetDistVal',
                           'Cpfcan_BtagPf_trackJetDistSig',
                           
-                          'Cpfcan_ptrel', #not the same as btv ptrel!
-                          #'Cpfcan_erel',
-                          #'Cpfcan_phirel',
-                          #'Cpfcan_etarel',
-                          #'Cpfcan_pt',
-                          #'Cpfcan_dxy',
-                          #'Cpfcan_dxyerrinv',
-                          #'Cpfcan_dz',
-                          
+                          'Cpfcan_ptrel', 
                           'Cpfcan_drminsv',
                           'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass',
-                          
                           'Cpfcan_puppiw',
                           'Cpfcan_chi2',
                           'Cpfcan_quality'
@@ -229,39 +222,30 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
                              25)
         
         
-        self.addBranches([#'Npfcan_erel',
-                          'Npfcan_ptrel',
+        self.addBranches(['Npfcan_ptrel',
                           'Npfcan_deltaR',
-                          #'Npfcan_phirel',
-                          #'Npfcan_etarel',
-                              'Npfcan_isGamma',
-                              'Npfcan_HadFrac',
-                              'Npfcan_drminsv',
-                              
-                              'Npfcan_puppiw'
-                              ],
-                             25)
+                          'Npfcan_isGamma',
+                          'Npfcan_HadFrac',
+                          'Npfcan_drminsv',
+                          'Npfcan_puppiw'
+                          ],
+                         25)
         
         
         self.addBranches(['sv_pt',
-                              #'sv_etarel',
-                              #'sv_phirel',
-                              'sv_deltaR',
-                              'sv_mass',
-                              'sv_ntracks',
-                              'sv_chi2',
-                              #'sv_ndf',
-                              'sv_normchi2',
-                              'sv_dxy',
-                              #'sv_dxyerr',
-                              'sv_dxysig',
-                              'sv_d3d',
-                              #'sv_d3derr',
-                              'sv_d3dsig',
-                              'sv_costhetasvpv',
-                              'sv_enratio',
-                              ],
-                             4)
+                          'sv_deltaR',
+                          'sv_mass',
+                          'sv_ntracks',
+                          'sv_chi2',
+                          'sv_normchi2',
+                          'sv_dxy',
+                          'sv_dxysig',
+                          'sv_d3d',
+                          'sv_d3dsig',
+                          'sv_costhetasvpv',
+                          'sv_enratio',
+                          ],
+                          4)
 
         self.registerBranches(['jet_corr_pt','gen_pt_WithNu'])
         
