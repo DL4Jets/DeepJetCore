@@ -126,6 +126,9 @@ class TrainData(object):
         
         self.reduceTruth(None)
         
+    def __del__(self):
+        self.readIn_abort()
+        
 
     def clear(self):
         self.samplename=''

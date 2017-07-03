@@ -1,9 +1,62 @@
 from keras.layers import Dense, Dropout, Flatten,Concatenate, Convolution2D, LSTM,merge, Convolution1D, Conv2D
 from keras.models import Model
- 
+from keras.layers.normalization import BatchNormalization
+from keras.layers.merge import Add
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage
 
 
+def model_deepFlavourReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
+    """
+    reference 1x1 convolutional model for 'deepFlavour'
+    with recurrent layers and batch normalisation
+    standard dropout rate it 0.1
+    should be trained for flavour prediction first. afterwards, all layers can be fixed
+    that do not include 'regression' and the training can be repeated focusing on the regression part
+    (check function fixLayersContaining with invert=True)
+    """  
+    
+    
+    cpf,npf,vtx = block_deepFlavourConvolutions(charged=Inputs[1],
+                                                neutrals=Inputs[2],
+                                                vertices=Inputs[3],
+                                                dropoutRate=dropoutRate,
+                                                active=True,
+                                                batchnorm=True)
+    
+    
+    #
+    cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
+    cpf=BatchNormalization(name='cpflstm_batchnorm')(cpf)
+    cpf = Dropout(dropoutRate)(cpf)
+    
+    npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
+    npf=BatchNormalization(name='npflstm_batchnorm')(npf)
+    npf = Dropout(dropoutRate)(npf)
+    
+    vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
+    vtx=BatchNormalization(name='vtxlstm_batchnorm')(vtx)
+    vtx = Dropout(dropoutRate)(vtx)
+    
+    
+    x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
+    
+    x = block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=True)
+    
+    flavour_pred=Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
+    
+    regInput = Concatenate()( [flavour_pred, Inputs[4]] )
+    
+    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_1')(regInput)
+    reg = Dropout(dropoutRate,name='regression_dropout_0')(reg)
+    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_2')(reg)
+    reg = Dropout(dropoutRate,name='regression_dropout_1')(reg)
+    reg = Dense(nclasses+1,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_3')(reg)
+    reg= Add()([reg,regInput]) #just a correction
+    reg_pred=Dense(nregclasses, activation='linear',kernel_initializer='ones',name='E_pred')(reg)
+    
+    predictions = [flavour_pred,reg_pred]
+    model = Model(inputs=Inputs, outputs=predictions)
+    return model
 
 def convolutional_model_deepcsv(Inputs,nclasses,nregclasses,dropoutRate=-1):
     

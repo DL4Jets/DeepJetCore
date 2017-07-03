@@ -43,6 +43,7 @@ class training_base(object):
         self.startlearningrate=None
         self.trainedepoches=0
         self.compiled=False
+        self.checkpointcounter=0
         
         parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
@@ -91,6 +92,8 @@ class training_base(object):
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         
+        print(shapes)
+        
         for s in shapes:
             self.keras_inputs.append(keras.layers.Input(shape=s))
             self.keras_inputsshapes.append(s)
@@ -109,7 +112,11 @@ class training_base(object):
                                self.train_data.getNClassificationTargets(),
                                self.train_data.getNRegressionTargets(),
                                **modelargs)
-            
+    
+    def saveCheckPoint(self,addstring=''):
+        
+        self.checkpointcounter=self.checkpointcounter+1 
+        self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring +".h5")       
         
     def loadModel(self,filename):
         #import h5py
@@ -184,6 +191,12 @@ class training_base(object):
         
         
         self.saveModel("KERAS_model.h5")
+        
+        import copy
+        #reset all file reads etc
+        tmpdc=copy.deepcopy(self.train_data)
+        del self.train_data
+        self.train_data=tmpdc
         
         return self.keras_model, callbacks.history
     

@@ -1,17 +1,24 @@
 
 
 
-def fixLayersContaining(m, fixOnlyContaining):
+def fixLayersContaining(m, fixOnlyContaining, invert=False):
     isseq=(not hasattr(fixOnlyContaining, "strip") and
             hasattr(fixOnlyContaining, "__getitem__") or
             hasattr(fixOnlyContaining, "__iter__"))
     if not isseq:
         fixOnlyContaining=[fixOnlyContaining]
-        
-    for layidx in range(len(m.layers)):
-        for ident in fixOnlyContaining:
-            if len(ident) and ident in m.get_layer(index=layidx).name:
-                m.get_layer(index=layidx).trainable=False
+    if invert:
+        for layidx in range(len(m.layers)):
+            m.get_layer(index=layidx).trainable=False
+        for layidx in range(len(m.layers)):
+            for ident in fixOnlyContaining:
+                if len(ident) and ident in m.get_layer(index=layidx).name:
+                    m.get_layer(index=layidx).trainable=True
+    else:
+        for layidx in range(len(m.layers)):
+            for ident in fixOnlyContaining:
+                if len(ident) and ident in m.get_layer(index=layidx).name:
+                    m.get_layer(index=layidx).trainable=False
     return m
 
 
