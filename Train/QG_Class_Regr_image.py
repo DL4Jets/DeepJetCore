@@ -48,7 +48,7 @@ shutil.copyfile('../modules/DeepJet_models.py',outputDir+'DeepJet_models.py')
 # configure the in/out/split etc
 config_args = { #we might want to move it to an external file
    'testrun'   : False,
-   'nepochs'   : 2,
+   'nepochs'   : 100,
    'batchsize' : 2000,
    'startlearnrate' : 0.0005,
    'useweights' : False,
@@ -92,6 +92,13 @@ class_weight = None
 def identity(generator):
     for i in generator:
         yield i
+
+#make sure tokens don't expire
+from tokenTools import checkTokens, renew_token_process
+from thread import start_new_thread
+
+checkTokens()
+start_new_thread(renew_token_process,())
 
 if args.mode == 'class':
     model = TrainData_image.classification_model(input_shapes, output_shapes[0])
@@ -163,26 +170,26 @@ plt.savefig(outputDir+'learningcurve.pdf')
 plt.clf()
 #plt.show()
 
-import json
-def normalize(inmap):
-    ret = {}
-    for i in inmap:
-        ret[i] = [float(j) for j in inmap[i]]
-    return ret
-                  
-with open(outputDir+'history.json', 'w') as history:
-    history.write(json.dumps(normalize(callbacks.history.history)))
-
-plt.plot(*callbacks.timer.points)
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('time [s]')
-plt.savefig(outputDir+'loss_vs_time.pdf')
-plt.clf()
-
-with open(outputDir+'loss_vs_time.json', 'w') as timeloss:
-    jmap = {
-        'elapsed' : callbacks.timer.points[0],
-        'loss' : callbacks.timer.points[1]
-    }
-    timeloss.write(json.dumps(normalize(jmap)))
+## import json
+## def normalize(inmap):
+##     ret = {}
+##     for i in inmap:
+##         ret[i] = [float(j) for j in inmap[i]]
+##     return ret
+##                   
+## with open(outputDir+'history.json', 'w') as history:
+##     history.write(json.dumps(normalize(callbacks.history.history)))
+## 
+## plt.plot(*callbacks.timer.points)
+## plt.title('model loss')
+## plt.ylabel('loss')
+## plt.xlabel('time [s]')
+## plt.savefig(outputDir+'loss_vs_time.pdf')
+## plt.clf()
+## 
+## with open(outputDir+'loss_vs_time.json', 'w') as timeloss:
+##     jmap = {
+##         'elapsed' : callbacks.timer.points[0],
+##         'loss' : callbacks.timer.points[1]
+##     }
+##     timeloss.write(json.dumps(normalize(jmap)))

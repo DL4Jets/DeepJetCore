@@ -7,7 +7,7 @@ from keras.models import Model
 class TrainData_QG_simple(TrainData_fullTruth):
     def __init__(self):
         super(TrainData_QG_simple, self).__init__()
-        self.addBranches(['QG_ptD', 'QG_axis2', 'QG_mult'])
+        self.addBranches(['jet_pt', 'jet_eta', 'rho', 'QG_ptD', 'QG_axis2', 'QG_mult'])
 
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         from preprocessing import MeanNormZeroPad
@@ -95,13 +95,13 @@ class TrainData_PT_recur(TrainData_quarkGluon):#TrainData_fullTruth):
         Constructor
         '''
         super(TrainData_PT_recur, self).__init__()
-        
+        self.regressiontargetclasses=['uncPt','Pt']        
         
         self.addBranches([
             #base
-            'jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv',
+            'jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','rho',
             #q/g enhancements
-            'QG_ptD', 'QG_axis2', 'QG_mult',
+            #'QG_ptD', 'QG_axis2', 'QG_mult',
         ])
        
         self.addBranches([
@@ -333,13 +333,13 @@ class TrainData_recurrent_fullTruth(TrainData_fullTruth):
         Constructor
         '''
         super(TrainData_recurrent_fullTruth, self).__init__()
-        
+        self.regressiontargetclasses=['uncPt','Pt']
         
         self.addBranches([
             #base
-            'jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv',
+            'jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','rho',
             #q/g enhancements
-            'QG_ptD', 'QG_axis2', 'QG_mult',
+            #'QG_ptD', 'QG_axis2', 'QG_mult',
         ])
        
         self.addBranches([
@@ -410,7 +410,6 @@ class TrainData_recurrent_fullTruth(TrainData_fullTruth):
         if self.remove:
             notremoves=weighter.createNotRemoveIndices(nparray)
             undef=nparray['isUndefined']
-            hf = np_slice.any(axis=1)
             notremoves -= undef
             print('took ', sw.getAndReset(), ' to create remove indices')
         
