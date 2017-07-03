@@ -627,7 +627,7 @@ class TrainData_leptTruth(TrainData):
         if tuple_in is not None:
             b = tuple_in['isB'].view(numpy.ndarray)
             bb = tuple_in['isBB'].view(numpy.ndarray)
-            allb = b+bb
+            
             
             bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
             blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
@@ -642,7 +642,7 @@ class TrainData_leptTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             l = g + uds
             
-            return numpy.vstack((allb,bb,lepb,c,l)).transpose()  
+            return numpy.vstack((b,bb,lepb,c,l)).transpose()  
         
         
         
@@ -658,7 +658,7 @@ class TrainData_fullTruth(TrainData):
         if tuple_in is not None:
             b = tuple_in['isB'].view(numpy.ndarray)
             bb = tuple_in['isBB'].view(numpy.ndarray)
-            allb = b+bb
+            
             
             bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
             blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
@@ -673,7 +673,7 @@ class TrainData_fullTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             
             
-            return numpy.vstack((allb,bb,lepb,c,uds,g)).transpose()    
+            return numpy.vstack((b,bb,lepb,c,uds,g)).transpose()    
   
 
 
