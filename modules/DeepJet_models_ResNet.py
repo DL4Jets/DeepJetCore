@@ -79,24 +79,19 @@ def get_subnet(num_classes, input_name, data, height=1, filter_list=[64, 128, 25
                   num_classes=num_classes,
                   bottle_neck=bottle_neck)
 
-def resnet_model(inputs, num_classes, input_shapes=None, **kwargs):
-
-#     input_jet = keras.layers.Input(shape=input_shapes[0], name='input_jet')
-#     input_cpf = keras.layers.Input(shape=input_shapes[1], name='input_Cpfcan')
-#     input_npf = keras.layers.Input(shape=input_shapes[2], name='input_Npfcan')
-#     input_sv = keras.layers.Input(shape=input_shapes[3], name='input_sv')
+def resnet_model(inputs, num_classes, **kwargs):
 
     input_jet = inputs[0]
     input_cpf = inputs[1]
     input_npf = inputs[2]
     input_sv = inputs[3]
 
-    cpf = get_subnet(num_classes, data=input_cpf, input_name='Cpfcan', filter_list=[32, 32, 64, 64], bottle_neck=False, units=[2, 2, 2])
-    npf = get_subnet(num_classes, data=input_npf, input_name='Npfcan', filter_list=[16, 16, 32, 32], bottle_neck=False, units=[2, 2, 2])
-    sv = get_subnet(num_classes, data=input_sv, input_name='sv', filter_list=[32, 32, 64, 64], bottle_neck=False, units=[2, 2, 2])
+    cpf = get_subnet(num_classes, data=input_cpf, input_name='Cpfcan', filter_list=[32, 64, 64, 128], bottle_neck=False, units=[2, 2, 2])
+    npf = get_subnet(num_classes, data=input_npf, input_name='Npfcan', filter_list=[32, 32, 64, 64], bottle_neck=False, units=[2, 2, 2])
+    sv = get_subnet(num_classes, data=input_sv, input_name='sv', filter_list=[32, 32, 64], bottle_neck=False, units=[3, 3])
 
     concat = keras.layers.concatenate([input_jet, cpf, npf, sv], name='concat')
-    fc1 = FC(concat, 512, p=0.3, name='fc1')
+    fc1 = FC(concat, 512, p=0.2, name='fc1')
     output = keras.layers.Dense(num_classes, activation='softmax', name='softmax')(fc1)
 
     model = keras.models.Model(inputs=inputs, outputs=[output])
