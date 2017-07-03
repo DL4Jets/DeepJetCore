@@ -5,7 +5,7 @@ from Losses import loss_NLL
 from modelTools import fixLayersContaining
 
 #also does all the parsing
-train=training_base(testrun=True)
+train=training_base(testrun=False)
 
 newtraining= not train.modelSet()
 #for recovering a training
@@ -23,7 +23,7 @@ if True or newtraining:
 
 
 print(train.keras_model.summary())
-model,history = train.trainModel(nepochs=1, 
+model,history = train.trainModel(nepochs=50, 
                                  batchsize=10000, 
                                  stop_patience=300, 
                                  lr_factor=0.5, 
@@ -49,7 +49,7 @@ print(train.keras_model.summary())
 
 
 
-model,history = train.trainModel(nepochs=1, 
+model,history = train.trainModel(nepochs=30, 
                                  batchsize=10000, 
                                  stop_patience=300, 
                                  lr_factor=0.5, 

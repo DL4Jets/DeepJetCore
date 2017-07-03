@@ -47,9 +47,9 @@ def model_deepFlavourReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
     regInput = Concatenate()( [flavour_pred, Inputs[4]] )
     
     reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_1')(regInput)
-    reg = Dropout(dropoutRate,name='regression_dropout_0')(reg)
+    reg = Dropout(dropoutRate*1.5,name='regression_dropout_0')(reg)
     reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_2')(reg)
-    reg = Dropout(dropoutRate,name='regression_dropout_1')(reg)
+    reg = Dropout(dropoutRate*1.5,name='regression_dropout_1')(reg)
     reg = Dense(nclasses+1,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_3')(reg)
     reg= Add()([reg,regInput]) #just a correction
     reg_pred=Dense(nregclasses, activation='linear',kernel_initializer='ones',name='E_pred')(reg)

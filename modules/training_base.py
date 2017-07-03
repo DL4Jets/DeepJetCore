@@ -116,7 +116,8 @@ class training_base(object):
     def saveCheckPoint(self,addstring=''):
         
         self.checkpointcounter=self.checkpointcounter+1 
-        self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring +".h5")       
+        self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring +".h5")    
+           
         
     def loadModel(self,filename):
         #import h5py
