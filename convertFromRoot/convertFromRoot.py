@@ -74,7 +74,7 @@ def main(argv=None):
         TrainData_PT_recur,
         TrainData_FatJet_Test,
         TrainData_QG_simple,
-        TrainData_recurrent_fullTruth
+        TrainData_recurrent_fullTruth,
         TrainData_deepFlavour_FT_map_reg,
         TrainData_deepCSV_int,
         TrainData_deepCSV_conv,
