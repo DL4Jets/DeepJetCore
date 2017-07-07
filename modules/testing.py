@@ -93,8 +93,11 @@ class testDescriptor(object):
             features=td.x
             labels=td.y
             weights=td.w[0]
+            
+            print(regressionclasses)
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
+            print(prediction[1].shape[1])
             if isinstance(prediction, list):
                 formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 if prediction[1].shape[1] > len(regressionclasses):
@@ -192,7 +195,9 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
                     invalidlist='',
                     extralegend=None,
-                    logY=True):#['solid?udsg','hatched?c']): 
+                    logY=True,
+                    individual=False,
+                    xaxis=""):#['solid?udsg','hatched?c']): 
     
     import copy
     
@@ -217,8 +222,10 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     colors_list=createColours(colors_list,namelistcopy,nnames,extralegcopy)   
         
-        
+    #check if multi-input file   
     files=makeASequence(intextfile,len(namelistcopy))
+    
+    
     allcuts=makeASequence(cuts,len(namelistcopy))
     probabilities_list=makeASequence(probabilities_list,len(namelistcopy))
     truths_list=makeASequence(truths_list,len(namelistcopy))
@@ -237,7 +244,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY)
+                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
+                        individual,xaxis)
         
         except Exception as e:
             print('error for these inputs:')

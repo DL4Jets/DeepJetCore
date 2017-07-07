@@ -43,7 +43,7 @@ void rocCurveCollection::addROC(const TString& name, const TString& probability,
 
 
 void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
-        const TString&outfile, TCanvas* cv, TFile * f){
+        const TString&outfile, TCanvas* cv, TFile * f, std::vector<TChain*>* chainvec){
 
     gROOT->SetBatch();
 
@@ -56,9 +56,13 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     }
     size_t count=0;
     std::vector<TH1D*> probhistos,vetohistos,invalidhistos,invalidvetohistos;
-    for(auto& rc:roccurves_){
+    for(size_t i=0;i<roccurves_.size();i++){
+        rocCurve& rc=roccurves_.at(i);
         rc.setNBins(200);
-        rc.process(c);
+        if(c)
+            rc.process(c);
+        else
+            rc.process(chainvec->at(i));
         TString tempname="tmph_";
         tempname+=count;
         count++;
@@ -98,7 +102,10 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     haxis.GetYaxis()->SetTitleSize(0.05);
     //haxis.GetYaxis()->SetTitleOffset(0.9);
     haxis.GetYaxis()->SetLabelSize(0.045);
-    haxis.GetXaxis()->SetTitle("efficiency");
+    if(xaxis_.Length())
+        haxis.GetXaxis()->SetTitle(xaxis_);
+    else
+        haxis.GetXaxis()->SetTitle("efficiency");
     haxis.GetXaxis()->SetTitleSize(0.05);
     haxis.GetXaxis()->SetLabelSize(0.045);
     //haxis.GetXaxis()->SetTitleOffset(0.95);
@@ -235,6 +242,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         cv->Print(outpdf);
         cv->Write();
         cv->Print(filename+".C");
+
         //if(cmsstyle_) //not working due to missing libraries
         //    cv->Print(filename+".png");
     }

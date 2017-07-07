@@ -1,7 +1,7 @@
 from keras.layers import Dense, Dropout, Flatten,Concatenate, Convolution2D, LSTM,merge, Convolution1D, Conv2D
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
-from keras.layers.merge import Add
+from keras.layers.merge import Add, Multiply
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage
 
 
@@ -26,33 +26,31 @@ def model_deepFlavourReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
     
     #
     cpf  = LSTM(150,go_backwards=True,implementation=2, name='cpf_lstm')(cpf)
-    cpf=BatchNormalization(name='cpflstm_batchnorm')(cpf)
+    cpf=BatchNormalization(momentum=0.6,name='cpflstm_batchnorm')(cpf)
     cpf = Dropout(dropoutRate)(cpf)
     
     npf = LSTM(50,go_backwards=True,implementation=2, name='npf_lstm')(npf)
-    npf=BatchNormalization(name='npflstm_batchnorm')(npf)
+    npf=BatchNormalization(momentum=0.6,name='npflstm_batchnorm')(npf)
     npf = Dropout(dropoutRate)(npf)
     
     vtx = LSTM(50,go_backwards=True,implementation=2, name='vtx_lstm')(vtx)
-    vtx=BatchNormalization(name='vtxlstm_batchnorm')(vtx)
+    vtx=BatchNormalization(momentum=0.6,name='vtxlstm_batchnorm')(vtx)
     vtx = Dropout(dropoutRate)(vtx)
     
     
     x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
     
-    x = block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=True)
+    x = block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=True,batchmomentum=0.6)
     
     flavour_pred=Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
     
-    regInput = Concatenate()( [flavour_pred, Inputs[4]] )
+    regInput = Concatenate()( [flavour_pred, Inputs[4] ] ) #ad hoc normalisation
+    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_1',trainable=True)(regInput)
+    reg = Dropout(dropoutRate,name='regression_dropout_0')(reg)
+    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_2',trainable=True)(reg)
+    reg = Dropout(dropoutRate,name='regression_dropout_1')(reg)
     
-    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_1')(regInput)
-    reg = Dropout(dropoutRate*1.5,name='regression_dropout_0')(reg)
-    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_2')(reg)
-    reg = Dropout(dropoutRate*1.5,name='regression_dropout_1')(reg)
-    reg = Dense(nclasses+1,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_3')(reg)
-    reg= Add()([reg,regInput]) #just a correction
-    reg_pred=Dense(nregclasses, activation='linear',kernel_initializer='ones',name='E_pred')(reg)
+    reg_pred=Dense(nregclasses, activation='linear',kernel_initializer='ones',name='regression_pred',trainable=True)(reg)
     
     predictions = [flavour_pred,reg_pred]
     model = Model(inputs=Inputs, outputs=predictions)

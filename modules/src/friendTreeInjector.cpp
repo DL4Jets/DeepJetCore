@@ -31,6 +31,7 @@ void friendTreeInjector::addFromFile(const TString& filename, const TString& ali
 		toinject.push_back(b);
 	}
 	friendaliases_.push_back(alias);
+	std::cout << "added alias "<<alias <<std::endl;
 
 	if(treesandfriends_.size()<1){
 		for(size_t i=0;i<originroots.size();i++){
@@ -51,6 +52,7 @@ void friendTreeInjector::addFromFile(const TString& filename, const TString& ali
 		for(size_t i=0;i<originroots.size();i++){
 			if(originroots.at(i) == orig){
 				o.push_back(toinject.at(i));
+				std::cout << toinject.at(i) << std::endl;
 				break;
 			}
 		}

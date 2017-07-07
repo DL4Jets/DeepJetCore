@@ -9,7 +9,7 @@ train=training_base(testrun=False)
 
 newtraining= not train.modelSet()
 #for recovering a training
-if True or newtraining:
+if newtraining:
     from models import model_deepFlavourReference
     
     train.setModel(model_deepFlavourReference,dropoutRate=0.1)
@@ -19,7 +19,7 @@ if True or newtraining:
     train.compileModel(learningrate=0.001,
                        loss=['categorical_crossentropy',loss_NLL],
                        metrics=['accuracy'],
-                       loss_weights=[1., 0.00000001])
+                       loss_weights=[1., 0.0001])
 
 
 print(train.keras_model.summary())

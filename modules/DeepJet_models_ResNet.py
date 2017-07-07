@@ -79,12 +79,16 @@ def get_subnet(num_classes, input_name, data, height=1, filter_list=[64, 128, 25
                   num_classes=num_classes,
                   bottle_neck=bottle_neck)
 
-def resnet_model(inputs, num_classes, **kwargs):
+def resnet_model(inputs, num_classes,num_regclasses, **kwargs):
 
     input_jet = inputs[0]
     input_cpf = inputs[1]
     input_npf = inputs[2]
     input_sv = inputs[3]
+    
+    input_regDummy=inputs[4]
+    
+    reg=keras.layers.Dense(2,kernel_initializer='ones',trainable=False,name='reg_off')(input_regDummy)
 
     cpf = get_subnet(num_classes, data=input_cpf, input_name='Cpfcan', filter_list=[32, 64, 64, 128], bottle_neck=False, units=[2, 2, 2])
     npf = get_subnet(num_classes, data=input_npf, input_name='Npfcan', filter_list=[32, 32, 64, 64], bottle_neck=False, units=[2, 2, 2])
@@ -94,7 +98,7 @@ def resnet_model(inputs, num_classes, **kwargs):
     fc1 = FC(concat, 512, p=0.2, name='fc1')
     output = keras.layers.Dense(num_classes, activation='softmax', name='softmax')(fc1)
 
-    model = keras.models.Model(inputs=inputs, outputs=[output])
+    model = keras.models.Model(inputs=inputs, outputs=[output,reg])
 
     return model
 

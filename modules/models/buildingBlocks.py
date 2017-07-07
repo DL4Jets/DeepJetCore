@@ -6,7 +6,7 @@ from keras.layers import Dense, Dropout, Flatten,Convolution2D, Convolution1D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 
-def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=True,batchnorm=False):
+def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=True,batchnorm=False,batchmomentum=0.6):
     '''
     deep Flavour convolution part. 
     '''
@@ -14,15 +14,15 @@ def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=T
     if active:
         cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv0')(cpf)
         if batchnorm:
-            cpf = BatchNormalization(name='cpf_batchnorm0')(cpf)
+            cpf = BatchNormalization(momentum=batchmomentum ,name='cpf_batchnorm0')(cpf)
         cpf = Dropout(dropoutRate,name='cpf_dropout0')(cpf)                                                   
         cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv1')(cpf)
         if batchnorm:
-            cpf = BatchNormalization(name='cpf_batchnorm1')(cpf)
+            cpf = BatchNormalization(momentum=batchmomentum,name='cpf_batchnorm1')(cpf)
         cpf = Dropout(dropoutRate,name='cpf_dropout1')(cpf)                                                   
         cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv2')(cpf)
         if batchnorm:
-            cpf = BatchNormalization(name='cpf_batchnorm2')(cpf)
+            cpf = BatchNormalization(momentum=batchmomentum,name='cpf_batchnorm2')(cpf)
         cpf = Dropout(dropoutRate,name='cpf_dropout2')(cpf)                                                   
         cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu' , name='cpf_conv3')(cpf)
     else:
@@ -32,11 +32,11 @@ def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=T
     if active:
         npf = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='npf_conv0')(npf)
         if batchnorm:
-            npf = BatchNormalization(name='npf_batchnorm0')(npf)
+            npf = BatchNormalization(momentum=batchmomentum,name='npf_batchnorm0')(npf)
         npf = Dropout(dropoutRate,name='npf_dropout0')(npf) 
         npf = Convolution1D(16, 1, kernel_initializer='lecun_uniform',  activation='relu', name='npf_conv1')(npf)
         if batchnorm:
-            npf = BatchNormalization(name='npf_batchnorm1')(npf)
+            npf = BatchNormalization(momentum=batchmomentum,name='npf_batchnorm1')(npf)
         npf = Dropout(dropoutRate,name='npf_dropout1')(npf)
         npf = Convolution1D(4, 1, kernel_initializer='lecun_uniform',  activation='relu' , name='npf_conv2')(npf)
     else:
@@ -46,15 +46,15 @@ def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=T
     if active:
         vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv0')(vtx)
         if batchnorm:
-            vtx = BatchNormalization(name='vtx_batchnorm0')(vtx)
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm0')(vtx)
         vtx = Dropout(dropoutRate,name='vtx_dropout0')(vtx) 
         vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv1')(vtx)
         if batchnorm:
-            vtx = BatchNormalization(name='vtx_batchnorm1')(vtx)
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm1')(vtx)
         vtx = Dropout(dropoutRate,name='vtx_dropout1')(vtx)
         vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv2')(vtx)
         if batchnorm:
-            vtx = BatchNormalization(name='vtx_batchnorm2')(vtx)
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm2')(vtx)
         vtx = Dropout(dropoutRate,name='vtx_dropout2')(vtx)
         vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv3')(vtx)
     else:
@@ -62,39 +62,39 @@ def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=T
 
     return cpf,npf,vtx
 
-def block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=False):
+def block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=False,batchmomentum=0.6):
     if active:
         x=  Dense(200, activation='relu',kernel_initializer='lecun_uniform', name='df_dense0')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm0')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm0')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout0')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense1')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm1')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm1')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout1')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense2')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm2')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm2')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout2')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense3')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm3')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm3')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout3')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense4')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm4')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm4')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout4')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense5')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm5')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm5')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout5')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense6')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm6')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm6')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout6')(x)
         x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform', name='df_dense7')(x)
         if batchnorm:
-            x = BatchNormalization(name='df_dense_batchnorm7')(x)
+            x = BatchNormalization(momentum=batchmomentum,name='df_dense_batchnorm7')(x)
         x = Dropout(dropoutRate,name='df_dense_dropout7')(x)
     else:
         x= Dense(1,kernel_initializer='zeros',trainable=False,name='df_dense_off')(x)

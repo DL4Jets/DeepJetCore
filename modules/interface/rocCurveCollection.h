@@ -14,6 +14,7 @@
 #include "TChain.h"
 #include "TFile.h"
 #include "TCanvas.h"
+#include <vector>
 
 class rocCurveCollection{
 public:
@@ -40,6 +41,7 @@ public:
 
 	void setCMSStyle(bool cmsst){cmsstyle_=cmsst;}
 	void setLogY(bool logy){logy_=logy;}
+	void setXaxis(TString axis){xaxis_=axis;}
 
 //	void addROC(const TString& name, const TString& probability, const TString& truth,
 //		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
@@ -48,7 +50,8 @@ public:
 		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="");
 
 
-	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0);
+	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0,
+	        std::vector<TChain*>* chainvec=0);
 
 private:
 	TLegend * leg_;
@@ -59,6 +62,7 @@ private:
 	bool cmsstyle_;
 	TString comment0_, comment1_;
 	bool logy_;
+	TString xaxis_;
 };
 
 
