@@ -5,43 +5,45 @@ import os
 os.system('mkdir -p '+outdir)
 outdir+='/'
 
-files30_50=['/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_30_50_PRED/tree_association.txt',
+imagepath='/afs/cern.ch/work/m/mverzett/public/forAnna/DPS/image_nopuppi/'
+
+files30_50=[#'/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_30_50_PRED/tree_association.txt',
             '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_30_50_PRED/tree_association.txt',
                        '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/recurrent_qcd_30_50/tree_association.txt',
-                           '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/image_qcd_30_50/tree_association.txt']
+                           imagepath+'qcd_30_50/tree_association.txt']
 
-files80_120=['/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_80_120_PRED/tree_association.txt',
+files80_120=[#'/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_80_120_PRED/tree_association.txt',
              '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_80_120_PRED/tree_association.txt',
                         '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/recurrent_qcd_80_120/tree_association.txt',
-                            '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/image_qcd_80_120/tree_association.txt']
+                            imagepath+'qcd_80_120/tree_association.txt']
 
 
-files300_470=['/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_300_470_PRED/tree_association.txt',
+files300_470=[#'/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_300_470_PRED/tree_association.txt',
               '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_300_470_PRED/tree_association.txt',
                          '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/recurrent_qcd_300_470/tree_association.txt',
-                             '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/image_qcd_300_470/tree_association.txt']
+                             imagepath+'qcd_300_470/tree_association.txt']
 
-files600_800=['/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_600_800_PRED/tree_association.txt',
+files600_800=[#'/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_600_800_PRED/tree_association.txt',
               '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_600_800_PRED/tree_association.txt',
                          '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/recurrent_qcd_600_800/tree_association.txt',
-                             '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/image_qcd_600_800/tree_association.txt']
+                             imagepath+'qcd_600_800/tree_association.txt']
 
 
 
-legend= ['Q/G LH',
-                 'DeepFlavour',
+legend= [#'Q/G LH',
+                 'DeepJet',
                  'recurrent',
                  'convolutional']
 
-colors=['blue',
-                 'purple',
+colors=[#'blue',
+                 'red',
                  'green,dashed',
                  'darkred,dotted']
 
-probs=['jet_qgl',
+probs=[#'jet_qgl',
+                 '0.prob_isUDS/(0.prob_isUDS + 0.prob_isG)',
                  '1.prob_isUDS/(1.prob_isUDS + 1.prob_isG)',
-                 '2.prob_isUDS/(2.prob_isUDS + 2.prob_isG)',
-                 '3.prob_isUDS/(3.prob_isUDS + 3.prob_isG)']
+                 '2.prob_isUDS/(2.prob_isUDS + 2.prob_isG)']
 
 forward='((jet_eta>-2.4 && jet_eta<-1.3) || (jet_eta>1.3 && jet_eta<2.4))'
 central='(jet_eta>-1.3 && jet_eta<1.3)'

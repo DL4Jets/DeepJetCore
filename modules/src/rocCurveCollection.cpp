@@ -16,6 +16,7 @@
 #include "TFile.h"
 #include "TLegendEntry.h"
 #include "TLatex.h"
+#include <fstream>
 
 //void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
 //        const TString& vetotruth, int linecol, const TString& cuts, int linestyle){
@@ -58,14 +59,16 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     std::vector<TH1D*> probhistos,vetohistos,invalidhistos,invalidvetohistos;
     for(size_t i=0;i<roccurves_.size();i++){
         rocCurve& rc=roccurves_.at(i);
-        rc.setNBins(200);
+        std::ofstream outtxt((filename+"_"+rc.compatName()+".txt").Data());
+        rc.setNBins(300);
         if(c)
-            rc.process(c);
+            rc.process(c,outtxt);
         else
-            rc.process(chainvec->at(i));
+            rc.process(chainvec->at(i),outtxt);
         TString tempname="tmph_";
         tempname+=count;
         count++;
+        outtxt.close();
 
         TH1D* ha=(TH1D*)rc.getProbHisto()->Clone(tempname);
         probhistos.push_back(ha);

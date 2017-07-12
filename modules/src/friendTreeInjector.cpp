@@ -52,7 +52,7 @@ void friendTreeInjector::addFromFile(const TString& filename, const TString& ali
 		for(size_t i=0;i<originroots.size();i++){
 			if(originroots.at(i) == orig){
 				o.push_back(toinject.at(i));
-				std::cout << toinject.at(i) << std::endl;
+				//std::cout << toinject.at(i) << std::endl;
 				break;
 			}
 		}

@@ -37,6 +37,7 @@ model,history = train.trainModel(nepochs=50,
 print('indentification training finished. Starting regression training...')
 
 train.saveCheckPoint('IDonly')
+exit()
 
 train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=True)
 train.compileModel(learningrate=0.001,

@@ -89,7 +89,7 @@ class testDescriptor(object):
             ##DO NOT COMMIT
             if False and hasattr(td,'regtruth'):
                regressionclasses=['uncPt','Pt'] ###DO NOT COMMIT!
-            
+            #regressionclasses = ['uncPt', 'regPt']
             features=td.x
             labels=td.y
             weights=td.w[0]
@@ -266,7 +266,9 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     # use multiprocessing return thread for waiting option
     
 def makePlots_async(intextfile, name_list, variables, cuts, colours,
-                     outpdffile, xaxis='',yaxis='',normalized=False,profiles=False,minimum=-1e100,maximum=1e100): 
+                     outpdffile, xaxis='',yaxis='',
+                     normalized=False,profiles=False,
+                     minimum=-1e100,maximum=1e100): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -292,8 +294,43 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
     import multiprocessing
     p = multiprocessing.Process(target=worker)
     p.start()
-    return p     
+    return p   
+  
+def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
+                     outpdffile, xaxis='',yaxis='',
+                     minimum=-1e100,maximum=1e100,
+                     rebinfactor=1): 
+    
+    
+    files_list=makeASequence(intextfile,len(name_list))
+    variables_list=makeASequence(variables,len(name_list))
+    cutsnum_list=makeASequence(cutsnum,len(name_list))
+    cutsden_list=makeASequence(cutsden,len(name_list))
+    
+    colours_list=createColours(colours, name_list)
+    
+    
 
+    import c_makePlots
+    def worker():
+        try:
+            c_makePlots.makeEffPlots(files_list,name_list,
+                                 variables_list,cutsnum_list,cutsden_list,colours_list,
+                                 outpdffile,xaxis,yaxis,rebinfactor,minimum,maximum)
+        except Exception as e:
+            print('error for these inputs:')
+            print(files_list)
+            print(name_list)
+            print(variables_list)
+            print(cutsnum_list)
+            print(cutsden_list)
+            print(colours_list)
+            raise e
+#    return worker()
+    import multiprocessing
+    p = multiprocessing.Process(target=worker)
+    p.start()
+    return p 
 
 
 def make_association(txtfiles, input_branches=None, output_branches=None, limit=None):

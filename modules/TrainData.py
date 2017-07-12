@@ -676,46 +676,41 @@ class TrainData_fullTruth(TrainData):
             return numpy.vstack((b,bb,lepb,c,uds,g)).transpose()    
   
 
-class TrainData_physTruth(TrainData):
+class TrainData_QGOnly(TrainData):
     def __init__(self):
         TrainData.__init__(self)
         self.clear()
-        self.undefTruth=['isPhysUndefined']
+        self.undefTruth=['isUndefined']
         
-        self.referenceclass='isPhysUD'
+        self.referenceclass='isUD'
         
-        self.truthclasses=['isPhysB','isPhysBB','isPhysGBB',
-                           'isPhysLeptonicB','isPhysLeptonicB_C',
-                           'isPhysC','isPhysGCC''isPhysCC'
-                           'isPhysUD',
-                           'isPhysS','isPhysG','isPhysUndefined']
         
         
     def reduceTruth(self, tuple_in):
         
-        self.reducedtruthclasses=['isPhysB','isPhysBB','isPhysLeptB','isPhysC','isPhysUDS','isPhysG']
+        self.reducedtruthclasses=['isUDS','isG']
         if tuple_in is not None:
-            b = tuple_in['isPhysB'].view(numpy.ndarray)
-            bb = tuple_in['isPhysBB'].view(numpy.ndarray)
-            gbb = tuple_in['isPhysGBB'].view(numpy.ndarray)
-            
-            
-            bl = tuple_in['isPhysLeptonicB'].view(numpy.ndarray)
-            blc = tuple_in['isPhysLeptonicB_C'].view(numpy.ndarray)
-            lepb=bl+blc
+            #b = tuple_in['isB'].view(numpy.ndarray)
+            #bb = tuple_in['isBB'].view(numpy.ndarray)
+            #gbb = tuple_in['isGBB'].view(numpy.ndarray)
+            #
+            #
+            #bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
+            #blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
+            #lepb=bl+blc
+            #
+            #c = tuple_in['isC'].view(numpy.ndarray)
+            #cc = tuple_in['isCC'].view(numpy.ndarray)
+            #gcc = tuple_in['isGCC'].view(numpy.ndarray)
            
-            c = tuple_in['isPhysC'].view(numpy.ndarray)
-            cc = tuple_in['isPhysCC'].view(numpy.ndarray)
-            gcc = tuple_in['isPhysGCC'].view(numpy.ndarray)
-           
-            ud = tuple_in['isPhysUD'].view(numpy.ndarray)
-            s = tuple_in['isPhysS'].view(numpy.ndarray)
+            ud = tuple_in['isUD'].view(numpy.ndarray)
+            s = tuple_in['isS'].view(numpy.ndarray)
             uds=ud+s
             
-            g = tuple_in['isPhysG'].view(numpy.ndarray)
+            g = tuple_in['isG'].view(numpy.ndarray)
             
             
-            return numpy.vstack((b,bb+gbb,lepb,c+cc+gcc,uds,g)).transpose()    
+            return numpy.vstack((uds,g)).transpose()    
 
 class TrainData_quarkGluon(TrainData):
     def __init__(self):

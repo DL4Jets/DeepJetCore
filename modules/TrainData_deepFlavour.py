@@ -13,7 +13,7 @@ from keras.layers.pooling import MaxPooling2D
 #tensorflow.python.control_flow_ops = control_flow_ops
 
 from TrainData import TrainData_fullTruth
-from TrainData import TrainData,fileTimeOut,TrainData_physTruth
+from TrainData import TrainData,fileTimeOut,TrainData_QGOnly
 
 class TrainData_deepFlavour_FT(TrainData_fullTruth):
     '''
@@ -290,9 +290,9 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
                                    self.branches[3],
                                    self.branchcutoffs[3],self.nsamples)
         
-        x_reg = MeanNormZeroPad(filename,TupleMeanStd,
-                                   [self.branches[4]],
-                                   [self.branchcutoffs[4]],self.nsamples)
+        #x_reg = MeanNormZeroPad(filename,TupleMeanStd,
+        #                           [self.branches[4]],
+        #                           [self.branchcutoffs[4]],self.nsamples)
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
@@ -335,7 +335,7 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
             x_sv=x_sv[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
             
-            x_reg=x_reg[notremoves > 0]
+            reco_pt=reco_pt[notremoves > 0]
             correctionfactor=correctionfactor[notremoves > 0]
        
         newnsamp=x_global.shape[0]
@@ -345,12 +345,12 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
         print(x_global.shape,self.nsamples)
 
         self.w=[weights,weights]
-        self.x=[x_global,x_cpf,x_npf,x_sv,x_reg]
+        self.x=[x_global,x_cpf,x_npf,x_sv,reco_pt]
         self.y=[alltruth,correctionfactor]
         
 
 
-class TrainData_deepFlavour_PhysFT_reg(TrainData_physTruth):
+class TrainData_deepFlavour_QGOnly_reg(TrainData_QGOnly):
     '''
     classdocs
     '''
@@ -359,7 +359,7 @@ class TrainData_deepFlavour_PhysFT_reg(TrainData_physTruth):
         '''
         Constructor
         '''
-        TrainData_physTruth.__init__(self)
+        TrainData_QGOnly.__init__(self)
         
         
         self.addBranches(['jet_pt', 'jet_eta',
@@ -483,7 +483,7 @@ class TrainData_deepFlavour_PhysFT_reg(TrainData_physTruth):
         
         if self.remove:
             notremoves=weighter.createNotRemoveIndices(Tuple)
-            undef=Tuple['isPhysUndefined']
+            undef=Tuple['isUndefined']
             notremoves-=undef
             print('took ', sw.getAndReset(), ' to create remove indices')
         
