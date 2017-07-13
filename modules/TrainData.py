@@ -83,6 +83,8 @@ class TrainData(object):
         
         '''
         
+        self.treename="deepntuplizer/tree"
+        
         self.undefTruth=['isUndefined']
         
         self.referenceclass='isB'
@@ -441,7 +443,12 @@ class TrainData(object):
             
         #print(branches)
         #remove duplicates
-        branches=list(set(branches))
+        usebranches=list(set(branches))
+        tmpbb=[]
+        for b in usebranches:
+            if len(b):
+                tmpbb.append(b)
+        usebranches=tmpbb
             
         import ROOT
         from root_numpy import tree2array, root2array
@@ -451,9 +458,9 @@ class TrainData(object):
             print('add files')
             nparray = root2array(
                 filenames, 
-                treename = "deepntuplizer/tree", 
+                treename = self.treename, 
                 stop = limit,
-                branches = branches
+                branches = usebranches
                 )
             print('done add files')
             return nparray
@@ -461,10 +468,10 @@ class TrainData(object):
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile(filenames)
-            tree = rfile.Get("deepntuplizer/tree")
+            tree = rfile.Get(self.treename)
             if not self.nsamples:
                 self.nsamples=tree.GetEntries()
-            nparray = tree2array(tree, stop=limit, branches=branches)
+            nparray = tree2array(tree, stop=limit, branches=usebranches)
             return nparray
         
     def make_means(self, nparray):
@@ -520,7 +527,7 @@ class TrainData(object):
         
         fileTimeOut(filename,120) #give eos a minute to recover
         rfile = ROOT.TFile(filename)
-        tree = rfile.Get("deepntuplizer/tree")
+        tree = rfile.Get(self.treename)
         self.nsamples=tree.GetEntries()
         
         #print('took ', sw.getAndReset(), ' seconds for getting tree entries')

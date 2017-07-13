@@ -28,6 +28,8 @@
 
 using namespace boost::python; //for some reason....
 
+static TString treename="deepntuplizer/tree";
+
 enum modeen {en_flat,en_particlewise};
 //can be extended later to run on a list of deep AND flat branches. Start simple first
 
@@ -134,7 +136,7 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
     TStopwatch stopw;
 
     //all branches are floats!
-    TTree* tree=(TTree*)tfile->Get("deepntuplizer/tree");
+    TTree* tree=(TTree*)tfile->Get(treename);
 
     for(auto& d:datacollection)
         d.setup(tree);
@@ -252,7 +254,7 @@ void particle_binner(
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
     //connect all branches
     branches.setup(tree);
@@ -461,7 +463,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
 
     //the order is important!
@@ -590,7 +592,7 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
     //connect all branches
     if(!count)
@@ -654,6 +656,9 @@ void meanPad() {
 	//make real zero pad
 	__hidden::indata::meanPadding = true;
 }
+void setTreeName(std::string name){
+    treename=name;
+}
 
 
 // Expose classes and methods to Python
@@ -669,4 +674,5 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("fillDensityLayers", &fillDensityLayers);
 		def("meanPad", &meanPad);
 		def("zeroPad", &zeroPad);
+        def("setTreeName", &setTreeName);
 }

@@ -34,7 +34,8 @@ conda install --name $envname --file $envfile
 source activate $envname
 pip install -r $pipfile
 
-conda install scikit-learn
+#conda install scikit-learn
+#conda install numpy #to update packages. fast bugfix. make a new conda list later
 
 cp activateROOT.sh  $CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh 
 

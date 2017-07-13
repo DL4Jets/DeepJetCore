@@ -62,12 +62,19 @@ class Weighter(object):
     def addDistributions(self,Tuple):
         import numpy
         selidxs=[]
-        labeltuple=Tuple[self.classes]
+        
         ytuple=Tuple[self.nameY]
         xtuple=Tuple[self.nameX]
         
-        for c in self.classes:
-            selidxs.append(labeltuple[c]>0)
+        useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0
+        
+        if not useonlyoneclass:
+            labeltuple=Tuple[self.classes]
+            for c in self.classes:
+                selidxs.append(labeltuple[c]>0)
+        else:
+            selidxs=[numpy.zeros(len(xtuple),dtype='int')+1]
+            
             
         for i in range(len(self.classes)):
             tmphist,xe,ye=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
@@ -115,7 +122,7 @@ class Weighter(object):
                 print('createRemoveProbabilities: reference index not found in class list')
                 raise Exception('createRemoveProbabilities: reference index not found in class list')
             
-        if len(self.classes) > 0:
+        if len(self.classes) > 0 and len(self.classes[0]):
             self.Axixandlabel = [self.nameX, self.nameY]+ self.classes
         else:
             self.Axixandlabel = [self.nameX, self.nameY]
@@ -184,17 +191,22 @@ class Weighter(object):
         xaverage=[]
         norm=[]
         yaverage=[]
+        
+        useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0
+        
         for c in self.classes:
             xaverage.append(0)
             norm.append(0)
             yaverage.append(0)
+            
+        
 
         for jet in iter(Tuple[self.Axixandlabel]):
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
             
             for index, classs in enumerate(self.classes):
-                if 1 == jet[classs]:
+                if  useonlyoneclass or 1 == jet[classs]:
                     rand=numpy.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
 
@@ -227,13 +239,16 @@ class Weighter(object):
         
         weight = numpy.zeros(len(Tuple))
         jetcount=0
+        
+        useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0
+        
         for jet in iter(Tuple[self.Axixandlabel]):
 
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
             
             for index, classs in enumerate(self.classes):
-                if 1 == jet[classs]:
+                if 1 == jet[classs] or useonlyoneclass:
                     weight[jetcount]=(self.binweights[index][binX][binY])
                     
             jetcount=jetcount+1        
