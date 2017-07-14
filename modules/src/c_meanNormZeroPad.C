@@ -30,6 +30,7 @@ using namespace boost::python; //for some reason....
 
 static TString treename="deepntuplizer/tree";
 
+
 enum modeen {en_flat,en_particlewise};
 //can be extended later to run on a list of deep AND flat branches. Start simple first
 
@@ -659,7 +660,9 @@ void meanPad() {
 void setTreeName(std::string name){
     treename=name;
 }
-
+void doScaling(bool doit){
+    __hidden::indata::doscaling=doit;
+}
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
@@ -672,7 +675,8 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("fillDensityMap", &fillDensityMap);
     def("fillCountMap", &fillCountMap);
     def("fillDensityLayers", &fillDensityLayers);
-		def("meanPad", &meanPad);
-		def("zeroPad", &zeroPad);
-        def("setTreeName", &setTreeName);
+    def("meanPad", &meanPad);
+    def("zeroPad", &zeroPad);
+    def("setTreeName", &setTreeName);
+    def("doScaling", &doScaling);
 }

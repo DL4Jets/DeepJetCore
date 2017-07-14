@@ -25,6 +25,7 @@ namespace __hidden{
 class indata{
 public:
 	static bool meanPadding;
+	static bool doscaling;
 
 	indata():max(0),offset_(0),mask_(-1){
 

@@ -73,9 +73,9 @@ class Weighter(object):
             for c in self.classes:
                 selidxs.append(labeltuple[c]>0)
         else:
-            selidxs=[numpy.zeros(len(xtuple),dtype='int')+1]
+            selidxs=[numpy.zeros(len(xtuple),dtype='int')<1]
             
-            
+        
         for i in range(len(self.classes)):
             tmphist,xe,ye=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
             self.xedges=xe
@@ -209,7 +209,7 @@ class Weighter(object):
                 if  useonlyoneclass or 1 == jet[classs]:
                     rand=numpy.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
-
+                    
                     if rand < prob and index != self.refclassidx:
                         #print('rm  ',index,self.refclassidx,jet[classs],classs)
                         notremove[counter]=0
