@@ -91,7 +91,7 @@ makeEffPlots_async(infile,      #input file or file list
                 'auto',     #line color and style (e.g. 'red,dashed')
                 outdir+'DF_ID_jet_npv_light.pdf',  #output file (pdf)
                 'npv',     #xaxisname
-                'light quark efficiency' ,    #yaxisname
+                'light jet efficiency' ,    #yaxisname
                    rebinfactor=5)       #normalise
 
 
@@ -122,7 +122,7 @@ makeEffPlots_async(infile,      #input file or file list
                 'auto',     #line color and style (e.g. 'red,dashed')
                 outdir+'DF_ID_jet_pt_light_QCD.pdf',  #output file (pdf)
                 'jet p_{T} [GeV]',     #xaxisname
-                'light quark efficiency' ,    #yaxisname
+                'light jet efficiency' ,    #yaxisname
                    rebinfactor=1, SetLogY = True, minimum = 0.0005, maximum = 1.5, Xmin=20., Xmax=900.)       #normalise
 
 
@@ -175,6 +175,6 @@ makeEffPlots_async(infile,      #input file or file list
                 'auto',     #line color and style (e.g. 'red,dashed')
                 outdir+'DF_ID_jet_npv_light_QCD.pdf',  #output file (pdf)
                 'npv',     #xaxisname
-                'light quark efficiency' ,    #yaxisname
+                'light jet efficiency' ,    #yaxisname
                    rebinfactor=5, SetLogY = True, minimum = 0.0005, maximum = 1.5, Xmin=9, Xmax=65)       #normalise
 
