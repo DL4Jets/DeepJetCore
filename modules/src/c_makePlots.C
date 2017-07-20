@@ -193,8 +193,13 @@ void makeEffPlots(
         std::string xaxis,
         std::string yaxis,
         int rebinfactor,
+        bool setLogY,
+	float Xmin,
+	float Xmax,
         float OverrideMin=-1e100,
-        float OverrideMax=1e100) {
+        float OverrideMax=1e100
+		  )
+  {
 
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -338,10 +343,12 @@ void makeEffPlots(
 
     TCanvas cv("plots");
 
+    if(setLogY) cv.SetLogy();
     allhistos.at(0)->Draw("AXIS");
     allhistos.at(0)->GetYaxis()->SetRangeUser(min,1.3*max); //space for legend on top
 
     allhistos.at(0)->GetXaxis()->SetTitle(xaxis.data());
+    if(Xmin!=-1)  allhistos.at(0)->GetXaxis()->SetRangeUser(Xmin,Xmax);
     allhistos.at(0)->GetYaxis()->SetTitle(yaxis.data());
 
     allhistos.at(0)->Draw("AXIS");

@@ -299,7 +299,7 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
 def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
                      outpdffile, xaxis='',yaxis='',
                      minimum=-1e100,maximum=1e100,
-                     rebinfactor=1): 
+                       rebinfactor=1, SetLogY = False, Xmin = -1., Xmax = 1000. ): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -316,7 +316,7 @@ def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colour
         try:
             c_makePlots.makeEffPlots(files_list,name_list,
                                  variables_list,cutsnum_list,cutsden_list,colours_list,
-                                 outpdffile,xaxis,yaxis,rebinfactor,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum)
         except Exception as e:
             print('error for these inputs:')
             print(files_list)
