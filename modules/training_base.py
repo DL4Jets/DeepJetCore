@@ -142,6 +142,17 @@ class training_base(object):
         
     def saveModel(self,outfile):
         self.keras_model.save(self.outputDir+outfile)
+        import tensorflow as tf
+        import keras.backend as K
+        tfsession=K.get_session()
+        saver = tf.train.Saver()
+        tfoutpath=self.outputDir+outfile+'_tfsession/tf'
+        import os
+        os.system('rm -f '+tfoutpath)
+        os.system('mkdir -p '+tfoutpath)
+        saver.save(tfsession, tfoutpath)
+
+
         #import h5py
         #f = h5py.File(self.outputDir+outfile, 'r+')
         #del f['optimizer_weights']

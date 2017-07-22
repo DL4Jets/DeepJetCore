@@ -1,4 +1,10 @@
 
+def printLayerInfosAndWeights(model):
+    for layer in model.layers:
+        g=layer.get_config()
+        h=layer.get_weights()
+        print (g)
+        print (h)
 
 
 def fixLayersContaining(m, fixOnlyContaining, invert=False):

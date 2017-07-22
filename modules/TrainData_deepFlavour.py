@@ -50,11 +50,11 @@ class TrainData_deepFlavour_FT(TrainData_fullTruth):
                           'Cpfcan_BtagPf_trackSip3dVal',
                           'Cpfcan_BtagPf_trackSip3dSig',
                           'Cpfcan_BtagPf_trackJetDistVal',
-                          'Cpfcan_BtagPf_trackJetDistSig',
+                          #'Cpfcan_BtagPf_trackJetDistSig',
                           
                           'Cpfcan_ptrel', 
                           'Cpfcan_drminsv',
-                          'Cpfcan_fromPV',
+                          #'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass',
                           'Cpfcan_puppiw',
                           'Cpfcan_chi2',
@@ -209,11 +209,11 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
                           'Cpfcan_BtagPf_trackSip3dVal',
                           'Cpfcan_BtagPf_trackSip3dSig',
                           'Cpfcan_BtagPf_trackJetDistVal',
-                          'Cpfcan_BtagPf_trackJetDistSig',
+                          #'Cpfcan_BtagPf_trackJetDistSig',
                           
                           'Cpfcan_ptrel', 
                           'Cpfcan_drminsv',
-                          'Cpfcan_fromPV',
+                          #'Cpfcan_fromPV',
                           'Cpfcan_VTX_ass',
                           'Cpfcan_puppiw',
                           'Cpfcan_chi2',
@@ -348,6 +348,109 @@ class TrainData_deepFlavour_FT_reg(TrainData_fullTruth):
         self.x=[x_global,x_cpf,x_npf,x_sv,reco_pt]
         self.y=[alltruth,correctionfactor]
         
+
+class TrainData_deepFlavour_FT_reg_noScale(TrainData_deepFlavour_FT_reg):
+    
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        TrainData_deepFlavour_FT_reg.__init__(self)
+        
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
+        import numpy
+        from stopwatch import stopwatch
+        
+        sw=stopwatch()
+        swall=stopwatch()
+        
+        import ROOT
+        
+        fileTimeOut(filename,120) #give eos a minute to recover
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        
+        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        
+        
+        # split for convolutional network
+        
+        x_global = MeanNormZeroPad(filename,None,
+                                   [self.branches[0]],
+                                   [self.branchcutoffs[0]],self.nsamples)
+        
+        x_cpf = MeanNormZeroPadParticles(filename,None,
+                                   self.branches[1],
+                                   self.branchcutoffs[1],self.nsamples)
+        
+        x_npf = MeanNormZeroPadParticles(filename,None,
+                                   self.branches[2],
+                                   self.branchcutoffs[2],self.nsamples)
+        
+        x_sv = MeanNormZeroPadParticles(filename,None,
+                                   self.branches[3],
+                                   self.branchcutoffs[3],self.nsamples)
+        
+        #x_reg = MeanNormZeroPad(filename,TupleMeanStd,
+        #                           [self.branches[4]],
+        #                           [self.branchcutoffs[4]],self.nsamples)
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+        
+        Tuple = self.readTreeFromRootToTuple(filename)
+        
+        reg_truth=Tuple['gen_pt_WithNu'].view(numpy.ndarray)
+        reco_pt=Tuple['jet_corr_pt'].view(numpy.ndarray)
+        
+        correctionfactor=numpy.zeros(self.nsamples)
+        for i in range(self.nsamples):
+            correctionfactor[i]=reg_truth[i]/reco_pt[i]
+        
+        if self.remove:
+            notremoves=weighter.createNotRemoveIndices(Tuple)
+            undef=Tuple['isUndefined']
+            notremoves-=undef
+            print('took ', sw.getAndReset(), ' to create remove indices')
+        
+        if self.weight:
+            weights=weighter.getJetWeights(Tuple)
+        elif self.remove:
+            weights=notremoves
+        else:
+            print('neither remove nor weight')
+            weights=numpy.empty(self.nsamples)
+            weights.fill(1.)
+        
+        truthtuple =  Tuple[self.truthclasses]
+        #print(self.truthclasses)
+        alltruth=self.reduceTruth(truthtuple)
+        
+        
+        
+        #print(alltruth.shape)
+        if self.remove:
+            print('remove')
+            weights=weights[notremoves > 0]
+            x_global=x_global[notremoves > 0]
+            x_cpf=x_cpf[notremoves > 0]
+            x_npf=x_npf[notremoves > 0]
+            x_sv=x_sv[notremoves > 0]
+            alltruth=alltruth[notremoves > 0]
+            
+            reco_pt=reco_pt[notremoves > 0]
+            correctionfactor=correctionfactor[notremoves > 0]
+       
+        newnsamp=x_global.shape[0]
+        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
+        self.nsamples = newnsamp
+        
+        print(x_global.shape,self.nsamples)
+
+        self.w=[weights,weights]
+        self.x=[x_global,x_cpf,x_npf,x_sv,reco_pt]
+        self.y=[alltruth,correctionfactor]
 
 
 class TrainData_deepFlavour_QGOnly_reg(TrainData_QGOnly):

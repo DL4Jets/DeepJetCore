@@ -89,7 +89,8 @@ class TrainData(object):
         
         self.referenceclass='isB'
         
-        self.truthclasses=['isB','isBB','isLeptonicB','isLeptonicB_C','isC','isUD','isS','isG','isUndefined']
+        self.truthclasses=['isB','isBB','isGBB','isLeptonicB','isLeptonicB_C','isC','isCC',
+                           'isGCC','isUD','isS','isG','isUndefined']
         
         self.allbranchestoberead=[]
         
@@ -634,6 +635,7 @@ class TrainData_leptTruth(TrainData):
         if tuple_in is not None:
             b = tuple_in['isB'].view(numpy.ndarray)
             bb = tuple_in['isBB'].view(numpy.ndarray)
+            gbb = tuple_in['isGBB'].view(numpy.ndarray)
             
             
             bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
@@ -641,6 +643,8 @@ class TrainData_leptTruth(TrainData):
             lepb=bl+blc
            
             c = tuple_in['isC'].view(numpy.ndarray)
+            cc = tuple_in['isCC'].view(numpy.ndarray)
+            gcc = tuple_in['isGCC'].view(numpy.ndarray)
            
             ud = tuple_in['isUD'].view(numpy.ndarray)
             s = tuple_in['isS'].view(numpy.ndarray)
@@ -649,7 +653,7 @@ class TrainData_leptTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             l = g + uds
             
-            return numpy.vstack((b,bb,lepb,c,l)).transpose()  
+            return numpy.vstack((b,bb+gbb,lepb,c+cc+gcc,l)).transpose()  
         
         
         
@@ -664,7 +668,9 @@ class TrainData_fullTruth(TrainData):
         self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDS','isG']
         if tuple_in is not None:
             b = tuple_in['isB'].view(numpy.ndarray)
+            
             bb = tuple_in['isBB'].view(numpy.ndarray)
+            gbb = tuple_in['isGBB'].view(numpy.ndarray)
             
             
             bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
@@ -672,6 +678,8 @@ class TrainData_fullTruth(TrainData):
             lepb=bl+blc
            
             c = tuple_in['isC'].view(numpy.ndarray)
+            cc = tuple_in['isCC'].view(numpy.ndarray)
+            gcc = tuple_in['isGCC'].view(numpy.ndarray)
            
             ud = tuple_in['isUD'].view(numpy.ndarray)
             s = tuple_in['isS'].view(numpy.ndarray)
@@ -680,7 +688,7 @@ class TrainData_fullTruth(TrainData):
             g = tuple_in['isG'].view(numpy.ndarray)
             
             
-            return numpy.vstack((b,bb,lepb,c,uds,g)).transpose()    
+            return numpy.vstack((b,bb+gbb,lepb,c+cc+gcc,uds,g)).transpose()    
   
 
 class TrainData_QGOnly(TrainData):
