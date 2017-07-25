@@ -1,7 +1,7 @@
 
 
 from training_base import training_base
-from Losses import loss_NLL
+from Losses import loss_NLL, loss_meansquared
 from modelTools import fixLayersContaining,printLayerInfosAndWeights
 
 #also does all the parsing
@@ -17,7 +17,7 @@ if newtraining:
     #train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=False)
     
     train.compileModel(learningrate=0.001,
-                       loss=['categorical_crossentropy',loss_NLL],
+                       loss=['categorical_crossentropy',loss_meansquared],
                        metrics=['accuracy'],
                        loss_weights=[1., 0.000000000001])
 
