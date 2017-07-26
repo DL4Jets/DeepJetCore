@@ -82,14 +82,13 @@ class testDescriptor(object):
             
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
+            formatstring=[]
+            if len(truthclasses)>1:
+                formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
             regressionclasses=[]
             if hasattr(td, 'regressiontargetclasses'):
                 regressionclasses=td.regressiontargetclasses
-            ##DO NOT COMMIT
-            if False and hasattr(td,'regtruth'):
-               regressionclasses=['uncPt','Pt'] ###DO NOT COMMIT!
-            #regressionclasses = ['uncPt', 'regPt']
+
             features=td.x
             labels=td.y
             weights=td.w[0]
