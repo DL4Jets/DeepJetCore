@@ -40,7 +40,7 @@ When the installation was successful, the DeepJet tools need to be compiled.
 ```
 cd <your working dir>
 cd DeepJet/environment
-source lxplus_env.sh
+source lxplus_env.sh / gpu_env.sh
 cd ../modules
 make -j4
 ```
@@ -55,16 +55,16 @@ Usage
 After logging in, please source the right environment (please cd to the directory first!):
 ```
 cd <your working dir>/DeepJet/environment
-source setup_env.sh
+source lxplus_env.sh / gpu_env.sh
 ```
 
 
 The preparation for the training consists of the following steps
 ====
 
-- define the data structure for the training (example in modules/TrainData_topreco.py)
-  for simplicity, copy the file to TrainData_mytopreco.py and adjust it. 
-  Define a new class name (e.g. TrainData_mytopreco), leave the inheritance untouched
+- define the data structure for the training (example in modules/TrainData_template.py)
+  for simplicity, copy the file to TrainData_template.py and adjust it. 
+  Define a new class name (e.g. TrainData_template), leave the inheritance untouched
   
 - register this class in DeepJet/convertFromRoot/convertFromRoot.py by 
   a) importing it (the line in the code is indiacted by a comment)
@@ -73,7 +73,7 @@ The preparation for the training consists of the following steps
 - convert the root file to the data strucure for training:
   ```
   cd DeepJet/convertFromRoot
-  ./convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_mytopreco
+  ./convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_myclass
   ```
   
   This step can take a while.
