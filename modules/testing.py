@@ -267,7 +267,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
 def makePlots_async(intextfile, name_list, variables, cuts, colours,
                      outpdffile, xaxis='',yaxis='',
                      normalized=False,profiles=False,
-                     minimum=-1e100,maximum=1e100): 
+                     minimum=-1e100,maximum=1e100,
+                     treename="deepntuplizer/tree"): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -283,11 +284,11 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
         if profiles:
             c_makePlots.makeProfiles(files_list,name_list,
                               variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum)
+                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum,treename)
         else:
             c_makePlots.makePlots(files_list,name_list,
                                  variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,profiles,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,normalized,profiles,minimum,maximum,treename)
     
 #    return worker()
     import multiprocessing
@@ -298,7 +299,8 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
 def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
                      outpdffile, xaxis='',yaxis='',
                      minimum=-1e100,maximum=1e100,
-                       rebinfactor=1, SetLogY = False, Xmin = -1., Xmax = 1000. ): 
+                     rebinfactor=1, SetLogY = False, Xmin = -1., Xmax = 1000. ,
+                     treename="deepntuplizer/tree"): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -315,7 +317,7 @@ def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colour
         try:
             c_makePlots.makeEffPlots(files_list,name_list,
                                  variables_list,cutsnum_list,cutsden_list,colours_list,
-                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum,treename)
         except Exception as e:
             print('error for these inputs:')
             print(files_list)
