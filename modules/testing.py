@@ -97,7 +97,7 @@ class testDescriptor(object):
             print(regressionclasses)
             #metric=model.evaluate(features, labels, batch_size=10000)
             prediction = model.predict(features)
-            print(prediction[1].shape[1])
+            #print(prediction[1].shape[1])
             if isinstance(prediction, list):
                 formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 if prediction[1].shape[1] > len(regressionclasses):
