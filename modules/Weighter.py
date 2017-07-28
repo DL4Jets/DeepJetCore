@@ -58,6 +58,8 @@ class Weighter(object):
         self.nameX=nameX
         self.nameY=nameY
         self.classes=classes
+        if len(self.classes)<1:
+            self.classes=['']
         
     def addDistributions(self,Tuple):
         import numpy

@@ -102,7 +102,7 @@ class DeepJet_callbacks(object):
                                         monitor='val_loss', verbose=1, 
                                         save_best_only=True)
         
-        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_{epoch:02d}.h5", verbose=1,period=10)
+        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=10)
         
         self.modelcheck=ModelCheckpoint(outputDir+"/KERAS_check_model_last.h5", verbose=1)
         

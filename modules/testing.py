@@ -83,19 +83,42 @@ class testDescriptor(object):
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
             formatstring=[]
-            if len(truthclasses)>1:
+            if len(truthclasses)>0 and len(truthclasses[0])>0:
                 formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
             regressionclasses=[]
             if hasattr(td, 'regressiontargetclasses'):
                 regressionclasses=td.regressiontargetclasses
+            #new implementation. Please check with the store_labels option, Mauro
+            formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
 
             features=td.x
             labels=td.y
             weights=td.w[0]
             
-            print(regressionclasses)
-            #metric=model.evaluate(features, labels, batch_size=10000)
+            
+            
             prediction = model.predict(features)
+            if isinstance(prediction, list):
+                all_write = np.concatenate(prediction, axis=1)
+            else:
+                all_write = prediction
+            
+            all_write = np.concatenate([all_write, weights], axis=1)
+            formatstring.append('weight')
+            if not all_write.shape[1] == len(formatstring):
+                raise ValueError('Prediction output does not match with the provided targets!')
+               
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
+            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
+            
+            #self.metrics.append(metric)
+            self.__sourceroots.append(originroot)
+            self.__predictroots.append(outputDir+'/'+outrootfilename)
+            print(formatstring)
+            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
+            
+            continue
+                
             #print(prediction[1].shape[1])
             if isinstance(prediction, list):
                 formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
