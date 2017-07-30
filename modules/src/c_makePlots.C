@@ -142,6 +142,13 @@ void makePlots(
         histo->SetFillStyle(0);
         histo->SetLineWidth(2);
 
+
+
+        float integral=histo->Integral("width");
+        //the normalised option doesn't really do well
+        if(integral && normalized)
+            histo->Scale(1/integral);
+
         float tmax=histo->GetMaximum();
         float tmin=histo->GetMinimum();
         if(tmax>max)max=tmax;
@@ -152,11 +159,6 @@ void makePlots(
             min = OverrideMin;
         }
 
-
-        float integral=histo->Integral("width");
-        //the normalised option doesn't really do well
-        if(integral && normalized)
-            histo->Scale(1/integral);
 
         allhistos.push_back(histo);
 
