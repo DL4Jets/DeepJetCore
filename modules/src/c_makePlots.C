@@ -153,7 +153,7 @@ void makePlots(
         }
 
 
-        float integral=histo->Integral();
+        float integral=histo->Integral("width");
         //the normalised option doesn't really do well
         if(integral && normalized)
             histo->Scale(1/integral);
