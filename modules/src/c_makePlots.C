@@ -151,7 +151,12 @@ void makePlots(
             max = OverrideMax;
             min = OverrideMin;
         }
-        //std::cout << "min" << min << " max" << max << std::endl;
+
+
+        float integral=histo->Integral();
+        //the normalised option doesn't really do well
+        if(integral && normalized)
+            histo->Scale(1/integral);
 
         allhistos.push_back(histo);
 
