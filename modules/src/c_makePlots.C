@@ -39,6 +39,7 @@ void makePlots(
         std::string yaxis,
         bool normalized,
         bool makeProfile=false,
+        bool makeWidthProfile=false,
         float OverrideMin=-1e100,
         float OverrideMax=1e100,
         std::string sourcetreename="deepntuplizer/tree") {
@@ -119,6 +120,10 @@ void makePlots(
         addstr="normalized";
     if(makeProfile)
         addstr+="prof";
+    else if(makeWidthProfile)
+        addstr+="profs";
+    if(makeProfile && makeWidthProfile)
+        throw std::logic_error("makePlots: Not allowed to use makeProfile and makeWidthProfile at the same time");
     float max=-1e100;
     float min=1e100;
 
@@ -153,7 +158,7 @@ void makePlots(
         float tmin=histo->GetMinimum();
         if(tmax>max)max=tmax;
         if(tmin<min)min=tmin;
-        if(makeProfile &&OverrideMin!=-1e100){
+        if((makeProfile||makeWidthProfile)  &&OverrideMin!=-1e100){
             //std::cout << "overriding min/max"<< std::endl;
             max = OverrideMax;
             min = OverrideMin;
@@ -398,7 +403,7 @@ void makeProfiles(
             xaxis,
             yaxis,
             normalized,
-            true,
+            true,false,
             minimum,
             maximum,treename);
 }  
