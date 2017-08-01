@@ -289,8 +289,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
 def makePlots_async(intextfile, name_list, variables, cuts, colours,
                      outpdffile, xaxis='',yaxis='',
-                     normalized=False,profiles=False,widthprofile=False,
-                     minimum=-1e100,maximum=1e100,
+                     normalized=False,profiles=False,
+                     minimum=-1e100,maximum=1e100,widthprofile=False,
                      treename="deepntuplizer/tree"): 
     
     
