@@ -1,3 +1,5 @@
+
+#define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
 #include "boost/python/numeric.hpp"
@@ -37,8 +39,10 @@ void makePlots(
         std::string yaxis,
         bool normalized,
         bool makeProfile=false,
+        bool makeWidthProfile=false,
         float OverrideMin=-1e100,
-        float OverrideMax=1e100) {
+        float OverrideMax=1e100,
+        std::string sourcetreename="deepntuplizer/tree") {
 
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -94,7 +98,7 @@ void makePlots(
 
 
 
-    friendTreeInjector injector;
+    friendTreeInjector injector(sourcetreename);
     for(size_t i=0;i<u_infiles.size();i++){
         if(!aliases.size())
             injector.addFromFile((TString)u_infiles.at(i));
@@ -116,6 +120,10 @@ void makePlots(
         addstr="normalized";
     if(makeProfile)
         addstr+="prof";
+    else if(makeWidthProfile)
+        addstr+="profs";
+    if(makeProfile && makeWidthProfile)
+        throw std::logic_error("makePlots: Not allowed to use makeProfile and makeWidthProfile at the same time");
     float max=-1e100;
     float min=1e100;
 
@@ -139,16 +147,23 @@ void makePlots(
         histo->SetFillStyle(0);
         histo->SetLineWidth(2);
 
+
+
+        float integral=histo->Integral("width");
+        //the normalised option doesn't really do well
+        if(integral && normalized)
+            histo->Scale(1/integral);
+
         float tmax=histo->GetMaximum();
         float tmin=histo->GetMinimum();
         if(tmax>max)max=tmax;
         if(tmin<min)min=tmin;
-        if(makeProfile &&OverrideMin!=-1e100){
+        if((makeProfile||makeWidthProfile)  &&OverrideMin!=-1e100){
             //std::cout << "overriding min/max"<< std::endl;
             max = OverrideMax;
             min = OverrideMin;
         }
-        //std::cout << "min" << min << " max" << max << std::endl;
+
 
         allhistos.push_back(histo);
 
@@ -179,6 +194,7 @@ void makePlots(
 
     f->Close();
 
+
 }
 
 
@@ -197,7 +213,8 @@ void makeEffPlots(
 	float Xmin,
 	float Xmax,
         float OverrideMin=-1e100,
-        float OverrideMax=1e100
+        float OverrideMax=1e100,
+        std::string sourcetreename="deepntuplizer/tree"
 		  )
   {
 
@@ -256,9 +273,7 @@ void makeEffPlots(
         //}
     }
 
-
-
-    friendTreeInjector injector;
+    friendTreeInjector injector(sourcetreename);
     for(size_t i=0;i<u_infiles.size();i++){
         if(!aliases.size())
             injector.addFromFile((TString)u_infiles.at(i));
@@ -362,6 +377,7 @@ void makeEffPlots(
 
     f->Close();
 
+
 }
 
 void makeProfiles(
@@ -373,7 +389,9 @@ void makeProfiles(
         std::string outfile,
         std::string xaxis,
         std::string yaxis,
-        bool normalized,float minimum, float maximum) {
+        bool normalized,float minimum,
+        float maximum,
+        std::string treename) {
 
     makePlots(
             intextfiles,
@@ -385,9 +403,9 @@ void makeProfiles(
             xaxis,
             yaxis,
             normalized,
-            true,
+            true,false,
             minimum,
-            maximum);
+            maximum,treename);
 }  
 
 

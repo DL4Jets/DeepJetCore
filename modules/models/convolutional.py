@@ -14,11 +14,15 @@ def model_deepFlavourReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
     that do not include 'regression' and the training can be repeated focusing on the regression part
     (check function fixLayersContaining with invert=True)
     """  
+    globalvars = BatchNormalization(momentum=0.6,name='globals_input_batchnorm') (Inputs[0])
+    cpf    =     BatchNormalization(momentum=0.6,name='cpf_input_batchnorm')     (Inputs[1])
+    npf    =     BatchNormalization(momentum=0.6,name='npf_input_batchnorm')     (Inputs[2])
+    vtx    =     BatchNormalization(momentum=0.6,name='vtx_input_batchnorm')     (Inputs[3])
+    ptreginput = BatchNormalization(momentum=0.6,name='reg_input_batchnorm')     (Inputs[4])
     
-    
-    cpf,npf,vtx = block_deepFlavourConvolutions(charged=Inputs[1],
-                                                neutrals=Inputs[2],
-                                                vertices=Inputs[3],
+    cpf,npf,vtx = block_deepFlavourConvolutions(charged=cpf,
+                                                neutrals=npf,
+                                                vertices=vtx,
                                                 dropoutRate=dropoutRate,
                                                 active=True,
                                                 batchnorm=True)
@@ -38,17 +42,13 @@ def model_deepFlavourReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
     vtx = Dropout(dropoutRate)(vtx)
     
     
-    x = Concatenate()( [Inputs[0],cpf,npf,vtx ])
+    x = Concatenate()( [globalvars,cpf,npf,vtx ])
     
     x = block_deepFlavourDense(x,dropoutRate,active=True,batchnorm=True,batchmomentum=0.6)
     
     flavour_pred=Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform',name='ID_pred')(x)
     
-    regInput = Concatenate()( [flavour_pred, Inputs[4] ] ) #ad hoc normalisation
-    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_1',trainable=True)(regInput)
-    reg = Dropout(dropoutRate,name='regression_dropout_0')(reg)
-    reg = Dense(32,activation='relu',kernel_initializer='lecun_uniform',name='regression_dense_2',trainable=True)(reg)
-    reg = Dropout(dropoutRate,name='regression_dropout_1')(reg)
+    reg = Concatenate()( [flavour_pred, ptreginput ] ) 
     
     reg_pred=Dense(nregclasses, activation='linear',kernel_initializer='ones',name='regression_pred',trainable=True)(reg)
     

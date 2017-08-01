@@ -9,7 +9,10 @@
 #include <fstream>
 #include <iostream>
 
-friendTreeInjector::friendTreeInjector():chain_(0){}
+
+friendTreeInjector::friendTreeInjector(TString sourcetreename):
+        chain_(0),
+        sourcetree_('/'+sourcetreename){}
 friendTreeInjector::~friendTreeInjector(){
 	resetChain();
 }
@@ -82,7 +85,7 @@ void friendTreeInjector::createChain(){
 	    friendchains_.at(i)=new TChain(s,s);
 	}
 	for(size_t i=0;i<treesandfriends_.size();i++){
-	    TString basetree=treesandfriends_.at(i).at(0)+"/deepntuplizer/tree";
+	    TString basetree=treesandfriends_.at(i).at(0)+sourcetree_;
 	    //std::cout << basetree << std::endl;
 		chain_->AddFile(basetree);
 		for(size_t j=1;j<treesandfriends_.at(i).size();j++){
