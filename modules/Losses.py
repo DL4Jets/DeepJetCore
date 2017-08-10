@@ -22,10 +22,8 @@ global_loss_list['loss_NLL']=loss_NLL
 
 def loss_meansquared(y_true, x):
     """
-    This loss is the negative log likelyhood for gaussian pdf.
-    See e.g. http://bayesiandeeplearning.org/papers/BDL_29.pdf for details
-    Generally it might be better to even use Mixture density networks (i.e. more complex pdf than single gauss, see:
-    https://publications.aston.ac.uk/373/1/NCRG_94_004.pdf
+    This loss is a standard mean squared error loss with a dummy for the uncertainty, 
+    which will just get minimised to 0.
     """
     x_pred = x[:,1:]
     x_sig = x[:,:1]
@@ -33,6 +31,30 @@ def loss_meansquared(y_true, x):
 
 #please always register the loss function here
 global_loss_list['loss_meansquared']=loss_meansquared
+
+
+def loss_logcosh(y_true, x):
+    """
+    This loss implements a logcosh loss with a dummy for the uncertainty.
+    It approximates a mean-squared loss for small differences and a linear one for
+    large differences, therefore it is conceptually similar to the Huber loss.
+    This loss here is scaled, such that it start becoming linear around 4-5 sigma
+    """
+    scalefactor_a=30
+    scalefactor_b=0.4
+    
+    from tensorflow import where, greater, abs, zeros_like, exp
+    
+    x_pred = x[:,1:]
+    x_sig = x[:,:1]
+    def cosh(x):
+        return (K.exp(x) + K.exp(-x)) / 2
+    
+    return K.mean(0.5*K.square(x_sig))   + K.mean(scalefactor_a* K.log(cosh( scalefactor_b*(x_pred - y_true))), axis=-1)
+    
+
+
+global_loss_list['loss_logcoshScaled']=loss_logcoshScaled
 
 
 # The below is to use multiple gaussians for regression
