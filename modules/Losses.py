@@ -57,6 +57,28 @@ def loss_logcosh(y_true, x):
 global_loss_list['loss_logcosh']=loss_logcosh
 
 
+def loss_logcosh_noUnc(y_true, x):
+    """
+    This loss implements a logcosh loss without a dummy for the uncertainty.
+    It approximates a mean-squared loss for small differences and a linear one for
+    large differences, therefore it is conceptually similar to the Huber loss.
+    This loss here is scaled, such that it start becoming linear around 4-5 sigma
+    """
+    scalefactor_a=30
+    scalefactor_b=0.4
+    
+    from tensorflow import where, greater, abs, zeros_like, exp
+    
+    x_pred = x
+    def cosh(x):
+        return (K.exp(x) + K.exp(-x)) / 2
+    
+    return K.mean(scalefactor_a* K.log(cosh( scalefactor_b*(x_pred - y_true))), axis=-1)
+    
+
+
+global_loss_list['loss_logcosh_noUnc']=loss_logcosh_noUnc
+
 # The below is to use multiple gaussians for regression
 
 ## https://github.com/axelbrando/Mixture-Density-Networks-for-distribution-and-uncertainty-estimation/blob/master/MDN-DNN-Regression.ipynb
