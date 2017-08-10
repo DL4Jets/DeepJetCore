@@ -54,7 +54,7 @@ def loss_logcosh(y_true, x):
     
 
 
-global_loss_list['loss_logcoshScaled']=loss_logcoshScaled
+global_loss_list['loss_logcosh']=loss_logcosh
 
 
 # The below is to use multiple gaussians for regression
