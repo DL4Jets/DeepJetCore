@@ -219,7 +219,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     extralegend=None,
                     logY=True,
                     individual=False,
-                    xaxis=""):#['solid?udsg','hatched?c']): 
+                    xaxis="",
+                    nbins=200):#['solid?udsg','hatched?c']): 
     
     import copy
     
@@ -267,7 +268,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         vetos_list,
                         colors_list,
                         outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
-                        individual,xaxis)
+                        individual,xaxis,nbins)
         
         except Exception as e:
             print('error for these inputs:')
@@ -321,8 +322,8 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
   
 def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
                      outpdffile, xaxis='',yaxis='',
-                     minimum=-1e100,maximum=1e100,
-                     rebinfactor=1, SetLogY = False, Xmin = -1., Xmax = 1000. ,
+                     minimum=1e100,maximum=-1e100,
+                     rebinfactor=1, SetLogY = False, Xmin = 100, Xmax = -100. ,
                      treename="deepntuplizer/tree"): 
     
     

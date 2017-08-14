@@ -18,7 +18,7 @@
 
 class rocCurveCollection{
 public:
-	rocCurveCollection():leg_(0),linewidth_(2),cmsstyle_(false),logy_(true){}
+	rocCurveCollection():leg_(0),linewidth_(2),cmsstyle_(false),logy_(true),nbins_(100){}
 	~rocCurveCollection(){
 		if(leg_)
 			delete leg_;
@@ -35,6 +35,10 @@ public:
 
     void setCommentLine1(const TString& l){
         comment1_=l;
+    }
+
+    void setNBins(size_t nbins){
+        nbins_=nbins;
     }
 
     void addExtraLegendEntry(const TString& entr);
@@ -63,6 +67,7 @@ private:
 	TString comment0_, comment1_;
 	bool logy_;
 	TString xaxis_;
+	size_t nbins_;
 };
 
 

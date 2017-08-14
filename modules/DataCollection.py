@@ -111,7 +111,7 @@ class DataCollection(object):
         
     def getClassWeights(self):
         if not len(self.classweights):
-            self.__computeClassWeights()
+            self.__computeClassWeights(self.dataclass.getUsedTruth())
         return self.classweights
         
     def __computeClassWeights(self,truthclassesarray):
