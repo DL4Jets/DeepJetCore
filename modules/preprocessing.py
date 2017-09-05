@@ -419,12 +419,19 @@ def createDensityLayers(Filename_in,
                         nevents, 
                         dimension1, 
                         dimension2, 
-                        counterbranch):
+                        counterbranch,
+                        scales=None):
     
     import c_meanNormZeroPad
     
+    if not scales:
+        norms = [1 for x in range(len(inbranches))]
+    else:
+        norms=scales
+        if not len(scales) == len(inbranches):
+            raise ValueError('Scales length must match number of branches')
+            
     
-    norms = [1 for x in range(len(inbranches))]
     means = [0 for x in range(len(inbranches))]
     
     x_branch, x_center, x_bins, x_width = dimension1

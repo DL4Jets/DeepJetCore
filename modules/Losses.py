@@ -1,9 +1,34 @@
 from keras import backend as K
 
+from tensorflow import where, greater, abs, zeros_like, exp
 
 global_loss_list={}
 
 #whenever a new loss function is created, please add it to the global_loss_list dictionary!
+
+
+def huberishLoss_noUnc(y_true, x_pred):
+    
+    
+    dxrel=(x_pred - y_true)/1#(K.clip(K.abs(y_true+0.1),K.epsilon(),None))
+    dxrel=K.clip(dxrel,-1e6,1e6)
+    
+    #defines the inverse of starting point of the linear behaviour
+    scaler=2
+    
+    dxabs=K.abs(scaler* dxrel)
+    dxsq=K.square(scaler * dxrel)
+    dxp4=K.square(dxsq)
+    
+    lossval=dxsq / (1+dxp4) + (2*dxabs -1)/(1 + 1/dxp4)
+    #K.clip(lossval,-1e6,1e6)
+    
+    return K.mean( lossval , axis=-1)
+    
+
+
+global_loss_list['huberishLoss_noUnc']=huberishLoss_noUnc
+
 
 
 def loss_NLL(y_true, x):
@@ -47,8 +72,8 @@ def loss_logcosh(y_true, x):
     
     x_pred = x[:,1:]
     x_sig = x[:,:1]
-    def cosh(x):
-        return (K.exp(x) + K.exp(-x)) / 2
+    def cosh(y):
+        return (K.exp(y) + K.exp(-y)) / 2
     
     return K.mean(0.5*K.square(x_sig))   + K.mean(scalefactor_a* K.log(cosh( scalefactor_b*(x_pred - y_true))), axis=-1)
     
@@ -57,23 +82,23 @@ def loss_logcosh(y_true, x):
 global_loss_list['loss_logcosh']=loss_logcosh
 
 
-def loss_logcosh_noUnc(y_true, x):
+def loss_logcosh_noUnc(y_true, x_pred):
     """
     This loss implements a logcosh loss without a dummy for the uncertainty.
     It approximates a mean-squared loss for small differences and a linear one for
     large differences, therefore it is conceptually similar to the Huber loss.
     This loss here is scaled, such that it start becoming linear around 4-5 sigma
     """
-    scalefactor_a=30
-    scalefactor_b=0.4
+    scalefactor_a=1.
+    scalefactor_b=3.
     
     from tensorflow import where, greater, abs, zeros_like, exp
     
-    x_pred = x
+    dxrel=(x_pred - y_true)/(y_true+0.0001)
     def cosh(x):
         return (K.exp(x) + K.exp(-x)) / 2
     
-    return K.mean(scalefactor_a* K.log(cosh( scalefactor_b*(x_pred - y_true))), axis=-1)
+    return scalefactor_a*K.mean( K.log(cosh(scalefactor_b*dxrel)), axis=-1)
     
 
 
