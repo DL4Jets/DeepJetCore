@@ -167,7 +167,7 @@ class training_base(object):
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
-                   maxqsize=20, 
+                   maxqsize=50, 
                    **trainargs):
         
         #make sure tokens don't expire

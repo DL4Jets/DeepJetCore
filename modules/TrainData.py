@@ -45,6 +45,7 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
             h5f[idstr].read_direct(arl[i])
     doneVal.value=True
     h5f.close()
+    del h5f
     
     
     
@@ -303,6 +304,8 @@ class TrainData(object):
             self.y_list,_=_readListInfo_('y')
             
         self.h5f.close()
+        del self.h5f
+        self.h5f=None
         
         #create shared mem in sync mode
         for i in range(len(self.w_list)):
@@ -363,7 +366,7 @@ class TrainData(object):
         while not self.readdone.value and wasasync: 
             self.readthread.join(1)
             counter+=1
-            if counter>10: #read failed. do synchronous read
+            if counter>30: #read failed. do synchronous read
                 print('\nfalling back to sync read\n')
                 self.readthread.terminate()
                 self.readthread=None

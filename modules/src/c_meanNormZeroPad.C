@@ -513,7 +513,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
 
                 float featval=0;
                 if(maskedlayerbranch>=0 && (size_t)maskedlayerbranch==i_feat)
-                    featval=layer;
+                    featval=(float)layer/s_norms.at(i_feat);
                 else
                     featval=branch.getData(i_feat, elem);
 

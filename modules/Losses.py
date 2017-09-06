@@ -1,9 +1,34 @@
 from keras import backend as K
 
+from tensorflow import where, greater, abs, zeros_like, exp
 
 global_loss_list={}
 
 #whenever a new loss function is created, please add it to the global_loss_list dictionary!
+
+
+def huberishLoss_noUnc(y_true, x_pred):
+    
+    
+    dxrel=(x_pred - y_true)/1#(K.clip(K.abs(y_true+0.1),K.epsilon(),None))
+    dxrel=K.clip(dxrel,-1e6,1e6)
+    
+    #defines the inverse of starting point of the linear behaviour
+    scaler=2
+    
+    dxabs=K.abs(scaler* dxrel)
+    dxsq=K.square(scaler * dxrel)
+    dxp4=K.square(dxsq)
+    
+    lossval=dxsq / (1+dxp4) + (2*dxabs -1)/(1 + 1/dxp4)
+    #K.clip(lossval,-1e6,1e6)
+    
+    return K.mean( lossval , axis=-1)
+    
+
+
+global_loss_list['huberishLoss_noUnc']=huberishLoss_noUnc
+
 
 
 def loss_NLL(y_true, x):
@@ -22,10 +47,8 @@ global_loss_list['loss_NLL']=loss_NLL
 
 def loss_meansquared(y_true, x):
     """
-    This loss is the negative log likelyhood for gaussian pdf.
-    See e.g. http://bayesiandeeplearning.org/papers/BDL_29.pdf for details
-    Generally it might be better to even use Mixture density networks (i.e. more complex pdf than single gauss, see:
-    https://publications.aston.ac.uk/373/1/NCRG_94_004.pdf
+    This loss is a standard mean squared error loss with a dummy for the uncertainty, 
+    which will just get minimised to 0.
     """
     x_pred = x[:,1:]
     x_sig = x[:,:1]
@@ -34,6 +57,52 @@ def loss_meansquared(y_true, x):
 #please always register the loss function here
 global_loss_list['loss_meansquared']=loss_meansquared
 
+
+def loss_logcosh(y_true, x):
+    """
+    This loss implements a logcosh loss with a dummy for the uncertainty.
+    It approximates a mean-squared loss for small differences and a linear one for
+    large differences, therefore it is conceptually similar to the Huber loss.
+    This loss here is scaled, such that it start becoming linear around 4-5 sigma
+    """
+    scalefactor_a=30
+    scalefactor_b=0.4
+    
+    from tensorflow import where, greater, abs, zeros_like, exp
+    
+    x_pred = x[:,1:]
+    x_sig = x[:,:1]
+    def cosh(y):
+        return (K.exp(y) + K.exp(-y)) / 2
+    
+    return K.mean(0.5*K.square(x_sig))   + K.mean(scalefactor_a* K.log(cosh( scalefactor_b*(x_pred - y_true))), axis=-1)
+    
+
+
+global_loss_list['loss_logcosh']=loss_logcosh
+
+
+def loss_logcosh_noUnc(y_true, x_pred):
+    """
+    This loss implements a logcosh loss without a dummy for the uncertainty.
+    It approximates a mean-squared loss for small differences and a linear one for
+    large differences, therefore it is conceptually similar to the Huber loss.
+    This loss here is scaled, such that it start becoming linear around 4-5 sigma
+    """
+    scalefactor_a=1.
+    scalefactor_b=3.
+    
+    from tensorflow import where, greater, abs, zeros_like, exp
+    
+    dxrel=(x_pred - y_true)/(y_true+0.0001)
+    def cosh(x):
+        return (K.exp(x) + K.exp(-x)) / 2
+    
+    return scalefactor_a*K.mean( K.log(cosh(scalefactor_b*dxrel)), axis=-1)
+    
+
+
+global_loss_list['loss_logcosh_noUnc']=loss_logcosh_noUnc
 
 # The below is to use multiple gaussians for regression
 

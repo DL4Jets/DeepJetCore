@@ -35,7 +35,8 @@ void makeROCs(
         const boost::python::list extralegend,
         bool logy,
         bool individual,
-        std::string xaxis
+        std::string xaxis,
+        int nbins
 ) {
 
 
@@ -110,6 +111,7 @@ void makeROCs(
     TString xaxisstr=xaxis;
 
     rocCurveCollection rocs;
+    rocs.setNBins(nbins);
     rocs.setXaxis(xaxisstr);
 
     rocs.setCommentLine0(firstcomment.data());

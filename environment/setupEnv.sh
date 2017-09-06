@@ -42,6 +42,7 @@ cp activateROOT.sh  $CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh
 if [ $addstring ]
 then
 	pip install --ignore-installed  --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.0.1-cp27-none-linux_x86_64.whl
+        pip install setGPU
 fi
 
 echo "environment set up. Please activate it with \"source activate ${envname}\""

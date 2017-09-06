@@ -106,7 +106,7 @@ class ReduceLROnPlateau(Callback):
                 self.cooldown_counter -= 1
                 self.wait = 0
 
-            if self.monitor_op(current, self.best):
+            if self.monitor_op(current, self.best) and self.patience>0:
                 self.best = current
                 self.wait = 0
             elif not self.in_cooldown():

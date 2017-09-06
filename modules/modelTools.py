@@ -1,9 +1,10 @@
 
-def printLayerInfosAndWeights(model):
+def printLayerInfosAndWeights(model, noweights=False):
     for layer in model.layers:
         g=layer.get_config()
         h=layer.get_weights()
         print (g)
+        if noweights: continue
         print (h)
 
 

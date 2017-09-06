@@ -106,6 +106,41 @@ makeROCs_async( ['/eos/cms/store/cmst3/group/dehep/DeepJet/Anna_DeepCSV/qcd_merg
                  "B efficiency"
                  )
 
+
+#QCD 150
+makeROCs_async( ['/eos/cms/store/cmst3/group/dehep/DeepJet/Anna_DeepCSV/qcd_merged_CFR_PRED/tree_association.txt',
+                '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_merged_PREDICTED/tree_association.txt'],
+                 ['DeepCSV',
+                  'DeepFlavour'],
+                 ['prob_isB + prob_isBB',
+                  'prob_isB + prob_isBB + prob_isLeptB',
+                  'prob_isB + prob_isBB',
+                  'prob_isB + prob_isBB + prob_isLeptB'],
+                [btruth,
+                 btruth,
+                 btruth,
+                 btruth],
+                ['isUD + isS + isG',
+                 'isUD + isS + isG',
+                 'isC',
+                 'isC'],
+                ['blue',
+                 'purple',
+                 'blue,dashed',
+                 'purple,dashed'],
+                 "ROC_qcd_80_120.pdf",
+                 'jet_pt>80 && jet_pt < 120 && jet_eta>0',
+                 True,
+                 'QCD events',
+                 "80 < jet p_{T} < 120 [GeV], jet |#eta| < 2.4",
+#                 "30 < jet p_{T} < 50 GeV}", 
+                 '',
+                 ['solid?L','dashed?C'],
+                 True,
+                 True,
+                 "B efficiency"
+                 )
+
 # QCD only b
 makeROCs_async( ['/eos/cms/store/cmst3/group/dehep/DeepJet/Anna_DeepCSV/qcd_merged_CFR_PRED/tree_association.txt',
                 '/eos/cms/store/cmst3/group/dehep/DeepJet/Predictions/Jan/DF_FT_fullRec_reg_BN/qcd_merged_PREDICTED/tree_association.txt'],

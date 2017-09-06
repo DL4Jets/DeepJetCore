@@ -82,22 +82,44 @@ class testDescriptor(object):
             
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
+            formatstring=[]
+            if len(truthclasses)>0 and len(truthclasses[0])>0:
+                formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
             regressionclasses=[]
             if hasattr(td, 'regressiontargetclasses'):
                 regressionclasses=td.regressiontargetclasses
-            ##DO NOT COMMIT
-            if False and hasattr(td,'regtruth'):
-               regressionclasses=['uncPt','Pt'] ###DO NOT COMMIT!
-            #regressionclasses = ['uncPt', 'regPt']
+            #new implementation. Please check with the store_labels option, Mauro
+            formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
+
             features=td.x
             labels=td.y
             weights=td.w[0]
             
-            print(regressionclasses)
-            #metric=model.evaluate(features, labels, batch_size=10000)
+            
+            
             prediction = model.predict(features)
-            print(prediction[1].shape[1])
+            if isinstance(prediction, list):
+                all_write = np.concatenate(prediction, axis=1)
+            else:
+                all_write = prediction
+            
+            all_write = np.concatenate([all_write, weights], axis=1)
+            formatstring.append('weight')
+            if not all_write.shape[1] == len(formatstring):
+                raise ValueError('Prediction output does not match with the provided targets!')
+               
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
+            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
+            
+            #self.metrics.append(metric)
+            self.__sourceroots.append(originroot)
+            self.__predictroots.append(outputDir+'/'+outrootfilename)
+            print(formatstring)
+            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
+            
+            continue
+                
+            #print(prediction[1].shape[1])
             if isinstance(prediction, list):
                 formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 if prediction[1].shape[1] > len(regressionclasses):
@@ -197,7 +219,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     extralegend=None,
                     logY=True,
                     individual=False,
-                    xaxis=""):#['solid?udsg','hatched?c']): 
+                    xaxis="",
+                    nbins=200):#['solid?udsg','hatched?c']): 
     
     import copy
     
@@ -245,7 +268,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         vetos_list,
                         colors_list,
                         outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
-                        individual,xaxis)
+                        individual,xaxis,nbins)
         
         except Exception as e:
             print('error for these inputs:')
@@ -268,7 +291,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
 def makePlots_async(intextfile, name_list, variables, cuts, colours,
                      outpdffile, xaxis='',yaxis='',
                      normalized=False,profiles=False,
-                     minimum=-1e100,maximum=1e100): 
+                     minimum=-1e100,maximum=1e100,widthprofile=False,
+                     treename="deepntuplizer/tree"): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -284,11 +308,11 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
         if profiles:
             c_makePlots.makeProfiles(files_list,name_list,
                               variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum)
+                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum,treename)
         else:
             c_makePlots.makePlots(files_list,name_list,
                                  variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,profiles,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,normalized,profiles,widthprofile,minimum,maximum,treename)
     
 #    return worker()
     import multiprocessing
@@ -298,8 +322,9 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
   
 def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
                      outpdffile, xaxis='',yaxis='',
-                     minimum=-1e100,maximum=1e100,
-                       rebinfactor=1, SetLogY = False, Xmin = -1., Xmax = 1000. ): 
+                     minimum=1e100,maximum=-1e100,
+                     rebinfactor=1, SetLogY = False, Xmin = 100, Xmax = -100. ,
+                     treename="deepntuplizer/tree"): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -316,7 +341,7 @@ def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colour
         try:
             c_makePlots.makeEffPlots(files_list,name_list,
                                  variables_list,cutsnum_list,cutsden_list,colours_list,
-                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum,treename)
         except Exception as e:
             print('error for these inputs:')
             print(files_list)

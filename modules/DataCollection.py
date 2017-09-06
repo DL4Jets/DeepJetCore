@@ -111,7 +111,7 @@ class DataCollection(object):
         
     def getClassWeights(self):
         if not len(self.classweights):
-            self.__computeClassWeights()
+            self.__computeClassWeights(self.dataclass.getUsedTruth())
         return self.classweights
         
     def __computeClassWeights(self,truthclassesarray):
@@ -623,6 +623,10 @@ class DataCollection(object):
         import numpy
         import copy
         from sklearn.utils import shuffle
+        import shutil
+        import uuid
+        import os
+        import copy
         
         #helper class
         class tdreader(object):
@@ -641,6 +645,8 @@ class DataCollection(object):
                 for i in range(maxopen):
                     self.tdlist.append(copy.deepcopy(tdclass))
                     self.tdopen.append(False)
+                self.copiedlist=[]
+                for i in range(len(filelist)): self.copiedlist.append('')
                     
                 self.closeAll() #reset state
                 
@@ -652,23 +658,24 @@ class DataCollection(object):
                 import copy
                 readfilename=self.filelist[self.filecounter]
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
-                self.tdlist[self.nextcounter].readIn_async(readfilename)
                 
-                #print('reading file '+readfilename)#DEBUG
+                unique_filename = '/dev/shm/'+str(uuid.uuid4())
+                shutil.copyfile(readfilename, unique_filename)
+                self.copiedlist[self.nextcounter]=unique_filename
+                
+                self.tdlist[self.nextcounter].readIn_async(unique_filename)
                 
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
-                
-                #if self.filecounter==0:
-                #    print('file counter reset to 0 after file '+readfilename)
                 
                 self.nextcounter=self.__increment(self.nextcounter,self.max)
                 
             def __getLast(self):
                 td=self.tdlist[self.lastcounter]
                 td.readIn_join()
-                
-                #print('got '+td.samplename+' with '+str(len(td.x[0]))+' samples')
+                if len(self.copiedlist[self.lastcounter]):
+                    os.remove(self.copiedlist[self.lastcounter])
+                self.copiedlist[self.lastcounter]=''
                 
                 self.tdopen[self.lastcounter]=False
                 self.lastcounter=self.__increment(self.lastcounter,self.max)
@@ -679,25 +686,25 @@ class DataCollection(object):
                 if counter>=maxval:
                     counter=0   
                 return counter 
-            def NOT__del__(self):
-                #print('del')
+            def __del__(self):
                 self.closeAll()
                 
             def closeAll(self):
-                #close all
-                for i in range(self.max):
+                for i in range(len(self.tdopen)):
                     if self.tdopen[i]:
                         self.tdlist[i].readIn_abort()
                         self.tdlist[i].clear()
                         self.tdopen[i]=False
+                for i in range(len(self.copiedlist)): 
+                    if len(self.copiedlist[i]):
+                        os.remove(self.copiedlist[i])
+                    self.copiedlist[i]=''
                 
                 self.nextcounter=0
                 self.lastcounter=0
                 self.filecounter=0
-                #print('closed')
                 
             def get(self):
-                #returns last reads next circular
                 td=self.__getLast()
                 self.__readNext()
                 return td

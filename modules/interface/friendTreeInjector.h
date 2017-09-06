@@ -13,7 +13,7 @@
 
 class friendTreeInjector{
 public:
-	friendTreeInjector();
+	friendTreeInjector(TString sourcetreename="deepntuplizer/tree");
 	~friendTreeInjector();
 
 	void addFromFile(const TString& filename, const TString& alias="");
@@ -24,6 +24,7 @@ public:
 
 	void showList()const;
 
+
 private:
 
 	void resetChain();
@@ -33,6 +34,7 @@ private:
 
 	TChain* chain_;
 	std::vector<TChain*> friendchains_;
+	TString sourcetree_;
 };
 
 
