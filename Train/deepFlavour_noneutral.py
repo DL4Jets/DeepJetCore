@@ -10,9 +10,9 @@ train=training_base(testrun=False)
 newtraining= not train.modelSet()
 #for recovering a training
 if newtraining:
-    from models import model_deepFlavourReference
+    from models import model_deepFlavourNoNeutralReference
     
-    train.setModel(model_deepFlavourReference,dropoutRate=0.1)
+    train.setModel(model_deepFlavourNoNeutralReference,dropoutRate=0.1)
     
     #train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=False)
     

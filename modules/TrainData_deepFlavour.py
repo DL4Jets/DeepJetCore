@@ -1123,3 +1123,150 @@ class TrainData_image(TrainData_fullTruth):
         ]
         return Model(inputs=inputs, outputs=predictions)
         
+
+
+class TrainData_deepFlavour_cleaninput(TrainData_deepFlavour_FT_reg_noScale):
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        super(TrainData_deepFlavour_cleaninput, self).__init__()
+        self.branches[1].remove('Cpfcan_quality')
+        self.branches[1].append('Cpfcan_lostInnerHits')#Cpfcan_numberOfPixelHits
+        
+class TrainData_deepFlavour_cleanBTVOnly(TrainData_fullTruth):
+    def __init__(self):
+        '''
+        Constructor
+        '''
+        super(TrainData_deepFlavour_cleanBTVOnly, self).__init__()
+        ##  ---- GLOBAL ----
+        ##  'jetPt': False, #$
+        ##  'jetAbsEta': False, #$ 
+        ##  'jetNSecondaryVertices': False, #$
+        ##  'jetNSelectedTracks': False, #$
+        ##  'jetNTracksEtaRel': False, #$
+        ##  'vertexCategory': False, #$
+        ##  'trackSip3dValAboveCharm': False, #$
+        ##  'trackSip2dSigAboveCharm': False, #$
+        ##  'trackSip2dValAboveCharm': False, #$
+        ##  'trackSip3dSigAboveCharm': False  #$
+
+        ##  'trackSumJetEtRatio': False, #$
+        ##  'trackSumJetDeltaR': False, #$
+
+        ##  ---- VERTEX ----
+        ##  'vertexJetDeltaR': False, #$
+        ##  'vertexMass': False, #$
+        ##  'vertexNTracks': False, #$ 
+        ##  'vertexEnergyRatio': False, #$
+        ##  'flightDistance3dSig': False, #$
+        ##  'flightDistance3dVal': False, #$
+        ##  'flightDistance2dVal': False, #$
+        ##  'flightDistance2dSig': False, #$
+
+        ##  ---- TRACKS ----
+        ##  'trackEtaRel': True, #$
+        ##  'trackDecayLenVal': True, 
+        ##  'trackJetDist': True, #$
+        ##  'trackPtRatio': True, #$
+        ##  'trackDeltaR': True, #$
+        ##  'trackSip2dSig': True, #$
+        ##  'trackPtRel': True, #$
+        ##  'trackSip3dSig': True, #$
+        self.addBranches([
+                'jet_pt', 'jet_eta', #$
+                'TagVarCSV_jetNSecondaryVertices', #$
+                'TagVarCSV_trackSumJetEtRatio', #$ 
+                'TagVarCSV_trackSumJetDeltaR', 
+                'TagVarCSV_vertexCategory', #$
+                'TagVarCSV_trackSip2dValAboveCharm', #$
+                'TagVarCSV_trackSip2dSigAboveCharm', #$
+                'TagVarCSV_trackSip3dValAboveCharm', #$
+                'TagVarCSV_trackSip3dSigAboveCharm', #$
+                'TagVarCSV_jetNSelectedTracks', #$
+                'TagVarCSV_jetNTracksEtaRel' #$
+                ])
+       
+        self.addBranches([
+                'Cpfcan_BtagPf_trackEtaRel', #$
+                'Cpfcan_BtagPf_trackPtRel', #$
+                'Cpfcan_BtagPf_trackDeltaR', #$
+                'Cpfcan_BtagPf_trackSip2dSig', #$
+                'Cpfcan_BtagPf_trackSip3dSig', #$
+                'Cpfcan_BtagPf_trackJetDistVal', #$
+                'Cpfcan_ptrel', #$
+                #'Cpfcan_BtagPf_trackJetDistSig', #?                          
+                #trackDecayLenVal #?
+                ], 20)
+        
+        self.addBranches([
+                'sv_deltaR', #$
+                'sv_mass', #$
+                'sv_ntracks', #$
+                'sv_dxy',  #$
+                'sv_dxysig', #$
+                'sv_d3d', #$
+                'sv_d3dsig', #$
+                'sv_enratio', #$
+                ], 4)
+        
+        self.addBranches(['jet_corr_pt'])
+        self.registerBranches(['gen_pt_WithNu'])
+        self.regressiontargetclasses=['uncPt','Pt']
+
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
+        import numpy
+        from stopwatch import stopwatch
+        
+        sw=stopwatch()
+        swall=stopwatch()
+        
+        import ROOT
+        
+        fileTimeOut(filename,120) #give eos a minute to recover
+        rfile = ROOT.TFile(filename)
+        tree = rfile.Get("deepntuplizer/tree")
+        self.nsamples=tree.GetEntries()
+        
+        print('took ', sw.getAndReset(), ' seconds for getting tree entries')
+        
+        
+        # split for convolutional network
+        
+        x_global = MeanNormZeroPad(
+            filename,None,
+            [self.branches[0]],
+            [self.branchcutoffs[0]],self.nsamples
+        )
+        
+        x_cpf = MeanNormZeroPadParticles(
+            filename,None,
+            self.branches[1],
+            self.branchcutoffs[1],self.nsamples
+        )
+                
+        x_sv = MeanNormZeroPadParticles(
+            filename,None,
+            self.branches[2],
+            self.branchcutoffs[2],self.nsamples
+        )
+        
+        print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
+        
+        npy_array = self.readTreeFromRootToTuple(filename)
+        
+        reg_truth=npy_array['gen_pt_WithNu'].view(numpy.ndarray)
+        reco_pt=npy_array['jet_corr_pt'].view(numpy.ndarray)
+        
+        correctionfactor=numpy.zeros(self.nsamples)
+        for i in range(self.nsamples):
+            correctionfactor[i]=reg_truth[i]/reco_pt[i]
+
+        truthtuple =  npy_array[self.truthclasses]
+        alltruth=self.reduceTruth(truthtuple)
+        
+        self.x=[x_global, x_cpf, x_sv, reco_pt]
+        self.y=[alltruth,correctionfactor]
+        self._normalize_input_(weighter, npy_array)
