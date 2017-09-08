@@ -44,7 +44,7 @@ class DataCollection(object):
         self.weighter=Weighter()
         self.weightsfraction=0.05
         self.maxConvertThreads=2
-        self.maxFilesOpen=5
+        self.maxFilesOpen=2
         self.means=None
         self.classweights={}
 
@@ -143,7 +143,7 @@ class DataCollection(object):
             return []
         self.dataclass.filelock=None
         td=copy.deepcopy(self.dataclass)
-        td.readIn(self.getSamplePath(self.samples[0]))
+        td.readIn(self.getSamplePath(self.samples[0]),shapesOnly=True)
         shapes=td.getInputShapes()
         td.clear()
         return shapes
@@ -642,11 +642,9 @@ class DataCollection(object):
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
                 self.tdclass.clear()#only use the format, no data
-                for i in range(maxopen):
-                    self.tdlist.append(copy.deepcopy(tdclass))
+                for i in range(self.nfiles):
                     self.tdopen.append(False)
-                self.copiedlist=[]
-                for i in range(len(filelist)): self.copiedlist.append('')
+                    self.tdlist.append(copy.deepcopy(tdclass))
                     
                 self.closeAll() #reset state
                 
@@ -659,23 +657,16 @@ class DataCollection(object):
                 readfilename=self.filelist[self.filecounter]
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 
-                unique_filename = '/dev/shm/'+str(uuid.uuid4())
-                shutil.copyfile(readfilename, unique_filename)
-                self.copiedlist[self.nextcounter]=unique_filename
-                
-                self.tdlist[self.nextcounter].readIn_async(unique_filename)
+                self.tdlist[self.nextcounter].readIn_async(readfilename,ramdiskpath='/dev/shm/')
                 
                 self.tdopen[self.nextcounter]=True
-                self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 
+                self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 self.nextcounter=self.__increment(self.nextcounter,self.max)
                 
             def __getLast(self):
                 td=self.tdlist[self.lastcounter]
                 td.readIn_join()
-                if len(self.copiedlist[self.lastcounter]):
-                    os.remove(self.copiedlist[self.lastcounter])
-                self.copiedlist[self.lastcounter]=''
                 
                 self.tdopen[self.lastcounter]=False
                 self.lastcounter=self.__increment(self.lastcounter,self.max)
@@ -683,22 +674,22 @@ class DataCollection(object):
                 
             def __increment(self,counter,maxval):
                 counter+=1
-                if counter>=maxval:
+                if counter>=self.nfiles:
                     counter=0   
                 return counter 
+            
             def __del__(self):
                 self.closeAll()
                 
             def closeAll(self):
                 for i in range(len(self.tdopen)):
-                    if self.tdopen[i]:
-                        self.tdlist[i].readIn_abort()
-                        self.tdlist[i].clear()
-                        self.tdopen[i]=False
-                for i in range(len(self.copiedlist)): 
-                    if len(self.copiedlist[i]):
-                        os.remove(self.copiedlist[i])
-                    self.copiedlist[i]=''
+                    try:
+                        if self.tdopen[i]:
+                            self.tdlist[i].readIn_abort()
+                            self.tdlist[i].clear()
+                            self.tdopen[i]=False
+                    except: pass
+                    self.tdlist[i].removeRamDiskFile()
                 
                 self.nextcounter=0
                 self.lastcounter=0
@@ -829,12 +820,12 @@ class DataCollection(object):
                     batchcomplete = True
                     
                     #random shuffle each time
-                    for i in range(0,dimx):
-                        xstored[i]=shuffle(xstored[i], random_state=psamples)
-                    for i in range(0,dimy):
-                        ystored[i]=shuffle(ystored[i], random_state=psamples)
-                    for i in range(0,dimw):
-                        wstored[i]=shuffle(wstored[i], random_state=psamples)
+                    #for i in range(0,dimx):
+                    #    xstored[i]=shuffle(xstored[i], random_state=psamples)
+                    #for i in range(0,dimy):
+                    #    ystored[i]=shuffle(ystored[i], random_state=psamples)
+                    #for i in range(0,dimw):
+                    #    wstored[i]=shuffle(wstored[i], random_state=psamples)
                     
                     
                     #randomize elements

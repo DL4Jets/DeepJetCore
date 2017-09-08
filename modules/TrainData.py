@@ -32,21 +32,28 @@ def fileTimeOut(fileName, timeOut):
         counter+=1
         time.sleep(1)
 
-def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
+
+def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None):
     import h5py
-    idstrs=['w','x','y']
-    h5f = h5py.File(fileprefix,'r')
-    alllists=[arrwl,arrxl,arryl]
-    for j in range(len(idstrs)):
-        fidstr=idstrs[j]
-        arl=alllists[j]
-        for i in range(len(arl)):
-            idstr=fidstr+str(i)
-            h5f[idstr].read_direct(arl[i])
-    doneVal.value=True
-    h5f.close()
-    del h5f
-    
+    try:
+        idstrs=['w','x','y']
+        h5f = h5py.File(fileprefix,'r')
+        alllists=[arrwl,arrxl,arryl]
+        for j in range(len(idstrs)):
+            fidstr=idstrs[j]
+            arl=alllists[j]
+            for i in range(len(arl)):
+                idstr=fidstr+str(i)
+                h5f[idstr].read_direct(arl[i])
+        doneVal.value=True
+        h5f.close()
+        del h5f
+    except Exception as d:
+        if tdref:
+            tdref.removeRamDiskFile()
+        raise d
+    if tdref:
+        tdref.removeRamDiskFile()    
     
     
 class ShowProgress(object):
@@ -132,16 +139,21 @@ class TrainData(object):
         
     def __del__(self):
         self.readIn_abort()
+        self.clear()
         
 
     def clear(self):
         self.samplename=''
+        self.readIn_abort()
         self.readthread=None
         self.readdone=None
+        if hasattr(self, 'x'):
+            del self.x
+            del self.y
+            del self.w
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
         self.w=[numpy.array([])]
-        
         
         self.nsamples=None
     
@@ -239,6 +251,8 @@ class TrainData(object):
         
         h5f.close()
        
+    
+        
        
     def __createArr(self,shapeinfo):
         import ctypes
@@ -255,8 +269,18 @@ class TrainData(object):
         shared_array = shared_array.reshape(shapeinfo)
         #print('gave shape',shapeinfo)
         return shared_array
-       
-    def readIn_async(self,fileprefix,read_async=True):
+    
+    def removeRamDiskFile(self):
+        if hasattr(self, 'ramdiskfile'):
+            import os
+            try:
+                if self.ramdiskfile and os.path.exists(self.ramdiskfile):
+                    os.remove(self.ramdiskfile)
+            except OSError:
+                pass
+            self.ramdiskfile=None
+               
+    def readIn_async(self,fileprefix,read_async=True,shapesOnly=False,ramdiskpath=''):
         
         if self.readthread and read_async:
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
@@ -306,6 +330,21 @@ class TrainData(object):
         self.h5f.close()
         del self.h5f
         self.h5f=None
+        if shapesOnly:
+            return
+        
+        readfile=fileprefix
+        
+        isRamDisk=len(ramdiskpath)>0
+        if isRamDisk:
+            import shutil
+            import uuid
+            import os
+            import copy
+            unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+            shutil.copyfile(fileprefix, unique_filename)
+            readfile=unique_filename
+            self.ramdiskfile=readfile
         
         #create shared mem in sync mode
         for i in range(len(self.w_list)):
@@ -319,38 +358,18 @@ class TrainData(object):
 
         if read_async:
             self.readdone=multiprocessing.Value('b',False)
-            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix))
+            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self))
             self.readthread.start()
         else:
             self.readdone=multiprocessing.Value('b',False)
-            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix)
+            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self)
             
             
         
         
-    def readIn_async_NEW(self,fileprefix):
-        
-        #if self.readthread:
-        #    print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
-        #    self.readIn_join()
-        #    
-        #
-        #import multiprocessing
-        #
-        #self.samplename=fileprefix
-        #self.readqueue=multiprocessing.Queue()
-        #
-        #self.readdone=multiprocessing.Value('b',False)
-        #self.readthread=multiprocessing.Process(target=_read_arrs, args=(fileprefix,self.readdone,self.readqueue))
-        #self.readthread.start()
-        #
-        print('\nstarted async thread\n')
-        
-        
-    #def __del__(self):
-    #    self.readIn_abort()
         
     def readIn_abort(self):
+        self.removeRamDiskFile()
         if not self.readthread:
             return
         self.readthread.terminate()
@@ -366,7 +385,7 @@ class TrainData(object):
         while not self.readdone.value and wasasync: 
             self.readthread.join(1)
             counter+=1
-            if counter>30: #read failed. do synchronous read
+            if counter>1200: #read failed. do synchronous read, safety option if threads died
                 print('\nfalling back to sync read\n')
                 self.readthread.terminate()
                 self.readthread=None
@@ -385,6 +404,8 @@ class TrainData(object):
         self.y=copy.deepcopy(self.y_list)
         del self.y_list
         
+        #in case of some errors during read-in
+        self.removeRamDiskFile()
         
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
@@ -408,19 +429,29 @@ class TrainData(object):
         self.readthread=None
         self.readdone=None
         
-    def readIn(self,fileprefix):
-        self.readIn_async(fileprefix,False)
-        self.w=(self.w_list)
-        self.x=(self.x_list)
-        self.y=(self.y_list)
+    def readIn(self,fileprefix,shapesOnly=False):
+        self.readIn_async(fileprefix,False,shapesOnly)
+        
+        import copy
+        self.w=copy.deepcopy(self.w_list)
+        del self.w_list
+        self.x=copy.deepcopy(self.x_list)
+        del self.x_list
+        self.y=copy.deepcopy(self.y_list)
+        del self.y_list
         
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
                 shapeinfo=numpy.array([arr.shape[0],1])
-            arr=arr.reshape(shapeinfo)
+            if shapesOnly:
+                arr=numpy.zeros(shape=shapeinfo)
+            else:
+                arr=arr.reshape(shapeinfo)
             return arr
         
         
+            
+            
         for i in range(len(self.w)):
             self.w[i]=reshape_fast(self.w[i],self.w_shapes[i])
         for i in range(len(self.x)):

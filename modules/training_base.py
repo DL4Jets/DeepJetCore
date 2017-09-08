@@ -102,6 +102,11 @@ class training_base(object):
             self.loadModel(self.outputDir+'KERAS_check_last_model.h5')
             self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
         
+        
+    def __del__(self):
+        del self.train_data
+        del self.val_data
+        
     def modelSet(self):
         return not self.keras_model==None
         
