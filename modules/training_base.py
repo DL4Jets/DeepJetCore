@@ -185,6 +185,16 @@ class training_base(object):
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
         
+        averagesamplesperfile=self.train_data.getAvEntriesPerFile()
+        samplespreread=maxqsize*batchsize
+        nfilespre=max(int(samplespreread/averagesamplesperfile),1)
+        print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
+        
+        #exit()
+        
+        self.train_data.maxFilesOpen=nfilespre
+        self.val_data.maxFilesOpen=nfilespre
+        
         self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         
         from DeepJet_callbacks import DeepJet_callbacks

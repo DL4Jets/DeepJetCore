@@ -173,6 +173,9 @@ class DataCollection(object):
         else:
             return self.nsamples
         
+    def getAvEntriesPerFile(self):
+        return float(self.nsamples)/float(len(self.samples))
+        
     
     def getNBatchesPerEpoch(self):
         if self.__batchsize <= 1:
@@ -627,54 +630,64 @@ class DataCollection(object):
         import uuid
         import os
         import copy
-        
+        import thread
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
                 
-                #print('init reader for '+str(len(filelist))+' files:')
-                #print(filelist)
-                
                 self.filelist=filelist
-                self.max=maxopen
                 self.nfiles=len(filelist)
+                self.max=min(maxopen,self.nfiles)
                 self.tdlist=[]
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
                 self.tdclass.clear()#only use the format, no data
+                self.copylock=thread.allocate_lock()
                 for i in range(self.nfiles):
-                    self.tdopen.append(False)
                     self.tdlist.append(copy.deepcopy(tdclass))
+                    self.tdopen.append(False)
                     
                 self.closeAll() #reset state
                 
             def start(self):
+                import time
                 for i in range(self.max):
                     self.__readNext()
+                    time.sleep(0.2)
+                    
+            
                 
             def __readNext(self):
+                #make sure this fast function has exited before getLast tries to read the file
                 import copy
                 readfilename=self.filelist[self.filecounter]
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 
-                self.tdlist[self.nextcounter].readIn_async(readfilename,ramdiskpath='/dev/shm/')
+                def startRead(counter,filename):
+                    self.copylock.acquire()
+                    #print('start ',counter)
+                    self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/')
+                    self.copylock.release()
+                thread.start_new_thread(startRead,(self.nextcounter,readfilename))
                 
                 self.tdopen[self.nextcounter]=True
-                
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
-                self.nextcounter=self.__increment(self.nextcounter,self.max)
+                self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
+                
+                
                 
             def __getLast(self):
                 td=self.tdlist[self.lastcounter]
-                td.readIn_join()
+                td.readIn_join(wasasync=True,waitforStart=True)
+                #print('got ',self.lastcounter)
                 
                 self.tdopen[self.lastcounter]=False
-                self.lastcounter=self.__increment(self.lastcounter,self.max)
+                self.lastcounter=self.__increment(self.lastcounter,self.nfiles)
                 return td
                 
             def __increment(self,counter,maxval):
                 counter+=1
-                if counter>=self.nfiles:
+                if counter>=maxval:
                     counter=0   
                 return counter 
             

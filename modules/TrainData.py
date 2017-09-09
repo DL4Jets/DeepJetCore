@@ -376,13 +376,17 @@ class TrainData(object):
         self.readthread=None
         self.readdone=None
      
-    def readIn_join(self,wasasync=True):
+    def readIn_join(self,wasasync=True,waitforStart=False):
         #print('joining async read')
-        if not self.readthread and wasasync:
+        if not waitforStart and not self.readthread and wasasync:
             print('\nreadIn_join:read never started\n')
         
         counter=0
-        while not self.readdone.value and wasasync: 
+        import time
+        while wasasync and (not self.readdone or not self.readdone.value): 
+            if not self.readthread:
+                time.sleep(.5)
+                continue
             self.readthread.join(1)
             counter+=1
             if counter>1200: #read failed. do synchronous read, safety option if threads died
