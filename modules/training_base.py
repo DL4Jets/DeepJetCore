@@ -187,7 +187,7 @@ class training_base(object):
         
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
-        nfilespre=max(int(samplespreread/averagesamplesperfile),1)
+        nfilespre=max(int(samplespreread/averagesamplesperfile),2)
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
         
         #exit()
