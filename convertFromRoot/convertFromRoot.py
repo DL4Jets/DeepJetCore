@@ -41,7 +41,9 @@ def main(argv=None):
     
     #try: 
         # setup option parser
+
     from TrainData import TrainData
+    from TrainData_test import TrainData_test
     from TrainData_deepCSV import TrainData_deepCSV
     from TrainData_deepConvCSV import TrainData_deepConvCSV
     from TrainData_deepCMVA import TrainData_deepCMVA
@@ -56,6 +58,7 @@ def main(argv=None):
     from TrainData_deepAK8 import TrainData_AK8Jet_init 
     
     class_options = [
+        TrainData_test,
         TrainData_deepCSV,
         TrainData_deepConvCSV,
         TrainData_deepCMVA,

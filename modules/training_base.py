@@ -41,6 +41,7 @@ class training_base(object):
         self.train_data=None
         self.val_data=None
         self.startlearningrate=None
+        self.optimizer=None
         self.trainedepoches=0
         self.compiled=False
         self.checkpointcounter=0
@@ -99,7 +100,7 @@ class training_base(object):
             self.keras_inputsshapes.append(s)
             
         if not isNewTraining:
-            self.loadModel(self.outputDir+'KERAS_check_last_model.h5')
+            self.loadModel(self.outputDir+'/KERAS_check_model_last.h5')
             self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
         
         
@@ -130,6 +131,7 @@ class training_base(object):
         #del f['optimizer_weights']
         from keras.models import load_model
         self.keras_model=load_model(filename, custom_objects=global_loss_list)
+        self.optimizer=self.keras_model.optimizer
         self.compiled=True
         
     def compileModel(self,
@@ -141,8 +143,8 @@ class training_base(object):
         #    return
         from keras.optimizers import Adam
         self.startlearningrate=learningrate
-        adam = Adam(lr=self.startlearningrate)
-        self.keras_model.compile(optimizer=adam,**compileargs)
+        self.optimizer = Adam(lr=self.startlearningrate)
+        self.keras_model.compile(optimizer=self.optimizer,**compileargs)
         self.compiled=True
         
     def saveModel(self,outfile):
@@ -199,7 +201,8 @@ class training_base(object):
         
         from DeepJet_callbacks import DeepJet_callbacks
         
-        callbacks=DeepJet_callbacks(stop_patience=stop_patience, 
+        callbacks=DeepJet_callbacks(self.keras_model,
+                                    stop_patience=stop_patience, 
                                     lr_factor=lr_factor,
                                     lr_patience=lr_patience, 
                                     lr_epsilon=lr_epsilon, 

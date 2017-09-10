@@ -73,9 +73,23 @@ class checkTokens_callback(Callback):
         from tokenTools import checkTokens
         checkTokens(self.cutofftime_hours)
         
+class saveCheckPointDeepJet(Callback):
+    '''
+    this seems obvious, however for some reason the keras model checkpoint fails
+    to save the optimizer state, needed for resuming a training. Therefore this explicit
+    implementation.
+    '''
+    
+    def __init__(self,outputDir,model):
+        self.outputDir=outputDir
+        self.djmodel=model
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        self.djmodel.save(self.outputDir+"/KERAS_check_model_last.h5")
+        
         
 class DeepJet_callbacks(object):
     def __init__(self,
+                 model,
                  stop_patience=10,
                  lr_factor=0.5,
                  lr_patience=1,
@@ -100,11 +114,11 @@ class DeepJet_callbacks(object):
 
         self.modelbestcheck=ModelCheckpoint(outputDir+"/KERAS_check_best_model.h5", 
                                         monitor='val_loss', verbose=1, 
-                                        save_best_only=True)
+                                        save_best_only=True, save_weights_only=False)
         
-        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=10)
+        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=10, save_weights_only=False)
         
-        self.modelcheck=ModelCheckpoint(outputDir+"/KERAS_check_model_last.h5", verbose=1)
+        self.modelcheck=saveCheckPointDeepJet(outputDir,model)
         
         
   

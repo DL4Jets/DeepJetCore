@@ -631,6 +631,8 @@ class DataCollection(object):
         import os
         import copy
         import thread
+        import time
+        print('start generator')
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
@@ -650,7 +652,7 @@ class DataCollection(object):
                 self.closeAll() #reset state
                 
             def start(self):
-                import time
+                
                 for i in range(self.max):
                     self.__readNext()
                     time.sleep(0.2)
@@ -664,10 +666,26 @@ class DataCollection(object):
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 
                 def startRead(counter,filename):
-                    self.copylock.acquire()
-                    #print('start ',counter)
-                    self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/')
-                    self.copylock.release()
+                    excounter=0
+                    while excounter<10:
+                        #try a few times in case file is broken or similar
+                        self.copylock.acquire()
+                        try:
+                            self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/')
+                            self.copylock.release()
+                            break
+                        except Exception as d:
+                            self.copylock.release()
+                            print(self.filelist[counter]+' read error, retry...')
+                            self.tdlist[counter].readIn_abort()
+                            excounter=excounter+1
+                            if excounter<10:
+                                time.sleep(5)
+                                continue
+                            traceback.print_exc(file=sys.stdout)
+                            raise d
+                    
+                    
                 thread.start_new_thread(startRead,(self.nextcounter,readfilename))
                 
                 self.tdopen[self.nextcounter]=True
@@ -741,7 +759,7 @@ class DataCollection(object):
         TDReader=tdreader(filelist, self.maxFilesOpen, self.dataclass)
         
         #print('generator: total batches '+str(totalbatches))
-        
+        print('start file buffering...')
         TDReader.start()
         #### 
         #
