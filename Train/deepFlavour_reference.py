@@ -33,7 +33,7 @@ model,history = train.trainModel(nepochs=1,
                                  lr_epsilon=0.0001, 
                                  lr_cooldown=6, 
                                  lr_minimum=0.0001, 
-                                 maxqsize=400)
+                                 maxqsize=1000)
 
 
 print('fixing input norms...')
