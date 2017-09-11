@@ -339,7 +339,7 @@ void makeEffPlots(
         float tmin=histo->GetMinimum();
         if(tmax>max)max=tmax;
         if(tmin<min)min=tmin;
-        if(OverrideMin<OverrideMax>){
+        if(OverrideMin<OverrideMax){
             //std::cout << "overriding min/max"<< std::endl;
             max = OverrideMax;
             min = OverrideMin;
