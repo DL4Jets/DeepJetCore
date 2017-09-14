@@ -686,8 +686,8 @@ class DataCollection(object):
                             raise d
                     
                     
-                thread.start_new_thread(startRead,(self.nextcounter,readfilename))
-                
+                #thread.start_new_thread(startRead,(self.nextcounter,readfilename))
+                startRead(self.nextcounter,readfilename)
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 self.nextcounter=self.__increment(self.nextcounter,self.nfiles)

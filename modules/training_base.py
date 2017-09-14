@@ -20,7 +20,7 @@ class training_base(object):
     def __init__(self, 
                  splittrainandtest=0.8,
                  useweights=False,
-                 testrun=False):
+                 testrun=False,resumeSilently=False):
         
         import matplotlib
         #if no X11 use below
@@ -57,9 +57,10 @@ class training_base(object):
         
         isNewTraining=True
         if os.path.isdir(self.outputDir):
-            var = raw_input('output dir exists. To recover a training, please type "yes"\n')
-            if not var == 'yes':
-                raise Exception('output directory must not exists yet')
+            if not resumeSilently:
+                var = raw_input('output dir exists. To recover a training, please type "yes"\n')
+                if not var == 'yes':
+                    raise Exception('output directory must not exists yet')
             isNewTraining=False     
         else:
             os.mkdir(self.outputDir)
@@ -100,6 +101,9 @@ class training_base(object):
             self.keras_inputsshapes.append(s)
             
         if not isNewTraining:
+            if not os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5'):
+                print('you cannot resume a training that did not train for at least one epoch.\nplease start a new training.')
+                exit()
             self.loadModel(self.outputDir+'/KERAS_check_model_last.h5')
             self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
         
