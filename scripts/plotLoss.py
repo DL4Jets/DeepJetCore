@@ -2,7 +2,7 @@
 
 import matplotlib
 
-#matplotlib.use('Agg')     
+matplotlib.use('Agg')     
 
 
 from argparse import ArgumentParser

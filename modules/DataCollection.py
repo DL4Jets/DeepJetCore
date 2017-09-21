@@ -499,7 +499,7 @@ class DataCollection(object):
             self.samples.append(samplename)
             self.nsamples+=sampleentries
             self.sampleentries.append(sampleentries)
-            self.writeToFile(outputDir+'/snapshot.dc')
+            #self.writeToFile(outputDir+'/snapshot.dc')
             
         processes=[]
         for i in range(startindex,len(self.originRoots)):
@@ -526,11 +526,12 @@ class DataCollection(object):
                 logging.info('starting %d child processes' % nchilds)
                 for i in range(nchilds):
                     logging.info('starting %s...' % self.originRoots[startindex+i+index])
+                    time.sleep(0.1)
                     processes[i+index].start()
                         
                 results=[]
                 import time
-                time.sleep(1)
+                time.sleep(0.01)
 
                 while 1:
                     running = len(results)<nchilds #  any(p.is_alive() for p in processes)
@@ -540,7 +541,7 @@ class DataCollection(object):
                         logging.info('collected result %d, %d left' % (res[0], (nchilds-len(results))))
                     if not running:
                         break
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                 
                 logging.info('joining')
                 for i in range(nchilds):
@@ -551,7 +552,7 @@ class DataCollection(object):
                 for i in range(nchilds):
                     logging.info(results[i])
                     __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
-                
+                self.writeToFile(outputDir+'/snapshot.dc')
                 index+=nchilds
         
         except:

@@ -26,12 +26,11 @@ class newline_callbacks_begin(Callback):
         print('\n***callbacks***\nsaving losses to '+lossfile)
         self.loss.append(epoch_logs.get('loss'))
         self.val_loss.append(epoch_logs.get('val_loss'))
-        f = open(lossfile, 'w')
-        for i in range(len(self.loss)):
-            f.write(str(self.loss[i]))
-            f.write(" ")
-            f.write(str(self.val_loss[i]))
-            f.write("\n")
+        f = open(lossfile, 'a')
+        f.write(str(epoch_logs.get('loss')))
+        f.write(" ")
+        f.write(str(epoch_logs.get('val_loss')))
+        f.write("\n")
         f.close()    
         normed = {}
         for vv in epoch_logs:
