@@ -434,8 +434,9 @@ class DataCollection(object):
         
     def __writeData_async_andCollect(self, startindex, outputDir):
         
-        from multiprocessing import Process, Queue, cpu_count
+        from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()
+        writelock=Lock()
         import os
         thispid=str(os.getpid())
         if not os.path.isfile(outputDir+'/snapshot.dc'):
@@ -446,7 +447,7 @@ class DataCollection(object):
         print('creating dir '+tempstoragepath)
         os.system('mkdir -p '+tempstoragepath)
         
-        def writeData_async(index,woq):
+        def writeData_async(index,woq,wrlck):
             
             import copy
             from stopwatch import stopwatch
@@ -472,7 +473,9 @@ class DataCollection(object):
             try:
                 os.system('cp '+sample+' '+ramdisksample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
+                wrlck.acquire()
                 td.writeOut(newpath)
+                wrlck.release()
                 print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname+'.z'
@@ -495,15 +498,20 @@ class DataCollection(object):
         def __collectWriteInfo(successful,samplename,sampleentries,outputDir):
             if not successful:
                 raise Exception("write not successful, stopping")
-            
+            import os
             self.samples.append(samplename)
             self.nsamples+=sampleentries
             self.sampleentries.append(sampleentries)
-            #self.writeToFile(outputDir+'/snapshot.dc')
+            self.writeToFile(outputDir+'/snapshot_tmp.dc')#avoid to overwrite directly
+            os.system('mv '+outputDir+'/snapshot_tmp.dc '+outputDir+'/snapshot.dc')
             
         processes=[]
+        processrunning=[]
+        processfinished=[]
         for i in range(startindex,len(self.originRoots)):
-            processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
+            processes.append(Process(target=writeData_async, args=(i,wo_queue,writelock) ) )
+            processrunning.append(False)
+            processfinished.append(False)
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
@@ -514,48 +522,55 @@ class DataCollection(object):
         
         #nchilds=10
         
-        index=0
+        
+        
+        lastindex=startindex-1
         alldone=False
+        results=[]
         import time
         try:
             while not alldone:
-                if index+nchilds >= len(processes):
-                    nchilds=len(processes)-index
-                    alldone=True
+                nrunning=0
+                for runs in processrunning:
+                    if runs: nrunning+=1
                 
-                
-                logging.info('starting %d child processes' % nchilds)
-                for i in range(nchilds):
-                    logging.info('starting %s...' % self.originRoots[startindex+i+index])
-                    time.sleep(0.1)
-                    processes[i+index].start()
-                        
-                results=[]
-                
-                time.sleep(0.01)
-
-                while 1:
-                    running = len(results)<nchilds #  any(p.is_alive() for p in processes)
-                    while not wo_queue.empty():
-                        res=wo_queue.get()
-                        results.append(res)
-                        logging.info('collected result %d, %d left' % (res[0], (nchilds-len(results))))
-                    if not running:
+                for i in range(len(processes)):
+                    if nrunning>=nchilds:
                         break
-                    time.sleep(0.01)
-                
-                logging.info('joining')
-                for i in range(nchilds):
-                    processes[i+index].join(5)
+                    if processrunning[i]:continue
+                    if processfinished[i]:continue
+                    time.sleep(0.1)
+                    logging.info('starting %s...' % self.originRoots[startindex+i])
+                    processes[i].start()
+                    processrunning[i]=True
+                    nrunning+=1
                     
-                results.sort()
-                results = [r[1] for r in results]
-                for i in range(nchilds):
-                    logging.info(results[i])
-                    __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
-                self.writeToFile(outputDir+'/snapshot.dc')
-                index+=nchilds
-        
+                
+                
+                if not wo_queue.empty():
+                    res=wo_queue.get()
+                    results.append(res)
+                    originrootindex=res[0]
+                    logging.info('finished %s...' % self.originRoots[originrootindex])
+                    processfinished[originrootindex-startindex]=True
+                    processes      [originrootindex-startindex].join(5)
+                    processrunning [originrootindex-startindex]=False  
+                    #immediately send the next
+                    continue
+                  
+                    
+                for r in results:
+                    thisidx=r[0]
+                    if thisidx==lastindex+1:
+                        logging.info('collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
+                        lastindex=thisidx        
+                
+                if nrunning==0:
+                    alldone=True
+                    continue
+                time.sleep(0.1)
+                  
         except:
             os.system('rm -rf '+tempstoragepath)
             raise 
