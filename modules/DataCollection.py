@@ -516,6 +516,7 @@ class DataCollection(object):
         
         index=0
         alldone=False
+        import time
         try:
             while not alldone:
                 if index+nchilds >= len(processes):
@@ -530,7 +531,7 @@ class DataCollection(object):
                     processes[i+index].start()
                         
                 results=[]
-                import time
+                
                 time.sleep(0.01)
 
                 while 1:
