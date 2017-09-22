@@ -870,12 +870,12 @@ class DataCollection(object):
                     batchcomplete = True
                     
                     #random shuffle each time
-                    #for i in range(0,dimx):
-                    #    xstored[i]=shuffle(xstored[i], random_state=psamples)
-                    #for i in range(0,dimy):
-                    #    ystored[i]=shuffle(ystored[i], random_state=psamples)
-                    #for i in range(0,dimw):
-                    #    wstored[i]=shuffle(wstored[i], random_state=psamples)
+                    for i in range(0,dimx):
+                        xstored[i]=shuffle(xstored[i], random_state=psamples)
+                    for i in range(0,dimy):
+                        ystored[i]=shuffle(ystored[i], random_state=psamples)
+                    for i in range(0,dimw):
+                        wstored[i]=shuffle(wstored[i], random_state=psamples)
                     
                     
                     #randomize elements

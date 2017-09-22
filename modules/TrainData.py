@@ -412,12 +412,14 @@ class TrainData(object):
         import copy
         #move away from shared memory
         #this costs performance but seems necessary
+        global_sharedmemlock.acquire()
         self.w=copy.deepcopy(self.w_list)
         del self.w_list
         self.x=copy.deepcopy(self.x_list)
         del self.x_list
         self.y=copy.deepcopy(self.y_list)
         del self.y_list
+        global_sharedmemlock.release()
         
         #in case of some errors during read-in
         self.removeRamDiskFile()
