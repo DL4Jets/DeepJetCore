@@ -11,6 +11,12 @@ from pdb import set_trace
 import numpy
 import logging
 
+import threading
+import multiprocessing
+
+global_sharedmemlock=threading.Lock()
+global_copylock=multiprocessing.Lock()
+
 def fileTimeOut(fileName, timeOut):
     '''
     simple wait function in case the file system has a glitch.
@@ -49,11 +55,10 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None):
         h5f.close()
         del h5f
     except Exception as d:
-        if tdref:
-            tdref.removeRamDiskFile()
         raise d
-    if tdref:
-        tdref.removeRamDiskFile()    
+    finally:
+        if tdref:
+            tdref.removeRamDiskFile()  
     
     
 class ShowProgress(object):
@@ -341,12 +346,17 @@ class TrainData(object):
             import uuid
             import os
             import copy
+            
+            global_copylock.acquire()
             unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
             shutil.copyfile(fileprefix, unique_filename)
+            global_copylock.release()
+            
             readfile=unique_filename
             self.ramdiskfile=readfile
         
         #create shared mem in sync mode
+        global_sharedmemlock.acquire()
         for i in range(len(self.w_list)):
             self.w_list[i]=self.__createArr(self.w_shapes[i])
             
@@ -355,7 +365,8 @@ class TrainData(object):
             
         for i in range(len(self.y_list)):
             self.y_list[i]=self.__createArr(self.y_shapes[i])
-
+        
+        global_sharedmemlock.release()
         if read_async:
             self.readdone=multiprocessing.Value('b',False)
             self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self))

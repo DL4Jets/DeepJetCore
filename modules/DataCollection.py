@@ -647,7 +647,7 @@ class DataCollection(object):
         import uuid
         import os
         import copy
-        import thread
+        import threading
         import time
         print('start generator')
         #helper class
@@ -661,7 +661,7 @@ class DataCollection(object):
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
                 self.tdclass.clear()#only use the format, no data
-                self.copylock=thread.allocate_lock()
+                #self.copylock=thread.allocate_lock()
                 for i in range(self.nfiles):
                     self.tdlist.append(copy.deepcopy(tdclass))
                     self.tdopen.append(False)
@@ -683,16 +683,17 @@ class DataCollection(object):
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 
                 def startRead(counter,filename):
+                    
                     excounter=0
                     while excounter<10:
                         #try a few times in case file is broken or similar
-                        self.copylock.acquire()
+                        #self.copylock.acquire()
                         try:
                             self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/')
-                            self.copylock.release()
+                            #self.copylock.release()
                             break
                         except Exception as d:
-                            self.copylock.release()
+                            #self.copylock.release()
                             print(self.filelist[counter]+' read error, retry...')
                             self.tdlist[counter].readIn_abort()
                             excounter=excounter+1
@@ -702,9 +703,9 @@ class DataCollection(object):
                             traceback.print_exc(file=sys.stdout)
                             raise d
                     
-                    
-                #thread.start_new_thread(startRead,(self.nextcounter,readfilename))
-                startRead(self.nextcounter,readfilename)
+                t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename))    
+                t.start()
+                #startRead(self.nextcounter,readfilename)
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
@@ -744,6 +745,7 @@ class DataCollection(object):
                 self.filecounter=0
                 
             def get(self):
+                
                 td=self.__getLast()
                 self.__readNext()
                 return td

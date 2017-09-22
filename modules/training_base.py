@@ -194,12 +194,13 @@ class training_base(object):
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
         nfilespre=max(int(samplespreread/averagesamplesperfile),2)
+        if nfilespre>30:nfilespre=30
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
-        
+        print('total sample size: '+str(self.train_data.nsamples))
         #exit()
         
         self.train_data.maxFilesOpen=nfilespre
-        self.val_data.maxFilesOpen=nfilespre
+        self.val_data.maxFilesOpen=min(nfilespre/3,1)
         
         self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         
