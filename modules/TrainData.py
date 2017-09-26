@@ -14,8 +14,9 @@ import logging
 import threading
 import multiprocessing
 
-global_sharedmemlock=threading.Lock()
-global_copylock=multiprocessing.Lock()
+threadingfileandmem_lock=threading.Lock()
+#threadingfileandmem_lock.release()
+#multiproc_fileandmem_lock=multiprocessing.Lock()
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -39,8 +40,9 @@ def fileTimeOut(fileName, timeOut):
         time.sleep(1)
 
 
-def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None):
+def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None):
     import h5py
+    from sklearn.utils import shuffle
     try:
         idstrs=['w','x','y']
         h5f = h5py.File(fileprefix,'r')
@@ -51,6 +53,10 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None):
             for i in range(len(arl)):
                 idstr=fidstr+str(i)
                 h5f[idstr].read_direct(arl[i])
+                #shuffle each read-in, but each array with the same seed (keeps right asso)
+                if randomSeed:
+                    arl[i]=shuffle(arl[i], random_state=randomSeed)
+                
         doneVal.value=True
         h5f.close()
         del h5f
@@ -285,7 +291,7 @@ class TrainData(object):
                 pass
             self.ramdiskfile=None
                
-    def readIn_async(self,fileprefix,read_async=True,shapesOnly=False,ramdiskpath=''):
+    def readIn_async(self,fileprefix,read_async=True,shapesOnly=False,ramdiskpath='',randomseed=None):
         
         if self.readthread and read_async:
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
@@ -316,68 +322,69 @@ class TrainData(object):
             return sharedlist, shapeinfos
         
         
-        try:
-            self.h5f = h5py.File(fileprefix,'r')
-        except:
-            raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
-        self.nsamples=self.h5f['n']
-        self.nsamples=self.nsamples[0]
-        if True or not hasattr(self, 'w_shapes'):
-            self.w_list,self.w_shapes=_readListInfo_('w')
-            self.x_list,self.x_shapes=_readListInfo_('x')
-            self.y_list,self.y_shapes=_readListInfo_('y')
-        else:
-            print('\nshape known\n')
-            self.w_list,_=_readListInfo_('w')
-            self.x_list,_=_readListInfo_('x')
-            self.y_list,_=_readListInfo_('y')
+        with threadingfileandmem_lock:
+            try:
+                self.h5f = h5py.File(fileprefix,'r')
+            except:
+                raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
+            self.nsamples=self.h5f['n']
+            self.nsamples=self.nsamples[0]
+            if True or not hasattr(self, 'w_shapes'):
+                self.w_list,self.w_shapes=_readListInfo_('w')
+                self.x_list,self.x_shapes=_readListInfo_('x')
+                self.y_list,self.y_shapes=_readListInfo_('y')
+            else:
+                print('\nshape known\n')
+                self.w_list,_=_readListInfo_('w')
+                self.x_list,_=_readListInfo_('x')
+                self.y_list,_=_readListInfo_('y')
+                
+            self.h5f.close()
+            del self.h5f
+            self.h5f=None
+            if shapesOnly:
+                return
             
-        self.h5f.close()
-        del self.h5f
-        self.h5f=None
-        if shapesOnly:
-            return
-        
-        readfile=fileprefix
-        
-        isRamDisk=len(ramdiskpath)>0
-        if isRamDisk:
-            import shutil
-            import uuid
-            import os
-            import copy
+            readfile=fileprefix
             
-            global_copylock.acquire()
-            unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
-            shutil.copyfile(fileprefix, unique_filename)
-            global_copylock.release()
+            isRamDisk=len(ramdiskpath)>0
+            if isRamDisk:
+                import shutil
+                import uuid
+                import os
+                import copy
+                unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+                shutil.copyfile(fileprefix, unique_filename)
+                readfile=unique_filename
+                self.ramdiskfile=readfile
+
+            #create shared mem in sync mode
+            for i in range(len(self.w_list)):
+                self.w_list[i]=self.__createArr(self.w_shapes[i])
+                
+            for i in range(len(self.x_list)):
+                self.x_list[i]=self.__createArr(self.x_shapes[i])
+                
+            for i in range(len(self.y_list)):
+                self.y_list[i]=self.__createArr(self.y_shapes[i])
             
-            readfile=unique_filename
-            self.ramdiskfile=readfile
-        
-        #create shared mem in sync mode
-        global_sharedmemlock.acquire()
-        for i in range(len(self.w_list)):
-            self.w_list[i]=self.__createArr(self.w_shapes[i])
-            
-        for i in range(len(self.x_list)):
-            self.x_list[i]=self.__createArr(self.x_shapes[i])
-            
-        for i in range(len(self.y_list)):
-            self.y_list[i]=self.__createArr(self.y_shapes[i])
-        
-        global_sharedmemlock.release()
+            if read_async:
+                self.readdone=multiprocessing.Value('b',False)
+                        
         if read_async:
-            self.readdone=multiprocessing.Value('b',False)
-            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self))
+            self.readthread=multiprocessing.Process(target=_read_arrs_, 
+                                                    args=(self.w_list,
+                                                          self.x_list,
+                                                          self.y_list,
+                                                          self.readdone,
+                                                          readfile,
+                                                          self,randomseed))
             self.readthread.start()
         else:
             self.readdone=multiprocessing.Value('b',False)
-            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self)
+            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
             
             
-        
-        
         
     def readIn_abort(self):
         self.removeRamDiskFile()
@@ -412,18 +419,19 @@ class TrainData(object):
         import copy
         #move away from shared memory
         #this costs performance but seems necessary
-        global_sharedmemlock.acquire()
-        self.w=copy.deepcopy(self.w_list)
-        del self.w_list
-        self.x=copy.deepcopy(self.x_list)
-        del self.x_list
-        self.y=copy.deepcopy(self.y_list)
-        del self.y_list
-        global_sharedmemlock.release()
+        
+        with threadingfileandmem_lock:
+            self.w=copy.deepcopy(self.w_list)
+            del self.w_list
+            self.x=copy.deepcopy(self.x_list)
+            del self.x_list
+            self.y=copy.deepcopy(self.y_list)
+            del self.y_list
         
         #in case of some errors during read-in
         self.removeRamDiskFile()
         
+        #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
                 shapeinfo=numpy.array([arr.shape[0],1])

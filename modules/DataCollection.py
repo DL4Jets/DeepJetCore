@@ -650,6 +650,7 @@ class DataCollection(object):
         import threading
         import time
         print('start generator')
+        
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
@@ -667,6 +668,7 @@ class DataCollection(object):
                     self.tdopen.append(False)
                     
                 self.closeAll() #reset state
+                self.shuffleseed=0
                 
             def start(self):
                 
@@ -682,18 +684,14 @@ class DataCollection(object):
                 readfilename=self.filelist[self.filecounter]
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 
-                def startRead(counter,filename):
-                    
+                def startRead(counter,filename,shuffleseed):   
                     excounter=0
                     while excounter<10:
-                        #try a few times in case file is broken or similar
-                        #self.copylock.acquire()
                         try:
-                            self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/')
-                            #self.copylock.release()
+                            self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/',
+                                                              randomseed=shuffleseed)
                             break
                         except Exception as d:
-                            #self.copylock.release()
                             print(self.filelist[counter]+' read error, retry...')
                             self.tdlist[counter].readIn_abort()
                             excounter=excounter+1
@@ -703,9 +701,12 @@ class DataCollection(object):
                             traceback.print_exc(file=sys.stdout)
                             raise d
                     
-                #t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename))    
-                #t.start()
-                startRead(self.nextcounter,readfilename)
+                t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename,self.shuffleseed))    
+                t.start()
+                self.shuffleseed+=1
+                if self.shuffleseed>1e5:
+                    self.shuffleseed=0
+                #startRead(self.nextcounter,readfilename,self.shuffleseed)
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
@@ -848,8 +849,8 @@ class DataCollection(object):
                         print('Found empty (corrupted?) file, skipping')
                         continue
                     
-                    #randomly^2 shuffle
-                    if psamples%2==0:
+                    #randomly^2 shuffle - not needed anymore here
+                    if False and psamples%2==0:
                         for i in range(0,dimx):
                             td.x[i]=shuffle(td.x[i], random_state=psamples)
                         for i in range(0,dimy):
