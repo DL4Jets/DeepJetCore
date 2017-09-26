@@ -90,6 +90,7 @@ class training_base(object):
 
 
         shapes=self.train_data.getInputShapes()
+        self.train_data.maxFilesOpen=-1
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
@@ -159,7 +160,7 @@ class training_base(object):
         saver = tf.train.Saver()
         tfoutpath=self.outputDir+outfile+'_tfsession/tf'
         import os
-        os.system('rm -f '+tfoutpath)
+        os.system('rm -rf '+tfoutpath)
         os.system('mkdir -p '+tfoutpath)
         saver.save(tfsession, tfoutpath)
 
@@ -185,6 +186,7 @@ class training_base(object):
         from tokenTools import checkTokens, renew_token_process
         from thread import start_new_thread
         
+        print('starting afs backgrounder')
         checkTokens()
         start_new_thread(renew_token_process,())
         
@@ -194,17 +196,19 @@ class training_base(object):
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
         nfilespre=max(int(samplespreread/averagesamplesperfile),2)
-        if nfilespre>30:nfilespre=30
+        if nfilespre>15:nfilespre=15
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
         print('total sample size: '+str(self.train_data.nsamples))
         #exit()
         
-        self.train_data.maxFilesOpen=nfilespre
-        self.val_data.maxFilesOpen=min(nfilespre/3,1)
+        if self.train_data.maxFilesOpen<0:
+            self.train_data.maxFilesOpen=nfilespre
+            self.val_data.maxFilesOpen=min(int(nfilespre/2),1)
         
-        self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
-        
+        #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
+        print('setting up callbacks')
         from DeepJet_callbacks import DeepJet_callbacks
+        
         
         callbacks=DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
@@ -215,7 +219,7 @@ class training_base(object):
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir)
         nepochs=nepochs-self.trainedepoches
-        
+        print('starting training')
         self.keras_model.fit_generator(self.train_data.generator() ,
                             steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
                             epochs=nepochs,

@@ -562,7 +562,7 @@ class DataCollection(object):
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
-                        logging.info('collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
                         __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
                         lastindex=thisidx        
                 
@@ -703,9 +703,9 @@ class DataCollection(object):
                             traceback.print_exc(file=sys.stdout)
                             raise d
                     
-                t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename))    
-                t.start()
-                #startRead(self.nextcounter,readfilename)
+                #t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename))    
+                #t.start()
+                startRead(self.nextcounter,readfilename)
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
                 self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
@@ -847,7 +847,18 @@ class DataCollection(object):
                     if td.x[0].shape == 0:
                         print('Found empty (corrupted?) file, skipping')
                         continue
-                    #print('dc:append read sample') #DEBUG
+                    
+                    #randomly^2 shuffle
+                    if psamples%2==0:
+                        for i in range(0,dimx):
+                            td.x[i]=shuffle(td.x[i], random_state=psamples)
+                        for i in range(0,dimy):
+                            td.y[i]=shuffle(td.y[i], random_state=psamples)
+                        for i in range(0,dimw):
+                            td.w[i]=shuffle(td.w[i], random_state=psamples)
+                    
+                    
+                    
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
                             xstored[i] = numpy.append(xstored[i],td.x[i])
@@ -870,12 +881,6 @@ class DataCollection(object):
                     batchcomplete = True
                     
                     #random shuffle each time
-                    for i in range(0,dimx):
-                        xstored[i]=shuffle(xstored[i], random_state=psamples)
-                    for i in range(0,dimy):
-                        ystored[i]=shuffle(ystored[i], random_state=psamples)
-                    for i in range(0,dimw):
-                        wstored[i]=shuffle(wstored[i], random_state=psamples)
                     
                     
                     #randomize elements
