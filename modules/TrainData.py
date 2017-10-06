@@ -6,6 +6,9 @@ Created on 20 Feb 2017
 
 from __future__ import print_function
 
+uselz4=False
+import hdf5plugin
+
 from Weighter import Weighter
 from pdb import set_trace
 import numpy
@@ -41,6 +44,9 @@ def fileTimeOut(fileName, timeOut):
 
 
 def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None):
+    import gc
+    gc.collect()
+    import hdf5plugin
     import h5py
     from sklearn.utils import shuffle
     try:
@@ -229,7 +235,9 @@ class TrainData(object):
         if tuple_in is not None:
             return numpy.array(tuple_in.tolist())
 
-    def writeOut(self,fileprefix):
+    def writeOut(self,fileprefix,uselz4=False):
+        
+        import hdf5plugin
         import h5py
         fileTimeOut(fileprefix,120)
         h5f = h5py.File(fileprefix, 'w')
@@ -246,7 +254,10 @@ class TrainData(object):
             for i in range(len(arrlist)):
                 idstr=fidstr+str(i)
                 arr=arrlist[i]
-                h5F.create_dataset(idstr, data=arr, compression="lzf")
+                if uselz4:
+                    h5F.create_dataset(idstr, data=arr, compression=32004, compression_opts=(0, 1), shuffle=False)
+                else:
+                    h5F.create_dataset(idstr, data=arr, compression="lzf")
         
         
         arr=numpy.array([self.nsamples],dtype='int')
@@ -298,6 +309,8 @@ class TrainData(object):
             self.readIn_join()
             
         #print('read')
+        
+        import hdf5plugin
         import h5py
         import multiprocessing
         
@@ -419,15 +432,20 @@ class TrainData(object):
         import copy
         #move away from shared memory
         #this costs performance but seems necessary
-        
+        direct=True
         with threadingfileandmem_lock:
-            self.w=copy.deepcopy(self.w_list)
+            if direct:
+                self.w=self.w_list
+                self.x=self.x_list
+                self.y=self.y_list
+            else:
+                self.w=copy.deepcopy(self.w_list)
+                self.x=copy.deepcopy(self.x_list)
+                self.y=copy.deepcopy(self.y_list)
+                
             del self.w_list
-            self.x=copy.deepcopy(self.x_list)
             del self.x_list
-            self.y=copy.deepcopy(self.y_list)
             del self.y_list
-        
         #in case of some errors during read-in
         self.removeRamDiskFile()
         
@@ -456,14 +474,19 @@ class TrainData(object):
         
     def readIn(self,fileprefix,shapesOnly=False):
         self.readIn_async(fileprefix,False,shapesOnly)
-        
-        import copy
-        self.w=copy.deepcopy(self.w_list)
-        del self.w_list
-        self.x=copy.deepcopy(self.x_list)
-        del self.x_list
-        self.y=copy.deepcopy(self.y_list)
-        del self.y_list
+        direct=True
+        if direct:
+            self.w=self.w_list
+            self.x=self.x_list
+            self.y=self.y_list
+        else:
+            import copy
+            self.w=copy.deepcopy(self.w_list)
+            del self.w_list
+            self.x=copy.deepcopy(self.x_list)
+            del self.x_list
+            self.y=copy.deepcopy(self.y_list)
+            del self.y_list
         
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:

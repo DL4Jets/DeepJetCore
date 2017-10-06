@@ -6,6 +6,7 @@ from __future__ import division
 from __future__ import print_function
 
 
+import hdf5plugin
 ## to call it from cammand lines
 import sys
 import os
@@ -18,19 +19,36 @@ from Losses import *
 class training_base(object):
     
     def __init__(self, 
-                 splittrainandtest=0.8,
+                 splittrainandtest=0.9,
                  useweights=False,
                  testrun=False,resumeSilently=False):
+        
+        
+        
+        parser = ArgumentParser('Run the training')
+        parser.add_argument('inputDataCollection')
+        parser.add_argument('outputDir')
+        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+        
+        args = parser.parse_args()
+        import os
+        
         
         import matplotlib
         #if no X11 use below
         matplotlib.use('Agg')
-        import imp
-        try:
-            imp.find_module('setGPU')
-            import setGPU
-        except ImportError:
-            found = False
+        if args.gpu<0:
+            import imp
+            try:
+                imp.find_module('setGPU')
+                import setGPU
+            except ImportError:
+                found = False
+        else:
+            os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+            print('running on GPU '+str(args.gpu))
+            
             
         
         import keras
@@ -46,10 +64,6 @@ class training_base(object):
         self.compiled=False
         self.checkpointcounter=0
         
-        parser = ArgumentParser('Run the training')
-        parser.add_argument('inputDataCollection')
-        parser.add_argument('outputDir')
-        args = parser.parse_args()
         
         self.inputData = os.path.abspath(args.inputDataCollection)
         self.outputDir=args.outputDir
@@ -179,7 +193,7 @@ class training_base(object):
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
-                   maxqsize=50, 
+                   maxqsize=20, 
                    **trainargs):
         
         #make sure tokens don't expire
@@ -195,8 +209,9 @@ class training_base(object):
         
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
-        nfilespre=max(int(samplespreread/averagesamplesperfile),2)
-        if nfilespre>15:nfilespre=15
+        nfilespre=max(int(samplespreread/averagesamplesperfile),3)
+        nfilespre-=1
+        #if nfilespre>15:nfilespre=15
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
         print('total sample size: '+str(self.train_data.nsamples))
         #exit()

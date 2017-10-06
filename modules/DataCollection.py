@@ -682,7 +682,9 @@ class DataCollection(object):
                 #make sure this fast function has exited before getLast tries to read the file
                 import copy
                 readfilename=self.filelist[self.filecounter]
+                del self.tdlist[self.nextcounter]
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
+                self.tdlist[self.nextcounter].readthread=None
                 
                 def startRead(counter,filename,shuffleseed):   
                     excounter=0
