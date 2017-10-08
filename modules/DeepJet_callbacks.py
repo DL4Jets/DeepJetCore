@@ -96,7 +96,8 @@ class DeepJet_callbacks(object):
                  lr_cooldown=4,
                  lr_minimum=1e-5,
                  outputDir='',
-                 minTokenLifetime=5):
+                 minTokenLifetime=5,
+                 checkperiod=10):
         
 
         
@@ -115,7 +116,7 @@ class DeepJet_callbacks(object):
                                         monitor='val_loss', verbose=1, 
                                         save_best_only=True, save_weights_only=False)
         
-        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=10, save_weights_only=False)
+        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
         
         self.modelcheck=saveCheckPointDeepJet(outputDir,model)
         

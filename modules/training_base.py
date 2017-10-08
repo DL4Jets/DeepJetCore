@@ -6,7 +6,6 @@ from __future__ import division
 from __future__ import print_function
 
 
-import hdf5plugin
 ## to call it from cammand lines
 import sys
 import os
@@ -194,6 +193,7 @@ class training_base(object):
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
                    maxqsize=20, 
+                   checkperiod=10,
                    **trainargs):
         
         #make sure tokens don't expire
@@ -209,8 +209,8 @@ class training_base(object):
         
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
-        nfilespre=max(int(samplespreread/averagesamplesperfile),3)
-        nfilespre-=1
+        nfilespre=max(int(samplespreread/averagesamplesperfile),2)
+        nfilespre+=1
         #if nfilespre>15:nfilespre=15
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
         print('total sample size: '+str(self.train_data.nsamples))
@@ -232,7 +232,8 @@ class training_base(object):
                                     lr_epsilon=lr_epsilon, 
                                     lr_cooldown=lr_cooldown, 
                                     lr_minimum=lr_minimum,
-                                    outputDir=self.outputDir)
+                                    outputDir=self.outputDir,
+                                    checkperiod=checkperiod)
         nepochs=nepochs-self.trainedepoches
         print('starting training')
         self.keras_model.fit_generator(self.train_data.generator() ,

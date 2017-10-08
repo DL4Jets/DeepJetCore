@@ -674,7 +674,7 @@ class DataCollection(object):
                 
                 for i in range(self.max):
                     self.__readNext()
-                    time.sleep(0.2)
+                    time.sleep(1)
                     
             
                 
@@ -682,7 +682,7 @@ class DataCollection(object):
                 #make sure this fast function has exited before getLast tries to read the file
                 import copy
                 readfilename=self.filelist[self.filecounter]
-                del self.tdlist[self.nextcounter]
+                self.tdlist[self.nextcounter].clear()
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 self.tdlist[self.nextcounter].readthread=None
                 
@@ -716,8 +716,8 @@ class DataCollection(object):
                 
                 
             def __getLast(self):
+                self.tdlist[self.lastcounter].readIn_join(wasasync=True,waitforStart=True)
                 td=self.tdlist[self.lastcounter]
-                td.readIn_join(wasasync=True,waitforStart=True)
                 #print('got ',self.lastcounter)
                 
                 self.tdopen[self.lastcounter]=False

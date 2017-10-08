@@ -6,8 +6,6 @@ Created on 20 Feb 2017
 
 from __future__ import print_function
 
-uselz4=False
-import hdf5plugin
 
 from Weighter import Weighter
 from pdb import set_trace
@@ -46,7 +44,7 @@ def fileTimeOut(fileName, timeOut):
 def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None):
     import gc
     gc.collect()
-    import hdf5plugin
+
     import h5py
     from sklearn.utils import shuffle
     try:
@@ -168,6 +166,11 @@ class TrainData(object):
             del self.x
             del self.y
             del self.w
+        if hasattr(self, 'w_list'):
+            del self.w_list
+            del self.x_list
+            del self.y_list
+            
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
         self.w=[numpy.array([])]
@@ -237,7 +240,6 @@ class TrainData(object):
 
     def writeOut(self,fileprefix,uselz4=False):
         
-        import hdf5plugin
         import h5py
         fileTimeOut(fileprefix,120)
         h5f = h5py.File(fileprefix, 'w')
@@ -310,7 +312,6 @@ class TrainData(object):
             
         #print('read')
         
-        import hdf5plugin
         import h5py
         import multiprocessing
         
@@ -416,18 +417,18 @@ class TrainData(object):
         import time
         while wasasync and (not self.readdone or not self.readdone.value): 
             if not self.readthread:
-                time.sleep(.5)
+                time.sleep(.1)
                 continue
-            self.readthread.join(1)
+            self.readthread.join(.1)
             counter+=1
-            if counter>1200: #read failed. do synchronous read, safety option if threads died
+            if counter>3000: #read failed. do synchronous read, safety option if threads died
                 print('\nfalling back to sync read\n')
                 self.readthread.terminate()
                 self.readthread=None
                 self.readIn(self.samplename)
                 return
         if self.readdone.value:
-            self.readthread.join(1)
+            self.readthread.join(.1)
                 
         import copy
         #move away from shared memory
