@@ -238,7 +238,7 @@ class TrainData(object):
         if tuple_in is not None:
             return numpy.array(tuple_in.tolist())
 
-    def writeOut(self,fileprefix,uselz4=False):
+    def writeOut(self,fileprefix):
         
         import h5py
         fileTimeOut(fileprefix,120)
@@ -256,8 +256,11 @@ class TrainData(object):
             for i in range(len(arrlist)):
                 idstr=fidstr+str(i)
                 arr=arrlist[i]
-                if uselz4:
-                    h5F.create_dataset(idstr, data=arr, compression=32004, compression_opts=(0, 1), shuffle=False)
+                if "meta" in fileprefix[-4:]:
+                    from c_readArrThreaded import writeArray
+                    if arr.dtype!='float32':
+                        arr=arr.astype('float32')
+                    writeArray(arr.ctypes.data,fileprefix[:-4]+fidstr+'.'+str(i),list(arr.shape))
                 else:
                     h5F.create_dataset(idstr, data=arr, compression="lzf")
         
@@ -299,7 +302,10 @@ class TrainData(object):
             import os
             try:
                 if self.ramdiskfile and os.path.exists(self.ramdiskfile):
-                    os.remove(self.ramdiskfile)
+                    if "meta" in self.ramdiskfile[-4:]:
+                        os.system('rm -f '+self.ramdiskfile[:-4]+"*")
+                    else:
+                        os.remove(self.ramdiskfile)
             except OSError:
                 pass
             self.ramdiskfile=None
@@ -367,8 +373,24 @@ class TrainData(object):
                 import uuid
                 import os
                 import copy
+                unique_filename=''
+                
                 unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
-                shutil.copyfile(fileprefix, unique_filename)
+                if "meta" in readfile[-4:]:
+                    filebase=readfile[:-4]
+                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())
+                    shutil.copyfile(filebase+'meta',unique_filename+'.meta')
+                    for i in range(len(self.w_list)):
+                        shutil.copyfile(filebase+'w.'+str(i),unique_filename+'.w.'+str(i))
+                    for i in range(len(self.x_list)):
+                        shutil.copyfile(filebase+'x.'+str(i),unique_filename+'.x.'+str(i))
+                    for i in range(len(self.y_list)):
+                        shutil.copyfile(filebase+'y.'+str(i),unique_filename+'.y.'+str(i))
+                    unique_filename+='.meta'
+                        
+                else:
+                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+                    shutil.copyfile(fileprefix, unique_filename)
                 readfile=unique_filename
                 self.ramdiskfile=readfile
 
@@ -386,17 +408,55 @@ class TrainData(object):
                 self.readdone=multiprocessing.Value('b',False)
                         
         if read_async:
-            self.readthread=multiprocessing.Process(target=_read_arrs_, 
-                                                    args=(self.w_list,
-                                                          self.x_list,
-                                                          self.y_list,
-                                                          self.readdone,
-                                                          readfile,
-                                                          self,randomseed))
-            self.readthread.start()
+            if "meta" in readfile[-4:]:
+                #new format
+                from c_readArrThreaded import startReading
+                self.readthreadids=[]
+                filebase=readfile[:-4]
+                for i in range(len(self.w_list)):
+                    self.readthreadids.append(startReading(self.w_list[i].ctypes.data,
+                                                           filebase+'w.'+str(i),
+                                                           list(self.w_list[i].shape)))
+                for i in range(len(self.x_list)):
+                    self.readthreadids.append(startReading(self.x_list[i].ctypes.data,
+                                                           filebase+'x.'+str(i),
+                                                           list(self.x_list[i].shape)))
+                for i in range(len(self.y_list)):
+                    self.readthreadids.append(startReading(self.y_list[i].ctypes.data,
+                                                           filebase+'y.'+str(i),
+                                                           list(self.y_list[i].shape)))
+                
+                
+            else:
+                self.readthread=multiprocessing.Process(target=_read_arrs_, 
+                                                        args=(self.w_list,
+                                                              self.x_list,
+                                                              self.y_list,
+                                                              self.readdone,
+                                                              readfile,
+                                                              self,randomseed))
+                self.readthread.start()
         else:
-            self.readdone=multiprocessing.Value('b',False)
-            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
+            if "meta" in readfile[-4:]:
+                from c_readArrThreaded import readBlocking
+                filebase=readfile[:-4]
+                self.readthreadids=[]
+                for i in range(len(self.w_list)):
+                    (readBlocking(self.w_list[i].ctypes.data,
+                                                           filebase+'w.'+str(i),
+                                                           list(self.w_list[i].shape)))
+                for i in range(len(self.x_list)):
+                    (readBlocking(self.x_list[i].ctypes.data,
+                                                           filebase+'x.'+str(i),
+                                                           list(self.x_list[i].shape)))
+                for i in range(len(self.y_list)):
+                    (readBlocking(self.y_list[i].ctypes.data,
+                                                           filebase+'y.'+str(i),
+                                                           list(self.y_list[i].shape)))
+                
+            else:
+                self.readdone=multiprocessing.Value('b',False)
+                _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
             
             
         
@@ -408,32 +468,60 @@ class TrainData(object):
         self.readthread=None
         self.readdone=None
      
-    def readIn_join(self,wasasync=True,waitforStart=False):
+    def readIn_join(self,wasasync=True,waitforStart=True):
         #print('joining async read')
-        if not waitforStart and not self.readthread and wasasync:
+        if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
             print('\nreadIn_join:read never started\n')
         
-        counter=0
         import time
-        while wasasync and (not self.readdone or not self.readdone.value): 
-            if not self.readthread:
-                time.sleep(.1)
-                continue
-            self.readthread.join(.1)
-            counter+=1
-            if counter>3000: #read failed. do synchronous read, safety option if threads died
-                print('\nfalling back to sync read\n')
-                self.readthread.terminate()
-                self.readthread=None
-                self.readIn(self.samplename)
-                return
-        if self.readdone.value:
-            self.readthread.join(.1)
+        if waitforStart:
+            while (not hasattr(self, 'readthreadids')) and not self.readthread:
+                time.sleep(0.1)
+            if hasattr(self, 'readthreadids'):
+                while not self.readthreadids:
+                    time.sleep(0.1)
+        
+        counter=0
+        
+        if hasattr(self, 'readthreadids') and self.readthreadids:
+            from c_readArrThreaded import isDone
+            doneids=[]
+            while True:
+                for id in self.readthreadids:
+                    if id in doneids: continue
+                    if isDone(id):
+                        doneids.append(id)
+                if len(self.readthreadids) == len(doneids):
+                    break
+                time.sleep(0.1)
+                counter+=1
+                if counter>3000: #read failed. do synchronous read, safety option if threads died
+                    print('\nfalling back to sync read\n')
+                    self.readthread.terminate()
+                    self.readthread=None
+                    self.readIn(self.samplename)
+                    return
+            
+        else: #will be removed at some point
+            while wasasync and (not self.readdone or not self.readdone.value): 
+                if not self.readthread:
+                    time.sleep(.1)
+                    continue
+                self.readthread.join(.1)
+                counter+=1
+                if counter>3000: #read failed. do synchronous read, safety option if threads died
+                    print('\nfalling back to sync read\n')
+                    self.readthread.terminate()
+                    self.readthread=None
+                    self.readIn(self.samplename)
+                    return
+            if self.readdone.value:
+                self.readthread.join(.1)
                 
         import copy
         #move away from shared memory
         #this costs performance but seems necessary
-        direct=True
+        direct=False
         with threadingfileandmem_lock:
             if direct:
                 self.w=self.w_list
@@ -468,7 +556,7 @@ class TrainData(object):
         self.w_list=None
         self.x_list=None
         self.y_list=None
-        if wasasync:
+        if wasasync and self.readthread:
             self.readthread.terminate()
         self.readthread=None
         self.readdone=None

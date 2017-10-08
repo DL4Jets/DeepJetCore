@@ -14,6 +14,8 @@ import logging
 from pdb import set_trace
 import copy
 
+usenewformat=True
+
 class DataCollection(object):
     '''
     classdocs
@@ -418,10 +420,15 @@ class DataCollection(object):
         try:
             td.readFromRootFile(ramdisksample,means, weighter) 
             newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newpath=os.path.abspath(outputDir+newname+'.z')
+            
+            if usenewformat:
+                newname+='.meta'
+            else:
+                newname+='.z'
+            newpath=os.path.abspath(outputDir+newname)
             td.writeOut(newpath)
-            print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
-            self.samples.append(newname+'.z')
+            print('converted and written '+newname+' in ',sw.getAndReset(),' sec')
+            self.samples.append(newname)
             self.nsamples+=td.nsamples
             self.sampleentries.append(td.nsamples)
             td.clear()
@@ -466,7 +473,11 @@ class DataCollection(object):
             out_samplename=''
             out_sampleentries=0
             newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newpath=os.path.abspath(outputDir+newname+'.z')
+            if usenewformat:
+                newname+='.meta'
+            else:
+                newname+='.z'
+            newpath=os.path.abspath(outputDir+newname)
             
             
             
@@ -476,9 +487,9 @@ class DataCollection(object):
                 wrlck.acquire()
                 td.writeOut(newpath)
                 wrlck.release()
-                print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec -', index)
+                print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
-                out_samplename=newname+'.z'
+                out_samplename=newname
                 out_sampleentries=td.nsamples
                 success=True
                 td.clear()
@@ -650,14 +661,13 @@ class DataCollection(object):
         import threading
         import time
         print('start generator')
-        
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
                 
                 self.filelist=filelist
                 self.nfiles=len(filelist)
-                self.max=min(maxopen,self.nfiles)
+                self.max=min(maxopen,len(filelist))
                 self.tdlist=[]
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
@@ -682,7 +692,8 @@ class DataCollection(object):
                 #make sure this fast function has exited before getLast tries to read the file
                 import copy
                 readfilename=self.filelist[self.filecounter]
-                self.tdlist[self.nextcounter].clear()
+                if len(filelist)>1:
+                    self.tdlist[self.nextcounter].clear()
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
                 self.tdlist[self.nextcounter].readthread=None
                 
@@ -825,6 +836,10 @@ class DataCollection(object):
                     td=TDReader.get()
                 except:
                     traceback.print_exc(file=sys.stdout)
+                    
+                if td.x[0].shape[0] == 0:
+                    print('Found empty (corrupted?) file, skipping')
+                    continue
                 
                 if xstored[0].shape[0] ==0:
                     #print('dc:read direct') #DEBUG
@@ -847,12 +862,9 @@ class DataCollection(object):
                         wout.append([])
                         
                 else:
-                    if td.x[0].shape == 0:
-                        print('Found empty (corrupted?) file, skipping')
-                        continue
                     
                     #randomly^2 shuffle - not needed anymore here
-                    if False and psamples%2==0:
+                    if psamples%2==0:
                         for i in range(0,dimx):
                             td.x[i]=shuffle(td.x[i], random_state=psamples)
                         for i in range(0,dimy):
@@ -883,11 +895,6 @@ class DataCollection(object):
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
                     
-                    #random shuffle each time
-                    
-                    
-                    #randomize elements
-                     
                 #limit of the random generator number 
                 psamples+=  td.x[0].shape[0]   
                 if psamples > 4e8:
