@@ -484,9 +484,9 @@ class DataCollection(object):
             try:
                 os.system('cp '+sample+' '+ramdisksample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
-                wrlck.acquire()
+                #wrlck.acquire()
                 td.writeOut(newpath)
-                wrlck.release()
+                #wrlck.release()
                 print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname
