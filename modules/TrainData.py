@@ -416,15 +416,18 @@ class TrainData(object):
                 for i in range(len(self.w_list)):
                     self.readthreadids.append(startReading(self.w_list[i].ctypes.data,
                                                            filebase+'w.'+str(i),
-                                                           list(self.w_list[i].shape)))
+                                                           list(self.w_list[i].shape),
+                                                           isRamDisk))
                 for i in range(len(self.x_list)):
                     self.readthreadids.append(startReading(self.x_list[i].ctypes.data,
                                                            filebase+'x.'+str(i),
-                                                           list(self.x_list[i].shape)))
+                                                           list(self.x_list[i].shape),
+                                                           isRamDisk))
                 for i in range(len(self.y_list)):
                     self.readthreadids.append(startReading(self.y_list[i].ctypes.data,
                                                            filebase+'y.'+str(i),
-                                                           list(self.y_list[i].shape)))
+                                                           list(self.y_list[i].shape),
+                                                           isRamDisk))
                 
                 
             else:
@@ -444,15 +447,18 @@ class TrainData(object):
                 for i in range(len(self.w_list)):
                     (readBlocking(self.w_list[i].ctypes.data,
                                                            filebase+'w.'+str(i),
-                                                           list(self.w_list[i].shape)))
+                                                           list(self.w_list[i].shape),
+                                                           isRamDisk))
                 for i in range(len(self.x_list)):
                     (readBlocking(self.x_list[i].ctypes.data,
                                                            filebase+'x.'+str(i),
-                                                           list(self.x_list[i].shape)))
+                                                           list(self.x_list[i].shape),
+                                                           isRamDisk))
                 for i in range(len(self.y_list)):
                     (readBlocking(self.y_list[i].ctypes.data,
                                                            filebase+'y.'+str(i),
-                                                           list(self.y_list[i].shape)))
+                                                           list(self.y_list[i].shape),
+                                                           isRamDisk))
                 
             else:
                 self.readdone=multiprocessing.Value('b',False)
@@ -469,74 +475,79 @@ class TrainData(object):
         self.readdone=None
      
     def readIn_join(self,wasasync=True,waitforStart=True):
-        #print('joining async read')
-        if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
-            print('\nreadIn_join:read never started\n')
         
-        import time
-        if waitforStart:
-            while (not hasattr(self, 'readthreadids')) and not self.readthread:
-                time.sleep(0.1)
-            if hasattr(self, 'readthreadids'):
-                while not self.readthreadids:
-                    time.sleep(0.1)
-        
-        counter=0
-        
-        if hasattr(self, 'readthreadids') and self.readthreadids:
-            from c_readArrThreaded import isDone
-            doneids=[]
-            while True:
-                for id in self.readthreadids:
-                    if id in doneids: continue
-                    if isDone(id):
-                        doneids.append(id)
-                if len(self.readthreadids) == len(doneids):
-                    break
-                time.sleep(0.1)
-                counter+=1
-                if counter>3000: #read failed. do synchronous read, safety option if threads died
-                    print('\nfalling back to sync read\n')
-                    self.readthread.terminate()
-                    self.readthread=None
-                    self.readIn(self.samplename)
-                    return
+        try:
+            if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
+                print('\nreadIn_join:read never started\n')
             
-        else: #will be removed at some point
-            while wasasync and (not self.readdone or not self.readdone.value): 
-                if not self.readthread:
-                    time.sleep(.1)
-                    continue
-                self.readthread.join(.1)
-                counter+=1
-                if counter>3000: #read failed. do synchronous read, safety option if threads died
-                    print('\nfalling back to sync read\n')
-                    self.readthread.terminate()
-                    self.readthread=None
-                    self.readIn(self.samplename)
-                    return
-            if self.readdone.value:
-                self.readthread.join(.1)
+            import time
+            if waitforStart:
+                while (not hasattr(self, 'readthreadids')) and not self.readthread:
+                    time.sleep(0.1)
+                if hasattr(self, 'readthreadids'):
+                    while not self.readthreadids:
+                        time.sleep(0.1)
+            
+            counter=0
+            
+            if hasattr(self, 'readthreadids') and self.readthreadids:
+                from c_readArrThreaded import isDone
+                doneids=[]
+                while True:
+                    for id in self.readthreadids:
+                        if id in doneids: continue
+                        if isDone(id):
+                            doneids.append(id)
+                    if len(self.readthreadids) == len(doneids):
+                        break
+                    time.sleep(0.1)
+                    counter+=1
+                    if counter>3000: #read failed. do synchronous read, safety option if threads died
+                        print('\nfalling back to sync read\n')
+                        self.readthread.terminate()
+                        self.readthread=None
+                        self.readIn(self.samplename)
+                        return
                 
-        import copy
-        #move away from shared memory
-        #this costs performance but seems necessary
-        direct=False
-        with threadingfileandmem_lock:
-            if direct:
-                self.w=self.w_list
-                self.x=self.x_list
-                self.y=self.y_list
-            else:
-                self.w=copy.deepcopy(self.w_list)
-                self.x=copy.deepcopy(self.x_list)
-                self.y=copy.deepcopy(self.y_list)
-                
-            del self.w_list
-            del self.x_list
-            del self.y_list
-        #in case of some errors during read-in
-        self.removeRamDiskFile()
+            else: #will be removed at some point
+                while wasasync and (not self.readdone or not self.readdone.value): 
+                    if not self.readthread:
+                        time.sleep(.1)
+                        continue
+                    self.readthread.join(.1)
+                    counter+=1
+                    if counter>3000: #read failed. do synchronous read, safety option if threads died
+                        print('\nfalling back to sync read\n')
+                        self.readthread.terminate()
+                        self.readthread=None
+                        self.readIn(self.samplename)
+                        return
+                if self.readdone.value:
+                    self.readthread.join(.1)
+                    
+            import copy
+            #move away from shared memory
+            #this costs performance but seems necessary
+            direct=False
+            with threadingfileandmem_lock:
+                if direct:
+                    self.w=self.w_list
+                    self.x=self.x_list
+                    self.y=self.y_list
+                else:
+                    self.w=copy.deepcopy(self.w_list)
+                    self.x=copy.deepcopy(self.x_list)
+                    self.y=copy.deepcopy(self.y_list)
+                    
+                del self.w_list
+                del self.x_list
+                del self.y_list
+            #in case of some errors during read-in
+            
+        except Exception as d:
+            raise d
+        finally:
+            self.removeRamDiskFile()
         
         #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):

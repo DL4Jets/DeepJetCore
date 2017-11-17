@@ -11,14 +11,16 @@ from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, R
 from time import time
 from pdb import set_trace
 import json
+from keras import backend as K
 
 class newline_callbacks_begin(Callback):
     
-    def __init__(self,outputDir):
+    def __init__(self,outputDir,plotLoss=False):
         self.outputDir=outputDir
         self.loss=[]
         self.val_loss=[]
         self.full_logs=[]
+        self.plotLoss=plotLoss
         
     def on_epoch_end(self,epoch, epoch_logs={}):
         import os
@@ -32,6 +34,10 @@ class newline_callbacks_begin(Callback):
         f.write(str(epoch_logs.get('val_loss')))
         f.write("\n")
         f.close()    
+        learnfile=os.path.join( self.outputDir, 'learn.log')
+        with open(learnfile, 'a') as f:
+            f.write(str(float(K.get_value(self.model.optimizer.lr)))+'\n')
+        
         normed = {}
         for vv in epoch_logs:
             normed[vv] = float(epoch_logs[vv])
@@ -39,6 +45,10 @@ class newline_callbacks_begin(Callback):
         lossfile=os.path.join( self.outputDir, 'full_info.log')
         with open(lossfile, 'w') as out:
             out.write(json.dumps(self.full_logs))
+            
+        if self.plotLoss:
+            from testing import plotLoss
+            plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, epoch_logs={}):
@@ -97,11 +107,12 @@ class DeepJet_callbacks(object):
                  lr_minimum=1e-5,
                  outputDir='',
                  minTokenLifetime=5,
-                 checkperiod=10):
+                 checkperiod=10,
+                 plotLossEachEpoch=True):
         
 
         
-        self.nl_begin=newline_callbacks_begin(outputDir)
+        self.nl_begin=newline_callbacks_begin(outputDir,plotLossEachEpoch)
         self.nl_end=newline_callbacks_end()
         
         self.stopping = EarlyStopping(monitor='val_loss', 

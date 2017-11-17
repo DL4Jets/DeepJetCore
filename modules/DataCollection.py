@@ -461,7 +461,6 @@ class DataCollection(object):
             sw=stopwatch()
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
-            fileTimeOut(sample,120) #once available copy to ram
             ramdisksample= tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
             
             def removefile():
@@ -482,6 +481,7 @@ class DataCollection(object):
             
             
             try:
+                fileTimeOut(sample,120) #once available copy to ram
                 os.system('cp '+sample+' '+ramdisksample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
                 #wrlck.acquire()
@@ -802,9 +802,11 @@ class DataCollection(object):
         #  check if really the right ones are read....
         #
         psamples=0 #for random shuffling
+        nepoch=0
         while 1:
             if processedbatches == totalbatches:
                 processedbatches=0
+                nepoch+=1
             
             lastbatchrest=0
             if processedbatches == 0: #reset buffer and start new
@@ -863,8 +865,8 @@ class DataCollection(object):
                         
                 else:
                     
-                    #randomly^2 shuffle - not needed anymore here
-                    if psamples%2==0:
+                    #randomly^2 shuffle - not needed every time
+                    if psamples%2==0 and nepoch%2==1:
                         for i in range(0,dimx):
                             td.x[i]=shuffle(td.x[i], random_state=psamples)
                         for i in range(0,dimy):

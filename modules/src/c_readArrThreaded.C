@@ -39,6 +39,8 @@ public:
         done=0;
         id=lastid;
         lastid++;
+        if(lastid>0xFFFE)
+            lastid=0;
         removewhendone=rmwhendone;
         state_decompress = new qlz_state_decompress();
     }
@@ -201,7 +203,7 @@ int startReading(long arrpointer,
     readThread * t=new readThread(arrpointer,filenamein,length,rmwhendone);
     t->start();
     if(allreads.at(acounter) && !allreads.at(acounter)->isDone())
-        throw std::out_of_range("c_readArrThreaded::startReading: overflow. Increase numer of maximum threads (setMax)");
+        throw std::out_of_range("c_readArrThreaded::startReading: overflow. Increase number of maximum threads (setMax)");
     allreads.at(acounter)=t;
     acounter++;
     if(acounter>=maxreads)
@@ -224,11 +226,14 @@ bool isDone(int id){
             }
         }
     }
-    std::cerr<<"isDone: ID "<< id << " not found "<<std::endl;
+    if(debug)
+        std::cerr<<"isDone: ID "<< id << " not found "<<std::endl;
     return true;
 }
 
 void setMax(int m){
+    if(m>0xFFFE)
+        throw std::runtime_error("setMax: must be smaller than 65536");
     maxreads=m;
     allreads.resize(m,0);
 }
