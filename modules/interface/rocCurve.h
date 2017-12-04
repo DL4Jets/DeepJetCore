@@ -12,6 +12,7 @@
 #include "TGraph.h"
 #include "TH1D.h"
 #include "TChain.h"
+#include <iostream>
 
 class rocCurve{
 public:
@@ -56,9 +57,17 @@ public:
 		linewidth_=width;
 	}
 
+	const TString& name()const{return name_;}
+     TString compatName()const{
+        TString namecp=name_;
+        namecp.ReplaceAll(" ","_");
+        namecp.ReplaceAll("!","_");
+        namecp.ReplaceAll("/","_");
+        return namecp;}
+
 	//now done in a simple tree-Draw way - if optmisation needed: switch to putting rocs in a loop (TBI)
 	//would need a differnet way of implementing cuts
-	void process(TChain *);
+	void process(TChain *,std::ostream& out=std::cout);
 
 
 	TGraph* getROC(){return &roc_;}
@@ -71,6 +80,7 @@ public:
 
 private:
 
+    static size_t nrocsCounter;
 	size_t nbins_;
 
 	TString name_;
@@ -89,6 +99,8 @@ private:
 
 	TGraph roc_;
 	int linecol_,linewidth_,linestyle_;
+
+	bool fullanalysis_;
 
 };
 

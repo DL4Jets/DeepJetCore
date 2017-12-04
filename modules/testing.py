@@ -21,13 +21,25 @@ Created on 21 Mar 2017
 
 from __future__ import print_function
 
-import imp
-try:
-    imp.find_module('setGPU')
-    print('running on GPU')
-    import setGPU
-except ImportError:
-    found = False
+colormap=['red'
+ , 'blue'
+ , 'darkgreen'
+ , 'purple'
+ , 'darkred'
+ , 'darkblue'
+ , 'green'
+ , 'darkpurple'
+ , 'gray']
+
+dashedcolormap=['red','red,dashed'
+ , 'blue','blue,dashed'
+ , 'darkgreen','darkgreen,dashed'
+ , 'purple','purple,dashed'
+ , 'darkred','darkred,dashed'
+ , 'darkblue','darkblue,dashed'
+ , 'green','green,dashed'
+ , 'darkpurple','darkpurple,dashed'
+ , 'gray','gray,dashed']
     
 from pdb import set_trace
 
@@ -70,16 +82,44 @@ class testDescriptor(object):
             
             td.readIn(fullpath)
             truthclasses=td.getUsedTruth()
-            formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
+            formatstring=[]
+            if len(truthclasses)>0 and len(truthclasses[0])>0:
+                formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
             regressionclasses=[]
             if hasattr(td, 'regressiontargetclasses'):
                 regressionclasses=td.regressiontargetclasses
-            
+            #new implementation. Please check with the store_labels option, Mauro
+            formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
+
             features=td.x
             labels=td.y
             weights=td.w[0]
-            #metric=model.evaluate(features, labels, batch_size=10000)
+            
+            
+            
             prediction = model.predict(features)
+            if isinstance(prediction, list):
+                all_write = np.concatenate(prediction, axis=1)
+            else:
+                all_write = prediction
+            
+            all_write = np.concatenate([all_write, weights], axis=1)
+            formatstring.append('weight')
+            if not all_write.shape[1] == len(formatstring):
+                raise ValueError('Prediction output does not match with the provided targets!')
+               
+            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
+            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
+            
+            #self.metrics.append(metric)
+            self.__sourceroots.append(originroot)
+            self.__predictroots.append(outputDir+'/'+outrootfilename)
+            print(formatstring)
+            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
+            
+            continue
+                
+            #print(prediction[1].shape[1])
             if isinstance(prediction, list):
                 formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
                 if prediction[1].shape[1] > len(regressionclasses):
@@ -134,32 +174,111 @@ def makeASequence(arg,length):
             hasattr(arg, "__iter__"))
     out=[]
     if isseq:
-        return arg
+        if len(arg)==length:
+            return arg
+        for i in range(length/len(arg)):
+            out.extend(arg)
     else:
         for i in range(length):
             out.append(arg)      
     return out      
+   
+def createColours(colors_list,name_list,nnames=None,extralegend=[]):
+    extramulti=1
+    if extralegend==None:
+        extralegend=[]
+    if len(extralegend):
+        extramulti=len(extralegend)
+    if not nnames:
+        nnames=len(name_list)
+    if 'auto' in colors_list:
+        newcolors=[]
+        usemap=colormap
+        if 'dashed' in colors_list and not len(extralegend):
+            usemap=dashedcolormap
+        if len(name_list) > len(usemap)*extramulti:
+            raise Exception('colors_list=auto: too many entries, color map too small: '+str(len(name_list))+'/'+str(len(usemap)*extramulti))
+        stylecounter=0
+        colorcounter=0
+        for i in range(len(name_list)):     
+            if len(extralegend):
+                newcolors.append(usemap[colorcounter] + ','+extralegend[stylecounter].split('?')[0])    
+            else:
+                newcolors.append(usemap[colorcounter])     
+            colorcounter=colorcounter+1
+            if colorcounter == nnames:
+                colorcounter=0
+                stylecounter=stylecounter+1
         
+        colors_list=newcolors   
+    return   colors_list    
     
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
-                    colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',invalidlist=''): 
+                    colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
+                    invalidlist='',
+                    extralegend=None,
+                    logY=True,
+                    individual=False,
+                    xaxis="",
+                    nbins=200):#['solid?udsg','hatched?c']): 
     
-    files=makeASequence(intextfile,len(name_list))
-    cuts=makeASequence(cuts,len(name_list))
-    probabilities_list=makeASequence(probabilities_list,len(name_list))
-    truths_list=makeASequence(truths_list,len(name_list))
-    vetos_list=makeASequence(vetos_list,len(name_list))
-    invalidlist=makeASequence(invalidlist,len(name_list))
+    import copy
+    
+    namelistcopy= copy.deepcopy(name_list)
+    extralegcopy=copy.deepcopy(extralegend)
+    if cmsstyle and extralegcopy==None:
+        extralegcopy=['solid?udsg','dashed?c']
+        
+    if extralegcopy==None:
+        extralegcopy=[]
+        
+    nnames=len(namelistcopy)
+    nextra=0
+    if extralegcopy:
+        nextra=len(extralegcopy)
+    
+
+    if nextra>1 and  len(namelistcopy[-1].strip(' ')) >0 :
+        extranames=['INVISIBLE']*(nnames)*(nextra-1)
+        namelistcopy.extend(extranames)
+        
+    
+    colors_list=createColours(colors_list,namelistcopy,nnames,extralegcopy)   
+        
+    #check if multi-input file   
+    files=makeASequence(intextfile,len(namelistcopy))
+    
+    
+    allcuts=makeASequence(cuts,len(namelistcopy))
+    probabilities_list=makeASequence(probabilities_list,len(namelistcopy))
+    truths_list=makeASequence(truths_list,len(namelistcopy))
+    vetos_list=makeASequence(vetos_list,len(namelistcopy))
+    invalidlist=makeASequence(invalidlist,len(namelistcopy))
+    
+    
+    
     import c_makeROCs
     
+    
     def worker():
-        
-        c_makeROCs.makeROCs(files,name_list,
+        try:
+            c_makeROCs.makeROCs(files,namelistcopy,
                         probabilities_list,
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,cuts,cmsstyle, firstcomment,secondcomment,invalidlist)
+                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
+                        individual,xaxis,nbins)
+        
+        except Exception as e:
+            print('error for these inputs:')
+            print(files)
+            print(allcuts)
+            print(probabilities_list)
+            print(truths_list)
+            print(vetos_list)
+            print(invalidlist)
+            raise e
     
     
     import multiprocessing
@@ -170,13 +289,20 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     # use multiprocessing return thread for waiting option
     
 def makePlots_async(intextfile, name_list, variables, cuts, colours,
-                     outpdffile, xaxis='',yaxis='',normalized=False,profiles=False,minimum=-1e100,maximum=1e100): 
+                     outpdffile, xaxis='',yaxis='',
+                     normalized=False,profiles=False,
+                     minimum=-1e100,maximum=1e100,widthprofile=False,
+                     treename="deepntuplizer/tree",
+                     nbins=0,xmin=0,xmax=0,
+                     ): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
     variables_list=makeASequence(variables,len(name_list))
     cuts_list=makeASequence(cuts,len(name_list))
-    colours_list=makeASequence(colours,len(name_list))
+    
+    colours_list=createColours(colours, name_list)
+    
     
 
     import c_makePlots
@@ -184,18 +310,55 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
         if profiles:
             c_makePlots.makeProfiles(files_list,name_list,
                               variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum)
+                                 outpdffile,xaxis,yaxis,normalized,minimum, maximum,treename)
         else:
             c_makePlots.makePlots(files_list,name_list,
                                  variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,profiles,minimum,maximum)
+                                 outpdffile,xaxis,yaxis,normalized,profiles,widthprofile,minimum,maximum,
+                                 treename,nbins,xmin,xmax)
     
 #    return worker()
     import multiprocessing
     p = multiprocessing.Process(target=worker)
     p.start()
-    return p     
+    return p   
+  
+def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
+                     outpdffile, xaxis='',yaxis='',
+                     minimum=1e100,maximum=-1e100,
+                     rebinfactor=1, SetLogY = False, Xmin = 100, Xmax = -100. ,
+                     treename="deepntuplizer/tree"): 
+    
+    
+    files_list=makeASequence(intextfile,len(name_list))
+    variables_list=makeASequence(variables,len(name_list))
+    cutsnum_list=makeASequence(cutsnum,len(name_list))
+    cutsden_list=makeASequence(cutsden,len(name_list))
+    
+    colours_list=createColours(colours, name_list)
+    
+    
 
+    import c_makePlots
+    def worker():
+        try:
+            c_makePlots.makeEffPlots(files_list,name_list,
+                                 variables_list,cutsnum_list,cutsden_list,colours_list,
+                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum,treename)
+        except Exception as e:
+            print('error for these inputs:')
+            print(files_list)
+            print(name_list)
+            print(variables_list)
+            print(cutsnum_list)
+            print(cutsden_list)
+            print(colours_list)
+            raise e
+#    return worker()
+    import multiprocessing
+    p = multiprocessing.Process(target=worker)
+    p.start()
+    return p 
 
 
 def make_association(txtfiles, input_branches=None, output_branches=None, limit=None):
@@ -230,6 +393,44 @@ def make_association(txtfiles, input_branches=None, output_branches=None, limit=
     
     
 
+def plotLoss(infilename,outfilename,range):
+    
+    import matplotlib
+    
+    matplotlib.use('Agg') 
+    
+    infile=open(infilename,'r')
+    trainloss=[]
+    valloss=[]
+    epochs=[]
+    i=0
+    automax=0
+    automin=100
+    for line in infile:
+        if len(line)<1: continue
+        tl=float(line.split(' ')[0])
+        vl=float(line.split(' ')[1])
+        trainloss.append(tl)
+        valloss.append(vl)
+        epochs.append(i)
+        i=i+1
+        if i==5:
+            automax=max(tl,vl)
+        automin=min(automin,vl,tl)
+        
+    
+    import matplotlib.pyplot as plt
+    f = plt.figure()
+    plt.plot(epochs,trainloss,'r',label='train')
+    plt.plot(epochs,valloss,'b',label='val')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend()
+    if len(range)==2:
+        plt.ylim(range)
+    elif automax>0:
+        plt.ylim([automin*0.9,automax])
+    f.savefig(outfilename)
     
 ######### old part - keep for reference, might be useful some day 
 

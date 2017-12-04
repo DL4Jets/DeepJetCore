@@ -26,14 +26,16 @@
 #include <iostream>
 #include "TCanvas.h"
 
-rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
+size_t rocCurve::nrocsCounter=0;
 
+rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
+    nrocsCounter++;
 }
-rocCurve::rocCurve(const TString& name):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
+rocCurve::rocCurve(const TString& name):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
     name_=name;
 }
 rocCurve::rocCurve(const TString& name, const TString& probability, const TString& truth,
-        const TString& vetotruth, const TString& cuts):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1){
+        const TString& vetotruth, const TString& cuts):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
     name_=name;
     addTagProbability(probability);
     addTruth(truth);
@@ -42,7 +44,7 @@ rocCurve::rocCurve(const TString& name, const TString& probability, const TStrin
 }
 rocCurve::rocCurve(const TString& name, const TString& probability, const TString& truth,
         const TString& vetotruth, int linecol, int linestyle, const TString& cuts,const TString& invalidateif)
-:nbins_(100),linecol_(linecol),linewidth_(1),linestyle_(linestyle)
+:nbins_(100),linecol_(linecol),linewidth_(1),linestyle_(linestyle),fullanalysis_(true)
 {
     name_=name;
     addTagProbability(probability);
@@ -58,7 +60,7 @@ rocCurve::~rocCurve(){
 }
 
 //now done in a simple tree-Draw way - if optmisation needed: switch to putting rocs in a loop (TBI)
-void rocCurve::process(TChain *c){
+void rocCurve::process(TChain *c,std::ostream& out){
 
 
 
@@ -102,19 +104,20 @@ void rocCurve::process(TChain *c){
     }
 
 
-
+    TString nrcc="";
+    nrcc+=nrocsCounter;
 
     TCanvas cv;//just a dummy
-    probh_=TH1D("prob","prob",nbins_,0,1);
-    vetoh_=TH1D("veto","veto",nbins_,0,1);
-    invalidate_=TH1D("invalid","invalid",nbins_,0,1);
-    invalidate_veto_=TH1D("invalid_veto","invalid_veto",nbins_,0,1);
+    probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1);
+    vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1);
+    invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1);
+    invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1);
 
 
-    c->Draw(probstr+">>prob",allcuts);//probcuts);
-    c->Draw(probstr+">>veto",vetostr);
-    c->Draw(probstr+">>invalid",allinvalid_truth);
-    c->Draw(probstr+">>invalid_veto",allinvalid_veto);
+    c->Draw(probstr+">>prob"+nrcc,allcuts);//probcuts);
+    c->Draw(probstr+">>veto"+nrcc,vetostr);
+    c->Draw(probstr+">>invalid"+nrcc,allinvalid_truth);
+    c->Draw(probstr+">>invalid_veto"+nrcc,allinvalid_veto);
 
 
     //remove from mem list
@@ -123,16 +126,16 @@ void rocCurve::process(TChain *c){
     invalidate_.SetDirectory(0);
     invalidate_veto_.SetDirectory(0);
 
-    probh_.SetName("probh_");
-    vetoh_.SetName("vetoh_");
-    invalidate_.SetName("invalidate_");
-    invalidate_veto_.SetName("invalidate_veto_");
+    probh_.SetName("probh_"+nrcc);
+    vetoh_.SetName("vetoh_"+nrcc);
+    invalidate_.SetName("invalidate_"+nrcc);
+    invalidate_veto_.SetName("invalidate_veto_"+nrcc);
 
     std::vector<double> p(nbins_),v(nbins_);
 
     double probintegral=probh_.Integral(0,nbins_);
     double vetointegral=vetoh_.Integral(0,nbins_);
-   // double invalidintegral=invalid.Integral(0,nbins_);
+    // double invalidintegral=invalid.Integral(0,nbins_);
 
     probh_.Add(&invalidate_,-1.);
     vetoh_.Add(&invalidate_veto_,-1.);
@@ -145,11 +148,44 @@ void rocCurve::process(TChain *c){
         p[i] = probh_.Integral(i,nbins_)/(probintegral);
         v[i] = vetoh_.Integral(i,nbins_)/vetointegral;
     }
+    TString compatname=name_;
+    compatname.ReplaceAll(" ","_");
+    compatname.ReplaceAll("/","_");
+    compatname.ReplaceAll(":","_");
+    compatname.ReplaceAll("!","_");
 
     roc_=TGraph(nbins_,&p.at(0),&v.at(0));
-    roc_.SetName(name_);
-    roc_.SetTitle(name_);
+    roc_.SetName(compatname+nrcc);
+    roc_.SetTitle(name_+nrcc);
     roc_.Draw("L");//necessary for some weird root reason
+
+
+
+    float misidset[]={0.001,0.01,0.1,0.2,1.};
+    int count=0;
+    double integral=0;
+    for(float eff=0;eff<1;eff+=0.0001){
+
+        float misid=roc_.Eval(eff);
+        integral+=misid*0.0001;
+        if(misid>misidset[count]){
+            out << eff <<"@"<< misid;
+            count++;
+            //search for closest bin
+            if(fullanalysis_){
+                for(size_t i=0;i<nbins_-1;i++) {
+                    double integra=probh_.Integral(i,nbins_)/(probintegral);
+                    double integrb=probh_.Integral(i+1,nbins_)/(probintegral);
+                    if(eff>integrb && eff<integra){
+                        out<< "@"<<probh_.GetBinCenter(i);
+                    }
+                }
+            }
+            out <<std::endl;
+        }
+
+    }
+    out << "Area under ROC: "<< integral<<std::endl;
     roc_.SetLineColor(linecol_);
     roc_.SetLineStyle(linestyle_);
     roc_.SetLineWidth(linewidth_);

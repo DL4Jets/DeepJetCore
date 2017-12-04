@@ -11,14 +11,16 @@ from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, R
 from time import time
 from pdb import set_trace
 import json
+from keras import backend as K
 
 class newline_callbacks_begin(Callback):
     
-    def __init__(self,outputDir):
+    def __init__(self,outputDir,plotLoss=False):
         self.outputDir=outputDir
         self.loss=[]
         self.val_loss=[]
         self.full_logs=[]
+        self.plotLoss=plotLoss
         
     def on_epoch_end(self,epoch, epoch_logs={}):
         import os
@@ -26,13 +28,16 @@ class newline_callbacks_begin(Callback):
         print('\n***callbacks***\nsaving losses to '+lossfile)
         self.loss.append(epoch_logs.get('loss'))
         self.val_loss.append(epoch_logs.get('val_loss'))
-        f = open(lossfile, 'w')
-        for i in range(len(self.loss)):
-            f.write(str(self.loss[i]))
-            f.write(" ")
-            f.write(str(self.val_loss[i]))
-            f.write("\n")
+        f = open(lossfile, 'a')
+        f.write(str(epoch_logs.get('loss')))
+        f.write(" ")
+        f.write(str(epoch_logs.get('val_loss')))
+        f.write("\n")
         f.close()    
+        learnfile=os.path.join( self.outputDir, 'learn.log')
+        with open(learnfile, 'a') as f:
+            f.write(str(float(K.get_value(self.model.optimizer.lr)))+'\n')
+        
         normed = {}
         for vv in epoch_logs:
             normed[vv] = float(epoch_logs[vv])
@@ -40,6 +45,10 @@ class newline_callbacks_begin(Callback):
         lossfile=os.path.join( self.outputDir, 'full_info.log')
         with open(lossfile, 'w') as out:
             out.write(json.dumps(self.full_logs))
+            
+        if self.plotLoss:
+            from testing import plotLoss
+            plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, epoch_logs={}):
@@ -73,9 +82,23 @@ class checkTokens_callback(Callback):
         from tokenTools import checkTokens
         checkTokens(self.cutofftime_hours)
         
+class saveCheckPointDeepJet(Callback):
+    '''
+    this seems obvious, however for some reason the keras model checkpoint fails
+    to save the optimizer state, needed for resuming a training. Therefore this explicit
+    implementation.
+    '''
+    
+    def __init__(self,outputDir,model):
+        self.outputDir=outputDir
+        self.djmodel=model
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        self.djmodel.save(self.outputDir+"/KERAS_check_model_last.h5")
+        
         
 class DeepJet_callbacks(object):
     def __init__(self,
+                 model,
                  stop_patience=10,
                  lr_factor=0.5,
                  lr_patience=1,
@@ -83,11 +106,13 @@ class DeepJet_callbacks(object):
                  lr_cooldown=4,
                  lr_minimum=1e-5,
                  outputDir='',
-                 minTokenLifetime=5):
+                 minTokenLifetime=5,
+                 checkperiod=10,
+                 plotLossEachEpoch=True):
         
 
         
-        self.nl_begin=newline_callbacks_begin(outputDir)
+        self.nl_begin=newline_callbacks_begin(outputDir,plotLossEachEpoch)
         self.nl_end=newline_callbacks_end()
         
         self.stopping = EarlyStopping(monitor='val_loss', 
@@ -100,9 +125,13 @@ class DeepJet_callbacks(object):
 
         self.modelbestcheck=ModelCheckpoint(outputDir+"/KERAS_check_best_model.h5", 
                                         monitor='val_loss', verbose=1, 
-                                        save_best_only=True)
+                                        save_best_only=True, save_weights_only=False)
         
-        self.modelcheck=ModelCheckpoint(outputDir+"/KERAS_check_last_model.h5", verbose=1)
+        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
+        
+        self.modelcheck=saveCheckPointDeepJet(outputDir,model)
+        
+        
   
         self.history=History()
         self.timer = Losstimer()
@@ -111,7 +140,7 @@ class DeepJet_callbacks(object):
   
         self.callbacks=[
             self.nl_begin, self.tokencheck,
-            self.modelbestcheck, self.modelcheck,
+            self.modelbestcheck, self.modelcheck,self.modelcheckperiod,
             self.reduce_lr, self.stopping, self.nl_end, self.history,
             self.timer
         ]

@@ -28,6 +28,9 @@
 
 using namespace boost::python; //for some reason....
 
+static TString treename="deepntuplizer/tree";
+
+
 enum modeen {en_flat,en_particlewise};
 //can be extended later to run on a list of deep AND flat branches. Start simple first
 
@@ -134,7 +137,7 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
     TStopwatch stopw;
 
     //all branches are floats!
-    TTree* tree=(TTree*)tfile->Get("deepntuplizer/tree");
+    TTree* tree=(TTree*)tfile->Get(treename);
 
     for(auto& d:datacollection)
         d.setup(tree);
@@ -252,7 +255,7 @@ void particle_binner(
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
     //connect all branches
     branches.setup(tree);
@@ -461,7 +464,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
 
     //the order is important!
@@ -510,7 +513,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
 
                 float featval=0;
                 if(maskedlayerbranch>=0 && (size_t)maskedlayerbranch==i_feat)
-                    featval=layer;
+                    featval=(float)layer/s_norms.at(i_feat);
                 else
                     featval=branch.getData(i_feat, elem);
 
@@ -590,7 +593,7 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
     counter.createFrom({counter_branch}, {1.}, {0.}, 1);
 
     TFile* tfile= new TFile(filename.c_str(), "READ");
-    TTree* tree = (TTree*) tfile->Get("deepntuplizer/tree");
+    TTree* tree = (TTree*) tfile->Get(treename);
 
     //connect all branches
     if(!count)
@@ -654,7 +657,12 @@ void meanPad() {
 	//make real zero pad
 	__hidden::indata::meanPadding = true;
 }
-
+void setTreeName(std::string name){
+    treename=name;
+}
+void doScaling(bool doit){
+    __hidden::indata::doscaling=doit;
+}
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
@@ -667,6 +675,8 @@ BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
     def("fillDensityMap", &fillDensityMap);
     def("fillCountMap", &fillCountMap);
     def("fillDensityLayers", &fillDensityLayers);
-		def("meanPad", &meanPad);
-		def("zeroPad", &zeroPad);
+    def("meanPad", &meanPad);
+    def("zeroPad", &zeroPad);
+    def("setTreeName", &setTreeName);
+    def("doScaling", &doScaling);
 }

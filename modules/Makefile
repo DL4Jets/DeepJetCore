@@ -24,6 +24,8 @@ MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 all: $(MODULES_SHARED_LIBS)
 
 #helpers
+libquicklz.so:
+	gcc -shared -O2 -fPIC src/quicklz.c -o libquicklz.so
 
 obj/%.o: src/%.cpp
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
@@ -33,15 +35,16 @@ libdeepjethelpers.so: $(OBJ_FILES)
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) obj/*.o -o $@ 
   
 
-%.so: %.o libdeepjethelpers.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+%.so: %.o libdeepjethelpers.so libquicklz.so
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
 %.o: src/%.C 
 	g++   $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
 
 
- 
-   
 clean: 
 	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjethelpers.so
+	
+	
+	

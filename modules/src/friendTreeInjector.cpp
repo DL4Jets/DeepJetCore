@@ -9,7 +9,10 @@
 #include <fstream>
 #include <iostream>
 
-friendTreeInjector::friendTreeInjector():chain_(0){}
+
+friendTreeInjector::friendTreeInjector(TString sourcetreename):
+        chain_(0),
+        sourcetree_('/'+sourcetreename){}
 friendTreeInjector::~friendTreeInjector(){
 	resetChain();
 }
@@ -31,6 +34,7 @@ void friendTreeInjector::addFromFile(const TString& filename, const TString& ali
 		toinject.push_back(b);
 	}
 	friendaliases_.push_back(alias);
+	std::cout << "added alias "<<alias <<std::endl;
 
 	if(treesandfriends_.size()<1){
 		for(size_t i=0;i<originroots.size();i++){
@@ -51,6 +55,7 @@ void friendTreeInjector::addFromFile(const TString& filename, const TString& ali
 		for(size_t i=0;i<originroots.size();i++){
 			if(originroots.at(i) == orig){
 				o.push_back(toinject.at(i));
+				//std::cout << toinject.at(i) << std::endl;
 				break;
 			}
 		}
@@ -80,7 +85,7 @@ void friendTreeInjector::createChain(){
 	    friendchains_.at(i)=new TChain(s,s);
 	}
 	for(size_t i=0;i<treesandfriends_.size();i++){
-	    TString basetree=treesandfriends_.at(i).at(0)+"/deepntuplizer/tree";
+	    TString basetree=treesandfriends_.at(i).at(0)+sourcetree_;
 	    //std::cout << basetree << std::endl;
 		chain_->AddFile(basetree);
 		for(size_t j=1;j<treesandfriends_.at(i).size();j++){
