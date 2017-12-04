@@ -28,6 +28,22 @@
 
 size_t rocCurve::nrocsCounter=0;
 
+static std::vector<double> loglist(double first, double last, double size){
+    if(first>last) std::swap(first,last);
+    double logfirst = log(first)/log(10);
+    double loglast = log(last)/log(10);
+    double step = (loglast-logfirst)/(size-1);
+    std::vector<double> out;
+    for(double x=logfirst; x<=loglast; x+=step)
+    {
+        double a = pow(10,x);
+        out.push_back(a);
+    }
+    return out;
+
+}
+
+
 rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
     nrocsCounter++;
 }
@@ -160,14 +176,14 @@ void rocCurve::process(TChain *c,std::ostream& out){
     roc_.Draw("L");//necessary for some weird root reason
 
 
-
-    float misidset[]={0.001,0.01,0.1,0.2,1.};
+    out << "eff @ misid @ discr value\n\n";
+    std::vector<double> misidset=loglist(0.001,1,100);
     int count=0;
     double integral=0;
-    for(float eff=0;eff<1;eff+=0.0001){
+    for(float eff=0;eff<1;eff+=0.00001){
 
         float misid=roc_.Eval(eff);
-        integral+=misid*0.0001;
+        integral+=misid*0.00001;
         if(misid>misidset[count]){
             out << eff <<"@"<< misid;
             count++;
