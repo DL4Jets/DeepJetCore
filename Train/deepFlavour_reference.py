@@ -43,7 +43,6 @@ if newtraining:
                            metrics=['accuracy'],
                            loss_weights=[1., 0.000000000001])
     
-
 print(train.keras_model.summary())
 #printLayerInfosAndWeights(train.keras_model)
 
