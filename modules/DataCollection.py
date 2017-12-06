@@ -400,7 +400,7 @@ class DataCollection(object):
         
         
     
-    def __writeData(self,sample,means, weighter,outputDir,dataclass):
+    def __writeData(self,sample,means, weighter,outputDir,dataclass,number=-1):
         import os
         import copy
         from stopwatch import stopwatch
@@ -420,6 +420,8 @@ class DataCollection(object):
         try:
             td.readFromRootFile(ramdisksample,means, weighter) 
             newname=os.path.basename(sample).rsplit('.', 1)[0]
+            if number>0:
+                newname+=str(number)
             
             if usenewformat:
                 newname+='.meta'
@@ -472,6 +474,8 @@ class DataCollection(object):
             out_samplename=''
             out_sampleentries=0
             newname=os.path.basename(sample).rsplit('.', 1)[0]
+            newname+=str(index)
+                
             if usenewformat:
                 newname+='.meta'
             else:
