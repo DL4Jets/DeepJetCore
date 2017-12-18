@@ -6,6 +6,49 @@ from keras.layers import Dense, Dropout, Flatten,Convolution2D, Convolution1D
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 
+def block_deepFlavourBTVConvolutions(charged,vertices,dropoutRate,active=True,batchnorm=False,batchmomentum=0.6):
+    '''
+    deep Flavour convolution part. 
+    '''
+    cpf=charged
+    if active:
+        cpf  = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv0')(cpf)
+        if batchnorm:
+            cpf = BatchNormalization(momentum=batchmomentum ,name='cpf_batchnorm0')(cpf)
+        cpf = Dropout(dropoutRate,name='cpf_dropout0')(cpf)                                                   
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv1')(cpf)
+        if batchnorm:
+            cpf = BatchNormalization(momentum=batchmomentum,name='cpf_batchnorm1')(cpf)
+        cpf = Dropout(dropoutRate,name='cpf_dropout1')(cpf)                                                   
+        cpf  = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='cpf_conv2')(cpf)
+        if batchnorm:
+            cpf = BatchNormalization(momentum=batchmomentum,name='cpf_batchnorm2')(cpf)
+        cpf = Dropout(dropoutRate,name='cpf_dropout2')(cpf)                                                   
+        cpf  = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu' , name='cpf_conv3')(cpf)
+    else:
+        cpf = Convolution1D(1,1, kernel_initializer='zeros',trainable=False)(cpf)
+        
+    vtx = vertices
+    if active:
+        vtx = Convolution1D(64, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv0')(vtx)
+        if batchnorm:
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm0')(vtx)
+        vtx = Dropout(dropoutRate,name='vtx_dropout0')(vtx) 
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv1')(vtx)
+        if batchnorm:
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm1')(vtx)
+        vtx = Dropout(dropoutRate,name='vtx_dropout1')(vtx)
+        vtx = Convolution1D(32, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv2')(vtx)
+        if batchnorm:
+            vtx = BatchNormalization(momentum=batchmomentum,name='vtx_batchnorm2')(vtx)
+        vtx = Dropout(dropoutRate,name='vtx_dropout2')(vtx)
+        vtx = Convolution1D(8, 1, kernel_initializer='lecun_uniform',  activation='relu', name='vtx_conv3')(vtx)
+    else:
+        vtx = Convolution1D(1,1, kernel_initializer='zeros',trainable=False)(vtx)
+
+    return cpf,vtx
+
+
 def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=True,batchnorm=False,batchmomentum=0.6):
     '''
     deep Flavour convolution part. 
