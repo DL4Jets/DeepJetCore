@@ -1,7 +1,8 @@
 '''
 Created on 16 Mar 2017
 
-backported from original keras source to current version
+backported from original keras source to current version.
+Added more functionality (e.g. intervals)
 '''
 from __future__ import absolute_import
 from __future__ import print_function
@@ -52,7 +53,8 @@ class ReduceLROnPlateau(Callback):
     """
 
     def __init__(self, monitor='val_loss', factor=0.1, patience=10,
-                 verbose=0, mode='auto', epsilon=1e-4, cooldown=0, min_lr=0):
+                 verbose=0, mode='auto', epsilon=1e-4, cooldown=0, min_lr=0,
+                 nexecuted=0):
         super(ReduceLROnPlateau, self).__init__()
 
         self.monitor = monitor
@@ -68,6 +70,7 @@ class ReduceLROnPlateau(Callback):
         self.cooldown_counter = 0  # Cooldown counter.
         self.wait = 0
         self.best = 0
+        self.nexecuted=nexecuted
         self.mode = mode
         self.monitor_op = None
         self._reset()
@@ -95,6 +98,20 @@ class ReduceLROnPlateau(Callback):
         self._reset()
 
     def on_epoch_end(self, epoch, logs=None):
+        
+        
+        
+        thisfactor=self.factor
+        #factors is list
+        if (not hasattr(self.factor, "strip") and
+            hasattr(self.factor, "__getitem__") or
+            hasattr(self.factor, "__iter__")):
+            if self.nexecuted<len(self.factor):
+                thisfactor=self.factor[self.nexecuted]
+            else:
+                thisfactor=self.factor[-1]
+            
+        
         logs = logs or {}
         logs['lr'] = K.get_value(self.model.optimizer.lr)
         current = logs.get(self.monitor)
@@ -120,6 +137,7 @@ class ReduceLROnPlateau(Callback):
                             print('\nEpoch %05d: reducing learning rate to %s.' % (epoch, new_lr))
                         self.cooldown_counter = self.cooldown
                         self.wait = 0
+                        self.nexecuted+=1
                 self.wait += 1
 
     def in_cooldown(self):

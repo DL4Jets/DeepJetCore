@@ -44,7 +44,7 @@ void rocCurveCollection::addROC(const TString& name, const TString& probability,
 
 
 void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
-        const TString&outfile, TCanvas* cv, TFile * f, std::vector<TChain*>* chainvec){
+        const TString&outfile, TCanvas* cv, TFile * f, std::vector<TChain*>* chainvec,double xmin_in){
 
     gROOT->SetBatch();
 
@@ -60,7 +60,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     for(size_t i=0;i<roccurves_.size();i++){
         rocCurve& rc=roccurves_.at(i);
         std::ofstream outtxt((filename+"_"+rc.compatName()+".txt").Data());
-        rc.setNBins(300);
+        rc.setNBins(nbins_);
         if(c)
             rc.process(c,outtxt);
         else
@@ -93,15 +93,17 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     cv->SetGrid();
     cv->SetTicks(1, 1);
     cv->SetBottomMargin(0.12);
-    cv->SetTopMargin(0.06);
+    cv->SetTopMargin(0.069);
     cv->SetLeftMargin(0.15);
     cv->SetRightMargin(0.03);
+    cv->Draw();
+    cv->cd();
 
     TH1D haxis=TH1D("AXIS","AXIS",10,0,1);
     //haxis.Draw("AXIS");
     haxis.GetYaxis()->SetRangeUser(8e-4,1);
     //haxis.GetYaxis()->SetNdivisions(510);
-    haxis.GetYaxis()->SetTitle("misid. probability");
+
     haxis.GetYaxis()->SetTitleSize(0.05);
     //haxis.GetYaxis()->SetTitleOffset(0.9);
     haxis.GetYaxis()->SetLabelSize(0.045);
@@ -109,6 +111,10 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         haxis.GetXaxis()->SetTitle(xaxis_);
     else
         haxis.GetXaxis()->SetTitle("efficiency");
+    if(yaxis_.Length())
+        haxis.GetYaxis()->SetTitle(yaxis_);
+    else
+        haxis.GetYaxis()->SetTitle("misid. probability");
     haxis.GetXaxis()->SetTitleSize(0.05);
     haxis.GetXaxis()->SetLabelSize(0.045);
     //haxis.GetXaxis()->SetTitleOffset(0.95);
@@ -172,7 +178,10 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     xmin*=10;
     xmin=(int)xmin;
     xmin/=10;
-    haxis.GetXaxis()->SetRangeUser(xmin,1);
+    if(xmin_in>0)
+        haxis.GetXaxis()->SetRangeUser(xmin_in,1);
+    else
+        haxis.GetXaxis()->SetRangeUser(xmin,1);
 
     if(cmsstyle_){
 
@@ -226,6 +235,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     //////
 
 
+    for(auto& t:additionaltext_)
+        t->Draw();
     //comment lines
     TLatex *tex = new TLatex(0.18,0.805,comment0_);
     tex->SetNDC(true);

@@ -962,8 +962,9 @@ class TrainData_image(TrainData_fullTruth):
         Constructor
         '''
         super(TrainData_image,self).__init__()
+        self.regressiontargetclasses=['uncPt','Pt']
 
-        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','npv'])
+        self.addBranches(['jet_pt', 'jet_eta','nCpfcand','nNpfcand','nsv','rho'])
         self.registerBranches(['Cpfcan_ptrel','Cpfcan_eta','Cpfcan_phi',
                                'Npfcan_ptrel','Npfcan_eta','Npfcan_phi',
                                'nCpfcand','nNpfcand',
@@ -1003,7 +1004,7 @@ class TrainData_image(TrainData_fullTruth):
                                    self.nsamples,
                                    ['Cpfcan_eta','jet_eta',20,0.5],
                                    ['Cpfcan_phi','jet_phi',20,0.5],
-                                   'nCpfcand',-1)
+                                   'nCpfcand',-1, weightbranch='Cpfcan_puppiw')
         
         x_chcount = createCountMap(filename,TupleMeanStd,
                                    self.nsamples,
@@ -1016,7 +1017,7 @@ class TrainData_image(TrainData_fullTruth):
                                    self.nsamples,
                                    ['Npfcan_eta','jet_eta',20,0.5],
                                    ['Npfcan_phi','jet_phi',20,0.5],
-                                   'nNpfcand',-1)
+                                   'nNpfcand',-1, weightbranch='Npfcan_puppiw')
         
         x_neucount = createCountMap(filename,TupleMeanStd,
                                    self.nsamples,

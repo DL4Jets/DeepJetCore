@@ -75,7 +75,7 @@ callbacks = DeepJet_callbacks(
 )
 
 from DataCollection import DataCollection
-from TrainData_PT_recur import TrainData_PT_recur
+from TrainData_PT_recur import TrainData_PT_recur, TrainData_recurrent_fullTruth
 
 traind = DataCollection(args.inputfile)
 traind.useweights = config_args['useweights']
@@ -146,6 +146,13 @@ traind.setBatchSize(config_args['batchsize'])
 testd.setBatchSize(500)
 traind.writeToFile(outputDir+'trainsamples.dc')
 testd.writeToFile( outputDir+'valsamples.dc')
+
+#make sure tokens don't expire
+from tokenTools import checkTokens, renew_token_process
+from thread import start_new_thread
+
+checkTokens()
+start_new_thread(renew_token_process,())
 
 print 'training'
 try:

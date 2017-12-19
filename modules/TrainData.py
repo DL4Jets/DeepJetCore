@@ -6,10 +6,18 @@ Created on 20 Feb 2017
 
 from __future__ import print_function
 
+
 from Weighter import Weighter
 from pdb import set_trace
 import numpy
 import logging
+
+import threading
+import multiprocessing
+
+threadingfileandmem_lock=threading.Lock()
+#threadingfileandmem_lock.release()
+#multiproc_fileandmem_lock=multiprocessing.Lock()
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -32,21 +40,35 @@ def fileTimeOut(fileName, timeOut):
         counter+=1
         time.sleep(1)
 
-def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix):
+
+def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None):
+    import gc
+    gc.collect()
+
     import h5py
-    idstrs=['w','x','y']
-    h5f = h5py.File(fileprefix,'r')
-    alllists=[arrwl,arrxl,arryl]
-    for j in range(len(idstrs)):
-        fidstr=idstrs[j]
-        arl=alllists[j]
-        for i in range(len(arl)):
-            idstr=fidstr+str(i)
-            h5f[idstr].read_direct(arl[i])
-    doneVal.value=True
-    h5f.close()
-    del h5f
-    
+    from sklearn.utils import shuffle
+    try:
+        idstrs=['w','x','y']
+        h5f = h5py.File(fileprefix,'r')
+        alllists=[arrwl,arrxl,arryl]
+        for j in range(len(idstrs)):
+            fidstr=idstrs[j]
+            arl=alllists[j]
+            for i in range(len(arl)):
+                idstr=fidstr+str(i)
+                h5f[idstr].read_direct(arl[i])
+                #shuffle each read-in, but each array with the same seed (keeps right asso)
+                if randomSeed:
+                    arl[i]=shuffle(arl[i], random_state=randomSeed)
+                
+        doneVal.value=True
+        h5f.close()
+        del h5f
+    except Exception as d:
+        raise d
+    finally:
+        if tdref:
+            tdref.removeRamDiskFile()  
     
     
 class ShowProgress(object):
@@ -132,16 +154,26 @@ class TrainData(object):
         
     def __del__(self):
         self.readIn_abort()
+        self.clear()
         
 
     def clear(self):
         self.samplename=''
+        self.readIn_abort()
         self.readthread=None
         self.readdone=None
+        if hasattr(self, 'x'):
+            del self.x
+            del self.y
+            del self.w
+        if hasattr(self, 'w_list'):
+            del self.w_list
+            del self.x_list
+            del self.y_list
+            
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
         self.w=[numpy.array([])]
-        
         
         self.nsamples=None
     
@@ -207,6 +239,7 @@ class TrainData(object):
             return numpy.array(tuple_in.tolist())
 
     def writeOut(self,fileprefix):
+        
         import h5py
         fileTimeOut(fileprefix,120)
         h5f = h5py.File(fileprefix, 'w')
@@ -223,7 +256,13 @@ class TrainData(object):
             for i in range(len(arrlist)):
                 idstr=fidstr+str(i)
                 arr=arrlist[i]
-                h5F.create_dataset(idstr, data=arr, compression="lzf")
+                if "meta" in fileprefix[-4:]:
+                    from c_readArrThreaded import writeArray
+                    if arr.dtype!='float32':
+                        arr=arr.astype('float32')
+                    writeArray(arr.ctypes.data,fileprefix[:-4]+fidstr+'.'+str(i),list(arr.shape))
+                else:
+                    h5F.create_dataset(idstr, data=arr, compression="lzf")
         
         
         arr=numpy.array([self.nsamples],dtype='int')
@@ -239,6 +278,8 @@ class TrainData(object):
         
         h5f.close()
        
+    
+        
        
     def __createArr(self,shapeinfo):
         import ctypes
@@ -255,14 +296,28 @@ class TrainData(object):
         shared_array = shared_array.reshape(shapeinfo)
         #print('gave shape',shapeinfo)
         return shared_array
-       
-    def readIn_async(self,fileprefix,read_async=True):
+    
+    def removeRamDiskFile(self):
+        if hasattr(self, 'ramdiskfile'):
+            import os
+            try:
+                if self.ramdiskfile and os.path.exists(self.ramdiskfile):
+                    if "meta" in self.ramdiskfile[-4:]:
+                        os.system('rm -f '+self.ramdiskfile[:-4]+"*")
+                    else:
+                        os.remove(self.ramdiskfile)
+            except OSError:
+                pass
+            self.ramdiskfile=None
+               
+    def readIn_async(self,fileprefix,read_async=True,shapesOnly=False,ramdiskpath='',randomseed=None):
         
         if self.readthread and read_async:
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
             self.readIn_join()
             
         #print('read')
+        
         import h5py
         import multiprocessing
         
@@ -287,105 +342,214 @@ class TrainData(object):
             return sharedlist, shapeinfos
         
         
-        try:
-            self.h5f = h5py.File(fileprefix,'r')
-        except:
-            raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
-        self.nsamples=self.h5f['n']
-        self.nsamples=self.nsamples[0]
-        if True or not hasattr(self, 'w_shapes'):
-            self.w_list,self.w_shapes=_readListInfo_('w')
-            self.x_list,self.x_shapes=_readListInfo_('x')
-            self.y_list,self.y_shapes=_readListInfo_('y')
-        else:
-            print('\nshape known\n')
-            self.w_list,_=_readListInfo_('w')
-            self.x_list,_=_readListInfo_('x')
-            self.y_list,_=_readListInfo_('y')
+        with threadingfileandmem_lock:
+            try:
+                self.h5f = h5py.File(fileprefix,'r')
+            except:
+                raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
+            self.nsamples=self.h5f['n']
+            self.nsamples=self.nsamples[0]
+            if True or not hasattr(self, 'w_shapes'):
+                self.w_list,self.w_shapes=_readListInfo_('w')
+                self.x_list,self.x_shapes=_readListInfo_('x')
+                self.y_list,self.y_shapes=_readListInfo_('y')
+            else:
+                print('\nshape known\n')
+                self.w_list,_=_readListInfo_('w')
+                self.x_list,_=_readListInfo_('x')
+                self.y_list,_=_readListInfo_('y')
+                
+            self.h5f.close()
+            del self.h5f
+            self.h5f=None
+            if shapesOnly:
+                return
             
-        self.h5f.close()
-        del self.h5f
-        self.h5f=None
-        
-        #create shared mem in sync mode
-        for i in range(len(self.w_list)):
-            self.w_list[i]=self.__createArr(self.w_shapes[i])
+            readfile=fileprefix
             
-        for i in range(len(self.x_list)):
-            self.x_list[i]=self.__createArr(self.x_shapes[i])
-            
-        for i in range(len(self.y_list)):
-            self.y_list[i]=self.__createArr(self.y_shapes[i])
+            isRamDisk=len(ramdiskpath)>0
+            if isRamDisk:
+                import shutil
+                import uuid
+                import os
+                import copy
+                unique_filename=''
+                
+                unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+                if "meta" in readfile[-4:]:
+                    filebase=readfile[:-4]
+                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())
+                    shutil.copyfile(filebase+'meta',unique_filename+'.meta')
+                    for i in range(len(self.w_list)):
+                        shutil.copyfile(filebase+'w.'+str(i),unique_filename+'.w.'+str(i))
+                    for i in range(len(self.x_list)):
+                        shutil.copyfile(filebase+'x.'+str(i),unique_filename+'.x.'+str(i))
+                    for i in range(len(self.y_list)):
+                        shutil.copyfile(filebase+'y.'+str(i),unique_filename+'.y.'+str(i))
+                    unique_filename+='.meta'
+                        
+                else:
+                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+                    shutil.copyfile(fileprefix, unique_filename)
+                readfile=unique_filename
+                self.ramdiskfile=readfile
 
+            #create shared mem in sync mode
+            for i in range(len(self.w_list)):
+                self.w_list[i]=self.__createArr(self.w_shapes[i])
+                
+            for i in range(len(self.x_list)):
+                self.x_list[i]=self.__createArr(self.x_shapes[i])
+                
+            for i in range(len(self.y_list)):
+                self.y_list[i]=self.__createArr(self.y_shapes[i])
+            
+            if read_async:
+                self.readdone=multiprocessing.Value('b',False)
+                        
         if read_async:
-            self.readdone=multiprocessing.Value('b',False)
-            self.readthread=multiprocessing.Process(target=_read_arrs_, args=(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix))
-            self.readthread.start()
+            if "meta" in readfile[-4:]:
+                #new format
+                from c_readArrThreaded import startReading
+                self.readthreadids=[]
+                filebase=readfile[:-4]
+                for i in range(len(self.w_list)):
+                    self.readthreadids.append(startReading(self.w_list[i].ctypes.data,
+                                                           filebase+'w.'+str(i),
+                                                           list(self.w_list[i].shape),
+                                                           isRamDisk))
+                for i in range(len(self.x_list)):
+                    self.readthreadids.append(startReading(self.x_list[i].ctypes.data,
+                                                           filebase+'x.'+str(i),
+                                                           list(self.x_list[i].shape),
+                                                           isRamDisk))
+                for i in range(len(self.y_list)):
+                    self.readthreadids.append(startReading(self.y_list[i].ctypes.data,
+                                                           filebase+'y.'+str(i),
+                                                           list(self.y_list[i].shape),
+                                                           isRamDisk))
+                
+                
+            else:
+                self.readthread=multiprocessing.Process(target=_read_arrs_, 
+                                                        args=(self.w_list,
+                                                              self.x_list,
+                                                              self.y_list,
+                                                              self.readdone,
+                                                              readfile,
+                                                              self,randomseed))
+                self.readthread.start()
         else:
-            self.readdone=multiprocessing.Value('b',False)
-            _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,fileprefix)
+            if "meta" in readfile[-4:]:
+                from c_readArrThreaded import readBlocking
+                filebase=readfile[:-4]
+                self.readthreadids=[]
+                for i in range(len(self.w_list)):
+                    (readBlocking(self.w_list[i].ctypes.data,
+                                                           filebase+'w.'+str(i),
+                                                           list(self.w_list[i].shape),
+                                                           isRamDisk))
+                for i in range(len(self.x_list)):
+                    (readBlocking(self.x_list[i].ctypes.data,
+                                                           filebase+'x.'+str(i),
+                                                           list(self.x_list[i].shape),
+                                                           isRamDisk))
+                for i in range(len(self.y_list)):
+                    (readBlocking(self.y_list[i].ctypes.data,
+                                                           filebase+'y.'+str(i),
+                                                           list(self.y_list[i].shape),
+                                                           isRamDisk))
+                
+            else:
+                self.readdone=multiprocessing.Value('b',False)
+                _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
             
             
-        
-        
-    def readIn_async_NEW(self,fileprefix):
-        
-        #if self.readthread:
-        #    print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
-        #    self.readIn_join()
-        #    
-        #
-        #import multiprocessing
-        #
-        #self.samplename=fileprefix
-        #self.readqueue=multiprocessing.Queue()
-        #
-        #self.readdone=multiprocessing.Value('b',False)
-        #self.readthread=multiprocessing.Process(target=_read_arrs, args=(fileprefix,self.readdone,self.readqueue))
-        #self.readthread.start()
-        #
-        print('\nstarted async thread\n')
-        
-        
-    #def __del__(self):
-    #    self.readIn_abort()
         
     def readIn_abort(self):
+        self.removeRamDiskFile()
         if not self.readthread:
             return
         self.readthread.terminate()
         self.readthread=None
         self.readdone=None
      
-    def readIn_join(self,wasasync=True):
-        #print('joining async read')
-        if not self.readthread and wasasync:
-            print('\nreadIn_join:read never started\n')
+    def readIn_join(self,wasasync=True,waitforStart=True):
         
-        counter=0
-        while not self.readdone.value and wasasync: 
-            self.readthread.join(1)
-            counter+=1
-            if counter>30: #read failed. do synchronous read
-                print('\nfalling back to sync read\n')
-                self.readthread.terminate()
-                self.readthread=None
-                self.readIn(self.samplename)
-                return
-        if self.readdone.value:
-            self.readthread.join(1)
+        try:
+            if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
+                print('\nreadIn_join:read never started\n')
+            
+            import time
+            if waitforStart:
+                while (not hasattr(self, 'readthreadids')) and not self.readthread:
+                    time.sleep(0.1)
+                if hasattr(self, 'readthreadids'):
+                    while not self.readthreadids:
+                        time.sleep(0.1)
+            
+            counter=0
+            
+            if hasattr(self, 'readthreadids') and self.readthreadids:
+                from c_readArrThreaded import isDone
+                doneids=[]
+                while True:
+                    for id in self.readthreadids:
+                        if id in doneids: continue
+                        if isDone(id):
+                            doneids.append(id)
+                    if len(self.readthreadids) == len(doneids):
+                        break
+                    time.sleep(0.1)
+                    counter+=1
+                    if counter>3000: #read failed. do synchronous read, safety option if threads died
+                        print('\nfalling back to sync read\n')
+                        self.readthread.terminate()
+                        self.readthread=None
+                        self.readIn(self.samplename)
+                        return
                 
-        import copy
-        #move away from shared memory
-        #this costs performance but seems necessary
-        self.w=copy.deepcopy(self.w_list)
-        del self.w_list
-        self.x=copy.deepcopy(self.x_list)
-        del self.x_list
-        self.y=copy.deepcopy(self.y_list)
-        del self.y_list
+            else: #will be removed at some point
+                while wasasync and (not self.readdone or not self.readdone.value): 
+                    if not self.readthread:
+                        time.sleep(.1)
+                        continue
+                    self.readthread.join(.1)
+                    counter+=1
+                    if counter>3000: #read failed. do synchronous read, safety option if threads died
+                        print('\nfalling back to sync read\n')
+                        self.readthread.terminate()
+                        self.readthread=None
+                        self.readIn(self.samplename)
+                        return
+                if self.readdone.value:
+                    self.readthread.join(.1)
+                    
+            import copy
+            #move away from shared memory
+            #this costs performance but seems necessary
+            direct=False
+            with threadingfileandmem_lock:
+                if direct:
+                    self.w=self.w_list
+                    self.x=self.x_list
+                    self.y=self.y_list
+                else:
+                    self.w=copy.deepcopy(self.w_list)
+                    self.x=copy.deepcopy(self.x_list)
+                    self.y=copy.deepcopy(self.y_list)
+                    
+                del self.w_list
+                del self.x_list
+                del self.y_list
+            #in case of some errors during read-in
+            
+        except Exception as d:
+            raise d
+        finally:
+            self.removeRamDiskFile()
         
-        
+        #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
                 shapeinfo=numpy.array([arr.shape[0],1])
@@ -403,24 +567,39 @@ class TrainData(object):
         self.w_list=None
         self.x_list=None
         self.y_list=None
-        if wasasync:
+        if wasasync and self.readthread:
             self.readthread.terminate()
         self.readthread=None
         self.readdone=None
         
-    def readIn(self,fileprefix):
-        self.readIn_async(fileprefix,False)
-        self.w=(self.w_list)
-        self.x=(self.x_list)
-        self.y=(self.y_list)
+    def readIn(self,fileprefix,shapesOnly=False):
+        self.readIn_async(fileprefix,False,shapesOnly)
+        direct=True
+        if direct:
+            self.w=self.w_list
+            self.x=self.x_list
+            self.y=self.y_list
+        else:
+            import copy
+            self.w=copy.deepcopy(self.w_list)
+            del self.w_list
+            self.x=copy.deepcopy(self.x_list)
+            del self.x_list
+            self.y=copy.deepcopy(self.y_list)
+            del self.y_list
         
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
                 shapeinfo=numpy.array([arr.shape[0],1])
-            arr=arr.reshape(shapeinfo)
+            if shapesOnly:
+                arr=numpy.zeros(shape=shapeinfo)
+            else:
+                arr=arr.reshape(shapeinfo)
             return arr
         
         
+            
+            
         for i in range(len(self.w)):
             self.w[i]=reshape_fast(self.w[i],self.w_shapes[i])
         for i in range(len(self.x)):

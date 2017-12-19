@@ -15,6 +15,7 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include <vector>
+class TLatex;
 
 class rocCurveCollection{
 public:
@@ -46,6 +47,7 @@ public:
 	void setCMSStyle(bool cmsst){cmsstyle_=cmsst;}
 	void setLogY(bool logy){logy_=logy;}
 	void setXaxis(TString axis){xaxis_=axis;}
+    void setYaxis(TString axis){yaxis_=axis;}
 
 //	void addROC(const TString& name, const TString& probability, const TString& truth,
 //		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
@@ -53,9 +55,10 @@ public:
 	void addROC(const TString& name, const TString& probability, const TString& truth,
 		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="");
 
+	void addText(TLatex *l){additionaltext_.push_back(l);}
 
 	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0,
-	        std::vector<TChain*>* chainvec=0);
+	        std::vector<TChain*>* chainvec=0,double xmin_in=-1);
 
 private:
 	TLegend * leg_;
@@ -66,8 +69,9 @@ private:
 	bool cmsstyle_;
 	TString comment0_, comment1_;
 	bool logy_;
-	TString xaxis_;
+	TString xaxis_,yaxis_;
 	size_t nbins_;
+	std::vector<TLatex *> additionaltext_;
 };
 
 

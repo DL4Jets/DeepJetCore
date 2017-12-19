@@ -292,7 +292,9 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
                      outpdffile, xaxis='',yaxis='',
                      normalized=False,profiles=False,
                      minimum=-1e100,maximum=1e100,widthprofile=False,
-                     treename="deepntuplizer/tree"): 
+                     treename="deepntuplizer/tree",
+                     nbins=0,xmin=0,xmax=0,
+                     ): 
     
     
     files_list=makeASequence(intextfile,len(name_list))
@@ -312,7 +314,8 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
         else:
             c_makePlots.makePlots(files_list,name_list,
                                  variables_list,cuts_list,colours_list,
-                                 outpdffile,xaxis,yaxis,normalized,profiles,widthprofile,minimum,maximum,treename)
+                                 outpdffile,xaxis,yaxis,normalized,profiles,widthprofile,minimum,maximum,
+                                 treename,nbins,xmin,xmax)
     
 #    return worker()
     import multiprocessing
@@ -390,6 +393,44 @@ def make_association(txtfiles, input_branches=None, output_branches=None, limit=
     
     
 
+def plotLoss(infilename,outfilename,range):
+    
+    import matplotlib
+    
+    matplotlib.use('Agg') 
+    
+    infile=open(infilename,'r')
+    trainloss=[]
+    valloss=[]
+    epochs=[]
+    i=0
+    automax=0
+    automin=100
+    for line in infile:
+        if len(line)<1: continue
+        tl=float(line.split(' ')[0])
+        vl=float(line.split(' ')[1])
+        trainloss.append(tl)
+        valloss.append(vl)
+        epochs.append(i)
+        i=i+1
+        if i==5:
+            automax=max(tl,vl)
+        automin=min(automin,vl,tl)
+        
+    
+    import matplotlib.pyplot as plt
+    f = plt.figure()
+    plt.plot(epochs,trainloss,'r',label='train')
+    plt.plot(epochs,valloss,'b',label='val')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend()
+    if len(range)==2:
+        plt.ylim(range)
+    elif automax>0:
+        plt.ylim([automin*0.9,automax])
+    f.savefig(outfilename)
     
 ######### old part - keep for reference, might be useful some day 
 

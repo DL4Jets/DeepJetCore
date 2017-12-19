@@ -14,6 +14,8 @@ import logging
 from pdb import set_trace
 import copy
 
+usenewformat=True
+
 class DataCollection(object):
     '''
     classdocs
@@ -44,7 +46,7 @@ class DataCollection(object):
         self.weighter=Weighter()
         self.weightsfraction=0.05
         self.maxConvertThreads=2
-        self.maxFilesOpen=5
+        self.maxFilesOpen=2
         self.means=None
         self.classweights={}
 
@@ -143,7 +145,7 @@ class DataCollection(object):
             return []
         self.dataclass.filelock=None
         td=copy.deepcopy(self.dataclass)
-        td.readIn(self.getSamplePath(self.samples[0]))
+        td.readIn(self.getSamplePath(self.samples[0]),shapesOnly=True)
         shapes=td.getInputShapes()
         td.clear()
         return shapes
@@ -172,6 +174,9 @@ class DataCollection(object):
             return count*self.__batchsize #final
         else:
             return self.nsamples
+        
+    def getAvEntriesPerFile(self):
+        return float(self.nsamples)/float(len(self.samples))
         
     
     def getNBatchesPerEpoch(self):
@@ -395,7 +400,7 @@ class DataCollection(object):
         
         
     
-    def __writeData(self,sample,means, weighter,outputDir,dataclass):
+    def __writeData(self,sample,means, weighter,outputDir,dataclass,number=-1):
         import os
         import copy
         from stopwatch import stopwatch
@@ -415,10 +420,17 @@ class DataCollection(object):
         try:
             td.readFromRootFile(ramdisksample,means, weighter) 
             newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newpath=os.path.abspath(outputDir+newname+'.z')
+            if number>0:
+                newname+=str(number)
+            
+            if usenewformat:
+                newname+='.meta'
+            else:
+                newname+='.z'
+            newpath=os.path.abspath(outputDir+newname)
             td.writeOut(newpath)
-            print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec')
-            self.samples.append(newname+'.z')
+            print('converted and written '+newname+' in ',sw.getAndReset(),' sec')
+            self.samples.append(newname)
             self.nsamples+=td.nsamples
             self.sampleentries.append(td.nsamples)
             td.clear()
@@ -431,8 +443,9 @@ class DataCollection(object):
         
     def __writeData_async_andCollect(self, startindex, outputDir):
         
-        from multiprocessing import Process, Queue, cpu_count
+        from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()
+        writelock=Lock()
         import os
         thispid=str(os.getpid())
         if not os.path.isfile(outputDir+'/snapshot.dc'):
@@ -443,14 +456,13 @@ class DataCollection(object):
         print('creating dir '+tempstoragepath)
         os.system('mkdir -p '+tempstoragepath)
         
-        def writeData_async(index,woq):
+        def writeData_async(index,woq,wrlck):
             
             import copy
             from stopwatch import stopwatch
             sw=stopwatch()
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
-            fileTimeOut(sample,120) #once available copy to ram
             ramdisksample= tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
             
             def removefile():
@@ -462,17 +474,26 @@ class DataCollection(object):
             out_samplename=''
             out_sampleentries=0
             newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newpath=os.path.abspath(outputDir+newname+'.z')
+            newname+=str(index)
+                
+            if usenewformat:
+                newname+='.meta'
+            else:
+                newname+='.z'
+            newpath=os.path.abspath(outputDir+newname)
             
             
             
             try:
+                fileTimeOut(sample,120) #once available copy to ram
                 os.system('cp '+sample+' '+ramdisksample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
+                #wrlck.acquire()
                 td.writeOut(newpath)
-                print('converted and written '+newname+'.z in ',sw.getAndReset(),' sec -', index)
+                #wrlck.release()
+                print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
-                out_samplename=newname+'.z'
+                out_samplename=newname
                 out_sampleentries=td.nsamples
                 success=True
                 td.clear()
@@ -492,15 +513,20 @@ class DataCollection(object):
         def __collectWriteInfo(successful,samplename,sampleentries,outputDir):
             if not successful:
                 raise Exception("write not successful, stopping")
-            
+            import os
             self.samples.append(samplename)
             self.nsamples+=sampleentries
             self.sampleentries.append(sampleentries)
-            self.writeToFile(outputDir+'/snapshot.dc')
+            self.writeToFile(outputDir+'/snapshot_tmp.dc')#avoid to overwrite directly
+            os.system('mv '+outputDir+'/snapshot_tmp.dc '+outputDir+'/snapshot.dc')
             
         processes=[]
+        processrunning=[]
+        processfinished=[]
         for i in range(startindex,len(self.originRoots)):
-            processes.append(Process(target=writeData_async, args=(i,wo_queue) ) )
+            processes.append(Process(target=writeData_async, args=(i,wo_queue,writelock) ) )
+            processrunning.append(False)
+            processfinished.append(False)
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
@@ -511,46 +537,55 @@ class DataCollection(object):
         
         #nchilds=10
         
-        index=0
+        
+        
+        lastindex=startindex-1
         alldone=False
+        results=[]
+        import time
         try:
             while not alldone:
-                if index+nchilds >= len(processes):
-                    nchilds=len(processes)-index
-                    alldone=True
+                nrunning=0
+                for runs in processrunning:
+                    if runs: nrunning+=1
                 
-                
-                logging.info('starting %d child processes' % nchilds)
-                for i in range(nchilds):
-                    logging.info('starting %s...' % self.originRoots[startindex+i+index])
-                    processes[i+index].start()
-                        
-                results=[]
-                import time
-                time.sleep(1)
-
-                while 1:
-                    running = len(results)<nchilds #  any(p.is_alive() for p in processes)
-                    while not wo_queue.empty():
-                        res=wo_queue.get()
-                        results.append(res)
-                        logging.info('collected result %d, %d left' % (res[0], (nchilds-len(results))))
-                    if not running:
+                for i in range(len(processes)):
+                    if nrunning>=nchilds:
                         break
+                    if processrunning[i]:continue
+                    if processfinished[i]:continue
                     time.sleep(0.1)
-                
-                logging.info('joining')
-                for i in range(nchilds):
-                    processes[i+index].join(5)
+                    logging.info('starting %s...' % self.originRoots[startindex+i])
+                    processes[i].start()
+                    processrunning[i]=True
+                    nrunning+=1
                     
-                results.sort()
-                results = [r[1] for r in results]
-                for i in range(nchilds):
-                    logging.info(results[i])
-                    __collectWriteInfo(results[i][0],results[i][1],results[i][2],outputDir)
                 
-                index+=nchilds
-        
+                
+                if not wo_queue.empty():
+                    res=wo_queue.get()
+                    results.append(res)
+                    originrootindex=res[0]
+                    logging.info('finished %s...' % self.originRoots[originrootindex])
+                    processfinished[originrootindex-startindex]=True
+                    processes      [originrootindex-startindex].join(5)
+                    processrunning [originrootindex-startindex]=False  
+                    #immediately send the next
+                    continue
+                  
+                    
+                for r in results:
+                    thisidx=r[0]
+                    if thisidx==lastindex+1:
+                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
+                        lastindex=thisidx        
+                
+                if nrunning==0:
+                    alldone=True
+                    continue
+                time.sleep(0.1)
+                  
         except:
             os.system('rm -rf '+tempstoragepath)
             raise 
@@ -627,58 +662,81 @@ class DataCollection(object):
         import uuid
         import os
         import copy
-        
+        import threading
+        import time
+        print('start generator')
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
                 
-                #print('init reader for '+str(len(filelist))+' files:')
-                #print(filelist)
-                
                 self.filelist=filelist
-                self.max=maxopen
                 self.nfiles=len(filelist)
+                self.max=min(maxopen,len(filelist))
                 self.tdlist=[]
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
                 self.tdclass.clear()#only use the format, no data
-                for i in range(maxopen):
+                #self.copylock=thread.allocate_lock()
+                for i in range(self.nfiles):
                     self.tdlist.append(copy.deepcopy(tdclass))
                     self.tdopen.append(False)
-                self.copiedlist=[]
-                for i in range(len(filelist)): self.copiedlist.append('')
                     
                 self.closeAll() #reset state
+                self.shuffleseed=0
                 
             def start(self):
+                
                 for i in range(self.max):
                     self.__readNext()
+                    time.sleep(1)
+                    
+            
                 
             def __readNext(self):
+                #make sure this fast function has exited before getLast tries to read the file
                 import copy
                 readfilename=self.filelist[self.filecounter]
+                if len(filelist)>1:
+                    self.tdlist[self.nextcounter].clear()
                 self.tdlist[self.nextcounter]=copy.deepcopy(self.tdclass)
+                self.tdlist[self.nextcounter].readthread=None
                 
-                unique_filename = '/dev/shm/'+str(uuid.uuid4())
-                shutil.copyfile(readfilename, unique_filename)
-                self.copiedlist[self.nextcounter]=unique_filename
-                
-                self.tdlist[self.nextcounter].readIn_async(unique_filename)
-                
+                def startRead(counter,filename,shuffleseed):   
+                    excounter=0
+                    while excounter<10:
+                        try:
+                            self.tdlist[counter].readIn_async(filename,ramdiskpath='/dev/shm/',
+                                                              randomseed=shuffleseed)
+                            break
+                        except Exception as d:
+                            print(self.filelist[counter]+' read error, retry...')
+                            self.tdlist[counter].readIn_abort()
+                            excounter=excounter+1
+                            if excounter<10:
+                                time.sleep(5)
+                                continue
+                            traceback.print_exc(file=sys.stdout)
+                            raise d
+                    
+                t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename,self.shuffleseed))    
+                t.start()
+                self.shuffleseed+=1
+                if self.shuffleseed>1e5:
+                    self.shuffleseed=0
+                #startRead(self.nextcounter,readfilename,self.shuffleseed)
                 self.tdopen[self.nextcounter]=True
                 self.filecounter=self.__increment(self.filecounter,self.nfiles)
+                self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
                 
-                self.nextcounter=self.__increment(self.nextcounter,self.max)
+                
                 
             def __getLast(self):
+                self.tdlist[self.lastcounter].readIn_join(wasasync=True,waitforStart=True)
                 td=self.tdlist[self.lastcounter]
-                td.readIn_join()
-                if len(self.copiedlist[self.lastcounter]):
-                    os.remove(self.copiedlist[self.lastcounter])
-                self.copiedlist[self.lastcounter]=''
+                #print('got ',self.lastcounter)
                 
                 self.tdopen[self.lastcounter]=False
-                self.lastcounter=self.__increment(self.lastcounter,self.max)
+                self.lastcounter=self.__increment(self.lastcounter,self.nfiles)
                 return td
                 
             def __increment(self,counter,maxval):
@@ -686,25 +744,26 @@ class DataCollection(object):
                 if counter>=maxval:
                     counter=0   
                 return counter 
+            
             def __del__(self):
                 self.closeAll()
                 
             def closeAll(self):
                 for i in range(len(self.tdopen)):
-                    if self.tdopen[i]:
-                        self.tdlist[i].readIn_abort()
-                        self.tdlist[i].clear()
-                        self.tdopen[i]=False
-                for i in range(len(self.copiedlist)): 
-                    if len(self.copiedlist[i]):
-                        os.remove(self.copiedlist[i])
-                    self.copiedlist[i]=''
+                    try:
+                        if self.tdopen[i]:
+                            self.tdlist[i].readIn_abort()
+                            self.tdlist[i].clear()
+                            self.tdopen[i]=False
+                    except: pass
+                    self.tdlist[i].removeRamDiskFile()
                 
                 self.nextcounter=0
                 self.lastcounter=0
                 self.filecounter=0
                 
             def get(self):
+                
                 td=self.__getLast()
                 self.__readNext()
                 return td
@@ -737,7 +796,7 @@ class DataCollection(object):
         TDReader=tdreader(filelist, self.maxFilesOpen, self.dataclass)
         
         #print('generator: total batches '+str(totalbatches))
-        
+        print('start file buffering...')
         TDReader.start()
         #### 
         #
@@ -747,9 +806,11 @@ class DataCollection(object):
         #  check if really the right ones are read....
         #
         psamples=0 #for random shuffling
+        nepoch=0
         while 1:
             if processedbatches == totalbatches:
                 processedbatches=0
+                nepoch+=1
             
             lastbatchrest=0
             if processedbatches == 0: #reset buffer and start new
@@ -781,6 +842,10 @@ class DataCollection(object):
                     td=TDReader.get()
                 except:
                     traceback.print_exc(file=sys.stdout)
+                    
+                if td.x[0].shape[0] == 0:
+                    print('Found empty (corrupted?) file, skipping')
+                    continue
                 
                 if xstored[0].shape[0] ==0:
                     #print('dc:read direct') #DEBUG
@@ -803,10 +868,18 @@ class DataCollection(object):
                         wout.append([])
                         
                 else:
-                    if td.x[0].shape == 0:
-                        print('Found empty (corrupted?) file, skipping')
-                        continue
-                    #print('dc:append read sample') #DEBUG
+                    
+                    #randomly^2 shuffle - not needed every time
+                    if psamples%2==0 and nepoch%2==1:
+                        for i in range(0,dimx):
+                            td.x[i]=shuffle(td.x[i], random_state=psamples)
+                        for i in range(0,dimy):
+                            td.y[i]=shuffle(td.y[i], random_state=psamples)
+                        for i in range(0,dimw):
+                            td.w[i]=shuffle(td.w[i], random_state=psamples)
+                    
+                    
+                    
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
                             xstored[i] = numpy.append(xstored[i],td.x[i])
@@ -828,17 +901,6 @@ class DataCollection(object):
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
                     
-                    #random shuffle each time
-                    for i in range(0,dimx):
-                        xstored[i]=shuffle(xstored[i], random_state=psamples)
-                    for i in range(0,dimy):
-                        ystored[i]=shuffle(ystored[i], random_state=psamples)
-                    for i in range(0,dimw):
-                        wstored[i]=shuffle(wstored[i], random_state=psamples)
-                    
-                    
-                    #randomize elements
-                     
                 #limit of the random generator number 
                 psamples+=  td.x[0].shape[0]   
                 if psamples > 4e8:

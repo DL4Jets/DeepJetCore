@@ -26,6 +26,10 @@
 
 using namespace boost::python; //for some reason....
 
+static void mergeOverflow(TH1F*h){
+    h->SetBinContent(h->GetNbinsX(),h->GetBinContent(h->GetNbinsX())+h->GetBinContent(h->GetNbinsX()+1));
+    h->SetBinContent(1,h->GetBinContent(1)+h->GetBinContent(0));
+}
 
 
 void makePlots(
@@ -42,7 +46,10 @@ void makePlots(
         bool makeWidthProfile=false,
         float OverrideMin=1e100,
         float OverrideMax=-1e100,
-        std::string sourcetreename="deepntuplizer/tree") {
+        std::string sourcetreename="deepntuplizer/tree",
+        size_t nbins=0,
+        float xmin=0,
+        float xmax=0) {
 
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -137,8 +144,16 @@ void makePlots(
     for(size_t i=0;i<s_names.size();i++){
         TString tmpname="hist_";
         tmpname+=i;
+        TH1F *histo =0;
+        if(nbins){
+            histo = new TH1F(tmpname,tmpname,nbins,xmin,xmax);
+        }
+
         c->Draw(s_vars.at(i)+">>"+tmpname,s_cuts.at(i),addstr);
-        TH1F *histo = (TH1F*) gROOT->FindObject(tmpname);
+        if(nbins<1){
+            histo = (TH1F*) gROOT->FindObject(tmpname);
+        }
+        mergeOverflow(histo);
         histo->SetLineColor(colorToTColor(s_colors.at(i)));
         histo->SetLineStyle(lineToTLineStyle(s_colors.at(i)));
         histo->SetTitle(s_names.at(i));
