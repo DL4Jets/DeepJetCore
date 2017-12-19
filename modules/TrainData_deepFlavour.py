@@ -1270,3 +1270,13 @@ class TrainData_deepFlavour_cleanBTVOnly(TrainData_fullTruth):
         self.x=[x_global, x_cpf, x_sv, reco_pt]
         self.y=[alltruth,correctionfactor]
         self._normalize_input_(weighter, npy_array)
+
+
+class TrainData_deepFlavour_nopuppi(TrainData_deepFlavour_FT_reg_noScale):
+	def __init__(self):
+		'''
+		Constructor FIXME
+		'''
+		super(TrainData_deepFlavour_nopuppi, self).__init__()
+		self.branches[1].remove('Cpfcan_puppiw')
+		self.branches[2].remove('Npfcan_puppiw')
