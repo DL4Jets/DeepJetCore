@@ -56,6 +56,7 @@ def main(argv=None):
     from TrainData_PT_recur import TrainData_PT_recur, TrainData_QG_simple, TrainData_recurrent_fullTruth
     from TrainData_deepCSV_int import TrainData_deepCSV_int,TrainData_deepCSV_conv
     from TrainData_deepAK8 import TrainData_AK8Jet_init 
+    from TrainData_domainAda import TrainData_sampleCheck
     
     class_options = [
         TrainData_test,
@@ -90,6 +91,7 @@ def main(argv=None):
         TrainData_deepFlavour_cleaninput,
         TrainData_deepFlavour_cleanBTVOnly,
 			  TrainData_deepFlavour_nopuppi,
+				TrainData_sampleCheck,
         ]
     class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
 
