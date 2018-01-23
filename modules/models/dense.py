@@ -1,12 +1,15 @@
 from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D
 from keras.models import Model
+from pdb import set_trace
 
-def dense_model(Inputs,nclasses,Inputshape,dropoutRate=0.25):
+def dense_model(Inputs,nclasses,nregressions,dropoutRate=0.25):
     """
     Dense matrix, defaults similat to 2016 training
     """
+    if nregressions: raise ValueError('The dense model does not support regression, only classification')
+    #set_trace()
     #  Here add e.g. the normal dense stuff from DeepCSV
-    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform',input_shape=Inputshape)(Inputs)
+    x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(Inputs[0])
     x = Dropout(dropoutRate)(x)
     x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
     x = Dropout(dropoutRate)(x)

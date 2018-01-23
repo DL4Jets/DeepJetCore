@@ -49,6 +49,16 @@ class TrainData_deepCSV(TrainData_Flavour, TrainData_simpleTruth):
                               'TagVarCSV_flightDistance3dSig'],
                              1)
 
+    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+			super(TrainData_deepCSV, self).readFromRootFile(filename, TupleMeanStd, weighter)
+			ys = self.y[0]
+			flav_sum = ys.sum(axis=1)
+			if (flav_sum > 1).any():
+				raise ValueError('In file: %s I get a jet with multiple flavours assigned!' % filename)
+			mask = (flav_sum == 1)
+			self.x = [self.x[0][mask]]
+			self.y = [self.y[0][mask]]
+			self.w = [self.w[0][mask]]
 
 class TrainData_deepCSV_RNN(TrainData_fullTruth):
     '''
