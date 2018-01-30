@@ -12,3 +12,7 @@ __pycache__
 *.png
 *.eps
 *.bak
+*.h5
+*.csv
+*.root
+*.json

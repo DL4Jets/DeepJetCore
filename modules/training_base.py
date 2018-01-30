@@ -11,16 +11,18 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
+from DataCollection import DataCollection
+from pdb import set_trace
 
 # argument parsing and bookkeeping
 from Losses import *
 
 class training_base(object):
     
-    def __init__(self, 
-                 splittrainandtest=0.85,
-                 useweights=False,
-                 testrun=False,resumeSilently=False):
+    def __init__(
+				self, splittrainandtest=0.85,
+				useweights=False, testrun=False,
+				resumeSilently=False, collection_class=DataCollection):
         
         
         
@@ -64,7 +66,9 @@ class training_base(object):
         self.checkpointcounter=0
         
         
-        self.inputData = os.path.abspath(args.inputDataCollection)
+        self.inputData = os.path.abspath(args.inputDataCollection) \
+												 if ',' not in args.inputDataCollection else \
+														[os.path.abspath(i) for i in args.inputDataCollection.split(',')]
         self.outputDir=args.outputDir
         # create output dir
         
@@ -80,7 +84,6 @@ class training_base(object):
         self.outputDir = os.path.abspath(self.outputDir)
         self.outputDir+='/'
         
-        from DataCollection import DataCollection
         #copy configuration to output dir
         if isNewTraining:
             djsource= os.environ['DEEPJET']
@@ -89,7 +92,7 @@ class training_base(object):
 
             
             
-        self.train_data=DataCollection()
+        self.train_data = collection_class()
         self.train_data.readFromFile(self.inputData)
         self.train_data.useweights=useweights
         

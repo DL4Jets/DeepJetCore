@@ -1,6 +1,7 @@
 from keras import backend as K
 
 from tensorflow import where, greater, abs, zeros_like, exp
+import tensorflow as tf
 
 global_loss_list={}
 
@@ -166,3 +167,138 @@ def mean_log_LaPlace_like(y_true, parameters):
 
 global_loss_list['mean_log_LaPlace_like']=mean_log_LaPlace_like
 
+
+def moment_loss(y_true, y_pred):
+	'''this methods calculates moments for different "bins", e.g. two; 1 data and 2 mc, and returns the difference between these moments of the different bins. The bins are passed in the true labels. This loss supports only one prediction output (the prediction is a single value per element)'''
+	# The below counts the entries in the histogram vector, i.e. the actual mini batch size
+	h_entr = K.sum(y_true,axis=0)
+    
+	## first moment ##
+	# Multiply the histogram vectors with estimated propability y_pred
+	h_fill = y_true * y_pred
+    
+	# Sum each histogram vector
+	Sum =K.sum(h_fill,axis=0)
+    
+  # Devide sum by entries (batch size) (i.e. mean, first moment)
+	Sum = Sum/h_entr
+    
+  # Devide per vector mean by average mean, i.e. now SUM is a vector of the relative deviations from the absolute mean
+	Sum = Sum/K.mean(y_pred)
+	
+	## second moment, same logic as before, just squared
+	y_pred2 = y_pred-K.mean(y_pred)
+	h_fill2 = y_true * y_pred2*y_pred2
+	Sum2 =K.sum(h_fill2,axis=0)
+	Sum2 = Sum2/h_entr
+	Sum2 = Sum2/K.mean(y_pred2*y_pred2)
+	
+	## third moment
+	
+	y_pred3 = y_pred-K.mean(y_pred)
+	h_fill3 = y_true * y_pred3*y_pred3*y_pred3
+	Sum3 =K.sum(h_fill3,axis=0)
+	Sum3 = Sum3/h_entr
+	Sum3 = Sum3/K.mean(y_pred2*y_pred2*y_pred2)
+	
+	## fourth moment
+	
+	y_pred4 = y_pred-K.mean(y_pred)
+	h_fill4 = y_true * y_pred4*y_pred4*y_pred4*y_pred4
+	Sum4 =K.sum(h_fill4,axis=0)
+	Sum4 = Sum4/h_entr
+	Sum4 = Sum4/K.mean(y_pred4*y_pred4*y_pred4*y_pred4)
+	
+	return  K.mean(K.square(Sum-1)) + K.mean(K.square(Sum2-1))  +  K.mean(K.square(Sum3-1))  + K.mean(K.square(Sum4-1))
+
+global_loss_list['moment_loss'] = moment_loss
+
+
+
+def nd_moment_loss(y_true, y_pred):
+	'''Extension of the moment_loss to the case where the prediction in multi-dimensional. 
+This methods calculates moments for different "bins", e.g. two; 1 data and 2 mc, and returns the difference between these moments of the different bins. The bins are passed in the true labels.'''
+	# The below counts the entries in the histogram vector, i.e. the actual mini batch size
+	h_entr = K.sum(y_true,axis=0)
+	  
+	## first moment ##
+	# Multiply the histogram vectors with estimated propability y_pred
+	# and sum each histogram vector
+	#Rows: predition classes, Colums: bins
+	Sum = tf.transpose(tf.matmul(
+			tf.transpose(y_true), y_pred
+			)) 
+	  
+	# Devide sum by entries (batch size) (i.e. mean, first moment)
+	Sum /= h_entr
+	
+	# Devide per vector mean by average mean in each class, i.e. now SUM is a vector of the relative deviations from the absolute mean
+	#Rows: bins, Columns: prediction classes
+	Sum = tf.transpose(Sum) / K.mean(y_pred, axis=0)
+	
+	#higer moments: common var
+	y_pred_deviation = y_pred - K.mean(y_pred, axis=0)
+	
+	## second moment, same logic as before, just squared  
+	#Rows: predition classes, Colums: bins
+	Sum2 = tf.transpose(tf.matmul(
+			tf.transpose(y_true), y_pred_deviation**2
+			))
+	Sum2 /= h_entr
+	Sum2 = tf.transpose(Sum2)/K.mean(y_pred_deviation**2, axis=0)
+	
+	## third moment
+	Sum3 = tf.transpose(tf.matmul(
+			tf.transpose(y_true), y_pred_deviation**3
+			))
+	Sum3 /= h_entr
+	Sum3 = tf.transpose(Sum3)/K.mean(y_pred_deviation**3, axis=0)
+	
+	## fourth moment
+	Sum4 = tf.transpose(tf.matmul(
+			tf.transpose(y_true), y_pred_deviation**4
+			))
+	Sum4 /= h_entr
+	Sum4 = tf.transpose(Sum4)/K.mean(y_pred_deviation**4, axis=0)
+	
+	return  K.mean(K.square(Sum-1)) + K.mean(K.square(Sum2-1))  +  K.mean(K.square(Sum3-1))  + K.mean(K.square(Sum4-1))
+
+global_loss_list['nd_moment_loss'] = nd_moment_loss
+
+def nd_moment_factory(nmoments):
+	if not isinstance(nmoments, int) and nmoments < 1:
+		raise ValueError('The number of moments used must be integer and > 1')
+	def nd_moments_(y_true, y_pred):
+		# The below counts the entries in the histogram vector, i.e. the actual mini batch size
+		h_entr = K.sum(y_true,axis=0)
+		  
+		## first moment, it's always there ##
+		# Multiply the histogram vectors with estimated propability y_pred
+		# and sum each histogram vector
+		#Rows: predition classes, Colums: bins
+		Sum = tf.transpose(tf.matmul(
+				tf.transpose(y_true), y_pred
+				)) 
+		  
+		# Devide sum by entries (batch size) (i.e. mean, first moment)
+		Sum /= h_entr
+		
+		# Devide per vector mean by average mean in each class, i.e. now SUM is a vector of the relative deviations from the absolute mean
+		#Rows: bins, Columns: prediction classes
+		Sum = tf.transpose(Sum) / K.mean(y_pred, axis=0)
+		
+		#higer moments: common var
+		y_pred_deviation = y_pred - K.mean(y_pred, axis=0)
+		nsums = [K.mean(K.square(Sum-1))]
+		for idx in range(2, nmoments+1): #from 2 to N (included)
+			isum = tf.transpose(tf.matmul(
+					tf.transpose(y_true), y_pred_deviation**idx
+					))
+			isum /= h_entr
+			isum = tf.transpose(isum)/K.mean(y_pred_deviation**idx, axis=0)
+			nsums.append(K.mean(K.square(isum-1)))
+		return tf.add_n(nsums)
+	return nd_moments_
+		
+for i in range(1, 5):
+	global_loss_list['nd_%dmoment_loss' % i] = nd_moment_factory(i)

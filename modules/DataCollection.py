@@ -50,6 +50,9 @@ class DataCollection(object):
         self.means=None
         self.classweights={}
 
+    def __len__(self):
+        return self.nsamples
+
     def __iadd__(self, other):
         'A += B'
         if not isinstance(other, DataCollection):
@@ -166,7 +169,14 @@ class DataCollection(object):
         if bsize > self.nsamples:
             raise Exception('Batch size must not be bigger than total sample size')
         self.__batchsize=bsize
+
+    def getBatchSize(self):
+        return self.__batchsize
         
+    @property
+    def batch_size(self):
+        return self.__batchsize
+
     def getSamplesPerEpoch(self):
         #modify by batch split
         count=self.getNBatchesPerEpoch()

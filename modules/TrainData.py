@@ -108,12 +108,12 @@ class TrainData(object):
         
         self.treename="deepntuplizer/tree"
         
-        self.undefTruth=['isUndefined', 'isTau']
+        self.undefTruth=['isUndefined']
         
         self.referenceclass='isB'
         
         self.truthclasses=['isB','isBB','isGBB','isLeptonicB','isLeptonicB_C','isC','isCC',
-                           'isGCC','isUD','isS','isG','isUndefined', 'isTau']
+                           'isGCC','isUD','isS','isG','isUndefined']
         
         self.allbranchestoberead=[]
         
@@ -817,20 +817,24 @@ class TrainData_simpleTruth(TrainData):
         self.reducedtruthclasses=['isB','isBB','isC','isUDSG']
         if tuple_in is not None:
             b = tuple_in['isB'].view(numpy.ndarray)
-            bb = tuple_in['isBB'].view(numpy.ndarray)
             bl = tuple_in['isLeptonicB'].view(numpy.ndarray)
             blc = tuple_in['isLeptonicB_C'].view(numpy.ndarray)
             allb = b+bl+blc
-            
+
+            bb = tuple_in['isBB'].view(numpy.ndarray)
+            gbb = tuple_in['isGBB'].view(numpy.ndarray)            
            
             c = tuple_in['isC'].view(numpy.ndarray)
+            cc = tuple_in['isCC'].view(numpy.ndarray)
+            gcc = tuple_in['isGCC'].view(numpy.ndarray)
            
             ud = tuple_in['isUD'].view(numpy.ndarray)
             s = tuple_in['isS'].view(numpy.ndarray)
             uds=ud+s
             g = tuple_in['isG'].view(numpy.ndarray)
             l = g + uds
-            return numpy.vstack((allb,bb,c,l)).transpose()
+
+            return numpy.vstack((allb,bb+gbb,c+cc+gcc,l)).transpose()
     
     
 class TrainData_leptTruth(TrainData):
