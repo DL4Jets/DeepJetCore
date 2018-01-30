@@ -173,6 +173,10 @@ class DataCollection(object):
     def getBatchSize(self):
         return self.__batchsize
         
+    @property
+    def batch_size(self):
+        return self.__batchsize
+
     def getSamplesPerEpoch(self):
         #modify by batch split
         count=self.getNBatchesPerEpoch()

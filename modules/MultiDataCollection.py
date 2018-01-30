@@ -51,7 +51,7 @@ flags: like add_ys, same rules apply. The flags gets multiplied by the event wei
 			raise ValueError('The Ys must be the same lenght of the input collections')
 		self.additional_ys = add_ys
 
-	def readFromFile(self, *infiles):
+	def readFromFile(self, infiles):
 		self.collections = [
 			DataCollection(
 				i, cpu_count()/len(infiles) if self.nprocs == -1 else self.nprocs/len(infiles)
@@ -99,7 +99,11 @@ flags: like add_ys, same rules apply. The flags gets multiplied by the event wei
 		out = [i.split(ratio) for i in self.collections]
 		retval = deepcopy(self)
 		retval.collections = out
-		return ret
+		return retval
+
+	def writeToFile(self, fname):
+		for idx, i in enumerate(self.collections):
+			i.writeToFile(fname.replace('.dc', '%d.dc' % idx))		
 
 	def generator(self):
 		'''Batch generator. Heavily based on the DataCollection one. 
@@ -107,14 +111,14 @@ Adds flags on the fly at the end of each Y'''
 		generators = [i.generator() for i in self.collections]
 		flags = self.flags if self.flags else [None for i in self.collections]
 		add_ys = self.additional_ys if self.additional_ys else [[] for i in self.collections]
-		xtot, wtot, ytot = None, None, None
 		for zipped in izip(*generators):
+			xtot, wtot, ytot = None, None, None
 			for xyw, flag, add_y in zip(zipped, flags, add_ys):
 				if len(xyw) == 3:
-					x, y, w = xyw
+					x, y, w = deepcopy(xyw)
 				else: #len(xyw) == 3:
-					x, y = xyw
-					w = [np.ones((x[0].shape[0], 1))] if self.flags else None
+					x, y = deepcopy(xyw)
+					w = [np.ones((x[0].shape[0]))] if self.flags else None
 
 				batch_size = x[0].shape[0]
 				ones = np.ones((batch_size, 1))
@@ -127,7 +131,9 @@ Adds flags on the fly at the end of each Y'''
 				#create the flags
 				if self.flags:
 					if len(flag) != len(y):
-						raise ValueError('Flags (if any) and total Y number MUST be the same!')				
+						raise ValueError(
+							'Flags (if any) and total Y number MUST'
+							' be the same! Got: %d and %d' % (len(flag), len(y)))				
 					w = [w[0]*i for i in flag]
 				
 				if xtot is None:
@@ -138,7 +144,7 @@ Adds flags on the fly at the end of each Y'''
 					xtot = [np.vstack([itot, ix]) for itot, ix in zip(xtot, x)]
 					ytot = [np.vstack([itot, iy]) for itot, iy in zip(ytot, y)]
 					if w is not None:
-						wtot = [np.vstack([itot, iw]) for itot, iw in zip(wtot, w)]
+						wtot = [np.concatenate([itot, iw]) for itot, iw in zip(wtot, w)]
 
 			if wtot is None:
 				yield self.generator_modifier((xtot, ytot))
@@ -148,10 +154,39 @@ Adds flags on the fly at the end of each Y'''
 	def __len__(self):
 		return sum(len(i) for i in self.collections)
 
+	@property
+	def sizes(self):
+		return [len(i) for i in self.collections]
+
+	@property
+	def nsamples(self):
+		return len(self)
+
 	def setBatchSize(self,bsize):
 		if bsize > len(self):
 			raise Exception('Batch size must not be bigger than total sample size')
 		for i in self.collections:
 			batch = bsize*len(i)/len(self)
 			i.setBatchSize(batch)
-		
+
+	@property
+	def batches(self):
+		return [i.batch_size for i in self.collections]
+
+	def getAvEntriesPerFile(self):
+		return min(i.getAvEntriesPerFile() for i in self.collections)
+
+	@property
+	def maxFilesOpen(self):
+		return max(i.maxFilesOpen for i in self.collections)
+
+	@maxFilesOpen.setter
+	def maxFilesOpen(self, val):		
+		for i in self.collections:
+			i.maxFilesOpen = val
+
+	def getNBatchesPerEpoch(self):
+		return sum(i.getNBatchesPerEpoch() for i in self.collections)/len(self.collections)
+	
+
+
