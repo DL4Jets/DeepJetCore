@@ -1,6 +1,7 @@
 from keras.layers import Dense, Dropout, Flatten, Convolution2D, merge, Convolution1D, Conv2D
 from keras.models import Model
 from pdb import set_trace
+from Layers import GradientReversal
 
 def dense_model(Inputs,nclasses,nregressions,dropoutRate=0.25):
     """
@@ -22,9 +23,61 @@ def dense_model(Inputs,nclasses,nregressions,dropoutRate=0.25):
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 
+
+def dense_model_moments(Inputs,nclasses,nregressions,dropoutRate=0.25):
+	"""
+	Dense matrix, defaults similat to 2016 training. Adaptation for moment-based domain adaptation
+	"""
+	if nregressions: raise ValueError(
+			'The dense model does not support regression, only classification')
+	#set_trace()
+	#  Here add e.g. the normal dense stuff from DeepCSV
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(Inputs[0])
+	x = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	x = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	x = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	x = Dropout(dropoutRate)(x)
+	x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+	model = Model(inputs=Inputs, outputs=[predictions, predictions])
+	return model
+
+def dense_model_gradientReversal(Inputs,nclasses,nregressions,dropoutRate=0.25):
+	"""
+	Dense matrix, defaults similat to 2016 training. Adaptation for gradient reversal
+	domain adaptation
+	"""
+	if nregressions: raise ValueError(
+			'The dense model does not support regression, only classification')
+	#set_trace()
+	#  Here add e.g. the normal dense stuff from DeepCSV
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(Inputs[0])
+	x = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	x = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	x_mid = Dropout(dropoutRate)(x)
+	x = Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x_mid)
+	x = Dropout(dropoutRate)(x)
+	x=  Dense(100, activation='relu',kernel_initializer='lecun_uniform')(x)
+	predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
+	
+	dom_ada = GradientReversal()(x_mid)
+	dom_ada = Dense(100, activation='relu', kernel_initializer='lecun_uniform')(dom_ada)
+	dom_ada = Dropout(dropoutRate)(dom_ada)
+	dom_ada = Dense(100, activation='relu', kernel_initializer='lecun_uniform')(dom_ada)
+	dom_ada = Dense(1, activation='sigmoid', kernel_initializer='lecun_uniform')(dom_ada)
+	
+	model = Model(inputs=Inputs, outputs=[predictions, dom_ada])
+	return model
+
+
 def dense_model_reg_fake(Inputs,nclasses,Inputshape,dropoutRate=0.25):
    """ 
-   Somewhat of a fake to test how much the BTV variables helped, only give REC PT and genPT. BTV and reco do not get merged! You need to set BTV loss to weight 0!
+   Somewhat of a fake to test how much the BTV variables helped, only give REC PT and genPT. BTV and recvo do not get merged! You need to set BTV loss to weight 0!
    """
    x = Dense(1, activation='relu',kernel_initializer='lecun_uniform')(Inputs[0])
  
