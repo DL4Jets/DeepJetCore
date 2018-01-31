@@ -31,12 +31,12 @@ obj/%.o: src/%.cpp
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
     
 #pack helpers in lib
-libdeepjethelpers.so: $(OBJ_FILES)
+libdeepjetcorehelpers.so: $(OBJ_FILES)
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) obj/*.o -o $@ 
   
 
-%.so: %.o libdeepjethelpers.so libquicklz.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjethelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+%.so: %.o libdeepjetcorehelpers.so libquicklz.so
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
 %.o: src/%.C 
@@ -44,7 +44,7 @@ libdeepjethelpers.so: $(OBJ_FILES)
 
 
 clean: 
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjethelpers.so
+	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so
 	
 	
 	
