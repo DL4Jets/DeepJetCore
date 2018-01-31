@@ -85,10 +85,11 @@ class training_base(object):
         self.outputDir+='/'
         
         #copy configuration to output dir
-        if isNewTraining:
-            djsource= os.environ['DEEPJET']
-            shutil.copytree(djsource+'/modules/models', self.outputDir+'models')
-            shutil.copyfile(sys.argv[0],self.outputDir+sys.argv[0])
+        # move this part to the individual subpackage
+        #if isNewTraining:
+        #    djsource= os.environ['DEEPJET']
+        #    shutil.copytree(djsource+'/modules/models', self.outputDir+'models')
+        #    shutil.copyfile(sys.argv[0],self.outputDir+sys.argv[0])
 
             
             
