@@ -1,8 +1,0 @@
-
-
-Models are defined in functions returning the model
-Require parameters for the functions are:
-
-your-model(Inputs,n_classificationclasses,n_regressionclasses, .... )
-
-All layers MUST have names. This is due to a bug in keras when the optimiser weights are being reloaded
