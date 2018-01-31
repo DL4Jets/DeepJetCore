@@ -9,7 +9,6 @@ except ImportError:
             
             
 from keras.models import load_model
-from testing import testDescriptor
 from argparse import ArgumentParser
 from keras import backend as K
 from Losses import * #needed!

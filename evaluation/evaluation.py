@@ -257,7 +257,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     
     
-    import c_makeROCs
+    from compiled import c_makeROCs
     
     
     def worker():
@@ -305,7 +305,7 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
     
     
 
-    import c_makePlots
+    from DeepJetCore.compiled import c_makePlots
     def worker():
         if profiles:
             c_makePlots.makeProfiles(files_list,name_list,

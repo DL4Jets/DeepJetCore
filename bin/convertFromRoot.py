@@ -18,6 +18,8 @@ from pdb import set_trace
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
+from DeepJetCore.DataCollection import DataCollection
+
 import imp
 try:
     imp.find_module('datastructures')
@@ -76,7 +78,6 @@ if outPath:
     logging.info("outPath = %s" % outPath)
 
 # MAIN BODY #
-from DataCollection import DataCollection
 dc = DataCollection(nprocs = (1 if args.nothreads else -1))  
 if len(nchilds):
     dc.nprocs=int(nchilds)  

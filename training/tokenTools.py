@@ -1,4 +1,11 @@
+
+renewtokens=True
+
 def renew_token_process():
+    
+    if not renewtokens:
+        return 
+     
     import subprocess
     import time 
     while True:
@@ -11,6 +18,8 @@ def renew_token_process():
         time.sleep(3600)
 
 def checkTokens(cutofftime_hours=48):
+    if not renewtokens:
+        return True
     import subprocess
     
     klist=""

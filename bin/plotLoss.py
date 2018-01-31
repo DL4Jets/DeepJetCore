@@ -1,6 +1,6 @@
 #!/usr/bin/env python
     
-from testing import plotLoss
+from DeepJetCore.evaluation import plotLoss
 
 
 from argparse import ArgumentParser

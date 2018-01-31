@@ -231,7 +231,7 @@ class TrainData(object):
                 idstr=fidstr+str(i)
                 arr=arrlist[i]
                 if "meta" in fileprefix[-4:]:
-                    from c_readArrThreaded import writeArray
+                    from DeepJetCore.compiled.c_readArrThreaded import writeArray
                     if arr.dtype!='float32':
                         arr=arr.astype('float32')
                     writeArray(arr.ctypes.data,fileprefix[:-4]+fidstr+'.'+str(i),list(arr.shape))
@@ -384,7 +384,7 @@ class TrainData(object):
         if read_async:
             if "meta" in readfile[-4:]:
                 #new format
-                from c_readArrThreaded import startReading
+                from DeepJetCore.compiled.c_readArrThreaded import startReading
                 self.readthreadids=[]
                 filebase=readfile[:-4]
                 for i in range(len(self.w_list)):
@@ -415,7 +415,7 @@ class TrainData(object):
                 self.readthread.start()
         else:
             if "meta" in readfile[-4:]:
-                from c_readArrThreaded import readBlocking
+                from DeepJetCore.compiled.c_readArrThreaded import readBlocking
                 filebase=readfile[:-4]
                 self.readthreadids=[]
                 for i in range(len(self.w_list)):
@@ -465,7 +465,7 @@ class TrainData(object):
             counter=0
             
             if hasattr(self, 'readthreadids') and self.readthreadids:
-                from c_readArrThreaded import isDone
+                from DeepJetCore.compiled.c_readArrThreaded import isDone
                 doneids=[]
                 while True:
                     for id in self.readthreadids:

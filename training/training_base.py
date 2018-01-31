@@ -11,7 +11,7 @@ import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DataCollection import DataCollection
+from DeepJetCore.DataCollection import DataCollection
 from pdb import set_trace
 
 # argument parsing and bookkeeping
@@ -201,7 +201,7 @@ class training_base(object):
                    **trainargs):
         
         #make sure tokens don't expire
-        from tokenTools import checkTokens, renew_token_process
+        from .tokenTools import checkTokens, renew_token_process
         from thread import start_new_thread
         
         print('starting afs backgrounder')
@@ -226,7 +226,7 @@ class training_base(object):
         
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
-        from DeepJet_callbacks import DeepJet_callbacks
+        from .DeepJet_callbacks import DeepJet_callbacks
         
         
         callbacks=DeepJet_callbacks(self.keras_model,

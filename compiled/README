@@ -1,0 +1,4 @@
+
+packages in here are compiled modules, only.
+They are not supposed to be exposed to the end user directly,
+but only with a python wrapper in one of the other subpackages

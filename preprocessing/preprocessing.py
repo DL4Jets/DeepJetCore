@@ -273,7 +273,7 @@ def MeanNormZeroPadBinned(
         ):
     '''Takes too long to run the binning twice, run it only once and compute at the same time
     both the binned and the summed variables'''
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     MeanNormTuple, inbranches, nMax = binned_info
     means=[]
     norms=[]
@@ -319,7 +319,7 @@ def createDensityMap(Filename_in, MeanNormTuple, inbranch,nevents, dimension1, d
     counter, offset=0,weightbranch=""
         ):
     
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     
     norm=1.#MeanNormTuple[inbranch][1]
 
@@ -341,7 +341,7 @@ def createCountMap(Filename_in, MeanNormTuple,nevents, dimension1, dimension2,
     counter, offset=0,weightbranch=""
         ):
     
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     
     
     norm=1.#MeanNormTuple[inbranch][1]
@@ -370,7 +370,7 @@ def createDensity(Filename_in,
                         counterbranch,
                         offsets=None):
     
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     
     layerbranch=''
     maxlayers=1
@@ -422,7 +422,7 @@ def createDensityLayers(Filename_in,
                         counterbranch,
                         scales=None):
     
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     
     if not scales:
         norms = [1 for x in range(len(inbranches))]
@@ -459,7 +459,7 @@ def createDensityLayers(Filename_in,
  
 def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
   
-    import c_meanNormZeroPad
+    from DeepJetCore.compiled import c_meanNormZeroPad
     
     array = numpy.zeros((nevents,nMax,len(inbranches)) , dtype='float32')
     
@@ -489,7 +489,7 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     New (Jan): due to performance reasons this part has been put in a compiled C++ module that is called here
     """
     import copy
-    import c_meanNormZeroPad #pre-compiled module
+    from DeepJetCore.compiled import c_meanNormZeroPad #pre-compiled module
     
     inbranches_listlist=copy.deepcopy(inbranches_listlist)
     nMaxslist=copy.deepcopy(nMaxslist)

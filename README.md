@@ -29,8 +29,8 @@ Installation:
 ```
 mkdir <your working dir>
 cd <your working dir>
-git clone https://github.com/mstoye/DeepJet
-cd DeepJet/environment
+git clone https://github.com/DL4Jets/DeepJetCore
+cd DeepJetCore/environment
 ./setupEnv.sh deepjetLinux3.conda
 ```
 For enabling gpu support add 'gpu' as an additional option to the last command.
@@ -39,9 +39,9 @@ This will take a while. Please log out and in again once the installation is fin
 When the installation was successful, the DeepJet tools need to be compiled.
 ```
 cd <your working dir>
-cd DeepJet/environment
+cd DeepJetCore
 source lxplus_env.sh / gpu_env.sh
-cd ../modules
+cd ../compiled
 make -j4
 ```
 
@@ -54,12 +54,12 @@ Usage
 
 After logging in, please source the right environment (please cd to the directory first!):
 ```
-cd <your working dir>/DeepJet/environment
+cd <your working dir>/DeepJetCore
 source lxplus_env.sh / gpu_env.sh
 ```
 
 
-The preparation for the training consists of the following steps
+The preparation for the training consists of the following steps <NEED TO BE ADAPTED>
 ====
 
 - define the data structure for the training (example in modules/TrainData_template.py)
@@ -72,8 +72,7 @@ The preparation for the training consists of the following steps
 
 - convert the root file to the data strucure for training:
   ```
-  cd DeepJet/convertFromRoot
-  ./convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_myclass
+  convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_myclass
   ```
   
   This step can take a while.

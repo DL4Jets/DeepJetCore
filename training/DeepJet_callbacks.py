@@ -5,7 +5,9 @@ Created on 7 Apr 2017
 '''
 from __future__ import print_function
 
-from ReduceLROnPlateau import ReduceLROnPlateau
+from .ReduceLROnPlateau import ReduceLROnPlateau
+from ..evaluation import plotLoss
+
 from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 from time import time
@@ -47,7 +49,6 @@ class newline_callbacks_begin(Callback):
             out.write(json.dumps(self.full_logs))
             
         if self.plotLoss:
-            from testing import plotLoss
             plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
         
 class newline_callbacks_end(Callback):
