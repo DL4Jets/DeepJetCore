@@ -85,7 +85,10 @@ if len(nchilds):
 if class_name in class_options:
     traind = class_options[class_name]
 elif not recover and not testdatafor:
-    raise Exception('wrong class selecton') #should never really happen as we catch it in the parser        
+    print('available classes:')
+    for key, val in class_options.iteritems():
+        print(key)
+    raise Exception('wrong class selection')        
 if testdatafor:
     logging.info('converting test data, no weights applied')
     dc.createTestDataForDataCollection(
