@@ -34,7 +34,7 @@ model=load_model(args.inputModel, custom_objects=global_loss_list)
 
 td=testDescriptor()
 
-from DataCollection import DataCollection
+from DeepJetCore.DataCollection import DataCollection
 
 testd=DataCollection()
 testd.readFromFile(args.inputDataCollection)

@@ -18,7 +18,7 @@
 #include "TTree.h"
 
 #ifndef MAXBRANCHLENGTH
-#define MAXBRANCHLENGTH 200
+#define MAXBRANCHLENGTH 40000
 #endif
 
 namespace __hidden{

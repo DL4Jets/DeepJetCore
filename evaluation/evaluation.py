@@ -257,7 +257,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     
     
     
-    from compiled import c_makeROCs
+    from DeepJetCore.compiled import c_makeROCs
     
     
     def worker():
