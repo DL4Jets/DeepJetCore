@@ -140,7 +140,7 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
     TTree* tree=(TTree*)tfile->Get(treename);
 
     for(auto& d:datacollection)
-        d.setup(tree);
+        d.setup(tree,treename);
 
     //std::cout << "looping over events: "<< stopw.RealTime () <<std::endl;
     //stopw.Reset();

@@ -2,6 +2,8 @@
 
 source activate deepjetLinux3_gpu
 
+export DEEPJETCORE=`pwd`
+
 export PYTHONPATH=`pwd`/../:$PYTHONPATH
 export LD_LIBRARY_PATH=`pwd`/compiled:$LD_LIBRARY_PATH
 export PATH=`pwd`/bin:$PATH

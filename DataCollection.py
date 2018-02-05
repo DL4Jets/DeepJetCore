@@ -390,6 +390,7 @@ class DataCollection(object):
         import copy
         self.dataclass=copy.deepcopy(dataclass)
         td=self.dataclass
+        
         ##produce weighter from a larger dataset as one file
         
         if redo_meansandweights and (td.remove or td.weight):
@@ -452,6 +453,10 @@ class DataCollection(object):
         
         
     def __writeData_async_andCollect(self, startindex, outputDir):
+        
+        #set tree name to use
+        import DeepJetCore.preprocessing
+        DeepJetCore.preprocessing.setTreeName(self.dataclass.treename)
         
         from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()

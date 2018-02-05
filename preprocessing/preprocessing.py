@@ -7,6 +7,11 @@ author Markus stoye, A collection of tools for data pre-processing in ML for Dee
 from array import array
 import logging
 
+def setTreeName(name):
+    from DeepJetCore.compiled import c_meanNormZeroPad
+    c_meanNormZeroPad.setTreeName(name)
+    
+
 def setDefaultsZero(inarray):
     inarray[inarray == -999] = 0
     return inarray

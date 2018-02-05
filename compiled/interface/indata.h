@@ -59,7 +59,7 @@ public:
 		getEntry(entry);
 	}
 
-	void setup(TTree* tree);
+	void setup(TTree* tree, const TString& treename="");
 
 	size_t branchOffset(const size_t& i){
 		return i*max;
@@ -80,6 +80,9 @@ public:
 	int max;
     void setMask(int m){mask_=m;}
 private:
+
+    void handleReturns(int retcode, const TString& branchname)const;
+
     int mask_;
 };
 

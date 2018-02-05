@@ -90,9 +90,13 @@ void indata::getEntry(size_t entry){
     }
 }
 
-void indata::setup(TTree* tree){
+void indata::setup(TTree* tree, const TString& treename){
     if(MAXBRANCHLENGTH<max)
-        throw std::runtime_error("max larger than buffer! (clean up here needed: TBI)");
+        throw std::runtime_error("indata::setup: max larger than buffer! (clean up here needed: TBI)");
+    if(! tree)
+    	throw std::runtime_error("indata::setup: tree \""+(std::string)treename +"\" is not valid! (NULL)");
+    if(tree->IsZombie())
+    	throw std::runtime_error("indata::setup: tree \""+(std::string)treename +"\" is not valid! (Zombie)");
 
     for(auto& b: buffer)
         b=new float[MAXBRANCHLENGTH];
@@ -101,16 +105,41 @@ void indata::setup(TTree* tree){
         if(mask_ != (int)i){
             tbranches.at(i)=new TBranch();
 
+            int ret=0;
+
             auto leaf = (TLeaf*)tree->GetBranch(branches.at(i))->GetListOfLeaves()->At(0);
             if (TString(leaf->GetTypeName()).Contains("vector<float>")){
                 buffervec.at(i) = new std::vector<float>;
-                tree->SetBranchAddress(branches.at(i), &buffervec.at(i), &tbranches.at(i));
+                ret=tree->SetBranchAddress(branches.at(i), &buffervec.at(i), &tbranches.at(i));
             }else{
                 buffervec.at(i)=0;
-                tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
+                ret=tree->SetBranchAddress(branches.at(i),buffer.at(i),&tbranches.at(i));
             }
+            handleReturns(ret, branches.at(i));
         }
     }
+}
+
+
+
+///private
+
+void indata::handleReturns(int ret, const TString& branchname)const{
+	if(ret == -2 || ret == -1){
+		std::cout << "indata: Class type given for branch " << branchname
+				<< " does not match class type in tree. (root CheckBranchAddressType returned " << ret << ")" <<std::endl;
+		throw std::runtime_error("indata: Class type does not match class type in branch");
+	}
+	else if(ret == -4 || ret == -3){
+		std::cout << "indata: Internal error in branch " << branchname
+				<< " (root CheckBranchAddressType returned " << ret << ")" <<std::endl;
+		throw std::runtime_error("indata: Internal error in branch");
+	}
+	else if( ret == -5){
+		std::cout << "indata: branch " << branchname << " does not exists!" << std::endl;
+		throw std::runtime_error("indata: branch does not exists!");
+	}
+
 }
 
 
@@ -136,6 +165,7 @@ std::vector<__hidden::indata> createDataVector(std::vector< std::vector<TString>
 
     return alldata;
 }
+
 
 }
 
