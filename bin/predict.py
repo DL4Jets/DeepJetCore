@@ -11,7 +11,20 @@ from keras.models import load_model
 from DeepJetCore.evaluation import testDescriptor
 from argparse import ArgumentParser
 from keras import backend as K
-from Losses import * #needed!
+import imp
+try:
+    imp.find_module('Losses')
+    from Losses import *
+except ImportError:
+    print 'No Losses module found, ignoring at your own risk'
+    global_loss_list = {}
+
+try:
+    imp.find_module('Layers')
+    from Layers import *
+except ImportError:
+    print 'No Layers module found, ignoring at your own risk'
+    global_layers_list = {}
 import os
 
 
@@ -19,6 +32,7 @@ parser = ArgumentParser('Apply a model to a (test) sample and create friend tree
 parser.add_argument('inputModel')
 parser.add_argument('inputDataCollection')
 parser.add_argument('outputDir')
+parser.add_argument('--use', help='coma-separated list of prediction indexes to be used')
 parser.add_argument('--labels', action='store_true', help='store true labels in the trees')
 parser.add_argument('--monkey_class', default='', help='allows to read the data with a different TrainData, it is actually quite dangerous if you do not know what you are doing')
 
@@ -28,11 +42,15 @@ args = parser.parse_args()
 if os.path.isdir(args.outputDir):
     raise Exception('output directory must not exists yet')
 
-
-model=load_model(args.inputModel, custom_objects=global_loss_list)
+custom_objs = {}
+custom_objs.update(global_loss_list)
+custom_objs.update(global_layers_list)
+model=load_model(args.inputModel, custom_objects=custom_objs)
 
 
 td=testDescriptor()
+if args.use:
+	td.use_only = [int(i) for i in args.use.split(',')]
 
 from DeepJetCore.DataCollection import DataCollection
 

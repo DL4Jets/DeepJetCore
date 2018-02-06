@@ -49,6 +49,7 @@ class testDescriptor(object):
         self.__sourceroots=[]
         self.__predictroots=[]
         self.metrics=[]
+        self.use_only = []
         
     def makePrediction(self, model, testdatacollection, outputDir, 
                        ident='', store_labels = False, monkey_class=''): 
@@ -98,6 +99,8 @@ class testDescriptor(object):
             
             
             prediction = model.predict(features)
+            if self.use_only:
+                prediction = [prediction[i] for i in self.use_only]
             if isinstance(prediction, list):
                 all_write = np.concatenate(prediction, axis=1)
             else:

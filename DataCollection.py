@@ -390,7 +390,6 @@ class DataCollection(object):
         import copy
         self.dataclass=copy.deepcopy(dataclass)
         td=self.dataclass
-        
         ##produce weighter from a larger dataset as one file
         
         if redo_meansandweights and (td.remove or td.weight):
@@ -700,7 +699,8 @@ class DataCollection(object):
                 self.shuffleseed=0
                 
             def start(self):
-                
+                if self.max < 1:
+                    raise ValueError('I got an invalid number of files to open (%d)' % self.max)
                 for i in range(self.max):
                     self.__readNext()
                     time.sleep(1)
