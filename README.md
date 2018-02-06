@@ -46,7 +46,7 @@ When the installation was successful, the DeepJet tools need to be compiled.
 cd <your working dir>
 cd DeepJetCore
 source lxplus_env.sh / gpu_env.sh
-cd ../compiled
+cd compiled
 make -j4
 ```
 
