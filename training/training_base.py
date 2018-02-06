@@ -135,11 +135,13 @@ class training_base(object):
         
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
-            raise Exception('setup data first') #can't happen
+            raise Exception('setup data first') 
         self.keras_model=model(self.keras_inputs,
                                self.train_data.getNClassificationTargets(),
                                self.train_data.getNRegressionTargets(),
                                **modelargs)
+        if not self.keras_model:
+            raise Exception('Setting model not successful') 
     
     def saveCheckPoint(self,addstring=''):
         
@@ -148,9 +150,6 @@ class training_base(object):
            
         
     def loadModel(self,filename):
-        #import h5py
-        #f = h5py.File(filename, 'r+')
-        #del f['optimizer_weights']
         from keras.models import load_model
         self.keras_model=load_model(filename, custom_objects=global_loss_list)
         self.optimizer=self.keras_model.optimizer
@@ -160,9 +159,8 @@ class training_base(object):
                      learningrate,
                      **compileargs):
         if not self.keras_model:
-            raise Exception('set model first') #can't happen
-        #if self.compiled:
-        #    return
+            raise Exception('set model first') 
+
         from keras.optimizers import Adam
         self.startlearningrate=learningrate
         self.optimizer = Adam(lr=self.startlearningrate)

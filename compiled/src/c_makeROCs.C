@@ -36,7 +36,8 @@ void makeROCs(
         bool logy,
         bool individual,
         std::string xaxis,
-        int nbins
+        int nbins,
+		std::string treename
 ) {
 
 
@@ -85,7 +86,7 @@ void makeROCs(
 
 
 
-    friendTreeInjector injector;
+    friendTreeInjector injector((TString)treename);
     std::vector<friendTreeInjector> injectors(u_infiles.size());
     std::vector<TChain*> chains(u_infiles.size());
     if(individual){
