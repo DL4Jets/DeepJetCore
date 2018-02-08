@@ -3,10 +3,10 @@
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
 
-"description here"
-
-This package just provides the basic functions. The actual training data structures
-and DNN models have to be defined in a user package. A script to set it up will be provided.
+This package provides the basic functions for out-of-memory training, resampling, and basic evaluation. 
+The actual training data structures and DNN models must be defined in an additional user package. The data structures (defining the structure of the training data as numpy arrays), must inherit from the TrainData class, and must be reachable in the PYTHONPATH as "from datastructure import * " .
+A script to set it up will be provided eventually. For reference, please see: 
+https://github.com/DL4Jets/DeepJet/tree/master/modules
 
 
 Setup (CERN)
