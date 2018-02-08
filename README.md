@@ -9,7 +9,7 @@ A script to set it up will be provided eventually. For reference, please see:
 https://github.com/DL4Jets/DeepJet/tree/master/modules
 
 
-Setup (CERN)
+Setup python packages (CERN)
 ==========
 It is essential to perform all these steps on lxplus7. Simple ssh to 'lxplus7' instead of 'lxplus'
 
@@ -41,7 +41,10 @@ cd DeepJetCore/environment
 For enabling gpu support add 'gpu' as an additional option to the last command.
 This will take a while. Please log out and in again once the installation is finised.
 
-When the installation was successful, the DeepJet tools need to be compiled.
+Compiling DeepJetCore
+===========
+
+When the installation was successful, the DeepJetCore tools need to be compiled.
 ```
 cd <your working dir>
 cd DeepJetCore
