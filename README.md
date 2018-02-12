@@ -60,4 +60,4 @@ The environment is set up.
 Usage
 ==========
 
-(to be updated)
+For a practical example application of the DeepJetCore package, please refer to https://github.com/DL4Jets/DeepJet
