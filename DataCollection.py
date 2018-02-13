@@ -16,6 +16,22 @@ import copy
 
 usenewformat=True
 
+
+# super not-generic without safety belts
+#needs some revision
+class BatchRandomInputGenerator(object):
+    def __init__(self, ranges, batchsize):
+        self.ranges=ranges
+        self.batchsize=batchsize
+        
+    def generateBatch(self):
+        import numpy as np
+        randoms=[]
+        for i in range(len(self.ranges)):
+            randoms.append(np.full((1,self.batchsize),np.random.uniform(self.ranges[i][0], self.ranges[i][1], size=1)[0]))
+        
+        return np.dstack((randoms))
+
 class DataCollection(object):
     '''
     classdocs
@@ -788,7 +804,11 @@ class DataCollection(object):
         totalbatches=self.getNBatchesPerEpoch()
         processedbatches=0
         
-        #print(totalbatches,self.__batchsize,self.nsamples)
+        ####generate randoms by batch
+        batchgen=None
+        if hasattr(td,'generatePerBatch'):
+            ranges=td.generatePerBatch
+            batchgen=BatchRandomInputGenerator(ranges, self.__batchsize)
         
         xstored=[numpy.array([])]
         dimx=0
@@ -962,6 +982,10 @@ class DataCollection(object):
                     raise Exception('serious problem with the output shapes!!')
             
             processedbatches+=1
+            
+            if batchgen:
+                xout.append(batchgen.generateBatch())
+            
             #print('generator: processed batch '+str(processedbatches)+' of '+str(totalbatches)+' '+str(psamples))
             
             #safety check

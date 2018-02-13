@@ -92,6 +92,8 @@ class ShowProgress(object):
         self._counter=0
         
 
+
+
 class TrainData(object):
     '''
     Base class for batch-wise training of the DNN
@@ -177,6 +179,10 @@ class TrainData(object):
             if len(s)==0:
                 s.append(1)
             shapes.append(s)
+            
+        if hasattr(self,'generatePerBatch'):
+            shapes.append([len(self.generatePerBatch)])
+            
         return shapes
         
     def getTruthShapes(self):
