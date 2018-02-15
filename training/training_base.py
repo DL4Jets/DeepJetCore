@@ -213,6 +213,7 @@ class training_base(object):
         samplespreread=maxqsize*batchsize
         nfilespre=max(int(samplespreread/averagesamplesperfile),2)
         nfilespre+=1
+        nfilespre=min(nfilespre, len(self.train_data.samples)-1)
         #if nfilespre>15:nfilespre=15
         print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
         print('total sample size: '+str(self.train_data.nsamples))
