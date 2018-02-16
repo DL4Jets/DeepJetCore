@@ -14,10 +14,10 @@
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
-
+#include <numeric> 
 
 #include <exception>
-
+#include <random>
 #include "TRandom3.h"
 
 using namespace boost::python;
