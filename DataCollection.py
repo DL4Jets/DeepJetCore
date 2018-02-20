@@ -30,7 +30,8 @@ class BatchRandomInputGenerator(object):
         for i in range(len(self.ranges)):
             randoms.append(np.full((1,self.batchsize),np.random.uniform(self.ranges[i][0], self.ranges[i][1], size=1)[0]))
         
-        return np.dstack((randoms))
+        nparr=np.dstack((randoms))
+        return nparr.reshape(nparr.shape[1],nparr.shape[2])
 
 class DataCollection(object):
     '''
@@ -822,6 +823,8 @@ class DataCollection(object):
         dimw=0
         nextfiletoread=0
         
+        target_xlistlength=len(td.getInputShapes())
+        
         xout=[]
         yout=[]
         wout=[]
@@ -987,18 +990,13 @@ class DataCollection(object):
             
             processedbatches+=1
             
+            
             if batchgen:
-                xout.append(batchgen.generateBatch())
-            
-            #print('generator: processed batch '+str(processedbatches)+' of '+str(totalbatches)+' '+str(psamples))
-            
-            #safety check
-            
-            #xout[1]=numpy.zeros(self.__batchsize) #DEBUG
-            #xout[1]=(xout[1].reshape(xout[1].shape[0],1))
-            
-            #yout[1]=numpy.zeros(self.__batchsize) #DEBUG
-            #yout[1]=(yout[1].reshape(yout[1].shape[0],1))
+                if len(xout)<target_xlistlength:
+                    xout.append(batchgen.generateBatch())
+                else:
+                    xout[-1]=batchgen.generateBatch()
+                    
             
             if self.useweights:
                 yield (xout,yout,wout)

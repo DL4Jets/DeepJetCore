@@ -25,9 +25,7 @@ envfile=$1
 envname="${envfile%.*}${addstring}"
 pipfile="${envfile%.*}.pip"
 
-conda create --copy --name $envname python=2.7.5
-# for Helsinki GPU cluster:
-#conda create --copy --name $envname python=2.7.13 
+conda create --copy --name $envname python=2.7.13 
 conda install --name $envname --file $envfile
 
 

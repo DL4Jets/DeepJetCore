@@ -20,6 +20,11 @@ MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
+UNAME_S := $(shell uname -s)
+# remove linux flags in osx
+ifeq ($(UNAME_S),Darwin)
+	LINUXADD=""
+endif
 
 all: $(MODULES_SHARED_LIBS)
 

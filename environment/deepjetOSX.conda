@@ -1,0 +1,42 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: osx-64
+@EXPLICIT
+https://repo.continuum.io/pkgs/free/osx-64/boost-1.61.0-py27_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/ca-certificates-2017.08.26-ha1e5d58_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/certifi-2018.1.18-py27_0.tar.bz2
+https://conda.anaconda.org/NLeSC/osx-64/fftw-3.3.4-0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/freetype-2.8-h12048fb_1.tar.bz2
+https://conda.anaconda.org/NLeSC/osx-64/gsl-1.16-2.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/hdf5-1.8.17-2.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/icu-58.2-h4b95b61_1.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/intel-openmp-2018.0.0-h8158457_8.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/krb5-1.14.2-h9a779f2_6.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libcxx-4.0.1-h579ed51_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libcxxabi-4.0.1-hebd6815_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libedit-3.1-hb4e282d_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libffi-3.2.1-h475c297_4.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libiconv-1.15-hdd342a3_7.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libpng-1.6.34-he12f830_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/libxml2-2.9.7-hab757c2_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/mkl-2017.0.4-h1fae6ae_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/ncurses-6.0-hd04f020_2.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/numexpr-2.6.2-np113py27_0.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/numpy-1.13.1-py27_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/openssl-1.0.2n-hdbc3d79_0.tar.bz2
+https://conda.anaconda.org/NLeSC/osx-64/pcre-8.35-7.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/pip-9.0.1-py27h1567d89_4.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/pytables-3.4.2-np113py27_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/python-2.7.13-h89fad4f_16.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/readline-7.0-hc1231fa_4.tar.bz2
+https://conda.anaconda.org/NLeSC/osx-64/root-6.04-py2.7_clang503.tar.bz2
+https://conda.anaconda.org/NLeSC/osx-64/root-numpy-4.4.0-root6.04_py2.7.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/scikit-learn-0.18.2-np113py27_0.tar.bz2
+https://repo.continuum.io/pkgs/free/osx-64/scipy-0.19.1-np113py27_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/setuptools-38.4.0-py27_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/six-1.11.0-py27h7252ba3_1.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/sqlite-3.22.0-h3efe00b_0.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/tk-8.6.7-h35a86e2_3.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/wheel-0.30.0-py27h677a027_1.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/xz-5.2.3-h0278029_2.tar.bz2
+https://repo.continuum.io/pkgs/main/osx-64/zlib-1.2.11-hf3cbc9b_2.tar.bz2
