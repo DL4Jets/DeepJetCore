@@ -39,11 +39,12 @@ class DataCollection(object):
     '''
 
 
-    def __init__(self, infile = None, nprocs = -1):
+    def __init__(self, infile = None, nprocs = -1,useRelativePaths=True):
         '''
         Constructor
         '''
         self.clear()
+        self.useRelativePaths=useRelativePaths
         self.nprocs = nprocs       
         self.meansnormslimit=500000 
         if infile:
@@ -275,8 +276,11 @@ class DataCollection(object):
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
-            self.originRoots.append(fdir+'/'+line)
-    
+            if self.useRelativePaths:
+                self.originRoots.append(fdir+'/'+line)
+            else:
+                self.originRoots.append(line)
+
         if len(self.originRoots)<1:
             raise Exception('root samples list empty')
         
