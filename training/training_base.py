@@ -127,8 +127,9 @@ class training_base(object):
         
         
     def __del__(self):
-        del self.train_data
-        del self.val_data
+        if hasattr(self, 'train_data'):
+            del self.train_data
+            del self.val_data
         
     def modelSet(self):
         return not self.keras_model==None
