@@ -435,6 +435,7 @@ def plotLoss(infilename,outfilename,range):
     elif automax>0:
         plt.ylim([automin*0.9,automax])
     f.savefig(outfilename)
+    plt.close()
     
 ######### old part - keep for reference, might be useful some day 
 

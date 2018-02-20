@@ -100,9 +100,9 @@ class saveCheckPointDeepJet(Callback):
 class DeepJet_callbacks(object):
     def __init__(self,
                  model,
-                 stop_patience=10,
+                 stop_patience=-1,
                  lr_factor=0.5,
-                 lr_patience=1,
+                 lr_patience=-1,
                  lr_epsilon=0.001,
                  lr_cooldown=4,
                  lr_minimum=1e-5,
@@ -116,32 +116,40 @@ class DeepJet_callbacks(object):
         self.nl_begin=newline_callbacks_begin(outputDir,plotLossEachEpoch)
         self.nl_end=newline_callbacks_end()
         
-        self.stopping = EarlyStopping(monitor='val_loss', 
-                                      patience=stop_patience, 
-                                      verbose=1, mode='min')
+        self.callbacks=[self.nl_begin]
         
-        self.reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=lr_factor, patience=lr_patience, 
-                                mode='min', verbose=1, epsilon=lr_epsilon,
-                                 cooldown=lr_cooldown, min_lr=lr_minimum)
+        if minTokenLifetime>0:
+            self.tokencheck=checkTokens_callback(minTokenLifetime)
+            self.callbacks.append(self.tokencheck)
+        
+        
+        if lr_patience>0:
+            self.reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=lr_factor, patience=lr_patience, 
+                                    mode='min', verbose=1, epsilon=lr_epsilon,
+                                     cooldown=lr_cooldown, min_lr=lr_minimum)
+            self.callbacks.append(self.reduce_lr)
+
 
         self.modelbestcheck=ModelCheckpoint(outputDir+"/KERAS_check_best_model.h5", 
                                         monitor='val_loss', verbose=1, 
                                         save_best_only=True, save_weights_only=False)
+        self.callbacks.append(self.modelbestcheck)
         
-        self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
+        if checkperiod>0:
+            self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
+            self.callbacks.append(self.modelcheckperiod)
         
         self.modelcheck=saveCheckPointDeepJet(outputDir,model)
         
+        if stop_patience>0:
+            self.stopping = EarlyStopping(monitor='val_loss', 
+                                          patience=stop_patience, 
+                                          verbose=1, mode='min')
+            self.callbacks.append(self.stopping)
         
   
         self.history=History()
         self.timer = Losstimer()
         
-        self.tokencheck=checkTokens_callback(minTokenLifetime)
   
-        self.callbacks=[
-            self.nl_begin, self.tokencheck,
-            self.modelbestcheck, self.modelcheck,self.modelcheckperiod,
-            self.reduce_lr, self.stopping, self.nl_end, self.history,
-            self.timer
-        ]
+        self.callbacks.extend([ self.nl_end, self.history,self.timer])

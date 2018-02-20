@@ -22,7 +22,9 @@ class training_base(object):
     def __init__(
 				self, splittrainandtest=0.85,
 				useweights=False, testrun=False,
-				resumeSilently=False, collection_class=DataCollection):
+				resumeSilently=False, 
+                renewtokens=True,
+                collection_class=DataCollection):
         
         
         
@@ -64,6 +66,7 @@ class training_base(object):
         self.trainedepoches=0
         self.compiled=False
         self.checkpointcounter=0
+        self.renewtokens=renewtokens
         
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
@@ -188,9 +191,9 @@ class training_base(object):
     def trainModel(self,
                    nepochs,
                    batchsize,
-                   stop_patience=300, 
+                   stop_patience=-1, 
                    lr_factor=0.5,
-                   lr_patience=2, 
+                   lr_patience=-1, 
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
@@ -202,9 +205,10 @@ class training_base(object):
         from .tokenTools import checkTokens, renew_token_process
         from thread import start_new_thread
         
-        print('starting afs backgrounder')
-        checkTokens()
-        start_new_thread(renew_token_process,())
+        if self.renewtokens:
+            print('starting afs backgrounder')
+            checkTokens()
+            start_new_thread(renew_token_process,())
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)

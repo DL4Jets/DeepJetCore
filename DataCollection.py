@@ -807,7 +807,7 @@ class DataCollection(object):
         
         ####generate randoms by batch
         batchgen=None
-        if hasattr(td,'generatePerBatch'):
+        if hasattr(td,'generatePerBatch') and td.generatePerBatch:
             ranges=td.generatePerBatch
             batchgen=BatchRandomInputGenerator(ranges, self.__batchsize)
         

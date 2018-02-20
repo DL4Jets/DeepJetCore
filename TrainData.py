@@ -180,7 +180,7 @@ class TrainData(object):
                 s.append(1)
             shapes.append(s)
             
-        if hasattr(self,'generatePerBatch'):
+        if hasattr(self,'generatePerBatch') and self.generatePerBatch:
             shapes.append([len(self.generatePerBatch)])
             
         return shapes
