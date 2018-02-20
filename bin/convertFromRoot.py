@@ -39,6 +39,7 @@ class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_opt
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
 parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
+parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
 parser.add_argument("-o",  help="set output path", metavar="PATH")
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
@@ -78,7 +79,8 @@ if outPath:
     logging.info("outPath = %s" % outPath)
 
 # MAIN BODY #
-dc = DataCollection(nprocs = (1 if args.nothreads else -1))  
+dc = DataCollection(nprocs = (1 if args.nothreads else -1), 
+                    useRelativePaths=True if not args.noRelativePaths else False)  
 if len(nchilds):
     dc.nprocs=int(nchilds)  
 
