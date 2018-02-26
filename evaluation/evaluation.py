@@ -107,7 +107,7 @@ class testDescriptor(object):
                 all_write = prediction
             
             all_write = np.concatenate([all_write, weights], axis=1)
-            formatstring.append('weight')
+            #formatstring.append('weight')
             if not all_write.shape[1] == len(formatstring):
                 raise ValueError('Prediction output does not match with the provided targets!')
                
