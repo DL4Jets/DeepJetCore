@@ -170,6 +170,15 @@ class training_base(object):
         self.optimizer = Adam(lr=self.startlearningrate)
         self.keras_model.compile(optimizer=self.optimizer,**compileargs)
         self.compiled=True
+
+    def compileModelWithCustomOptimizer(self,
+                                        customOptimizer,
+                                        **compileargs):
+        if not self.keras_model:
+            raise Exception('set model first') 
+        self.optimizer = customOptimizer
+        self.keras_model.compile(optimizer=self.optimizer,**compileargs)
+        self.compiled=True
         
     def saveModel(self,outfile):
         self.keras_model.save(self.outputDir+outfile)
