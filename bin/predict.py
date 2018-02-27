@@ -25,6 +25,14 @@ try:
 except ImportError:
     print 'No Layers module found, ignoring at your own risk'
     global_layers_list = {}
+
+try:
+    imp.find_module('Metrics')
+    from Metrics import *
+except ImportError:
+    print 'No metrics module found, ignoring at your own risk'
+    global_metrics_list = {}
+
 import os
 
 
@@ -45,6 +53,7 @@ if os.path.isdir(args.outputDir):
 custom_objs = {}
 custom_objs.update(global_loss_list)
 custom_objs.update(global_layers_list)
+custom_objs.update(global_metrics_list)
 model=load_model(args.inputModel, custom_objects=custom_objs)
 
 

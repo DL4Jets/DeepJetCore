@@ -42,6 +42,7 @@ parser.add_argument("-i", help="set input sample description (output from the ch
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
 parser.add_argument("-o",  help="set output path", metavar="PATH")
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
+parser.add_argument("--classArgs",  help="Arguments to pass to output class")
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
 parser.add_argument("-n", default='', help="(optional) number of child processes")
 parser.add_argument("--testdatafor", default='')
@@ -57,6 +58,7 @@ args=parser.parse_args()
 infile=args.i
 outPath=args.o
 class_name=args.c    
+class_args=args.classArgs
 recover=args.r
 testdatafor=args.testdatafor
 usemeansfrom=args.usemeansfrom
@@ -102,12 +104,12 @@ elif recover:
     dc.recoverCreateDataFromRootFromSnapshot(recover)        
 elif args.means:
     dc.convertListOfRootFiles(
-        infile, traind(), outPath, 
+        infile, traind(class_args) if class_args else traind(), outPath, 
         means_only=True, output_name='batch_template.dc'
         )
 else:
     dc.convertListOfRootFiles(
-        infile, traind(), outPath, 
+        infile, traind(class_args) if class_args else traind(), outPath, 
         usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
         batch_mode = bool(args.batch)
         )
