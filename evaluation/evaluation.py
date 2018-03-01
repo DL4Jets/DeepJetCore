@@ -85,7 +85,8 @@ class testDescriptor(object):
             td.readIn(fullpath)
             
             if hasattr(td, 'customlabels'):
-                formatstring=td.customlabels
+                import copy
+                formatstring=copy.deepcopy(td.customlabels)
             
             else:
                 truthclasses=td.getUsedTruth()
