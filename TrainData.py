@@ -161,6 +161,8 @@ class TrainData(object):
         
         self.nsamples=None
     
+    def defineCustomPredictionLabels(self, labels):
+        self.customlabels=labels
         
     def getInputShapes(self):
         '''

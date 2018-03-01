@@ -105,8 +105,6 @@ class training_base(object):
             
         self.val_data=self.train_data.split(splittrainandtest)
         
-        self.train_data.writeToFile(self.outputDir+'trainsamples.dc')
-        self.val_data.writeToFile(self.outputDir+'valsamples.dc')
 
 
         shapes=self.train_data.getInputShapes()
@@ -146,6 +144,10 @@ class training_base(object):
                                **modelargs)
         if not self.keras_model:
             raise Exception('Setting model not successful') 
+        
+    def defineCustomPredictionLabels(self, labels):
+        self.train_data.defineCustomPredictionLabels(labels)
+        self.val_data.defineCustomPredictionLabels(labels)
     
     def saveCheckPoint(self,addstring=''):
         
@@ -211,6 +213,19 @@ class training_base(object):
                    checkperiod=10,
                    **trainargs):
         
+        
+        # check a few things, e.g. output dimensions etc.
+        # need implementation, but probably TF update SWAPNEEL
+        customtarget=self.train_data.getCustomPredictionLabels()
+        if customtarget:
+            pass
+            # work on self.model.outputs
+            # check here if the output dimension of the model fits the custom labels
+        
+        # write only after the output classes have been added
+        self.train_data.writeToFile(self.outputDir+'trainsamples.dc')
+        self.val_data.writeToFile(self.outputDir+'valsamples.dc')
+        
         #make sure tokens don't expire
         from .tokenTools import checkTokens, renew_token_process
         from thread import start_new_thread
@@ -229,7 +244,7 @@ class training_base(object):
         nfilespre+=1
         nfilespre=min(nfilespre, len(self.train_data.samples)-1)
         #if nfilespre>15:nfilespre=15
-        print('best pre read: '+str(nfilespre)+'  a: '+str(averagesamplesperfile))
+        print('best pre read: '+str(nfilespre)+'  a: '+str(int(averagesamplesperfile)))
         print('total sample size: '+str(self.train_data.nsamples))
         #exit()
         

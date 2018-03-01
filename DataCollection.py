@@ -158,6 +158,16 @@ class DataCollection(object):
             outdict[i]=l
         self.classweights=outdict
         
+    
+    def defineCustomPredictionLabels(self, labels):
+        self.dataclass.defineCustomPredictionLabels(labels)
+        
+    
+    def getCustomPredictionLabels(self):
+        if hasattr(self.dataclass, 'customlabels'):
+            return self.dataclass.customlabels
+        return None
+        
     def getInputShapes(self):
         '''
         gets the input shapes from the data class description

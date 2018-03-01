@@ -43,6 +43,7 @@ parser.add_argument('outputDir')
 parser.add_argument('--use', help='coma-separated list of prediction indexes to be used')
 parser.add_argument('--labels', action='store_true', help='store true labels in the trees')
 parser.add_argument('--monkey_class', default='', help='allows to read the data with a different TrainData, it is actually quite dangerous if you do not know what you are doing')
+parser.add_argument('--numpy', help='switches on numpy rec-array output in addition to root files', action='store_true' , default=False )
 
 args = parser.parse_args()
 
@@ -57,7 +58,7 @@ custom_objs.update(global_metrics_list)
 model=load_model(args.inputModel, custom_objects=custom_objs)
 
 
-td=testDescriptor()
+td=testDescriptor(addnumpyoutput = args.numpy)
 if args.use:
 	td.use_only = [int(i) for i in args.use.split(',')]
 
