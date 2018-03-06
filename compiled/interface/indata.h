@@ -59,6 +59,8 @@ public:
 		getEntry(entry);
 	}
 
+	bool isVector()const;
+
 	void setup(TTree* tree, const TString& treename="");
 
 	size_t branchOffset(const size_t& i){
@@ -67,6 +69,12 @@ public:
 
 	size_t nfeatures() {return branches.size();}
 	size_t nelements() {return buffer.size();}
+
+	size_t vectorSize(const size_t idex){
+		if(buffervec.at(idex))
+			return buffervec.at(idex)->size();
+		return 0;
+	}
 
 	std::vector<float* > buffer;
 	std::vector<std::vector<float>*> buffervec;
