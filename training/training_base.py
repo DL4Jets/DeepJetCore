@@ -55,6 +55,7 @@ class training_base(object):
         parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
+        parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
         parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
         
         args = parser.parse_args()
@@ -83,6 +84,7 @@ class training_base(object):
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         self.keras_model=None
+        self.keras_model_method=args.modelMethod
         self.train_data=None
         self.val_data=None
         self.startlearningrate=None
