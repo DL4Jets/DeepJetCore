@@ -90,6 +90,13 @@ void indata::getEntry(size_t entry){
     }
 }
 
+bool indata::isVector()const{
+	for(const auto& v:buffervec){
+		if(!v)return false;
+	}
+	return true;
+}
+
 void indata::setup(TTree* tree, const TString& treename){
     if(MAXBRANCHLENGTH<max)
         throw std::runtime_error("indata::setup: max larger than buffer! (clean up here needed: TBI)");

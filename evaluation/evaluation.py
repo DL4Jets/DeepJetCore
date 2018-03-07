@@ -72,6 +72,8 @@ class testDescriptor(object):
         self.__predictroots=[]
         self.metrics=[]
         
+        fullnumpyarray=np.array([])
+        
         for i in range(len(testdatacollection.samples)):
             sample=testdatacollection.samples[i]
             originroot=testdatacollection.originRoots[i]
@@ -129,7 +131,13 @@ class testDescriptor(object):
             print(formatstring)
             print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
             if self.addnumpyoutput:
-                np.save(outputDir+'/'+outrootfilename+'.npy', all_write)
+                if len(fullnumpyarray):
+                    fullnumpyarray=np.concatenate((fullnumpyarray,all_write))
+                else:
+                    fullnumpyarray=np.array(all_write)
+                    
+        if self.addnumpyoutput:    
+            np.save(outputDir+'/'+'allprediction.npy', fullnumpyarray)
                 
             
     def writeToTextFile(self, outfile):

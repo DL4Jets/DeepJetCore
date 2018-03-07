@@ -14,8 +14,32 @@ import shutil
 from DeepJetCore.DataCollection import DataCollection
 from pdb import set_trace
 
-# argument parsing and bookkeeping
-from Losses import *
+import imp
+try:
+    imp.find_module('Losses')
+    from Losses import *
+except ImportError:
+    print('No Losses module found, ignoring at your own risk')
+    global_loss_list = {}
+
+try:
+    imp.find_module('Layers')
+    from Layers import *
+except ImportError:
+    print('No Layers module found, ignoring at your own risk')
+    global_layers_list = {}
+
+try:
+    imp.find_module('Metrics')
+    from Metrics import *
+except ImportError:
+    print('No metrics module found, ignoring at your own risk')
+    global_metrics_list = {}
+custom_objects_list = {}
+custom_objects_list.update(global_loss_list)
+custom_objects_list.update(global_layers_list)
+custom_objects_list.update(global_metrics_list)
+
 
 class training_base(object):
     
@@ -157,7 +181,7 @@ class training_base(object):
         
     def loadModel(self,filename):
         from keras.models import load_model
-        self.keras_model=load_model(filename, custom_objects=global_loss_list)
+        self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
         
