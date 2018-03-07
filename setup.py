@@ -32,4 +32,5 @@ setup(name='DeepJetCore',
           'PyYAML==3.12',
           'subprocess32==3.2.7'
       ],
+      include_package_data=True,
       zip_safe=False)
