@@ -11,9 +11,9 @@ setup(name='DeepJetCore',
       description='The DeepJetCore Library: Deep Learning \
       for High-energy Physics',
       url='https://github.com/SwapneelM/DeepJetCore',
-      author='CMS Group (EP-CMG-PS)',
+      author='CERN - CMS Group (EP-CMG-PS)',
       author_email='swapneel.mehta@cern.ch',
-      license='MIT',
+      license='Apache',
       packages=['DeepJetCore'],
       install_requires=[
           'cycler==0.10.0',
