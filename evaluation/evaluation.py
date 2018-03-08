@@ -253,7 +253,9 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
+                        outpdffile,allcuts,cmsstyle, 
+                        firstcomment,secondcomment,
+                        invalidlist,extralegcopy,logY,
                         individual,xaxis,nbins,treename)
         
         except Exception as e:

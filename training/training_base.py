@@ -55,7 +55,9 @@ class training_base(object):
         if parser is None: parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
+        parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
         parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+        parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         
         args = parser.parse_args()
         self.args = args
@@ -76,6 +78,17 @@ class training_base(object):
             os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
             os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
             print('running on GPU '+str(args.gpu))
+        
+        if args.gpufraction>0 and args.gpufraction<1:
+            import sys
+            import tensorflow as tf
+            gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpufraction)
+            sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+            import keras
+            from keras import backend as K
+            K.set_session(sess)
+            print('using gpu memory fraction: '+str(args.gpufraction))
+        
             
             
         
@@ -84,6 +97,7 @@ class training_base(object):
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         self.keras_model=None
+        self.keras_model_method=args.modelMethod
         self.train_data=None
         self.val_data=None
         self.startlearningrate=None
