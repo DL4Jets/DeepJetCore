@@ -7,14 +7,16 @@ def readme():
 
 
 setup(name='DeepJetCore',
-      version='0.0.1',
+      version='0.0.3',
       description='The DeepJetCore Library: Deep Learning \
       for High-energy Physics',
-      url='https://github.com/SwapneelM/DeepJetCore',
+      url='https://github.com/DL4J/DeepJetCore',
       author='CERN - CMS Group (EP-CMG-PS)',
       author_email='swapneel.mehta@cern.ch',
       license='Apache',
-      packages=['DeepJetCore'],
+      long_description=readme(),
+      packages=['DeepJetCore', 'DeepJetCore.preprocessing', 'DeepJetCore.training', 'DeepJetCore.evaluation'],
+      python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
           'funcsigs==1.0.2',
@@ -33,4 +35,22 @@ setup(name='DeepJetCore',
           'subprocess32==3.2.7'
       ],
       include_package_data=True,
-      zip_safe=False)
+      zip_safe=False,
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'License :: OSI Approved :: Apache Software License',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Science/Research',
+          'Intended Audience :: Information Technology',
+          'Intended Audience :: Education',
+          'Operating System :: Unix',
+          'Programming Language :: Python :: 2.7',
+          'Topic :: Scientific/Research :: Artificial Intelligence',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+      ],
+      keywords='deep-learning physics jets cern cms',
+      project_urls={
+          'Documentation': 'https://github.com/SwapneelM/DeepJetCore/wiki',
+          'Source': 'https://github.com/SwapneelM/DeepJetCore',
+},
+)
