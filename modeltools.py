@@ -1,4 +1,13 @@
 
+
+def getLayer(model, name):
+    for layer in model.layers:
+        if layer.name == name:
+            return layer
+        
+
+
+
 def printLayerInfosAndWeights(model, noweights=False):
     for layer in model.layers:
         g=layer.get_config()
