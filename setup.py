@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, Extension
 from setuptools.command.install import install
 from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
@@ -12,6 +12,9 @@ print "\nBasepath: ", BASEPATH
 DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
 print "\nDeepjetcore: ", DEEPJETCORE
 
+COMPILEPATH = os.path.join(BASEPATH, 'DeepJetCore/compiled/')
+print "\Compile Path: ", COMPILEPATH
+
 
 class DeepJetCoreBuildPy(build_py):
     def run(self):
@@ -20,8 +23,6 @@ class DeepJetCoreBuildPy(build_py):
         print "\n\n*****************running custom \
 build_py**********************\n\n"
         # build XCSoar
-        build_path = os.path.join(BASEPATH, '/DeepJetCore/compiled')
-        print "\nbuild path: ", build_path
         cmd = [
             'make',
         ]
@@ -32,8 +33,8 @@ build_py**********************\n\n"
             print 'Unable to determine number of CPUs. \
             Using single threaded make.'
         options = [
-            '--directory=DeepJetCore/compiled',
-            '--makefile=Makefile'
+            '--directory=' + COMPILEPATH,
+            '--makefile=Makefile',
         ]
         cmd.extend(options)
         print cmd
@@ -51,8 +52,6 @@ class DeepJetCoreBuildExt(build_ext):
         print "\n\n*****************running custom \
 build_ext**********************\n\n"
         # build DeepJetCore
-        build_path = os.path.join(BASEPATH, 'DeepJetCore/compiled')
-        print "\nbuild path: ", build_path
         cmd = [
             'make',
         ]
@@ -63,8 +62,8 @@ build_ext**********************\n\n"
             print 'Unable to determine number of CPUs. \
             Using single threaded make.'
         options = [
-            '--directory=' + build_path,
-            '--makefile=Makefile'
+            '--directory=' + COMPILEPATH,
+            '--makefile=Makefile',
         ]
         cmd.extend(options)
         print cmd
@@ -90,6 +89,16 @@ def retrieveReadmeContent():
         return f.read()
 
 
+compiledModule = Extension('DeepJetCore.compiled',
+                           sources=[os.path.join(COMPILEPATH, 'src/*.c'),
+                                    os.path.join(COMPILEPATH, 'src/*.cpp'),
+                                    os.path.join(COMPILEPATH, 'src/*.C')],
+                           include_dirs=[os.path.join(COMPILEPATH,
+                                                      'interface/*.h')],
+                           extra_compile_args=['--directory=' + COMPILEPATH,
+                                               '--makefile=Makefile'])
+
+
 setup(name='DeepJetCore',
       version='0.0.4',
       description='The DeepJetCore Library: Deep Learning \
@@ -100,7 +109,8 @@ setup(name='DeepJetCore',
       license='Apache',
       long_description=retrieveReadmeContent(),
       packages=['DeepJetCore', 'DeepJetCore.preprocessing',
-                'DeepJetCore.training', 'DeepJetCore.evaluation'],
+                'DeepJetCore.training', 'DeepJetCore.evaluation',
+                'DeepJetCore.compiled'],
       python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
@@ -138,4 +148,6 @@ setup(name='DeepJetCore',
           'build_py': DeepJetCoreBuildPy,
           'build_ext': DeepJetCoreBuildExt,
           'install': DeepJetCoreInstall,
-      })
+      },
+      ext_modules=[compiledModule]
+      )

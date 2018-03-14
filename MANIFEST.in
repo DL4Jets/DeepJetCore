@@ -6,8 +6,16 @@ include CHANGELOG.rst
 include DeepJetCore/lxplus_env.sh
 include DeepJetCore/gpu_env.sh
 
+# makefile
+include DeepJetCore/compiled/Makefile
+
+
 # build scripts
-graft DeepJetCore/compiled
+include DeepJetCore/compiled/interface/*.h
+include DeepJetCore/compiled/src/*.c
+include DeepJetCore/compiled/src/*.cpp
+include DeepJetCore/compiled/src/*.C
 
 # scripts
 graft DeepJetCore/bin
+
