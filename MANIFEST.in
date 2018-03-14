@@ -1,1 +1,13 @@
+# metadata
 include README.rst
+include CHANGELOG.rst
+
+# environment setup
+include DeepJetCore/lxplus_env.sh
+include DeepJetCore/gpu_env.sh
+
+# build scripts
+graft DeepJetCore/compiled
+
+# scripts
+graft DeepJetCore/bin

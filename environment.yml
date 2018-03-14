@@ -79,3 +79,8 @@ dependencies:
     - subprocess32==3.2.7
     - tables==3.3.0
     - tensorflow==1.0.1
+build:
+  script_env:
+    build:
+      - LD_PRELOAD
+      - LD_LIBRARY_PATH
