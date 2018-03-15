@@ -90,7 +90,7 @@ setup(name='DeepJetCore',
       long_description=retrieveReadmeContent(),
       packages=['DeepJetCore', 'DeepJetCore.preprocessing',
                 'DeepJetCore.training', 'DeepJetCore.evaluation',
-                'DeepJetCore.compiled'],
+                'DeepJetCore.compiled', 'DeepJetCore.bin'],
       python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
