@@ -1,9 +1,9 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.install import install
-#from distutils.command.build_py import build_py
+from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
-from setuptools.command.build_py import build_py
+#from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -22,7 +22,7 @@ class DeepJetCoreBuildPy(build_py):
         # run original build code
         print "\n\n*****************running custom \
 build_py**********************\n\n"
-        # build XCSoar
+        # build DeepJetCore
         cmd = [
             'make',
         ]
@@ -126,4 +126,6 @@ setup(name='DeepJetCore',
       },
       cmdclass={
           'install': DeepJetCoreInstall,
-      })
+      },
+#      ext_modules=[compiledModule]
+      )
