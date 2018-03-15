@@ -1,9 +1,9 @@
 import os
-from setuptools import setup, Extension
+from setuptools import setup  # , Extension
 from setuptools.command.install import install
 from distutils.command.build_py import build_py
-from setuptools.command.build_ext import build_ext
-#from setuptools.command.build_py import build_py
+# from setuptools.command.build_ext import build_ext
+# from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -90,7 +90,16 @@ setup(name='DeepJetCore',
       long_description=retrieveReadmeContent(),
       packages=['DeepJetCore', 'DeepJetCore.preprocessing',
                 'DeepJetCore.training', 'DeepJetCore.evaluation',
-                'DeepJetCore.compiled', 'DeepJetCore.bin'],
+                'DeepJetCore.compiled'],
+      scripts=['DeepJetCore/bin/plotLoss.py',
+               'DeepJetCore/bin/plotLoss.py',
+               'DeepJetCore/bin/batch_conversion.py',
+               'DeepJetCore/bin/check_conversion.py',
+               'DeepJetCore/bin/convertFromRoot.py',
+               'DeepJetCore/bin/predict.py',
+               'DeepJetCore/bin/addPredictionLabels.py',
+               'DeepJetCore/bin/convertDCtoNumpy.py',
+               'DeepJetCore/bin/convertToTF.py'],
       python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
