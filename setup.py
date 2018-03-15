@@ -1,8 +1,9 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.install import install
-from distutils.command.build_py import build_py
+#from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -19,14 +20,12 @@ print "\Compile Path: ", COMPILEPATH
 class DeepJetCoreBuildPy(build_py):
     def run(self):
         # run original build code
-        build_py.run(self)
         print "\n\n*****************running custom \
 build_py**********************\n\n"
         # build XCSoar
         cmd = [
             'make',
         ]
-
         try:
             cmd.append('-j%d' % cpu_count())
         except NotImplementedError:
@@ -37,50 +36,32 @@ build_py**********************\n\n"
             '--makefile=Makefile',
         ]
         cmd.extend(options)
-        print cmd
+        print "\n\n" + cmd + "\n\n"
         call(cmd, cwd=DEEPJETCORE)
-
-
-class DeepJetCoreBuildExt(build_ext):
-    def run(self):
-        BASEPATH = os.path.dirname(os.path.abspath(__file__))
-        print "\nBasepath: ", BASEPATH
-        DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
-        print "\nDeepjetcore: ", DEEPJETCORE
-        # run original build code
-        build_ext.run(self)
-        print "\n\n*****************running custom \
-build_ext**********************\n\n"
-        # build DeepJetCore
-        cmd = [
-            'make',
-        ]
-
-        try:
-            cmd.append('-j%d' % cpu_count())
-        except NotImplementedError:
-            print 'Unable to determine number of CPUs. \
-            Using single threaded make.'
-        options = [
-            '--directory=' + COMPILEPATH,
-            '--makefile=Makefile',
-        ]
-        cmd.extend(options)
-        print cmd
-        call(cmd, cwd=DEEPJETCORE)
+        # run parent build_py
+        build_py.run(self)
 
 
 class DeepJetCoreInstall(install):
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.build_scripts = None
-
-    def finalize_options(self):
-        install.finalize_options(self)
-
     def run(self):
+        print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
+        cmd = [
+            'make',
+        ]
+        try:
+            cmd.append('-j%d' % cpu_count())
+        except NotImplementedError:
+            print 'Unable to determine number of CPUs. \
+            Using single threaded make.'
+        options = [
+            '--directory=' + COMPILEPATH,
+            '--makefile=Makefile',
+        ]
+        cmd.extend(options)
+        print cmd
+        call(cmd, cwd=DEEPJETCORE)
         # run original install code
-        print "\n\n\n running custom DeepJetCore install\n\n\n"
+        print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
 
 
@@ -89,15 +70,14 @@ def retrieveReadmeContent():
         return f.read()
 
 
-compiledModule = Extension('DeepJetCore.compiled',
+'''compiledModule = Extension('DeepJetCore.compiled',
                            sources=[os.path.join(COMPILEPATH, 'src/*.c'),
                                     os.path.join(COMPILEPATH, 'src/*.cpp'),
                                     os.path.join(COMPILEPATH, 'src/*.C')],
                            include_dirs=[os.path.join(COMPILEPATH,
                                                       'interface/*.h')],
-                           extra_compile_args=['--directory=' + COMPILEPATH,
-                                               '--makefile=Makefile'])
-
+                           extra_compile_args=['-fPIC'])
+'''
 
 setup(name='DeepJetCore',
       version='0.0.4',
@@ -145,9 +125,5 @@ setup(name='DeepJetCore',
           'Source': 'https://github.com/SwapneelM/DeepJetCore',
       },
       cmdclass={
-          'build_py': DeepJetCoreBuildPy,
-          'build_ext': DeepJetCoreBuildExt,
           'install': DeepJetCoreInstall,
-      },
-      ext_modules=[compiledModule]
-      )
+      })
