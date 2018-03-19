@@ -42,7 +42,7 @@ build_py**********************\n\n"
 	except RuntimeError,e:
 		print e
         # run parent build_py
-        print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
+        print "\n\n\n*****running custom DeepJetCore build*****\n\n\n"
         build_py.run(self)
 
 
@@ -142,7 +142,7 @@ setup(name='DeepJetCore',
       },
       cmdclass={
           'install': DeepJetCoreInstall,
-	  'build':DeepJetCoreBuild,
+	  'build': DeepJetCoreBuild,
       },
 #      ext_modules=[compiledModule]
       )
