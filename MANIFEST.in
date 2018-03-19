@@ -16,6 +16,10 @@ include DeepJetCore/compiled/src/*.c
 include DeepJetCore/compiled/src/*.cpp
 include DeepJetCore/compiled/src/*.C
 
+#shared libs
+include *.so
+graft DeepJetCore/compiled
+
 # scripts
 graft DeepJetCore/bin
 

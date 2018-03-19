@@ -1,9 +1,9 @@
 import os
 from setuptools import setup  # , Extension
 from setuptools.command.install import install
-from distutils.command.build_py import build_py
+#from distutils.command.build_py import build_py
 # from setuptools.command.build_ext import build_ext
-# from setuptools.command.build_py import build_py
+from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -17,7 +17,7 @@ COMPILEPATH = os.path.join(BASEPATH, 'DeepJetCore/compiled/')
 print "\Compile Path: ", COMPILEPATH
 
 
-class DeepJetCoreBuildPy(build_py):
+class DeepJetCoreBuild(build_py):
     def run(self):
         # run original build code
         print "\n\n*****************running custom \
@@ -37,8 +37,12 @@ build_py**********************\n\n"
         ]
         cmd.extend(options)
         print "\n\n" + cmd + "\n\n"
-        call(cmd, cwd=DEEPJETCORE)
+        try:
+		call(cmd, cwd=DEEPJETCORE)
+	except RuntimeError,e:
+		print e
         # run parent build_py
+        print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
         build_py.run(self)
 
 
@@ -59,7 +63,10 @@ class DeepJetCoreInstall(install):
         ]
         cmd.extend(options)
         print cmd
-        call(cmd, cwd=DEEPJETCORE)
+        try:
+		call(cmd, cwd=DEEPJETCORE)
+	except RuntimeError,e:
+		print e
         # run original install code
         print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
@@ -135,6 +142,7 @@ setup(name='DeepJetCore',
       },
       cmdclass={
           'install': DeepJetCoreInstall,
+	  'build':DeepJetCoreBuild,
       },
 #      ext_modules=[compiledModule]
       )
