@@ -29,27 +29,25 @@ endif
 all: $(MODULES_SHARED_LIBS)
 
 #helpers
-libquicklz.so:
-	gcc -shared -O2 -fPIC src/quicklz.c -o libquicklz.so
+./libquicklz.so:
+	gcc -shared -O2 -fPIC ./src/quicklz.c -o ./libquicklz.so
 
-obj/%.o: src/%.cpp
+./obj/%.o: ./src/%.cpp
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
     
 #pack helpers in lib
-libdeepjetcorehelpers.so: $(OBJ_FILES)
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) obj/*.o -o $@ 
+./libdeepjetcorehelpers.so: $(OBJ_FILES)
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./obj/*.o -o $@ 
   
 
-%.so: %.o libdeepjetcorehelpers.so libquicklz.so
+%.so: %.o ./libdeepjetcorehelpers.so ./libquicklz.so
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
-%.o: src/%.C 
+%.o: ./src/%.C 
 	g++   $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
 
 
 clean: 
 	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so
-	
-	
 	
