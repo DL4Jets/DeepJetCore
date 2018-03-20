@@ -124,7 +124,7 @@ void * readThread::readArrThread( void *ptr ){
     char* src =0;
     if(debug)
         std::cout << "Full length " << thisthread->length << std::endl;
-    while(chunk<nchunks){
+    while(chunk<nchunks && thisthread->length){
 
         src = new char[chunksizes.at(chunk)];
         fread(src, 1, chunksizes.at(chunk), ifile);
