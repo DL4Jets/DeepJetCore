@@ -70,6 +70,8 @@ def retrieveReadmeContent():
         return f.read()
 
 
+quicklz = Extension('quicklz', sources = ['quicklzpy.c'])
+
 '''compiledModule = Extension('DeepJetCore.compiled',
                            sources=[os.path.join(COMPILEPATH, 'src/*.c'),
                                     os.path.join(COMPILEPATH, 'src/*.cpp'),
@@ -127,5 +129,5 @@ setup(name='DeepJetCore',
       cmdclass={
           'install': DeepJetCoreInstall,
       },
-#      ext_modules=[compiledModule]
+      ext_modules=[quicklz],
       )
