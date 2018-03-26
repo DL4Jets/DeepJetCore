@@ -1,9 +1,9 @@
 import os
-from setuptools import setup  # , Extension
+from setuptools import setup, Extension
 from setuptools.command.install import install
 #from distutils.command.build_py import build_py
-# from setuptools.command.build_ext import build_ext
-from setuptools.command.build_py import build_py
+from setuptools.command.build_ext import build_ext
+# from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -16,57 +16,40 @@ print "\nDeepjetcore: ", DEEPJETCORE
 COMPILEPATH = os.path.join(BASEPATH, 'DeepJetCore/compiled/')
 print "\Compile Path: ", COMPILEPATH
 
+BUILDFLAG = 0
 
-class DeepJetCoreBuild(build_py):
+# declare `make` command
+cmd = [
+    'make',
+]
+try:
+    cmd.append('-j%d' % cpu_count())
+except NotImplementedError:
+    print 'Unable to determine number of CPUs. \
+    Using single threaded make.'
+options = [
+    '--directory=' + COMPILEPATH,
+    '--makefile=Makefile',
+]
+cmd.extend(options)
+print "\n\n" + str(cmd) + "\n\n"
+
+
+class DeepJetCoreBuildExt(build_ext):
     def run(self):
         # run original build code
-        print "\n\n*****************running custom \
-build_py**********************\n\n"
-        # build DeepJetCore
-        cmd = [
-            'make',
-        ]
-        try:
-            cmd.append('-j%d' % cpu_count())
-        except NotImplementedError:
-            print 'Unable to determine number of CPUs. \
-            Using single threaded make.'
-        options = [
-            '--directory=' + COMPILEPATH,
-            '--makefile=Makefile',
-        ]
-        cmd.extend(options)
-        print "\n\n" + cmd + "\n\n"
-        try:
-		call(cmd, cwd=DEEPJETCORE)
-	except RuntimeError,e:
-		print e
-        # run parent build_py
-        print "\n\n\n*****running custom DeepJetCore build*****\n\n\n"
-        build_py.run(self)
+        print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
+        build_ext.run(self)
+        print "\n\n*********running custom build_py***********\n\n"
+        BUILDFLAG = 1
+	call(cmd, cwd=DEEPJETCORE)
 
 
 class DeepJetCoreInstall(install):
     def run(self):
-        print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
-        cmd = [
-            'make',
-        ]
-        try:
-            cmd.append('-j%d' % cpu_count())
-        except NotImplementedError:
-            print 'Unable to determine number of CPUs. \
-            Using single threaded make.'
-        options = [
-            '--directory=' + COMPILEPATH,
-            '--makefile=Makefile',
-        ]
-        cmd.extend(options)
-        print cmd
-        try:
-		call(cmd, cwd=DEEPJETCORE)
-	except RuntimeError,e:
-		print e
+	# if BUILDFLAG==0:
+        #	print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
+        #	call(cmd, cwd=DEEPJETCORE)
         # run original install code
         print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
@@ -85,6 +68,9 @@ def retrieveReadmeContent():
                                                       'interface/*.h')],
                            extra_compile_args=['-fPIC'])
 '''
+
+quicklz = Extension('quicklz', sources = ['./DeepJetCore/compiled/quicklzpy.c'])
+ # include['./DeepJetCore/compiled/src/quicklz.c'])
 
 setup(name='DeepJetCore',
       version='0.0.4',
@@ -142,7 +128,7 @@ setup(name='DeepJetCore',
       },
       cmdclass={
           'install': DeepJetCoreInstall,
-	  'build': DeepJetCoreBuild,
+	  'build_ext': DeepJetCoreBuildExt,
       },
-#      ext_modules=[compiledModule]
+      ext_modules=[quicklz],
       )
