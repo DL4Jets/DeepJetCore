@@ -1,9 +1,9 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.install import install
-from distutils.command.build_py import build_py
+#from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
-#from setuptools.command.build_py import build_py
+# from setuptools.command.build_py import build_py
 from subprocess import call
 from multiprocessing import cpu_count
 
@@ -16,50 +16,40 @@ print "\nDeepjetcore: ", DEEPJETCORE
 COMPILEPATH = os.path.join(BASEPATH, 'DeepJetCore/compiled/')
 print "\Compile Path: ", COMPILEPATH
 
+BUILDFLAG = 0
 
-class DeepJetCoreBuildPy(build_py):
+# declare `make` command
+cmd = [
+    'make',
+]
+try:
+    cmd.append('-j%d' % cpu_count())
+except NotImplementedError:
+    print 'Unable to determine number of CPUs. \
+    Using single threaded make.'
+options = [
+    '--directory=' + COMPILEPATH,
+    '--makefile=Makefile',
+]
+cmd.extend(options)
+print "\n\n" + str(cmd) + "\n\n"
+
+
+class DeepJetCoreBuildExt(build_ext):
     def run(self):
         # run original build code
-        print "\n\n*****************running custom \
-build_py**********************\n\n"
-        # build DeepJetCore
-        cmd = [
-            'make',
-        ]
-        try:
-            cmd.append('-j%d' % cpu_count())
-        except NotImplementedError:
-            print 'Unable to determine number of CPUs. \
-            Using single threaded make.'
-        options = [
-            '--directory=' + COMPILEPATH,
-            '--makefile=Makefile',
-        ]
-        cmd.extend(options)
-        print "\n\n" + cmd + "\n\n"
-        call(cmd, cwd=DEEPJETCORE)
-        # run parent build_py
-        build_py.run(self)
+        print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
+        build_ext.run(self)
+        print "\n\n*********running custom build_py***********\n\n"
+        BUILDFLAG = 1
+	call(cmd, cwd=DEEPJETCORE)
 
 
 class DeepJetCoreInstall(install):
     def run(self):
-        print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
-        cmd = [
-            'make',
-        ]
-        try:
-            cmd.append('-j%d' % cpu_count())
-        except NotImplementedError:
-            print 'Unable to determine number of CPUs. \
-            Using single threaded make.'
-        options = [
-            '--directory=' + COMPILEPATH,
-            '--makefile=Makefile',
-        ]
-        cmd.extend(options)
-        print cmd
-        call(cmd, cwd=DEEPJETCORE)
+	# if BUILDFLAG==0:
+        #	print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
+        #	call(cmd, cwd=DEEPJETCORE)
         # run original install code
         print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
@@ -81,6 +71,9 @@ quicklz = Extension('quicklz', sources = ['quicklzpy.c'])
                            extra_compile_args=['-fPIC'])
 '''
 
+quicklz = Extension('quicklz', sources = ['./DeepJetCore/compiled/quicklzpy.c'])
+ # include['./DeepJetCore/compiled/src/quicklz.c'])
+
 setup(name='DeepJetCore',
       version='0.0.4',
       description='The DeepJetCore Library: Deep Learning \
@@ -92,7 +85,16 @@ setup(name='DeepJetCore',
       long_description=retrieveReadmeContent(),
       packages=['DeepJetCore', 'DeepJetCore.preprocessing',
                 'DeepJetCore.training', 'DeepJetCore.evaluation',
-                'DeepJetCore.compiled', 'DeepJetCore.bin'],
+                'DeepJetCore.compiled'],
+      scripts=['DeepJetCore/bin/plotLoss.py',
+               'DeepJetCore/bin/plotLoss.py',
+               'DeepJetCore/bin/batch_conversion.py',
+               'DeepJetCore/bin/check_conversion.py',
+               'DeepJetCore/bin/convertFromRoot.py',
+               'DeepJetCore/bin/predict.py',
+               'DeepJetCore/bin/addPredictionLabels.py',
+               'DeepJetCore/bin/convertDCtoNumpy.py',
+               'DeepJetCore/bin/convertToTF.py'],
       python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
@@ -128,6 +130,7 @@ setup(name='DeepJetCore',
       },
       cmdclass={
           'install': DeepJetCoreInstall,
+	  'build_ext': DeepJetCoreBuildExt,
       },
       ext_modules=[quicklz],
       )
