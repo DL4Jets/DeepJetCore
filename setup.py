@@ -10,19 +10,31 @@ from multiprocessing import cpu_count
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 print "\nBasepath: ", BASEPATH
 
+# Path to the `DeepJetCore` folder within the package
 DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
 print "\nDeepjetcore: ", DEEPJETCORE
 
+# Path to the `compiled` folder within `DeepJetCore`
 COMPILEPATH = os.path.join(DEEPJETCORE, 'compiled')
 print "\Compile Path: ", COMPILEPATH
 
+# Path to the `interface` folder within `DeepJetCore/compiled`
+INTERFACEPATH = os.path.join(COMPILEPATH, 'interface')
+print "\Compile Path: ", INTERFACEPATH
+
+# Exporting the value to a variable for use to set paths
 CONDA_PREFIX = os.environ('CONDA_PREFIX')
 
-PYCONFIG_PATH = os.path.join(CONDA_PREFIX, 'lib',
-                             'python' + str(os.environ('PYTHON_VERSION')),
-                             'config')
+# Path to configuration files required to build some of the extensions
+PYCONFIG_PATH = ''
+if os.environ('PYTHON_VERSION'):
+    PYCONFIG_PATH = os.path.join(
+        CONDA_PREFIX, 'lib', 'python' +
+        str(os.environ('PYTHON_VERSION')), 'config')
 
-# declare `make` command
+
+# declare command to run manual `make` using Makefile in COMPILEPATH
+# --to be deprecated in DeepJetCore version 0.0.5
 cmd = [
     'make',
 ]
@@ -40,6 +52,11 @@ print "\n\n" + str(cmd) + "\n\n"
 
 
 class DeepJetCoreBuildExt(build_ext):
+    '''
+    Override the default `build_ext` command
+    to implement custom commands
+    -- deprecated in DeepJetCorev0.0.5
+    '''
     def run(self):
         # run original build code
         print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
@@ -49,6 +66,11 @@ class DeepJetCoreBuildExt(build_ext):
 
 
 class DeepJetCoreInstall(install):
+    '''
+    Override the default `install` command
+    to implement custom commands
+    -- deprecated in DeepJetCorev0.0.5
+    '''
     def run(self):
         # if BUILDFLAG==0:
         # print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
@@ -59,63 +81,114 @@ class DeepJetCoreInstall(install):
 
 
 def retrieveReadmeContent():
+    '''
+    Retrieve the description for the package
+    from the README.rst file in BASEPATH
+    '''
     with open(os.path.join(BASEPATH, 'README.rst')) as f:
         return f.read()
 
 
-quicklz = Extension('DeepJet.compiled.quicklz',
-                    include_dirs=[os.path.join(COMPILEPATH, 'interface')],
-                    sources=['quicklzpy.c'])
+quicklz = Extension(
+    'DeepJet.compiled.quicklz',
+    include_dirs=[
+        os.path.join(COMPILEPATH, 'interface')
+    ],
+    sources=['quicklzpy.c'])
 
-cpp_compiler_args = ['-O2', '-fPIC', '-c']
+root_flags = ['root-config', '--cflags', '--libs', '--glibs', '-g']
 
-cpp_indata = Extension('DeepJetCore.compiled.indata')
+cpp_compiler_flags = ['-O2', '-fPIC', '-c'] + root_flags
+cpp_lib_dirs = [
+    os.path.join(CONDA_PREFIX, 'lib'),
+    os.path.join(COMPILEPATH, 'interface'),
+    '/usr/local/lib/',
+]
+cpp_include_dirs = [
+    os.path.join(CONDA_PREFIX, 'include'),
+    '/usr/local/include'
+]
 
-boost_include_dirs = [os.path.join(CONDA_PREFIX, 'include'), ]
-module_lib_dirs = [os.path.join(CONDA_PREFIX, 'lib'), PYCONFIG_PATH,
-                   os.path.join(COMPILEPATH, 'interface')]
-module_compiler_flags = ['-fPIC', '-Wl', '--export-dynamic', ]
+cpp_indata = Extension(
+    'DeepJetCore.compiled.indata',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src', 'indata.c'),
+             os.path.join(INTERFACEPATH,
+                          'indata_wrap.cxx')],
+    include_dirs=cpp_lib_dirs,
+    libraries=['python2.7'])
 
-c_meanNormZeroPad = Extension('DeepJet.compiled.c_meanNormZeroPad',
-                              # define_macros=module_macros,
-                              extra_compile_args=module_compiler_flags,
-                              sources=[os.path.join(COMPILEPATH, 'src',
-                                                    'c_meanNormZeroPad.c')],
-                              include_dirs=module_lib_dirs,
-                              runtime_library_dirs=[],
-                              libraries=['boost_python', 'python2.7'])
+cpp_helper = Extension(
+    'DeepJetCore.compiled.indata',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src', 'helper.c'),
+             os.path.join(INTERFACEPATH,
+                          'helper_wrap.cxx')],
+    include_dirs=cpp_lib_dirs,
+    libraries=['python2.7'])
 
-c_makePlots = Extension('DeepJet.compiled.c_makePlots',
-                        extra_compile_args=module_compiler_flags,
-                        sources=[os.path.join(COMPILEPATH, 'src',
-                                              'c_makePlots.c')],
-                        include_dirs=module_lib_dirs,
-                        runtime_library_dirs=[],
-                        libraries=['boost_python', 'python2.7'])
+cpp_friendTreeInjector = Extension(
+    'DeepJetCore.compiled.indata',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'friendTreeInjector.c'),
+             os.path.join(INTERFACEPATH,
+                          'friendTreeInjector_wrap.cxx')],
+    include_dirs=cpp_lib_dirs,
+    libraries=['python2.7'])
 
-c_makeROCs = Extension('DeepJet.compiled.c_makeROCs',
-                       extra_compile_args=module_compiler_flags,
-                       sources=[os.path.join(COMPILEPATH, 'src',
-                                             'c_makeROCs.c')],
-                       include_dirs=module_lib_dirs,
-                       runtime_library_dirs=[],
-                       libraries=['boost_python', 'python2.7'])
+boost_include_dirs = [os.path.join(CONDA_PREFIX, 'include')]
+module_lib_dirs = [
+    os.path.join(CONDA_PREFIX, 'lib'), PYCONFIG_PATH,
+    os.path.join(COMPILEPATH, 'interface'),
+]
+module_compiler_flags = ['-fPIC', '-Wl', '--export-dynamic'] + root_flags
 
-c_readArrThreaded = Extension('DeepJet.compiled.c_readArrThreaded',
-                              extra_compile_args=module_compiler_flags,
-                              sources=[os.path.join(COMPILEPATH, 'src',
-                                                    'c_readArrThreaded.c')],
-                              include_dirs=module_lib_dirs,
-                              runtime_library_dirs=[],
-                              libraries=['boost_python', 'python2.7'])
+c_meanNormZeroPad = Extension(
+    'DeepJet.compiled.c_meanNormZeroPad',
+    # define_macros=module_macros,
+    extra_compile_args=module_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'c_meanNormZeroPad.c')],
+    include_dirs=module_lib_dirs,
+    runtime_library_dirs=[boost_include_dirs],
+    libraries=['boost_python', 'python2.7'])
 
-c_randomSelect = Extension('DeepJet.compiled.c_randomSelect',
-                           extra_compile_args=module_compiler_flags,
-                           sources=[os.path.join(COMPILEPATH, 'src',
-                                                 'c_randomSelect.c')],
-                           include_dirs=module_lib_dirs,
-                           runtime_library_dirs=[],
-                           libraries=['boost_python', 'python2.7'])
+c_makePlots = Extension(
+    'DeepJet.compiled.c_makePlots',
+    extra_compile_args=module_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'c_makePlots.c')],
+    include_dirs=module_lib_dirs,
+    runtime_library_dirs=[],
+    libraries=['boost_python', 'python2.7'])
+
+c_makeROCs = Extension(
+    'DeepJet.compiled.c_makeROCs',
+    extra_compile_args=module_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'c_makeROCs.c')],
+    include_dirs=module_lib_dirs,
+    runtime_library_dirs=[],
+    libraries=['boost_python', 'python2.7'])
+
+c_readArrThreaded = Extension(
+    'DeepJet.compiled.c_readArrThreaded',
+    extra_compile_args=module_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'c_readArrThreaded.c')],
+    include_dirs=module_lib_dirs,
+    runtime_library_dirs=[],
+    libraries=['boost_python', 'python2.7'])
+
+c_randomSelect = Extension(
+    'DeepJet.compiled.c_randomSelect',
+    extra_compile_args=module_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'c_randomSelect.c')],
+    include_dirs=module_lib_dirs,
+    runtime_library_dirs=[],
+    libraries=['boost_python', 'python2.7'])
 
 setup(name='DeepJetCore',
       version='0.0.4',
@@ -174,6 +247,14 @@ setup(name='DeepJetCore',
       cmdclass={
           'build_ext': DeepJetCoreBuildExt,
       },
-      ext_modules=[quicklz, c_randomSelect, c_makeROCs, c_meanNormZeroPad,
-                   c_makePlots, c_readArrThreaded],
-      )
+      ext_modules=[
+          quicklz,
+          cpp_helper,
+          cpp_indata,
+          cpp_friendTreeInjector,
+          c_randomSelect,
+          c_makeROCs,
+          c_meanNormZeroPad,
+          c_makePlots,
+          c_readArrThreaded
+      ])

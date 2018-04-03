@@ -29,14 +29,14 @@ endif
 
 all: $(MODULES_SHARED_LIBS)
 
-#helpers
-#./quicklz.so:
+# helpers
+# ./quicklz.so:
 #	gcc -shared -O2 -fPIC ./src/quicklz.c -o ./quicklz.so
 
-./obj/%.o: ./src/%.cpp
-	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
+# ./obj/%.o: ./src/%.cpp
+#	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
     
-#pack helpers in lib
+# pack helpers in lib
 ./libdeepjetcorehelpers.so: $(OBJ_FILES)
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./obj/*.o -o $@ 
   
