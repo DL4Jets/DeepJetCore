@@ -1,13 +1,10 @@
 CHANGELOG
 =========
 
-0.0.5
+0.0.4
 -----
 - Adding support for compiling scripts during build
 - Added CHANGELOG
-
-0.0.4
------
 - Restructured and included subpackages
 
 0.0.3

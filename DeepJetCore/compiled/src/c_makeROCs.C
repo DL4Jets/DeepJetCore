@@ -11,7 +11,7 @@
 #include <string>
 #include <boost/python/exception_translator.hpp>
 #include <exception>
-#include "../interface/pythonToSTL.h"
+#include "pythonToSTL.h"
 #include "friendTreeInjector.h"
 #include "rocCurveCollection.h"
 

@@ -15,7 +15,7 @@
 
   **/
 #include <Python.h>
-#include "./interface/quicklz.h"
+#include "quicklz.h"
 #if QLZ_STREAMING_BUFFER == 0
     #error Define QLZ_STREAMING_BUFFER to a non-zero value for this module
 #endif

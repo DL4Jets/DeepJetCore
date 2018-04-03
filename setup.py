@@ -1,10 +1,10 @@
 import os
 from setuptools import setup, Extension
 from setuptools.command.install import install
-#from distutils.command.build_py import build_py
+# from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
 # from setuptools.command.build_py import build_py
-from subprocess import call
+# from subprocess import call
 from multiprocessing import cpu_count
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
@@ -13,10 +13,14 @@ print "\nBasepath: ", BASEPATH
 DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
 print "\nDeepjetcore: ", DEEPJETCORE
 
-COMPILEPATH = os.path.join(BASEPATH, 'DeepJetCore/compiled/')
+COMPILEPATH = os.path.join(DEEPJETCORE, 'compiled')
 print "\Compile Path: ", COMPILEPATH
 
-BUILDFLAG = 0
+CONDA_PREFIX = os.environ('CONDA_PREFIX')
+
+PYCONFIG_PATH = os.path.join(CONDA_PREFIX, 'lib',
+                             'python' + str(os.environ('PYTHON_VERSION')),
+                             'config')
 
 # declare `make` command
 cmd = [
@@ -40,16 +44,15 @@ class DeepJetCoreBuildExt(build_ext):
         # run original build code
         print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_ext.run(self)
-        print "\n\n*********running custom build_py***********\n\n"
-        BUILDFLAG = 1
-	call(cmd, cwd=DEEPJETCORE)
+        # print "\n\n*********running custom build_py***********\n\n"
+        # call(cmd, cwd=DEEPJETCORE)
 
 
 class DeepJetCoreInstall(install):
     def run(self):
-	# if BUILDFLAG==0:
-        #	print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
-        #	call(cmd, cwd=DEEPJETCORE)
+        # if BUILDFLAG==0:
+        # print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
+        # call(cmd, cwd=DEEPJETCORE)
         # run original install code
         print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
@@ -60,19 +63,59 @@ def retrieveReadmeContent():
         return f.read()
 
 
-quicklz = Extension('quicklz', sources = ['quicklzpy.c'])
+quicklz = Extension('DeepJet.compiled.quicklz',
+                    include_dirs=[os.path.join(COMPILEPATH, 'interface')],
+                    sources=['quicklzpy.c'])
 
-'''compiledModule = Extension('DeepJetCore.compiled',
-                           sources=[os.path.join(COMPILEPATH, 'src/*.c'),
-                                    os.path.join(COMPILEPATH, 'src/*.cpp'),
-                                    os.path.join(COMPILEPATH, 'src/*.C')],
-                           include_dirs=[os.path.join(COMPILEPATH,
-                                                      'interface/*.h')],
-                           extra_compile_args=['-fPIC'])
-'''
+cpp_compiler_args = ['-O2', '-fPIC', '-c']
 
-quicklz = Extension('quicklz', sources = ['./DeepJetCore/compiled/quicklzpy.c'])
- # include['./DeepJetCore/compiled/src/quicklz.c'])
+cpp_indata = Extension('DeepJetCore.compiled.indata')
+
+boost_include_dirs = [os.path.join(CONDA_PREFIX, 'include'), ]
+module_lib_dirs = [os.path.join(CONDA_PREFIX, 'lib'), PYCONFIG_PATH,
+                   os.path.join(COMPILEPATH, 'interface')]
+module_compiler_flags = ['-fPIC', '-Wl', '--export-dynamic', ]
+
+c_meanNormZeroPad = Extension('DeepJet.compiled.c_meanNormZeroPad',
+                              # define_macros=module_macros,
+                              extra_compile_args=module_compiler_flags,
+                              sources=[os.path.join(COMPILEPATH, 'src',
+                                                    'c_meanNormZeroPad.c')],
+                              include_dirs=module_lib_dirs,
+                              runtime_library_dirs=[],
+                              libraries=['boost_python', 'python2.7'])
+
+c_makePlots = Extension('DeepJet.compiled.c_makePlots',
+                        extra_compile_args=module_compiler_flags,
+                        sources=[os.path.join(COMPILEPATH, 'src',
+                                              'c_makePlots.c')],
+                        include_dirs=module_lib_dirs,
+                        runtime_library_dirs=[],
+                        libraries=['boost_python', 'python2.7'])
+
+c_makeROCs = Extension('DeepJet.compiled.c_makeROCs',
+                       extra_compile_args=module_compiler_flags,
+                       sources=[os.path.join(COMPILEPATH, 'src',
+                                             'c_makeROCs.c')],
+                       include_dirs=module_lib_dirs,
+                       runtime_library_dirs=[],
+                       libraries=['boost_python', 'python2.7'])
+
+c_readArrThreaded = Extension('DeepJet.compiled.c_readArrThreaded',
+                              extra_compile_args=module_compiler_flags,
+                              sources=[os.path.join(COMPILEPATH, 'src',
+                                                    'c_readArrThreaded.c')],
+                              include_dirs=module_lib_dirs,
+                              runtime_library_dirs=[],
+                              libraries=['boost_python', 'python2.7'])
+
+c_randomSelect = Extension('DeepJet.compiled.c_randomSelect',
+                           extra_compile_args=module_compiler_flags,
+                           sources=[os.path.join(COMPILEPATH, 'src',
+                                                 'c_randomSelect.c')],
+                           include_dirs=module_lib_dirs,
+                           runtime_library_dirs=[],
+                           libraries=['boost_python', 'python2.7'])
 
 setup(name='DeepJetCore',
       version='0.0.4',
@@ -129,8 +172,8 @@ setup(name='DeepJetCore',
           'Source': 'https://github.com/SwapneelM/DeepJetCore',
       },
       cmdclass={
-          'install': DeepJetCoreInstall,
-	  'build_ext': DeepJetCoreBuildExt,
+          'build_ext': DeepJetCoreBuildExt,
       },
-      ext_modules=[quicklz],
+      ext_modules=[quicklz, c_randomSelect, c_makeROCs, c_meanNormZeroPad,
+                   c_makePlots, c_readArrThreaded],
       )
