@@ -11,6 +11,8 @@ include DeepJetCore/compiled/Makefile
 
 
 # build scripts
+include DeepJetCore/compiled/interface/*.cxx
+include DeepJetCore/compiled/interface/*.i
 include DeepJetCore/compiled/interface/*.h
 include DeepJetCore/compiled/src/*.c
 include DeepJetCore/compiled/src/*.cpp
