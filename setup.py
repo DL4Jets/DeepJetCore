@@ -98,7 +98,7 @@ quicklz = Extension(
 
 root_flags = ['root-config', '--cflags', '--libs', '--glibs', '-g']
 
-cpp_compiler_flags = ['-O2', '-fPIC', '-c'] + root_flags
+cpp_compiler_flags = root_flags + ['-O2', '-fPIC', '-c']
 cpp_lib_dirs = [
     os.path.join(CONDA_PREFIX, 'lib'),
     os.path.join(COMPILEPATH, 'interface'),
@@ -142,7 +142,7 @@ module_lib_dirs = [
     os.path.join(CONDA_PREFIX, 'lib'), PYCONFIG_PATH,
     os.path.join(COMPILEPATH, 'interface'),
 ]
-module_compiler_flags = ['-fPIC', '-Wl', '--export-dynamic'] + root_flags
+module_compiler_flags = root_flags + ['-fPIC', '-Wl', '--export-dynamic']
 
 c_meanNormZeroPad = Extension(
     'DeepJet.compiled.c_meanNormZeroPad',
@@ -256,5 +256,5 @@ setup(name='DeepJetCore',
           c_makeROCs,
           c_meanNormZeroPad,
           c_makePlots,
-          c_readArrThreaded
+          c_readArrThreaded,
       ])
