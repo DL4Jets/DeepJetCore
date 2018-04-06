@@ -4,7 +4,7 @@ from setuptools.command.install import install
 # from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
 # from setuptools.command.build_py import build_py
-# from subprocess import call
+from subprocess import call
 from multiprocessing import cpu_count
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
@@ -62,10 +62,10 @@ class DeepJetCoreBuildExt(build_ext):
     '''
     def run(self):
         # run original build code
-        print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
+        # print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_ext.run(self)
-        # print "\n\n*********running custom build_py***********\n\n"
-        # call(cmd, cwd=DEEPJETCORE)
+        print "\n\n*********running custom build_py***********\n\n"
+        call(cmd)
 
 
 class DeepJetCoreInstall(install):
@@ -79,7 +79,7 @@ class DeepJetCoreInstall(install):
         # print "\n\n\n*****running custom DeepJetCore install*****\n\n\n"
         # call(cmd, cwd=DEEPJETCORE)
         # run original install code
-        print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
+        # print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
 
 
@@ -93,7 +93,7 @@ def retrieveReadmeContent():
 
 
 quicklz = Extension(
-    'DeepJet.compiled.quicklz',
+    'quicklz',
     include_dirs=[
         os.path.join(COMPILEPATH, 'interface')
     ],
@@ -273,12 +273,14 @@ setup(name='DeepJetCore',
       },
       ext_modules=[
           quicklz,
-          cpp_helper,
-          cpp_indata,
-          cpp_friendTreeInjector,
-          c_randomSelect,
-          c_makeROCs,
-          c_meanNormZeroPad,
-          c_makePlots,
-          c_readArrThreaded,
-      ])
+          ])
+'''
+cpp_helper,
+cpp_indata,
+cpp_friendTreeInjector,
+c_randomSelect,
+c_makeROCs,
+c_meanNormZeroPad,
+c_makePlots,
+c_readArrThreaded,
+'''

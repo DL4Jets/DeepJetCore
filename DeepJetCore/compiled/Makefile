@@ -41,8 +41,8 @@ all: $(MODULES_SHARED_LIBS)
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./obj/*.o -o $@ 
   
 
-./%.so: %.o ./%.so ./quicklz.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) quicklz.so ./*.so -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+./%.so: %.o ./%.so
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./*.so -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
 
 
 %.o: ./src/%.C 
@@ -50,5 +50,5 @@ all: $(MODULES_SHARED_LIBS)
 
 
 clean:
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) *.so quicklz.so
+	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) *.so
 
