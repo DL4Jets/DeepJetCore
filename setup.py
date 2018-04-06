@@ -11,7 +11,8 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 print "\nBasepath: ", BASEPATH
 
 # Path to the `DeepJetCore` folder within the package
-DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
+# DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
+DEEPJETCORE = './DeepJetCore'
 print "\nDeepjetcore: ", DEEPJETCORE
 
 # Path to the `compiled` folder within `DeepJetCore`
@@ -23,15 +24,17 @@ INTERFACEPATH = os.path.join(COMPILEPATH, 'interface')
 print "\Compile Path: ", INTERFACEPATH
 
 # Exporting the value to a variable for use to set paths
-CONDA_PREFIX = os.environ('CONDA_PREFIX')
+CONDA_PREFIX = os.environ['CONDA_PREFIX']
 
 # Path to configuration files required to build some of the extensions
-PYCONFIG_PATH = ''
-if os.environ('PYTHON_VERSION'):
+PYCONFIG_PATH = os.path.join(
+    CONDA_PREFIX, 'lib', 'python2.7', 'config')
+'''
+if os.environ['PYTHON_VERSION']:
     PYCONFIG_PATH = os.path.join(
         CONDA_PREFIX, 'lib', 'python' +
-        str(os.environ('PYTHON_VERSION')), 'config')
-
+        str(os.environ['PYTHON_VERSION']), 'config')
+'''
 
 # declare command to run manual `make` using Makefile in COMPILEPATH
 # --to be deprecated in DeepJetCore version 0.0.5
@@ -94,9 +97,31 @@ quicklz = Extension(
     include_dirs=[
         os.path.join(COMPILEPATH, 'interface')
     ],
-    sources=['quicklzpy.c'])
+    sources=[os.path.join(COMPILEPATH, 'quicklzpy.c')])
 
-root_flags = ['root-config', '--cflags', '--libs', '--glibs', '-g']
+root_flags = [
+	'-pthread',
+	'-std=c++11',
+	'-Wno-deprecated-declarations',
+	'-m64',
+	'-lCore',
+	'-lRIO',
+	'-lNet',
+	'-lHist',
+	'-lGraf',
+	'-lGraf3d',
+	'-lGpad',
+	'-lTree',
+	'-lRint',
+	'-lPostscript',
+	'-lMatrix',
+	'-lPhysics',
+	'-lMathCore',
+	'-lThread',
+	'-lm',
+	'-ldl',
+	'-rdynamic',
+]
 
 cpp_compiler_flags = root_flags + ['-O2', '-fPIC', '-c']
 cpp_lib_dirs = [
@@ -112,7 +137,7 @@ cpp_include_dirs = [
 cpp_indata = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src', 'indata.c'),
+    sources=[os.path.join(COMPILEPATH, 'src', 'indata.cpp'),
              os.path.join(INTERFACEPATH,
                           'indata_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
@@ -121,7 +146,7 @@ cpp_indata = Extension(
 cpp_helper = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src', 'helper.c'),
+    sources=[os.path.join(COMPILEPATH, 'src', 'helper.cpp'),
              os.path.join(INTERFACEPATH,
                           'helper_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
@@ -131,7 +156,7 @@ cpp_friendTreeInjector = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'friendTreeInjector.c'),
+                          'friendTreeInjector.cpp'),
              os.path.join(INTERFACEPATH,
                           'friendTreeInjector_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
@@ -146,7 +171,6 @@ module_compiler_flags = root_flags + ['-fPIC', '-Wl', '--export-dynamic']
 
 c_meanNormZeroPad = Extension(
     'DeepJet.compiled.c_meanNormZeroPad',
-    # define_macros=module_macros,
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
                           'c_meanNormZeroPad.c')],
@@ -202,15 +226,15 @@ setup(name='DeepJetCore',
       packages=['DeepJetCore', 'DeepJetCore.preprocessing',
                 'DeepJetCore.training', 'DeepJetCore.evaluation',
                 'DeepJetCore.compiled'],
-      scripts=['DeepJetCore/bin/plotLoss.py',
-               'DeepJetCore/bin/plotLoss.py',
-               'DeepJetCore/bin/batch_conversion.py',
-               'DeepJetCore/bin/check_conversion.py',
-               'DeepJetCore/bin/convertFromRoot.py',
-               'DeepJetCore/bin/predict.py',
-               'DeepJetCore/bin/addPredictionLabels.py',
-               'DeepJetCore/bin/convertDCtoNumpy.py',
-               'DeepJetCore/bin/convertToTF.py'],
+      scripts=['./DeepJetCore/bin/plotLoss.py',
+               './DeepJetCore/bin/plotLoss.py',
+               './DeepJetCore/bin/batch_conversion.py',
+               './DeepJetCore/bin/check_conversion.py',
+               './DeepJetCore/bin/convertFromRoot.py',
+               './DeepJetCore/bin/predict.py',
+               './DeepJetCore/bin/addPredictionLabels.py',
+               './DeepJetCore/bin/convertDCtoNumpy.py',
+               './DeepJetCore/bin/convertToTF.py'],
       python_requires='~=2.7',
       install_requires=[
           'cycler==0.10.0',
