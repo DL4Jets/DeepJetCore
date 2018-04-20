@@ -14,7 +14,7 @@ import logging
 from pdb import set_trace
 import copy
 
-usenewformat=False
+usenewformat=True
 
 
 # super not-generic without safety belts
