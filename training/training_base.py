@@ -52,14 +52,17 @@ class training_base(object):
 				parser=None
 				):
         
-        if parser is None: parser = ArgumentParser('Run the training')
-        parser.add_argument('inputDataCollection')
-        parser.add_argument('outputDir')
-        parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
-        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
-        parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
+        if parser is None: 
+		parser = ArgumentParser('Run the training')
+		parser.add_argument('inputDataCollection')
+	       	parser.add_argument('outputDir')
+	       	parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
+	      	parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+	       	parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         
-        args = parser.parse_args()
+        	args = parser.parse_args()
+	else:
+		args=parser
         self.args = args
         import os
         
@@ -117,10 +120,14 @@ class training_base(object):
         isNewTraining=True
         if os.path.isdir(self.outputDir):
             if not resumeSilently:
-                var = raw_input('output dir exists. To recover a training, please type "yes"\n')
-                if not var == 'yes':
+                var = raw_input('Output dir exists. To recover a training, please type "yes"\n To overwrite a training, please type "continue"\n')
+                if var == 'yes':
+			isNewTraining=False
+		elif var == 'continue':
+			shutil.rmtree(self.outputDir)		
+		else:
                     raise Exception('output directory must not exists yet')
-            isNewTraining=False     
+            #isNewTraining=False     
         else:
             os.mkdir(self.outputDir)
         self.outputDir = os.path.abspath(self.outputDir)

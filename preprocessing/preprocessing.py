@@ -486,6 +486,22 @@ def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
    
     return array
 
+def ZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
+    from DeepJetCore.compiled import c_meanNormZeroPad
+    
+    array = numpy.zeros((nevents,nMax,len(inbranches)) , dtype='float32')
+    
+    means=[]
+    norms=[]
+    for b in inbranches:
+        means.append(0.)
+        norms.append(1.)
+    
+    c_meanNormZeroPad.particlecluster(array,[norms],[means],[inbranches],[nMax],Filename_in)
+ 
+    return array
+
+
 def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,nevents):
 
     """

@@ -221,8 +221,7 @@ class Weighter(object):
                         xaverage[index]+=jet[self.nameX]
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
-            
-                    counter=counter+1            
+            counter=counter+1            
         
             
         if not len(notremove) == counter:

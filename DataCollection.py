@@ -14,7 +14,7 @@ import logging
 from pdb import set_trace
 import copy
 
-usenewformat=True
+usenewformat=False
 
 
 # super not-generic without safety belts
@@ -286,7 +286,8 @@ class DataCollection(object):
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
-            if self.useRelativePaths:
+            #if self.useRelativePaths:
+	    if not line.startswith('/'):
                 self.originRoots.append(fdir+'/'+line)
             else:
                 self.originRoots.append(line)
@@ -587,13 +588,13 @@ class DataCollection(object):
         lastindex=startindex-1
         alldone=False
         results=[]
+	
         import time
         try:
             while not alldone:
                 nrunning=0
                 for runs in processrunning:
                     if runs: nrunning+=1
-                
                 for i in range(len(processes)):
                     if nrunning>=nchilds:
                         break
@@ -604,8 +605,6 @@ class DataCollection(object):
                     processes[i].start()
                     processrunning[i]=True
                     nrunning+=1
-                    
-                
                 
                 if not wo_queue.empty():
                     res=wo_queue.get()
@@ -622,11 +621,12 @@ class DataCollection(object):
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
-                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        logging.info('>>>> collected result %d of %d' % (thisidx+1,len(self.originRoots)))
                         __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
-                        lastindex=thisidx        
+                        lastindex=thisidx
+               
                 
-                if nrunning==0:
+                if nrunning==0 and lastindex+1 == len(self.originRoots):
                     alldone=True
                     continue
                 time.sleep(0.1)
@@ -657,6 +657,9 @@ class DataCollection(object):
     
     def getAllFeatures(self):
         return self.__stackData(self.dataclass,'x')
+    
+    def getAllSpectators(self):
+        return self.__stackData(self.dataclass,'z')
         
     def getAllWeights(self):
         return self.__stackData(self.dataclass,'w')
@@ -681,6 +684,8 @@ class DataCollection(object):
                 thislist=td.x
             if selector == 'y':
                 thislist=td.y
+            if selector == 'z':
+                thislist=td.z
             if selector == 'w':
                 thislist=td.w
                
@@ -1019,3 +1024,4 @@ class DataCollection(object):
     
     
     
+
