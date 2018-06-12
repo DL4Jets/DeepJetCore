@@ -48,10 +48,10 @@ def checkTokens(cutofftime_hours=48):
     
     import datetime
     thistime=datetime.datetime.now()
-    tokentime=datetime.datetime(2000+int(kdate.split('/')[2]) ,
-                                int(kdate.split('/')[0]),
-                                int(kdate.split('/')[1]),
-                                int(ktime.split(':')[0]))
+    day,month,year=kdate.split('/')
+    hour,minu,sec=ktime.split(':')
+    tokentime=datetime.datetime(2000+int(year),int(month),int(day),int(hour))
+
     diff=tokentime-thistime
     diff=diff.total_seconds()
     
