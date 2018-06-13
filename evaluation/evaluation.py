@@ -118,6 +118,14 @@ class testDescriptor(object):
             else:
                 all_write = prediction
 
+            #if a prediction functor was set, it's output is also added to the final predictions
+            if hasattr(td, 'predictionFunctor') and hasattr(td,'predictionFunctorClasses'):
+                print('Extending the output with the configured prediction functor output')
+                formatstring.extend( getattr(td,'predictionFunctorClasses') )
+                all_write = np.concatenate([all_write,
+                                            [getattr(td,'predictionFunctor')(p) for p in prediction]],
+                                           axis=1)
+
             if all_write.ndim == 2:
                 all_write = np.concatenate([all_write, weights], axis=1)
                 formatstring.append('weight')
