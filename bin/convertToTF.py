@@ -22,7 +22,7 @@ args = parser.parse_args()
 
  
 if os.path.isdir(args.outputDir):
-    raise Exception('output directory must not exists yet')
+    raise Exception('output directory must not exist yet')
 
 
 model=load_model(args.inputModel, custom_objects=global_loss_list)
