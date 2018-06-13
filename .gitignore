@@ -16,4 +16,5 @@ __pycache__
 *.csv
 *.root
 *.json
+.DS_Store
 #*.*#
