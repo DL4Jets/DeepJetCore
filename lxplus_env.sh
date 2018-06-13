@@ -1,6 +1,6 @@
 
 
-source activate deepjetLinux3
+conda activate deepjetenv
 
 export DEEPJETCORE=`pwd`
 
