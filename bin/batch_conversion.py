@@ -26,7 +26,7 @@ proc = subprocess.Popen(
    stderr=subprocess.PIPE
 )
 if proc.wait() <> 0:
-   print "You should have a valid grid proxy to run this!"
+   print ("You should have a valid grid proxy to run this!")
    exit()
 
 if not os.path.isdir(args.batch_dir):

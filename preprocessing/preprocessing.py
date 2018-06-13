@@ -42,7 +42,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     # if classes present, loop ober them and make 2d histogram for each class
     else:
         for label in classes:
-            #print 'the labe is ', label
+            #print ('the label is ', label)
             nameXvec = Tuple[nameX]
             nameYvec = Tuple[nameY]
             valid = Tuple[label] > 0.

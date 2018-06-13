@@ -16,21 +16,21 @@ try:
     imp.find_module('Losses')
     from Losses import *
 except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
+    print ('No Losses module found, ignoring at your own risk')
     global_loss_list = {}
 
 try:
     imp.find_module('Layers')
     from Layers import *
 except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
+    print ('No Layers module found, ignoring at your own risk')
     global_layers_list = {}
 
 try:
     imp.find_module('Metrics')
     from Metrics import *
 except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
+    print ('No metrics module found, ignoring at your own risk')
     global_metrics_list = {}
 
 import os

@@ -34,7 +34,7 @@ outputs = glob.glob('%s/batch/con_out.*.out' % args.indir)
 failed = [i for i in outputs if not grep(i, 'JOBSUB::SUCC')]
 
 if len(failed) == 0:
-   print 'All jobs successfully completed, merging...'
+   print ('All jobs successfully completed, merging...')
    from DataCollection import DataCollection
    from glob import glob
    batch_args = [i for i in open('%s/submit.sub' % args.indir) if 'arguments' in i][0]
@@ -44,7 +44,7 @@ if len(failed) == 0:
    dname = os.path.dirname(merged.originRoots[0])
    infiles = glob('%s/*.root' % dname)
    if len(infiles) != len(merged.originRoots):
-      print '\n\n\nThere are missing files that were not converted, maybe something went wrong!\n\n\n'
+      print ('\n\n\nThere are missing files that were not converted, maybe something went wrong!\n\n\n')
    merged.writeToFile('%s/dataCollection.dc' % output_dir)
 else:
    keep_going = raw_input('%d/%d jobs have failed, should I recover them? [yY/nN]   ' % (len(failed), len(outputs)))
@@ -54,4 +54,4 @@ else:
    with open('%s/rescue.sub' % args.indir, 'w') as jdl:
       jdl.write(''.join(general_lines))   
       jdl.write('\n'.join([proc_lines.format(IDX=i) for i in idxs]))
-   print 'rescue file created'
+   print ('rescue file created')
