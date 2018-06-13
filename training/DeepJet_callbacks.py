@@ -140,6 +140,7 @@ class DeepJet_callbacks(object):
             self.callbacks.append(self.modelcheckperiod)
         
         self.modelcheck=saveCheckPointDeepJet(outputDir,model)
+        self.callbacks.append(self.modelcheck)
         
         if stop_patience>0:
             self.stopping = EarlyStopping(monitor='val_loss', 

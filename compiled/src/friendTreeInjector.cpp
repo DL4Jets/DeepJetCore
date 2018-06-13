@@ -10,16 +10,15 @@
 #include <iostream>
 
 
-friendTreeInjector::friendTreeInjector(TString sourcetreename):
+friendTreeInjector::friendTreeInjector(const TString& sourcetreename):
         chain_(0),
         sourcetree_('/'+sourcetreename){}
+
 friendTreeInjector::~friendTreeInjector(){
 	resetChain();
 }
 
 void friendTreeInjector::addFromFile(const TString& filename, const TString& alias){
-
-	//add to treesandfriends_
 
 	std::vector<TString> originroots,toinject;
 
@@ -76,6 +75,11 @@ void friendTreeInjector::showList()const{
 }
 
 void friendTreeInjector::createChain(){
+
+	if(sourcetree_.Length()<1){
+		throw std::runtime_error("friendTreeInjector::createChain: treename is empty");
+	}
+
 	resetChain();
 	chain_ = new TChain();
 	friendchains_ = std::vector<TChain*> (treesandfriends_.at(0).size()-1,0);

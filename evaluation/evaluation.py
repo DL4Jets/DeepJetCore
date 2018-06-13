@@ -42,6 +42,8 @@ dashedcolormap=['red','red,dashed'
  , 'gray','gray,dashed']
     
 from pdb import set_trace
+from DeepJetCore.compiled import c_storeTensor
+
 
 class testDescriptor(object):
     
@@ -77,7 +79,7 @@ class testDescriptor(object):
         for i in range(len(testdatacollection.samples)):
             sample=testdatacollection.samples[i]
             originroot=testdatacollection.originRoots[i]
-            outrootfilename=os.path.basename(originroot).split('.')[0]+'_predict'+ident+'.root'
+            outrootfilename=os.path.splitext(os.path.basename(originroot))[0]+'_predict'+ident+'.root'
             
             fullpath=testdatacollection.getSamplePath(sample)
             if monkey_class_obj is not None:
@@ -115,26 +117,36 @@ class testDescriptor(object):
                 all_write = np.concatenate(prediction, axis=1)
             else:
                 all_write = prediction
-            
-            all_write = np.concatenate([all_write, weights], axis=1)
-            formatstring.append('weight')
-            if not all_write.shape[1] == len(formatstring):
-                print(formatstring, ' vs ', all_write.shape[1])
-                raise ValueError('Prediction output does not match with the provided targets!')
-               
-            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
-            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
-            
-            #self.metrics.append(metric)
-            self.__sourceroots.append(originroot)
-            self.__predictroots.append(outputDir+'/'+outrootfilename)
-            print(formatstring)
-            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
-            if self.addnumpyoutput:
-                if len(fullnumpyarray):
-                    fullnumpyarray=np.concatenate((fullnumpyarray,all_write))
-                else:
-                    fullnumpyarray=np.array(all_write)
+
+            if all_write.ndim == 2:
+                all_write = np.concatenate([all_write, weights], axis=1)
+                formatstring.append('weight')
+                if not all_write.shape[1] == len(formatstring):
+                    print(formatstring, ' vs ', all_write.shape[1])
+                    raise ValueError('Prediction output does not match with the provided targets!')
+                
+                all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
+                array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
+                
+                #self.metrics.append(metric)
+                self.__sourceroots.append(originroot)
+                self.__predictroots.append(outputDir+'/'+outrootfilename)
+                print(formatstring)
+                print('\ncreated prediction friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
+                if self.addnumpyoutput:
+                    if len(fullnumpyarray):
+                        fullnumpyarray=np.concatenate((fullnumpyarray,all_write))
+                    else:
+                        fullnumpyarray=np.array(all_write)
+            else:
+                c_storeTensor.store(np.ascontiguousarray(all_write, dtype=np.float32).ctypes.data, list(np.shape(all_write)), outputDir+'/'+outrootfilename)
+                self.__sourceroots.append(originroot)
+                self.__predictroots.append(outputDir+'/'+outrootfilename)
+                if self.addnumpyoutput:
+                    if len(fullnumpyarray):
+                        fullnumpyarray=np.concatenate((fullnumpyarray,all_write))
+                    else:
+                        fullnumpyarray=np.array(all_write)
                     
         if self.addnumpyoutput:    
             np.save(outputDir+'/'+'allprediction.npy', fullnumpyarray)
@@ -253,7 +265,9 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         truths_list,
                         vetos_list,
                         colors_list,
-                        outpdffile,allcuts,cmsstyle, firstcomment,secondcomment,invalidlist,extralegcopy,logY,
+                        outpdffile,allcuts,cmsstyle, 
+                        firstcomment,secondcomment,
+                        invalidlist,extralegcopy,logY,
                         individual,xaxis,nbins,treename)
         
         except Exception as e:
