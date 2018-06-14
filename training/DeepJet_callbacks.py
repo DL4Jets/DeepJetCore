@@ -109,6 +109,7 @@ class DeepJet_callbacks(object):
                  outputDir='',
                  minTokenLifetime=5,
                  checkperiod=10,
+                 checkperiodoffset=0,
                  plotLossEachEpoch=True):
         
 
@@ -136,7 +137,8 @@ class DeepJet_callbacks(object):
         self.callbacks.append(self.modelbestcheck)
         
         if checkperiod>0:
-            self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
+            self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_block_"+str(checkperiodoffset)+"_epoch_{epoch:02d}.h5", 
+                                                  verbose=1,period=checkperiod, save_weights_only=False)
             self.callbacks.append(self.modelcheckperiod)
         
         self.modelcheck=saveCheckPointDeepJet(outputDir,model)

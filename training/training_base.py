@@ -52,6 +52,9 @@ class training_base(object):
 				parser=None
 				):
         
+        import sys
+        scriptname=sys.argv[0]
+        
         if parser is None: parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
@@ -127,12 +130,8 @@ class training_base(object):
         self.outputDir+='/'
         
         #copy configuration to output dir
-        # move this part to the individual subpackage
-        #if isNewTraining:
-        #    djsource= os.environ['DEEPJET']
-        #    shutil.copytree(djsource+'/modules/models', self.outputDir+'models')
-        #    shutil.copyfile(sys.argv[0],self.outputDir+sys.argv[0])
-
+        shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+        
             
             
         self.train_data = collection_class()
@@ -140,7 +139,7 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.002)
+            self.train_data.split(0.05)
             
         self.val_data=self.train_data.split(splittrainandtest)
         
@@ -307,18 +306,19 @@ class training_base(object):
                                     lr_cooldown=lr_cooldown, 
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir,
-                                    checkperiod=checkperiod)
-        nepochs=nepochs-self.trainedepoches
+                                    checkperiod=checkperiod,
+                                    checkperiodoffset=self.trainedepoches)
+        
         print('starting training')
         self.keras_model.fit_generator(self.train_data.generator() ,
                             steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
-                            epochs=nepochs,
+                            epochs=nepochs-self.trainedepoches,
                             callbacks=callbacks.callbacks,
                             validation_data=self.val_data.generator(),
                             validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
                             max_q_size=maxqsize,**trainargs)
         
-        
+        self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")
         
         import copy
