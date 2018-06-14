@@ -1,7 +1,7 @@
 # location of the Python header files
  
-PYTHON_VERSION = 2.7
-PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python2.7
+PYTHON_VERSION = 3.6
+PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python3.6
  
 # location of the Boost Python include files and library
  
