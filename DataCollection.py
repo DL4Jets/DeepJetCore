@@ -6,9 +6,8 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from __future__ import print_function
-
-from Weighter import Weighter
 from TrainData import TrainData, fileTimeOut
+from Weighter import Weighter
 #for convenience
 import logging
 from pdb import set_trace
