@@ -18,7 +18,7 @@ from pdb import set_trace
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
-from DeepJetCore.DataCollection import DataCollection
+from DataCollection import DataCollection
 
 import imp
 try:
