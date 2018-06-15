@@ -7,12 +7,11 @@ from pdb import set_trace
 modules = [basename(i.replace('.py','')) for i in glob('%s/[A-Za-z]*.py' % dirname(__file__))]
 print ('\n\npreprocessing modules:', modules)
 __all__ = []
-structure_list = []
 for module_name in modules:
     module = __import__(module_name, globals(), locals(), [module_name])
+    print('preprocessing module: ', module)
     for model_name in [i for i in dir(module)]:
         model = getattr(module, model_name)
-        print ('\npreprocessing model: ', model)
         globals()[model_name] = model
         locals( )[model_name] = model
         print('preprocessing: ', model_name)
@@ -22,9 +21,3 @@ for module_name in modules:
                 __all__.append(model_name)
         else:
             __all__ = [model_name]
-        
-        if structure_list is not None:
-            if model_name not in structure_list:
-                structure_list.append(model_name)
-        else:
-            structure_list = [model_name]
