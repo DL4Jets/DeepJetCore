@@ -1,4 +1,4 @@
-from DataCollection import DataCollection
+from DeepJetCore.DataCollection import DataCollection
 from multiprocessing import cpu_count
 from itertools import izip
 from pdb import set_trace

@@ -251,6 +251,7 @@ def MeanNormApply(Tuple,MeanNormTuple):
     
     The function retuen a numpy.ndarray! That is mean subtracted and normalized AND all values og -999 are patched to 0 as well!
     """
+    import numpy
     arrayList = []
     for field in iter(Tuple.dtype.names):
         if Tuple[field].dtype=='O':

@@ -6,8 +6,10 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from __future__ import print_function
-from TrainData import TrainData, fileTimeOut
-from Weighter import Weighter
+
+from DeepJetCore.Weighter import Weighter
+from DeepJetCore.TrainData import TrainData, fileTimeOut
+
 #for convenience
 import logging
 from pdb import set_trace

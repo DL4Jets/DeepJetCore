@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 '''
 convertFromRoot -- converts the root files produced with the deepJet ntupler to the data format used by keras for the DNN training
@@ -23,7 +23,7 @@ from DataCollection import DataCollection
 import imp
 try:
     imp.find_module('datastructures')
-    from datastructures import *
+    import datastructures
 except ImportError:
     print('datastructure modules not found. Please define a DeepJetCore submodule')
    
@@ -32,6 +32,8 @@ class_options=[]
 import inspect, sys
 for name, obj in inspect.getmembers(sys.modules['datastructures']):
     if inspect.isclass(obj) and 'TrainData' in name:
+        class_options.append(obj)
+    if inspect.ismodule(obj) and 'TrainData' in name:
         class_options.append(obj)
       
 class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
@@ -89,12 +91,12 @@ if len(nchilds):
 if class_name in class_options:
     traind = class_options[class_name]
 elif not recover and not testdatafor:
-    print('available classes:')
+    print('\nAvailable classes: ')
     for key, val in class_options.iteritems():
         print(key)
-    raise Exception('wrong class selection')        
+    raise Exception('Incorrect class selection')        
 if testdatafor:
-    logging.info('converting test data, no weights applied')
+    logging.info('Converting test data, no weights applied')
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
         outname = args.batch if args.batch else 'dataCollection.dc',
@@ -113,7 +115,4 @@ else:
         usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
         batch_mode = bool(args.batch)
         )
-
-
-
 

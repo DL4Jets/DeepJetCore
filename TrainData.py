@@ -7,7 +7,7 @@ Created on 20 Feb 2017
 from __future__ import print_function
 
 
-from Weighter import Weighter
+from DeepJetCore.Weighter import Weighter
 from pdb import set_trace
 import numpy
 import logging

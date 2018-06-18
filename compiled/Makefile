@@ -41,7 +41,7 @@ libdeepjetcorehelpers.so: $(OBJ_FILES)
   
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config-3.6m-x86_64-linux-gnu -lpython3.6m  -L$(BOOST_LIB) -lboost_python $< -o $(@) 
 
 
 %.o: src/%.C 
