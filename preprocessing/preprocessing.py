@@ -98,6 +98,7 @@ def meanNormProd(Tuple):
     TO DO: we need to add a parser to JSON to interface to C++ or store straight a C++ map as well.
    
     """
+    import numpy
     BranchList = Tuple.dtype.names
     dTypeList = []
     mean = ()

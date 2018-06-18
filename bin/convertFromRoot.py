@@ -23,20 +23,23 @@ from DataCollection import DataCollection
 import imp
 try:
     imp.find_module('datastructures')
-    import datastructures
+    from datastructures import *
+    print('Found Datastructures submodule')
 except ImportError:
-    print('datastructure modules not found. Please define a DeepJetCore submodule')
-   
+    print('\nDatastructures modules not found. Please define a DeepJetCore \
+submodule and add it to your PYTHONPATH variable.')
 
 class_options=[]
 import inspect, sys
 for name, obj in inspect.getmembers(sys.modules['datastructures']):
-    if inspect.isclass(obj) and 'TrainData' in name:
+    if inspect.isclass(obj) and 'TrainData' in name and obj not in class_options:
         class_options.append(obj)
-    if inspect.ismodule(obj) and 'TrainData' in name:
+    elif inspect.ismodule(obj) and 'TrainData' in name and obj not in class_options:
         class_options.append(obj)
-      
+
+print("\nClass Options: ", class_options)      
 class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
+print("\nClass Options: ", class_options)      
 
 
 parser = ArgumentParser('program to convert root tuples to traindata format')

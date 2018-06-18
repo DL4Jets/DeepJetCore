@@ -486,8 +486,8 @@ class DataCollection(object):
     def __writeData_async_andCollect(self, startindex, outputDir):
         
         #set tree name to use
-        import DeepJetCore.preprocessing
-        DeepJetCore.preprocessing.setTreeName(self.dataclass.treename)
+        from DeepJetCore.preprocessing import preprocessing
+        preprocessing.setTreeName(self.dataclass.treename)
         
         from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()
