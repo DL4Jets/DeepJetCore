@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 # Assume user has already activated conda environment
 # conda activate deepjetenv
