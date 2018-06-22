@@ -15,7 +15,7 @@ CHANGELOG
 0.0.2
 -----
 - Updates for packaging
-- Tested upload on [testpypi](https://test.pypi.org/legacy/)
+- Tested upload on testpypi
 
 0.0.1
 -----
