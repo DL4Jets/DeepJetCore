@@ -34,3 +34,6 @@ __pycache__
 # Build Directory
 build/
 #*.*#
+
+# PyCharm
+.idea/
