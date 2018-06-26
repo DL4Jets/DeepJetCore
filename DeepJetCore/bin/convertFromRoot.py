@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 '''
 convertFromRoot -- converts the root files produced with the deepJet ntupler to the data format used by keras for the DNN training
@@ -18,23 +18,28 @@ from pdb import set_trace
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
-from DeepJetCore.DataCollection import DataCollection
+from DataCollection import DataCollection
 
 import imp
 try:
     imp.find_module('datastructures')
     from datastructures import *
+    print('Found Datastructures submodule')
 except ImportError:
-    print('datastructure modules not found. Please define a DeepJetCore submodule')
-   
+    print('\nDatastructures modules not found. Please define a DeepJetCore \
+submodule and add it to your PYTHONPATH variable.')
 
 class_options=[]
 import inspect, sys
 for name, obj in inspect.getmembers(sys.modules['datastructures']):
-    if inspect.isclass(obj) and 'TrainData' in name:
+    if inspect.isclass(obj) and 'TrainData' in name and obj not in class_options:
         class_options.append(obj)
-      
+    elif inspect.ismodule(obj) and 'TrainData' in name and obj not in class_options:
+        class_options.append(obj)
+
+print("\nClass Options: ", class_options)      
 class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
+print("\nClass Options: ", class_options)      
 
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
@@ -89,12 +94,12 @@ if len(nchilds):
 if class_name in class_options:
     traind = class_options[class_name]
 elif not recover and not testdatafor:
-    print('available classes:')
+    print('\nAvailable classes: ')
     for key, val in class_options.iteritems():
         print(key)
-    raise Exception('wrong class selection')        
+    raise Exception('Incorrect class selection')        
 if testdatafor:
-    logging.info('converting test data, no weights applied')
+    logging.info('Converting test data, no weights applied')
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
         outname = args.batch if args.batch else 'dataCollection.dc',
@@ -113,7 +118,4 @@ else:
         usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
         batch_mode = bool(args.batch)
         )
-
-
-
 

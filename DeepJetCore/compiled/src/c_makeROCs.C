@@ -40,7 +40,6 @@ void makeROCs(
 		std::string treename
 ) {
 
-
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
     std::vector<TString>  s_names = toSTLVector<TString>(names);
     std::vector<TString>  s_probabilities = toSTLVector<TString>(probabilities);
@@ -84,10 +83,8 @@ void makeROCs(
         //}
     }
 
-
-
     friendTreeInjector injector((TString)treename);
-    std::vector<friendTreeInjector> injectors(u_infiles.size());
+    std::vector<friendTreeInjector> injectors(u_infiles.size(), friendTreeInjector((TString)treename));
     std::vector<TChain*> chains(u_infiles.size());
     if(individual){
         if(u_infiles.size() != s_names.size())

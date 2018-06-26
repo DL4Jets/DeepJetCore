@@ -7,7 +7,7 @@ Created on 20 Feb 2017
 from __future__ import print_function
 
 
-from Weighter import Weighter
+from DeepJetCore.Weighter import Weighter
 from pdb import set_trace
 import numpy
 import logging
@@ -640,11 +640,11 @@ class TrainData(object):
             return nparray
         
     def make_means(self, nparray):
-        from preprocessing import meanNormProd
-        return meanNormProd(nparray)
+        from DeepJetCore.preprocessing import preprocessing
+        return preprocessing.meanNormProd(nparray)
         
     def produceMeansFromRootFile(self,filename, limit=500000):
-        from preprocessing import meanNormProd
+        # from DeepJetCore.preprocessing import preprocessing
         nparray = self.readTreeFromRootToTuple(filename, limit=limit)
         means = self.make_means(nparray)
         del nparray
@@ -652,7 +652,7 @@ class TrainData(object):
     
     #overload if necessary
     def make_empty_weighter(self):
-        from Weighter import Weighter
+        from DeepJetCore.Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
         

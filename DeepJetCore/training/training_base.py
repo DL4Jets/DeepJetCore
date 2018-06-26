@@ -1,6 +1,3 @@
-
-
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -14,8 +11,32 @@ import shutil
 from DeepJetCore.DataCollection import DataCollection
 from pdb import set_trace
 
-# argument parsing and bookkeeping
-from Losses import *
+import imp
+try:
+    imp.find_module('Losses')
+    from Losses import *
+except ImportError:
+    print('No Losses module found, ignoring at your own risk')
+    global_loss_list = {}
+
+try:
+    imp.find_module('Layers')
+    from Layers import *
+except ImportError:
+    print('No Layers module found, ignoring at your own risk')
+    global_layers_list = {}
+
+try:
+    imp.find_module('Metrics')
+    from Metrics import *
+except ImportError:
+    print('No metrics module found, ignoring at your own risk')
+    global_metrics_list = {}
+custom_objects_list = {}
+custom_objects_list.update(global_loss_list)
+custom_objects_list.update(global_layers_list)
+custom_objects_list.update(global_metrics_list)
+
 
 class training_base(object):
     
@@ -23,17 +44,20 @@ class training_base(object):
 				self, splittrainandtest=0.85,
 				useweights=False, testrun=False,
 				resumeSilently=False, 
-                renewtokens=True,
-                collection_class=DataCollection):
+				renewtokens=True,
+				collection_class=DataCollection,
+				parser=None
+				):
         
-        
-        
-        parser = ArgumentParser('Run the training')
+        if parser is None: parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
+        parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
         parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+        parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         
         args = parser.parse_args()
+        self.args = args
         import os
         
         
@@ -51,6 +75,17 @@ class training_base(object):
             os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
             os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
             print('running on GPU '+str(args.gpu))
+        
+        if args.gpufraction>0 and args.gpufraction<1:
+            import sys
+            import tensorflow as tf
+            gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpufraction)
+            sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+            import keras
+            from keras import backend as K
+            K.set_session(sess)
+            print('using gpu memory fraction: '+str(args.gpufraction))
+        
             
             
         
@@ -59,6 +94,7 @@ class training_base(object):
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         self.keras_model=None
+        self.keras_model_method=args.modelMethod
         self.train_data=None
         self.val_data=None
         self.startlearningrate=None
@@ -120,10 +156,13 @@ class training_base(object):
             self.keras_inputsshapes.append(s)
             
         if not isNewTraining:
-            if not os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5'):
+            kfile = self.outputDir+'/KERAS_check_model_last.h5' \
+							 if os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5') else \
+							 self.outputDir+'/KERAS_model.h5'
+            if not os.path.isfile(kfile):
                 print('you cannot resume a training that did not train for at least one epoch.\nplease start a new training.')
                 exit()
-            self.loadModel(self.outputDir+'/KERAS_check_model_last.h5')
+            self.loadModel(kfile)
             self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
         
         
@@ -157,7 +196,7 @@ class training_base(object):
         
     def loadModel(self,filename):
         from keras.models import load_model
-        self.keras_model=load_model(filename, custom_objects=global_loss_list)
+        self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
         

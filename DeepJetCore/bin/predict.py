@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import imp
 try:
@@ -16,21 +16,21 @@ try:
     imp.find_module('Losses')
     from Losses import *
 except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
+    print ('No Losses module found, ignoring at your own risk')
     global_loss_list = {}
 
 try:
     imp.find_module('Layers')
     from Layers import *
 except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
+    print ('No Layers module found, ignoring at your own risk')
     global_layers_list = {}
 
 try:
     imp.find_module('Metrics')
     from Metrics import *
 except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
+    print ('No metrics module found, ignoring at your own risk')
     global_metrics_list = {}
 
 import os
@@ -43,7 +43,7 @@ parser.add_argument('outputDir')
 parser.add_argument('--use', help='coma-separated list of prediction indexes to be used')
 parser.add_argument('--labels', action='store_true', help='store true labels in the trees')
 parser.add_argument('--monkey_class', default='', help='allows to read the data with a different TrainData, it is actually quite dangerous if you do not know what you are doing')
-parser.add_argument('--numpy', help='switches on numpy rec-array output in addition to root files', action='store_true' , default=False )
+parser.add_argument('--numpy', help='switches on numpy rec-array output in addition to root files. Will produce ONE large file (can become big)', action='store_true' , default=False )
 
 args = parser.parse_args()
 

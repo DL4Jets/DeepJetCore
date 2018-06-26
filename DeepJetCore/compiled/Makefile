@@ -1,8 +1,8 @@
 
 # location of the Python header files
  
-PYTHON_VERSION = 2.7
-PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python2.7
+PYTHON_VERSION = 3.6
+PYTHON_INCLUDE = ${CONDA_PREFIX}/include/python3.6m
  
 # location of the Boost Python include files and library
  
@@ -41,8 +41,12 @@ all: $(MODULES_SHARED_LIBS)
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./obj/*.o -o $@ 
   
 
-./%.so: %.o ./%.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./*.so -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+#<<<<<<< HEAD:DeepJetCore/compiled/Makefile
+#./%.so: %.o ./%.so
+#	g++ -shared $(LINUXADD)  $(ROOTSTUFF) ./*.so -L$(BOOST_LIB)  -lboost_python -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config -lpython2.7  $< -o $(@) 
+#=======
+%.so: %.o libdeepjetcorehelpers.so libquicklz.so
+	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L${CONDA_PREFIX}/lib/python$(PYTHON_VERSION)/config-3.6m-x86_64-linux-gnu -lpython3.6m  -L$(BOOST_LIB) -lboost_python $< -o $(@) 
 
 
 %.o: ./src/%.C 
