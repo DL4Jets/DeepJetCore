@@ -1,9 +1,14 @@
 CHANGELOG
 =========
 
+0.0.5
+-----
+- Migrated to Python 3.6
+- Updated conda packages
+
 0.0.4
 -----
-- Adding support for compiling scripts during build
+- Added support for compiling scripts during build
 - Added CHANGELOG
 - Restructured and included subpackages
 
