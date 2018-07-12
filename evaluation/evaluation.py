@@ -226,7 +226,10 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     individual=False,
                     xaxis="",
                     nbins=200,
-                    treename='deepntuplizer/tree'):#['solid?udsg','hatched?c']): 
+                    treename='deepntuplizer/tree',
+                    xmin=-1,
+                    experimentlabel="",lumilabel="",prelimlabel="",
+                    npoints=500):#['solid?udsg','hatched?c']): 
     
     import copy
     
@@ -276,7 +279,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         outpdffile,allcuts,cmsstyle, 
                         firstcomment,secondcomment,
                         invalidlist,extralegcopy,logY,
-                        individual,xaxis,nbins,treename)
+                        individual,xaxis,nbins,treename,xmin,
+                        experimentlabel,lumilabel,prelimlabel)
         
         except Exception as e:
             print('error for these inputs:')

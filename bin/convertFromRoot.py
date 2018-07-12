@@ -49,6 +49,7 @@ parser.add_argument("--testdatafor", default='')
 parser.add_argument("--usemeansfrom", default='')
 parser.add_argument("--nothreads", action='store_true')
 parser.add_argument("--means", action='store_true', help='compute only means')
+parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
 parser.add_argument("--batch", help='Provide a batch ID to be used')
 parser.add_argument("-v", action='store_true', help='verbose')
 parser.add_argument("-q", action='store_true', help='quiet')
@@ -83,6 +84,7 @@ if outPath:
 # MAIN BODY #
 dc = DataCollection(nprocs = (1 if args.nothreads else -1), 
                     useRelativePaths=True if not args.noRelativePaths else False)  
+dc.meansnormslimit = int(args.nforweighter)
 if len(nchilds):
     dc.nprocs=int(nchilds)  
 

@@ -58,7 +58,8 @@ public:
 	void addText(TLatex *l){additionaltext_.push_back(l);}
 
 	void printRocs(TChain* c, const TString& outpdf,const TString&outfile="",TCanvas* cv=0, TFile * f=0,
-	        std::vector<TChain*>* chainvec=0,double xmin_in=-1);
+	        std::vector<TChain*>* chainvec=0,double xmin_in=-1,
+			TString experimentlabel="",TString lumilabel="",TString prelimlabel="");
 
 private:
 	TLegend * leg_;

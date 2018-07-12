@@ -46,6 +46,10 @@ def set_trainable(m, patterns, value):
 			m.get_layer(index=layidx).trainable = value
 	return m
 
+def setAllTrainable(m):
+    for layidx in range(len(m.layers)):
+        m.get_layer(index=layidx).trainable = True
+    return m
 
 def loadModelAndFixLayers(filename,fixOnlyContaining):
     #import keras

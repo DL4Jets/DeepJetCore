@@ -1,4 +1,4 @@
-#define BOOST_PYTHON_MAX_ARITY 20
+#define BOOST_PYTHON_MAX_ARITY 40
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
 #include "boost/python/numeric.hpp"
@@ -37,7 +37,9 @@ void makeROCs(
         bool individual,
         std::string xaxis,
         int nbins,
-		std::string treename
+		std::string treename,
+		double xmin,
+		std::string experimentlabel,std::string lumilabel,std::string prelimlabel
 ) {
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -129,10 +131,12 @@ void makeROCs(
         rocs.addExtraLegendEntry(s);
 
     if(individual){
-        rocs.printRocs(0,(TString)outfile,"",0,0,&chains);
+        rocs.printRocs(0,(TString)outfile,"",0,0,&chains,xmin,
+        		experimentlabel,lumilabel,prelimlabel);
     }
     else{
-        rocs.printRocs(injector.getChain(),(TString)outfile);
+        rocs.printRocs(injector.getChain(),(TString)outfile,"",0,0,0,xmin,
+        		experimentlabel,lumilabel,prelimlabel);
     }
 }
 

@@ -12,13 +12,18 @@ parser.add_argument("out", help="output path")
 parser.add_argument("batch_dir", help="batch directory")
 parser.add_argument("-c", help="output class")
 parser.add_argument("--testdatafor", default='')
+parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
 parser.add_argument("--nomeans", action='store_true', help='where to get means/std, in case already computed')
 args = parser.parse_args()
 
-deep_jet_base = [i for i in os.environ['PYTHONPATH'].split(':') if 'DeepJet' in i]
-if len(deep_jet_base) != 1:
-   raise RuntimeError('I cannot find the project root directory')
-deep_jet_base = os.path.realpath(deep_jet_base[0].split('environment')[0])
+deep_jet_base = os.environ['DEEPJETCORE_SUBPACKAGE']
+if len(deep_jet_base) < 1:
+   raise RuntimeError('I cannot find the project root directory. DEEPJETCORE_SUBPACKAGE needs to be defined')
+
+cmssw = os.environ['CMSSW_BASE']
+if len(cmssw) < 1:
+    raise RuntimeError('I cannot find the CMSSW root directory. Batch conversion on SL6 machines requires CMSSW (for now)')
+
 
 proc = subprocess.Popen(
    'voms-proxy-info', 
@@ -38,10 +43,11 @@ if not os.path.isdir('%s/batch' % args.batch_dir):
 if not (args.nomeans or args.testdatafor):
    #Run a fisrt round of root conversion to get the means/std and weights
    cmd = [
-      './convertFromRoot.py', 
+      'convertFromRoot.py', 
       '-i', args.infile,
       '-c', args.c, 
       '-o', args.out, 
+      '--nforweighter', args.nforweighter,
       '--means'
       ]
    proc  = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -76,10 +82,9 @@ batch_template = '''#!/bin/bash
 sleep $(shuf -i1-600 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
 echo "JOBSUB::RUN job running"
 trap "echo JOBSUB::FAIL job killed" SIGTERM
-cd {DJ}/environment/
+cd {DJ}
 source lxplus_env.sh
-cd {DJ}/convertFromRoot/
-./convertFromRoot.py "$@"
+convertFromRoot.py "$@"
 exitstatus=$?
 if [ $exitstatus != 0 ]
 then
