@@ -4,7 +4,7 @@ from setuptools.command.install import install
 # from distutils.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
 # from setuptools.command.build_py import build_py
-from subprocess import call
+# from subprocess import call
 from multiprocessing import cpu_count
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
@@ -38,6 +38,7 @@ if os.environ['PYTHON_VERSION']:
 
 # declare command to run manual `make` using Makefile in COMPILEPATH
 # --to be deprecated in DeepJetCore version 0.0.5
+'''
 cmd = [
     'make',
 ]
@@ -52,7 +53,7 @@ options = [
 ]
 cmd.extend(options)
 print "\n\n" + str(cmd) + "\n\n"
-
+'''
 
 class DeepJetCoreBuildExt(build_ext):
     '''
@@ -64,8 +65,8 @@ class DeepJetCoreBuildExt(build_ext):
         # run original build code
         # print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_ext.run(self)
-        print "\n\n*********running custom build_py***********\n\n"
-        call(cmd)
+        # print "\n\n*********running custom build_py***********\n\n"
+        # call(cmd)
 
 
 class DeepJetCoreInstall(install):
@@ -144,7 +145,7 @@ cpp_indata = Extension(
     libraries=['python2.7'])
 
 cpp_helper = Extension(
-    'DeepJetCore.compiled.indata',
+    'DeepJetCore.compiled.helper',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src', 'helper.cpp'),
              os.path.join(INTERFACEPATH,
@@ -152,8 +153,26 @@ cpp_helper = Extension(
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'])
 
+cpp_rocCurve = Extension(
+    'DeepJetCore.compiled.rocCurve',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'rocCurve.cpp'),
+             os.path.join(INTERFACEPATH,
+                          'rocCurve_wrap.cxx')],
+    include_dirs=cpp_lib_dirs,
+    libraries=['python2.7'])
+
+cpp_rocCurveCollection = Extension(
+    'DeepJetCore.compiled.rocCurveCollection',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(COMPILEPATH, 'src',
+                          'rocCurveCollection.cpp'),
+             os.path.join(INTERFACEPATH,
+                          'rocCurveCollection_wrap.cxx')],
+
 cpp_friendTreeInjector = Extension(
-    'DeepJetCore.compiled.indata',
+    'DeepJetCore.compiled.friendTreeInjector',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
                           'friendTreeInjector.cpp'),
@@ -273,4 +292,5 @@ setup(name='DeepJetCore',
       },
       ext_modules=[
           quicklz,
+          cpp_indata
       ])
