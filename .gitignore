@@ -37,6 +37,7 @@ bin/
 
 # Build Directory
 build/
+compiled/ 
 
 .DS_Store
 #*.*#
