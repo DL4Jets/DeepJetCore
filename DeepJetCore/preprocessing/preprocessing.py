@@ -42,7 +42,7 @@ def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     # if classes present, loop ober them and make 2d histogram for each class
     else:
         for label in classes:
-            #print 'the labe is ', label
+            #print ('the label is ', label)
             nameXvec = Tuple[nameX]
             nameYvec = Tuple[nameY]
             valid = Tuple[label] > 0.
@@ -98,6 +98,7 @@ def meanNormProd(Tuple):
     TO DO: we need to add a parser to JSON to interface to C++ or store straight a C++ map as well.
    
     """
+    import numpy
     BranchList = Tuple.dtype.names
     dTypeList = []
     mean = ()
@@ -251,6 +252,7 @@ def MeanNormApply(Tuple,MeanNormTuple):
     
     The function retuen a numpy.ndarray! That is mean subtracted and normalized AND all values og -999 are patched to 0 as well!
     """
+    import numpy
     arrayList = []
     for field in iter(Tuple.dtype.names):
         if Tuple[field].dtype=='O':

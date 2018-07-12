@@ -7,8 +7,9 @@ Created on 21 Feb 2017
 #from builtins import list
 from __future__ import print_function
 
-from Weighter import Weighter
-from TrainData import TrainData, fileTimeOut
+from DeepJetCore.Weighter import Weighter
+from DeepJetCore.TrainData import TrainData, fileTimeOut
+
 #for convenience
 import logging
 from pdb import set_trace
@@ -485,8 +486,8 @@ class DataCollection(object):
     def __writeData_async_andCollect(self, startindex, outputDir):
         
         #set tree name to use
-        import DeepJetCore.preprocessing
-        DeepJetCore.preprocessing.setTreeName(self.dataclass.treename)
+        from DeepJetCore.preprocessing import preprocessing
+        preprocessing.setTreeName(self.dataclass.treename)
         
         from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()

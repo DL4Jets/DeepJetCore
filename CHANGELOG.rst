@@ -1,9 +1,14 @@
 CHANGELOG
 =========
 
+0.0.5
+-----
+- Migrated to Python 3.6
+- Updated conda packages
+
 0.0.4
 -----
-- Adding support for compiling scripts during build
+- Added support for compiling scripts during build
 - Added CHANGELOG
 - Restructured and included subpackages
 
@@ -15,7 +20,7 @@ CHANGELOG
 0.0.2
 -----
 - Updates for packaging
-- Tested upload on [testpypi](https://test.pypi.org/legacy/)
+- Tested upload on testpypi
 
 0.0.1
 -----
