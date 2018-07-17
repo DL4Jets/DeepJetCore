@@ -17,12 +17,17 @@ __pycache__
 *.root
 *.json
 
+# Shared object files and libraries
+*.so
+*.o 
+
 # Setuptools distribution folder.
 /dist/
+bin/
 
 # Python egg metadata, regenerated from source files by setuptools
-/*.egg-info
 *.egg
+/*.egg-info
 
 # Mac OS X
 .DS_Store

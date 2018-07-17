@@ -3003,22 +3003,16 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_TString swig_types[0]
-#define SWIGTYPE_p_TTree swig_types[1]
-#define SWIGTYPE_p___hidden__indata swig_types[2]
-#define SWIGTYPE_p_char swig_types[3]
-#define SWIGTYPE_p_std__vectorT_TBranch_p_t swig_types[4]
-#define SWIGTYPE_p_std__vectorT_TString_t swig_types[5]
-#define SWIGTYPE_p_std__vectorT___hidden__indata_t swig_types[6]
-#define SWIGTYPE_p_std__vectorT_double_t swig_types[7]
-#define SWIGTYPE_p_std__vectorT_float_p_t swig_types[8]
-#define SWIGTYPE_p_std__vectorT_float_t swig_types[9]
-#define SWIGTYPE_p_std__vectorT_int_t swig_types[10]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_TString_t_t swig_types[11]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_double_t_t swig_types[12]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_float_t_p_t swig_types[13]
-static swig_type_info *swig_types[15];
-static swig_module_info swig_module = {swig_types, 14, 0, 0, 0, 0};
+#define SWIGTYPE_p_TCanvas swig_types[0]
+#define SWIGTYPE_p_TChain swig_types[1]
+#define SWIGTYPE_p_TFile swig_types[2]
+#define SWIGTYPE_p_TLatex swig_types[3]
+#define SWIGTYPE_p_TString swig_types[4]
+#define SWIGTYPE_p_char swig_types[5]
+#define SWIGTYPE_p_rocCurveCollection swig_types[6]
+#define SWIGTYPE_p_std__vectorT_TChain_p_t swig_types[7]
+static swig_type_info *swig_types[9];
+static swig_module_info swig_module = {swig_types, 8, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3031,16 +3025,16 @@ static swig_module_info swig_module = {swig_types, 14, 0, 0, 0, 0};
 #endif
 
 /*-----------------------------------------------
-              @(target):= _indata.so
+              @(target):= _rocCurveCollection.so
   ------------------------------------------------*/
 #if PY_VERSION_HEX >= 0x03000000
-#  define SWIG_init    PyInit__indata
+#  define SWIG_init    PyInit__rocCurveCollection
 
 #else
-#  define SWIG_init    init_indata
+#  define SWIG_init    init_rocCurveCollection
 
 #endif
-#define SWIG_name    "_indata"
+#define SWIG_name    "_rocCurveCollection"
 
 #define SWIGVERSION 0x030012 
 #define SWIG_VERSION SWIGVERSION
@@ -3124,14 +3118,17 @@ namespace swig {
 
  
     #define SWIG_FILE_WITH_INIT
-    #include "indata.h"
+    #include "rocCurveCollection.h"
 
 
-SWIGINTERNINLINE PyObject*
-  SWIG_From_int  (int value)
-{
-  return PyInt_FromLong((long) value);
-}
+#include <limits.h>
+#if !defined(SWIG_NO_LLONG_MAX)
+# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
+#   define LLONG_MAX __LONG_LONG_MAX__
+#   define LLONG_MIN (-LLONG_MAX - 1LL)
+#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+# endif
+#endif
 
 
 SWIGINTERN int
@@ -3257,37 +3254,6 @@ SWIG_AsVal_long (PyObject *obj, long* val)
 #endif
   return SWIG_TypeError;
 }
-
-
-SWIGINTERN int
-SWIG_AsVal_bool (PyObject *obj, bool *val)
-{
-  int r;
-  if (!PyBool_Check(obj))
-    return SWIG_ERROR;
-  r = PyObject_IsTrue(obj);
-  if (r == -1)
-    return SWIG_ERROR;
-  if (val) *val = r ? true : false;
-  return SWIG_OK;
-}
-
-
-SWIGINTERNINLINE PyObject*
-  SWIG_From_bool  (bool value)
-{
-  return PyBool_FromLong(value ? 1 : 0);
-}
-
-
-#include <limits.h>
-#if !defined(SWIG_NO_LLONG_MAX)
-# if !defined(LLONG_MAX) && defined(__GNUC__) && defined (__LONG_LONG_MAX__)
-#   define LLONG_MAX __LONG_LONG_MAX__
-#   define LLONG_MIN (-LLONG_MAX - 1LL)
-#   define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
-# endif
-#endif
 
 
 SWIGINTERN int
@@ -3421,268 +3387,48 @@ SWIG_AsVal_size_t (PyObject * obj, size_t *val)
 }
 
 
-  #define SWIG_From_long   PyInt_FromLong 
-
-
-SWIGINTERNINLINE PyObject* 
-SWIG_From_unsigned_SS_long  (unsigned long value)
+SWIGINTERN int
+SWIG_AsVal_bool (PyObject *obj, bool *val)
 {
-  return (value > LONG_MAX) ?
-    PyLong_FromUnsignedLong(value) : PyInt_FromLong(static_cast< long >(value));
-}
-
-
-#ifdef SWIG_LONG_LONG_AVAILABLE
-SWIGINTERNINLINE PyObject* 
-SWIG_From_unsigned_SS_long_SS_long  (unsigned long long value)
-{
-  return (value > LONG_MAX) ?
-    PyLong_FromUnsignedLongLong(value) : PyInt_FromLong(static_cast< long >(value));
-}
-#endif
-
-
-SWIGINTERNINLINE PyObject *
-SWIG_From_size_t  (size_t value)
-{    
-#ifdef SWIG_LONG_LONG_AVAILABLE
-  if (sizeof(size_t) <= sizeof(unsigned long)) {
-#endif
-    return SWIG_From_unsigned_SS_long  (static_cast< unsigned long >(value));
-#ifdef SWIG_LONG_LONG_AVAILABLE
-  } else {
-    /* assume sizeof(size_t) <= sizeof(unsigned long long) */
-    return SWIG_From_unsigned_SS_long_SS_long  (static_cast< unsigned long long >(value));
-  }
-#endif
-}
-
-
-  #define SWIG_From_double   PyFloat_FromDouble 
-
-
-SWIGINTERNINLINE PyObject *
-SWIG_From_float  (float value)
-{    
-  return SWIG_From_double  (value);
+  int r;
+  if (!PyBool_Check(obj))
+    return SWIG_ERROR;
+  r = PyObject_IsTrue(obj);
+  if (r == -1)
+    return SWIG_ERROR;
+  if (val) *val = r ? true : false;
+  return SWIG_OK;
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN int Swig_var_indata_meanPadding_set(PyObject *_val) {
-  {
-    bool val;
-    int res = SWIG_AsVal_bool(_val, &val);
-    if (!SWIG_IsOK(res)) {
-      SWIG_exception_fail(SWIG_ArgError(res), "in variable '""__hidden::indata::meanPadding""' of type '""bool""'");
-    }
-    __hidden::indata::meanPadding = static_cast< bool >(val);
-  }
-  return 0;
-fail:
-  return 1;
-}
-
-
-SWIGINTERN PyObject *Swig_var_indata_meanPadding_get(void) {
-  PyObject *pyobj = 0;
-  
-  pyobj = SWIG_From_bool(static_cast< bool >(__hidden::indata::meanPadding));
-  return pyobj;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_meanPadding_get(PyObject *SWIGUNUSEDPARM(self), PyObject *SWIGUNUSEDPARM(args)) {
-  return Swig_var_indata_meanPadding_get();
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_meanPadding_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  int res;
-  PyObject *value;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:set",&value)) return NULL;
-  res = Swig_var_indata_meanPadding_set(value);
-  return !res ? SWIG_Py_Void() : NULL;
-}
-
-
-SWIGINTERN int Swig_var_indata_doscaling_set(PyObject *_val) {
-  {
-    bool val;
-    int res = SWIG_AsVal_bool(_val, &val);
-    if (!SWIG_IsOK(res)) {
-      SWIG_exception_fail(SWIG_ArgError(res), "in variable '""__hidden::indata::doscaling""' of type '""bool""'");
-    }
-    __hidden::indata::doscaling = static_cast< bool >(val);
-  }
-  return 0;
-fail:
-  return 1;
-}
-
-
-SWIGINTERN PyObject *Swig_var_indata_doscaling_get(void) {
-  PyObject *pyobj = 0;
-  
-  pyobj = SWIG_From_bool(static_cast< bool >(__hidden::indata::doscaling));
-  return pyobj;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_doscaling_get(PyObject *SWIGUNUSEDPARM(self), PyObject *SWIGUNUSEDPARM(args)) {
-  return Swig_var_indata_doscaling_get();
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_doscaling_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  int res;
-  PyObject *value;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:set",&value)) return NULL;
-  res = Swig_var_indata_doscaling_set(value);
-  return !res ? SWIG_Py_Void() : NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_indata(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_new_rocCurveCollection(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *result = 0 ;
+  rocCurveCollection *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)":new_indata")) SWIG_fail;
-  result = (__hidden::indata *)new __hidden::indata();
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p___hidden__indata, SWIG_POINTER_NEW |  0 );
+  if (!PyArg_ParseTuple(args,(char *)":new_rocCurveCollection")) SWIG_fail;
+  result = (rocCurveCollection *)new rocCurveCollection();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_rocCurveCollection, SWIG_POINTER_NEW |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_createFrom(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_delete_rocCurveCollection(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< TString > arg2 ;
-  std::vector< double > arg3 ;
-  std::vector< double > arg4 ;
-  int arg5 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  void *argp3 ;
-  int res3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
-  int val5 ;
-  int ecode5 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  PyObject * obj4 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOOO:indata_createFrom",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_createFrom" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_TString_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_createFrom" "', argument " "2"" of type '" "std::vector< TString >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_createFrom" "', argument " "2"" of type '" "std::vector< TString >""'");
-    } else {
-      std::vector< TString > * temp = reinterpret_cast< std::vector< TString > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  {
-    res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_double_t,  0  | 0);
-    if (!SWIG_IsOK(res3)) {
-      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "indata_createFrom" "', argument " "3"" of type '" "std::vector< double >""'"); 
-    }  
-    if (!argp3) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_createFrom" "', argument " "3"" of type '" "std::vector< double >""'");
-    } else {
-      std::vector< double > * temp = reinterpret_cast< std::vector< double > * >(argp3);
-      arg3 = *temp;
-      if (SWIG_IsNewObj(res3)) delete temp;
-    }
-  }
-  {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__vectorT_double_t,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "indata_createFrom" "', argument " "4"" of type '" "std::vector< double >""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_createFrom" "', argument " "4"" of type '" "std::vector< double >""'");
-    } else {
-      std::vector< double > * temp = reinterpret_cast< std::vector< double > * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
-    }
-  }
-  ecode5 = SWIG_AsVal_int(obj4, &val5);
-  if (!SWIG_IsOK(ecode5)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode5), "in method '" "indata_createFrom" "', argument " "5"" of type '" "int""'");
-  } 
-  arg5 = static_cast< int >(val5);
-  (arg1)->createFrom(arg2,arg3,arg4,arg5);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_setSize(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_setSize",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_setSize" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_setSize" "', argument " "2"" of type '" "size_t""'");
-  } 
-  arg2 = static_cast< size_t >(val2);
-  (arg1)->setSize(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_indata(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_indata",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, SWIG_POINTER_DISOWN |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_rocCurveCollection",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, SWIG_POINTER_DISOWN |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_indata" "', argument " "1"" of type '" "__hidden::indata *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_rocCurveCollection" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
   delete arg1;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -3691,229 +3437,29 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_getMax(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setLineWidth(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  int arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_getMax",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_getMax" "', argument " "1"" of type '" "__hidden::indata const *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result = ((__hidden::indata const *)arg1)->getMax();
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_getData(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  size_t *arg3 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  size_t temp3 ;
-  size_t val3 ;
-  int ecode3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  float result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:indata_getData",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_getData" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_getData" "', argument " "2"" of type '" "size_t""'");
-  } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  ecode3 = SWIG_AsVal_size_t(obj2, &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "indata_getData" "', argument " "3"" of type '" "size_t""'");
-  } 
-  temp3 = static_cast< size_t >(val3);
-  arg3 = &temp3;
-  result = (float)(arg1)->getData((size_t const &)*arg2,(size_t const &)*arg3);
-  resultobj = SWIG_From_float(static_cast< float >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_getRaw(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  size_t *arg3 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  size_t temp3 ;
-  size_t val3 ;
-  int ecode3 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  float result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOO:indata_getRaw",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_getRaw" "', argument " "1"" of type '" "__hidden::indata const *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_getRaw" "', argument " "2"" of type '" "size_t""'");
-  } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  ecode3 = SWIG_AsVal_size_t(obj2, &val3);
-  if (!SWIG_IsOK(ecode3)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "indata_getRaw" "', argument " "3"" of type '" "size_t""'");
-  } 
-  temp3 = static_cast< size_t >(val3);
-  arg3 = &temp3;
-  result = (float)((__hidden::indata const *)arg1)->getRaw((size_t const &)*arg2,(size_t const &)*arg3);
-  resultobj = SWIG_From_float(static_cast< float >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_mean(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
+  int val2 ;
   int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
-  float result;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_mean",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setLineWidth",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_mean" "', argument " "1"" of type '" "__hidden::indata const *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setLineWidth" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_mean" "', argument " "2"" of type '" "size_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rocCurveCollection_setLineWidth" "', argument " "2"" of type '" "int""'");
   } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  result = (float)((__hidden::indata const *)arg1)->mean((size_t const &)*arg2);
-  resultobj = SWIG_From_float(static_cast< float >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_std(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  float result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_std",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_std" "', argument " "1"" of type '" "__hidden::indata const *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_std" "', argument " "2"" of type '" "size_t""'");
-  } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  result = (float)((__hidden::indata const *)arg1)->std((size_t const &)*arg2);
-  resultobj = SWIG_From_float(static_cast< float >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_getDefault(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  float result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_getDefault",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_getDefault" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_getDefault" "', argument " "2"" of type '" "size_t""'");
-  } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  result = (float)(arg1)->getDefault((size_t const &)*arg2);
-  resultobj = SWIG_From_float(static_cast< float >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_allZero(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_allZero",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_allZero" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  (arg1)->allZero();
+  arg2 = static_cast< int >(val2);
+  (arg1)->setLineWidth(arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3921,9 +3467,75 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_getEntry(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setCommentLine0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setCommentLine0",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setCommentLine0" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_setCommentLine0" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_setCommentLine0" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  (arg1)->setCommentLine0((TString const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setCommentLine1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setCommentLine1",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setCommentLine1" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_setCommentLine1" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_setCommentLine1" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  (arg1)->setCommentLine1((TString const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setNBins(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
   size_t arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -3932,18 +3544,18 @@ SWIGINTERN PyObject *_wrap_indata_getEntry(PyObject *SWIGUNUSEDPARM(self), PyObj
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_getEntry",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setNBins",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_getEntry" "', argument " "1"" of type '" "__hidden::indata *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setNBins" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
   ecode2 = SWIG_AsVal_size_t(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_getEntry" "', argument " "2"" of type '" "size_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rocCurveCollection_setNBins" "', argument " "2"" of type '" "size_t""'");
   } 
   arg2 = static_cast< size_t >(val2);
-  (arg1)->getEntry(arg2);
+  (arg1)->setNBins(arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3951,29 +3563,62 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_zeroAndGet(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addExtraLegendEntry(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t arg2 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  size_t val2 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_addExtraLegendEntry",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_addExtraLegendEntry" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_addExtraLegendEntry" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addExtraLegendEntry" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  (arg1)->addExtraLegendEntry((TString const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setCMSStyle(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  bool arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  bool val2 ;
   int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_zeroAndGet",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setCMSStyle",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_zeroAndGet" "', argument " "1"" of type '" "__hidden::indata *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setCMSStyle" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  ecode2 = SWIG_AsVal_bool(obj1, &val2);
   if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_zeroAndGet" "', argument " "2"" of type '" "size_t""'");
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rocCurveCollection_setCMSStyle" "', argument " "2"" of type '" "bool""'");
   } 
-  arg2 = static_cast< size_t >(val2);
-  (arg1)->zeroAndGet(arg2);
+  arg2 = static_cast< bool >(val2);
+  (arg1)->setCMSStyle(arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -3981,32 +3626,907 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_isVector(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setLogY(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  bool arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
+  bool val2 ;
+  int ecode2 = 0 ;
   PyObject * obj0 = 0 ;
-  bool result;
+  PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_isVector",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setLogY",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_isVector" "', argument " "1"" of type '" "__hidden::indata const *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setLogY" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result = (bool)((__hidden::indata const *)arg1)->isVector();
-  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  ecode2 = SWIG_AsVal_bool(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "rocCurveCollection_setLogY" "', argument " "2"" of type '" "bool""'");
+  } 
+  arg2 = static_cast< bool >(val2);
+  (arg1)->setLogY(arg2);
+  resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_setup__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setXaxis(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  TTree *arg2 = (TTree *) 0 ;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setXaxis",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setXaxis" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_setXaxis" "', argument " "2"" of type '" "TString""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_setXaxis" "', argument " "2"" of type '" "TString""'");
+    } else {
+      TString * temp = reinterpret_cast< TString * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  (arg1)->setXaxis(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_setYaxis(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_setYaxis",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_setYaxis" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_setYaxis" "', argument " "2"" of type '" "TString""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_setYaxis" "', argument " "2"" of type '" "TString""'");
+    } else {
+      TString * temp = reinterpret_cast< TString * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  (arg1)->setYaxis(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addROC__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TString *arg5 = 0 ;
+  TString *arg6 = 0 ;
+  TString *arg7 = 0 ;
+  TString *arg8 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  void *argp8 = 0 ;
+  int res8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rocCurveCollection_addROC",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_addROC" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  if (!argp5) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  arg5 = reinterpret_cast< TString * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  if (!argp6) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  arg6 = reinterpret_cast< TString * >(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "rocCurveCollection_addROC" "', argument " "7"" of type '" "TString const &""'"); 
+  }
+  if (!argp7) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "7"" of type '" "TString const &""'"); 
+  }
+  arg7 = reinterpret_cast< TString * >(argp7);
+  res8 = SWIG_ConvertPtr(obj7, &argp8, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res8)) {
+    SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "rocCurveCollection_addROC" "', argument " "8"" of type '" "TString const &""'"); 
+  }
+  if (!argp8) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "8"" of type '" "TString const &""'"); 
+  }
+  arg8 = reinterpret_cast< TString * >(argp8);
+  (arg1)->addROC((TString const &)*arg2,(TString const &)*arg3,(TString const &)*arg4,(TString const &)*arg5,(TString const &)*arg6,(TString const &)*arg7,(TString const &)*arg8);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addROC__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TString *arg5 = 0 ;
+  TString *arg6 = 0 ;
+  TString *arg7 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:rocCurveCollection_addROC",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_addROC" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  if (!argp5) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  arg5 = reinterpret_cast< TString * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  if (!argp6) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  arg6 = reinterpret_cast< TString * >(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "rocCurveCollection_addROC" "', argument " "7"" of type '" "TString const &""'"); 
+  }
+  if (!argp7) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "7"" of type '" "TString const &""'"); 
+  }
+  arg7 = reinterpret_cast< TString * >(argp7);
+  (arg1)->addROC((TString const &)*arg2,(TString const &)*arg3,(TString const &)*arg4,(TString const &)*arg5,(TString const &)*arg6,(TString const &)*arg7);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addROC__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TString *arg2 = 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TString *arg5 = 0 ;
+  TString *arg6 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:rocCurveCollection_addROC",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_addROC" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "2"" of type '" "TString const &""'"); 
+  }
+  arg2 = reinterpret_cast< TString * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  if (!argp5) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "5"" of type '" "TString const &""'"); 
+  }
+  arg5 = reinterpret_cast< TString * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  if (!argp6) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_addROC" "', argument " "6"" of type '" "TString const &""'"); 
+  }
+  arg6 = reinterpret_cast< TString * >(argp6);
+  (arg1)->addROC((TString const &)*arg2,(TString const &)*arg3,(TString const &)*arg4,(TString const &)*arg5,(TString const &)*arg6);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addROC(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[9] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 8) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 6) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_TString, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            int res = SWIG_ConvertPtr(argv[4], 0, SWIGTYPE_p_TString, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              int res = SWIG_ConvertPtr(argv[5], 0, SWIGTYPE_p_TString, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                return _wrap_rocCurveCollection_addROC__SWIG_2(self, args);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 7) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_TString, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            int res = SWIG_ConvertPtr(argv[4], 0, SWIGTYPE_p_TString, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              int res = SWIG_ConvertPtr(argv[5], 0, SWIGTYPE_p_TString, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                int res = SWIG_ConvertPtr(argv[6], 0, SWIGTYPE_p_TString, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  return _wrap_rocCurveCollection_addROC__SWIG_1(self, args);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_TString, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            int res = SWIG_ConvertPtr(argv[4], 0, SWIGTYPE_p_TString, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              int res = SWIG_ConvertPtr(argv[5], 0, SWIGTYPE_p_TString, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                int res = SWIG_ConvertPtr(argv[6], 0, SWIGTYPE_p_TString, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  int res = SWIG_ConvertPtr(argv[7], 0, SWIGTYPE_p_TString, 0);
+                  _v = SWIG_CheckState(res);
+                  if (_v) {
+                    return _wrap_rocCurveCollection_addROC__SWIG_0(self, args);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'rocCurveCollection_addROC'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    rocCurveCollection::addROC(TString const &,TString const &,TString const &,TString const &,TString const &,TString const &,TString const &)\n"
+    "    rocCurveCollection::addROC(TString const &,TString const &,TString const &,TString const &,TString const &,TString const &)\n"
+    "    rocCurveCollection::addROC(TString const &,TString const &,TString const &,TString const &,TString const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_addText(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TLatex *arg2 = (TLatex *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:rocCurveCollection_addText",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_addText" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TLatex, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_addText" "', argument " "2"" of type '" "TLatex *""'"); 
+  }
+  arg2 = reinterpret_cast< TLatex * >(argp2);
+  (arg1)->addText(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TCanvas *arg5 = (TCanvas *) 0 ;
+  TFile *arg6 = (TFile *) 0 ;
+  std::vector< TChain * > *arg7 = (std::vector< TChain * > *) 0 ;
+  double arg8 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  double val8 ;
+  int ecode8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  PyObject * obj7 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
+  }
+  arg2 = reinterpret_cast< TChain * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_TCanvas, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_printRocs" "', argument " "5"" of type '" "TCanvas *""'"); 
+  }
+  arg5 = reinterpret_cast< TCanvas * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_TFile, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_printRocs" "', argument " "6"" of type '" "TFile *""'"); 
+  }
+  arg6 = reinterpret_cast< TFile * >(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_std__vectorT_TChain_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "rocCurveCollection_printRocs" "', argument " "7"" of type '" "std::vector< TChain * > *""'"); 
+  }
+  arg7 = reinterpret_cast< std::vector< TChain * > * >(argp7);
+  ecode8 = SWIG_AsVal_double(obj7, &val8);
+  if (!SWIG_IsOK(ecode8)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "rocCurveCollection_printRocs" "', argument " "8"" of type '" "double""'");
+  } 
+  arg8 = static_cast< double >(val8);
+  (arg1)->printRocs(arg2,(TString const &)*arg3,(TString const &)*arg4,arg5,arg6,arg7,arg8);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TCanvas *arg5 = (TCanvas *) 0 ;
+  TFile *arg6 = (TFile *) 0 ;
+  std::vector< TChain * > *arg7 = (std::vector< TChain * > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
+  }
+  arg2 = reinterpret_cast< TChain * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_TCanvas, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_printRocs" "', argument " "5"" of type '" "TCanvas *""'"); 
+  }
+  arg5 = reinterpret_cast< TCanvas * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_TFile, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_printRocs" "', argument " "6"" of type '" "TFile *""'"); 
+  }
+  arg6 = reinterpret_cast< TFile * >(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_std__vectorT_TChain_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "rocCurveCollection_printRocs" "', argument " "7"" of type '" "std::vector< TChain * > *""'"); 
+  }
+  arg7 = reinterpret_cast< std::vector< TChain * > * >(argp7);
+  (arg1)->printRocs(arg2,(TString const &)*arg3,(TString const &)*arg4,arg5,arg6,arg7);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TCanvas *arg5 = (TCanvas *) 0 ;
+  TFile *arg6 = (TFile *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
+  }
+  arg2 = reinterpret_cast< TChain * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_TCanvas, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_printRocs" "', argument " "5"" of type '" "TCanvas *""'"); 
+  }
+  arg5 = reinterpret_cast< TCanvas * >(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_TFile, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "rocCurveCollection_printRocs" "', argument " "6"" of type '" "TFile *""'"); 
+  }
+  arg6 = reinterpret_cast< TFile * >(argp6);
+  (arg1)->printRocs(arg2,(TString const &)*arg3,(TString const &)*arg4,arg5,arg6);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  TCanvas *arg5 = (TCanvas *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
+  }
+  arg2 = reinterpret_cast< TChain * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_TCanvas, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "rocCurveCollection_printRocs" "', argument " "5"" of type '" "TCanvas *""'"); 
+  }
+  arg5 = reinterpret_cast< TCanvas * >(argp5);
+  (arg1)->printRocs(arg2,(TString const &)*arg3,(TString const &)*arg4,arg5);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_4(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
+  TString *arg3 = 0 ;
+  TString *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
+  }
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
+  }
+  arg2 = reinterpret_cast< TChain * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  if (!argp3) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
+  }
+  arg3 = reinterpret_cast< TString * >(argp3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_TString,  0  | 0);
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  if (!argp4) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "4"" of type '" "TString const &""'"); 
+  }
+  arg4 = reinterpret_cast< TString * >(argp4);
+  (arg1)->printRocs(arg2,(TString const &)*arg3,(TString const &)*arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs__SWIG_5(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  rocCurveCollection *arg1 = (rocCurveCollection *) 0 ;
+  TChain *arg2 = (TChain *) 0 ;
   TString *arg3 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
@@ -4018,26 +4538,26 @@ SWIGINTERN PyObject *_wrap_indata_setup__SWIG_0(PyObject *SWIGUNUSEDPARM(self), 
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOO:indata_setup",&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OOO:rocCurveCollection_printRocs",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_rocCurveCollection, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_setup" "', argument " "1"" of type '" "__hidden::indata *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "rocCurveCollection_printRocs" "', argument " "1"" of type '" "rocCurveCollection *""'"); 
   }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TTree, 0 |  0 );
+  arg1 = reinterpret_cast< rocCurveCollection * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TChain, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_setup" "', argument " "2"" of type '" "TTree *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "rocCurveCollection_printRocs" "', argument " "2"" of type '" "TChain *""'"); 
   }
-  arg2 = reinterpret_cast< TTree * >(argp2);
+  arg2 = reinterpret_cast< TChain * >(argp2);
   res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_TString,  0  | 0);
   if (!SWIG_IsOK(res3)) {
-    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "indata_setup" "', argument " "3"" of type '" "TString const &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
   }
   if (!argp3) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_setup" "', argument " "3"" of type '" "TString const &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "rocCurveCollection_printRocs" "', argument " "3"" of type '" "TString const &""'"); 
   }
   arg3 = reinterpret_cast< TString * >(argp3);
-  (arg1)->setup(arg2,(TString const &)*arg3);
+  (arg1)->printRocs(arg2,(TString const &)*arg3);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4045,892 +4565,279 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_setup__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  TTree *arg2 = (TTree *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_setup",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_setup" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_TTree, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_setup" "', argument " "2"" of type '" "TTree *""'"); 
-  }
-  arg2 = reinterpret_cast< TTree * >(argp2);
-  (arg1)->setup(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_setup(PyObject *self, PyObject *args) {
+SWIGINTERN PyObject *_wrap_rocCurveCollection_printRocs(PyObject *self, PyObject *args) {
   Py_ssize_t argc;
-  PyObject *argv[4] = {
+  PyObject *argv[9] = {
     0
   };
   Py_ssize_t ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 8) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
-  }
-  if (argc == 2) {
-    int _v;
-    void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p___hidden__indata, 0);
-    _v = SWIG_CheckState(res);
-    if (_v) {
-      void *vptr = 0;
-      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TTree, 0);
-      _v = SWIG_CheckState(res);
-      if (_v) {
-        return _wrap_indata_setup__SWIG_1(self, args);
-      }
-    }
   }
   if (argc == 3) {
     int _v;
     void *vptr = 0;
-    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p___hidden__indata, 0);
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
     _v = SWIG_CheckState(res);
     if (_v) {
       void *vptr = 0;
-      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TTree, 0);
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
       _v = SWIG_CheckState(res);
       if (_v) {
         int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
         _v = SWIG_CheckState(res);
         if (_v) {
-          return _wrap_indata_setup__SWIG_0(self, args);
+          return _wrap_rocCurveCollection_printRocs__SWIG_5(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_rocCurveCollection_printRocs__SWIG_4(self, args);
+          }
+        }
+      }
+    }
+  }
+  if (argc == 5) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_TCanvas, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              return _wrap_rocCurveCollection_printRocs__SWIG_3(self, args);
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 6) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_TCanvas, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              void *vptr = 0;
+              int res = SWIG_ConvertPtr(argv[5], &vptr, SWIGTYPE_p_TFile, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                return _wrap_rocCurveCollection_printRocs__SWIG_2(self, args);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 7) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_TCanvas, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              void *vptr = 0;
+              int res = SWIG_ConvertPtr(argv[5], &vptr, SWIGTYPE_p_TFile, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                void *vptr = 0;
+                int res = SWIG_ConvertPtr(argv[6], &vptr, SWIGTYPE_p_std__vectorT_TChain_p_t, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  return _wrap_rocCurveCollection_printRocs__SWIG_1(self, args);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  if (argc == 8) {
+    int _v;
+    void *vptr = 0;
+    int res = SWIG_ConvertPtr(argv[0], &vptr, SWIGTYPE_p_rocCurveCollection, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      void *vptr = 0;
+      int res = SWIG_ConvertPtr(argv[1], &vptr, SWIGTYPE_p_TChain, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_TString, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_TString, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            void *vptr = 0;
+            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_TCanvas, 0);
+            _v = SWIG_CheckState(res);
+            if (_v) {
+              void *vptr = 0;
+              int res = SWIG_ConvertPtr(argv[5], &vptr, SWIGTYPE_p_TFile, 0);
+              _v = SWIG_CheckState(res);
+              if (_v) {
+                void *vptr = 0;
+                int res = SWIG_ConvertPtr(argv[6], &vptr, SWIGTYPE_p_std__vectorT_TChain_p_t, 0);
+                _v = SWIG_CheckState(res);
+                if (_v) {
+                  {
+                    int res = SWIG_AsVal_double(argv[7], NULL);
+                    _v = SWIG_CheckState(res);
+                  }
+                  if (_v) {
+                    return _wrap_rocCurveCollection_printRocs__SWIG_0(self, args);
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
   }
   
 fail:
-  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'indata_setup'.\n"
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'rocCurveCollection_printRocs'.\n"
     "  Possible C/C++ prototypes are:\n"
-    "    __hidden::indata::setup(TTree *,TString const &)\n"
-    "    __hidden::indata::setup(TTree *)\n");
+    "    rocCurveCollection::printRocs(TChain *,TString const &,TString const &,TCanvas *,TFile *,std::vector< TChain * > *,double)\n"
+    "    rocCurveCollection::printRocs(TChain *,TString const &,TString const &,TCanvas *,TFile *,std::vector< TChain * > *)\n"
+    "    rocCurveCollection::printRocs(TChain *,TString const &,TString const &,TCanvas *,TFile *)\n"
+    "    rocCurveCollection::printRocs(TChain *,TString const &,TString const &,TCanvas *)\n"
+    "    rocCurveCollection::printRocs(TChain *,TString const &,TString const &)\n"
+    "    rocCurveCollection::printRocs(TChain *,TString const &)\n");
   return 0;
 }
 
 
-SWIGINTERN PyObject *_wrap_indata_branchOffset(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t *arg2 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t temp2 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_branchOffset",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_branchOffset" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_branchOffset" "', argument " "2"" of type '" "size_t""'");
-  } 
-  temp2 = static_cast< size_t >(val2);
-  arg2 = &temp2;
-  result = (arg1)->branchOffset((size_t const &)*arg2);
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_nfeatures(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_nfeatures",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_nfeatures" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result = (arg1)->nfeatures();
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_nelements(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_nelements",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_nelements" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result = (arg1)->nelements();
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_vectorSize(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_vectorSize",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_vectorSize" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_vectorSize" "', argument " "2"" of type '" "size_t""'");
-  } 
-  arg2 = static_cast< size_t >(val2);
-  result = (arg1)->vectorSize(arg2);
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_buffer_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< float * > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_buffer_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_buffer_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_float_p_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_buffer_set" "', argument " "2"" of type '" "std::vector< float * >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_buffer_set" "', argument " "2"" of type '" "std::vector< float * >""'");
-    } else {
-      std::vector< float * > * temp = reinterpret_cast< std::vector< float * > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->buffer = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_buffer_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< float * > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_buffer_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_buffer_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->buffer);
-  resultobj = SWIG_NewPointerObj((new std::vector< float * >(static_cast< const std::vector< float * >& >(result))), SWIGTYPE_p_std__vectorT_float_p_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_buffervec_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< std::vector< float > * > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_buffervec_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_buffervec_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__vectorT_float_t_p_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_buffervec_set" "', argument " "2"" of type '" "std::vector< std::vector< float > * >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_buffervec_set" "', argument " "2"" of type '" "std::vector< std::vector< float > * >""'");
-    } else {
-      std::vector< std::vector< float > * > * temp = reinterpret_cast< std::vector< std::vector< float > * > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->buffervec = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_buffervec_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< std::vector< float > * > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_buffervec_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_buffervec_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->buffervec);
-  resultobj = SWIG_NewPointerObj((new std::vector< std::vector< float > * >(static_cast< const std::vector< std::vector< float > * >& >(result))), SWIGTYPE_p_std__vectorT_std__vectorT_float_t_p_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_tbranches_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< TBranch * > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_tbranches_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_tbranches_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_TBranch_p_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_tbranches_set" "', argument " "2"" of type '" "std::vector< TBranch * >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_tbranches_set" "', argument " "2"" of type '" "std::vector< TBranch * >""'");
-    } else {
-      std::vector< TBranch * > * temp = reinterpret_cast< std::vector< TBranch * > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->tbranches = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_tbranches_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< TBranch * > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_tbranches_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_tbranches_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->tbranches);
-  resultobj = SWIG_NewPointerObj((new std::vector< TBranch * >(static_cast< const std::vector< TBranch * >& >(result))), SWIGTYPE_p_std__vectorT_TBranch_p_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_offset__set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  size_t arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  size_t val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_offset__set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_offset__set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_offset__set" "', argument " "2"" of type '" "size_t""'");
-  } 
-  arg2 = static_cast< size_t >(val2);
-  if (arg1) (arg1)->offset_ = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_offset__get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  size_t result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_offset__get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_offset__get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->offset_);
-  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_norms_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< float > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_norms_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_norms_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_float_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_norms_set" "', argument " "2"" of type '" "std::vector< float >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_norms_set" "', argument " "2"" of type '" "std::vector< float >""'");
-    } else {
-      std::vector< float > * temp = reinterpret_cast< std::vector< float > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->norms = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_norms_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< float > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_norms_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_norms_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->norms);
-  resultobj = SWIG_NewPointerObj((new std::vector< float >(static_cast< const std::vector< float >& >(result))), SWIGTYPE_p_std__vectorT_float_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_means_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< float > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_means_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_means_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_float_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_means_set" "', argument " "2"" of type '" "std::vector< float >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_means_set" "', argument " "2"" of type '" "std::vector< float >""'");
-    } else {
-      std::vector< float > * temp = reinterpret_cast< std::vector< float > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->means = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_means_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< float > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_means_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_means_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->means);
-  resultobj = SWIG_NewPointerObj((new std::vector< float >(static_cast< const std::vector< float >& >(result))), SWIGTYPE_p_std__vectorT_float_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_branches_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  std::vector< TString > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_branches_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_branches_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_TString_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "indata_branches_set" "', argument " "2"" of type '" "std::vector< TString >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "indata_branches_set" "', argument " "2"" of type '" "std::vector< TString >""'");
-    } else {
-      std::vector< TString > * temp = reinterpret_cast< std::vector< TString > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  if (arg1) (arg1)->branches = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_branches_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::vector< TString > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_branches_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_branches_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result =  ((arg1)->branches);
-  resultobj = SWIG_NewPointerObj((new std::vector< TString >(static_cast< const std::vector< TString >& >(result))), SWIGTYPE_p_std__vectorT_TString_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_max_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  int arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_max_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_max_set" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_max_set" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  if (arg1) (arg1)->max = arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_max_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  int result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:indata_max_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_max_get" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  result = (int) ((arg1)->max);
-  resultobj = SWIG_From_int(static_cast< int >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_indata_setMask(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  __hidden::indata *arg1 = (__hidden::indata *) 0 ;
-  int arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  int val2 ;
-  int ecode2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:indata_setMask",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p___hidden__indata, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "indata_setMask" "', argument " "1"" of type '" "__hidden::indata *""'"); 
-  }
-  arg1 = reinterpret_cast< __hidden::indata * >(argp1);
-  ecode2 = SWIG_AsVal_int(obj1, &val2);
-  if (!SWIG_IsOK(ecode2)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "indata_setMask" "', argument " "2"" of type '" "int""'");
-  } 
-  arg2 = static_cast< int >(val2);
-  (arg1)->setMask(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *indata_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *rocCurveCollection_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p___hidden__indata, SWIG_NewClientData(obj));
+  SWIG_TypeNewClientData(SWIGTYPE_p_rocCurveCollection, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
 
-SWIGINTERN PyObject *_wrap_createDataVector(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  std::vector< std::vector< TString > > arg1 ;
-  std::vector< std::vector< double > > arg2 ;
-  std::vector< std::vector< double > > arg3 ;
-  std::vector< int > arg4 ;
-  void *argp1 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  void *argp3 ;
-  int res3 = 0 ;
-  void *argp4 ;
-  int res4 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  PyObject * obj3 = 0 ;
-  SwigValueWrapper< std::vector< __hidden::indata > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OOOO:createDataVector",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
-  {
-    res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__vectorT_std__vectorT_TString_t_t,  0  | 0);
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "createDataVector" "', argument " "1"" of type '" "std::vector< std::vector< TString > >""'"); 
-    }  
-    if (!argp1) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "createDataVector" "', argument " "1"" of type '" "std::vector< std::vector< TString > >""'");
-    } else {
-      std::vector< std::vector< TString > > * temp = reinterpret_cast< std::vector< std::vector< TString > > * >(argp1);
-      arg1 = *temp;
-      if (SWIG_IsNewObj(res1)) delete temp;
-    }
-  }
-  {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__vectorT_double_t_t,  0  | 0);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "createDataVector" "', argument " "2"" of type '" "std::vector< std::vector< double > >""'"); 
-    }  
-    if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "createDataVector" "', argument " "2"" of type '" "std::vector< std::vector< double > >""'");
-    } else {
-      std::vector< std::vector< double > > * temp = reinterpret_cast< std::vector< std::vector< double > > * >(argp2);
-      arg2 = *temp;
-      if (SWIG_IsNewObj(res2)) delete temp;
-    }
-  }
-  {
-    res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_std__vectorT_double_t_t,  0  | 0);
-    if (!SWIG_IsOK(res3)) {
-      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "createDataVector" "', argument " "3"" of type '" "std::vector< std::vector< double > >""'"); 
-    }  
-    if (!argp3) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "createDataVector" "', argument " "3"" of type '" "std::vector< std::vector< double > >""'");
-    } else {
-      std::vector< std::vector< double > > * temp = reinterpret_cast< std::vector< std::vector< double > > * >(argp3);
-      arg3 = *temp;
-      if (SWIG_IsNewObj(res3)) delete temp;
-    }
-  }
-  {
-    res4 = SWIG_ConvertPtr(obj3, &argp4, SWIGTYPE_p_std__vectorT_int_t,  0  | 0);
-    if (!SWIG_IsOK(res4)) {
-      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "createDataVector" "', argument " "4"" of type '" "std::vector< int >""'"); 
-    }  
-    if (!argp4) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "createDataVector" "', argument " "4"" of type '" "std::vector< int >""'");
-    } else {
-      std::vector< int > * temp = reinterpret_cast< std::vector< int > * >(argp4);
-      arg4 = *temp;
-      if (SWIG_IsNewObj(res4)) delete temp;
-    }
-  }
-  result = __hidden::createDataVector(arg1,arg2,arg3,arg4);
-  resultobj = SWIG_NewPointerObj((new std::vector< __hidden::indata >(static_cast< const std::vector< __hidden::indata >& >(result))), SWIGTYPE_p_std__vectorT___hidden__indata_t, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"indata_meanPadding_get", _wrap_indata_meanPadding_get, METH_VARARGS, NULL},
-	 { (char *)"indata_meanPadding_set", _wrap_indata_meanPadding_set, METH_VARARGS, NULL},
-	 { (char *)"indata_doscaling_get", _wrap_indata_doscaling_get, METH_VARARGS, NULL},
-	 { (char *)"indata_doscaling_set", _wrap_indata_doscaling_set, METH_VARARGS, NULL},
-	 { (char *)"new_indata", _wrap_new_indata, METH_VARARGS, NULL},
-	 { (char *)"indata_createFrom", _wrap_indata_createFrom, METH_VARARGS, NULL},
-	 { (char *)"indata_setSize", _wrap_indata_setSize, METH_VARARGS, NULL},
-	 { (char *)"delete_indata", _wrap_delete_indata, METH_VARARGS, NULL},
-	 { (char *)"indata_getMax", _wrap_indata_getMax, METH_VARARGS, NULL},
-	 { (char *)"indata_getData", _wrap_indata_getData, METH_VARARGS, NULL},
-	 { (char *)"indata_getRaw", _wrap_indata_getRaw, METH_VARARGS, NULL},
-	 { (char *)"indata_mean", _wrap_indata_mean, METH_VARARGS, NULL},
-	 { (char *)"indata_std", _wrap_indata_std, METH_VARARGS, NULL},
-	 { (char *)"indata_getDefault", _wrap_indata_getDefault, METH_VARARGS, NULL},
-	 { (char *)"indata_allZero", _wrap_indata_allZero, METH_VARARGS, NULL},
-	 { (char *)"indata_getEntry", _wrap_indata_getEntry, METH_VARARGS, NULL},
-	 { (char *)"indata_zeroAndGet", _wrap_indata_zeroAndGet, METH_VARARGS, NULL},
-	 { (char *)"indata_isVector", _wrap_indata_isVector, METH_VARARGS, NULL},
-	 { (char *)"indata_setup", _wrap_indata_setup, METH_VARARGS, NULL},
-	 { (char *)"indata_branchOffset", _wrap_indata_branchOffset, METH_VARARGS, NULL},
-	 { (char *)"indata_nfeatures", _wrap_indata_nfeatures, METH_VARARGS, NULL},
-	 { (char *)"indata_nelements", _wrap_indata_nelements, METH_VARARGS, NULL},
-	 { (char *)"indata_vectorSize", _wrap_indata_vectorSize, METH_VARARGS, NULL},
-	 { (char *)"indata_buffer_set", _wrap_indata_buffer_set, METH_VARARGS, NULL},
-	 { (char *)"indata_buffer_get", _wrap_indata_buffer_get, METH_VARARGS, NULL},
-	 { (char *)"indata_buffervec_set", _wrap_indata_buffervec_set, METH_VARARGS, NULL},
-	 { (char *)"indata_buffervec_get", _wrap_indata_buffervec_get, METH_VARARGS, NULL},
-	 { (char *)"indata_tbranches_set", _wrap_indata_tbranches_set, METH_VARARGS, NULL},
-	 { (char *)"indata_tbranches_get", _wrap_indata_tbranches_get, METH_VARARGS, NULL},
-	 { (char *)"indata_offset__set", _wrap_indata_offset__set, METH_VARARGS, NULL},
-	 { (char *)"indata_offset__get", _wrap_indata_offset__get, METH_VARARGS, NULL},
-	 { (char *)"indata_norms_set", _wrap_indata_norms_set, METH_VARARGS, NULL},
-	 { (char *)"indata_norms_get", _wrap_indata_norms_get, METH_VARARGS, NULL},
-	 { (char *)"indata_means_set", _wrap_indata_means_set, METH_VARARGS, NULL},
-	 { (char *)"indata_means_get", _wrap_indata_means_get, METH_VARARGS, NULL},
-	 { (char *)"indata_branches_set", _wrap_indata_branches_set, METH_VARARGS, NULL},
-	 { (char *)"indata_branches_get", _wrap_indata_branches_get, METH_VARARGS, NULL},
-	 { (char *)"indata_max_set", _wrap_indata_max_set, METH_VARARGS, NULL},
-	 { (char *)"indata_max_get", _wrap_indata_max_get, METH_VARARGS, NULL},
-	 { (char *)"indata_setMask", _wrap_indata_setMask, METH_VARARGS, NULL},
-	 { (char *)"indata_swigregister", indata_swigregister, METH_VARARGS, NULL},
-	 { (char *)"createDataVector", _wrap_createDataVector, METH_VARARGS, NULL},
+	 { (char *)"new_rocCurveCollection", _wrap_new_rocCurveCollection, METH_VARARGS, NULL},
+	 { (char *)"delete_rocCurveCollection", _wrap_delete_rocCurveCollection, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setLineWidth", _wrap_rocCurveCollection_setLineWidth, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setCommentLine0", _wrap_rocCurveCollection_setCommentLine0, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setCommentLine1", _wrap_rocCurveCollection_setCommentLine1, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setNBins", _wrap_rocCurveCollection_setNBins, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_addExtraLegendEntry", _wrap_rocCurveCollection_addExtraLegendEntry, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setCMSStyle", _wrap_rocCurveCollection_setCMSStyle, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setLogY", _wrap_rocCurveCollection_setLogY, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setXaxis", _wrap_rocCurveCollection_setXaxis, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_setYaxis", _wrap_rocCurveCollection_setYaxis, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_addROC", _wrap_rocCurveCollection_addROC, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_addText", _wrap_rocCurveCollection_addText, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_printRocs", _wrap_rocCurveCollection_printRocs, METH_VARARGS, NULL},
+	 { (char *)"rocCurveCollection_swigregister", rocCurveCollection_swigregister, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
+static swig_type_info _swigt__p_TCanvas = {"_p_TCanvas", "TCanvas *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_TChain = {"_p_TChain", "TChain *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_TFile = {"_p_TFile", "TFile *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_TLatex = {"_p_TLatex", "TLatex *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_TString = {"_p_TString", "TString *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_TTree = {"_p_TTree", "TTree *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p___hidden__indata = {"_p___hidden__indata", "__hidden::indata *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_TBranch_p_t = {"_p_std__vectorT_TBranch_p_t", "std::vector< TBranch * > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_TString_t = {"_p_std__vectorT_TString_t", "std::vector< TString > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT___hidden__indata_t = {"_p_std__vectorT___hidden__indata_t", "std::vector< __hidden::indata > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_double_t = {"_p_std__vectorT_double_t", "std::vector< double > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_float_p_t = {"_p_std__vectorT_float_p_t", "std::vector< float * > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_float_t = {"_p_std__vectorT_float_t", "std::vector< float > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_int_t = {"_p_std__vectorT_int_t", "std::vector< int > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_std__vectorT_TString_t_t = {"_p_std__vectorT_std__vectorT_TString_t_t", "std::vector< std::vector< TString > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_std__vectorT_double_t_t = {"_p_std__vectorT_std__vectorT_double_t_t", "std::vector< std::vector< double > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__vectorT_std__vectorT_float_t_p_t = {"_p_std__vectorT_std__vectorT_float_t_p_t", "std::vector< std::vector< float > * > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_rocCurveCollection = {"_p_rocCurveCollection", "rocCurveCollection *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_TChain_p_t = {"_p_std__vectorT_TChain_p_t", "std::vector< TChain * > *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
+  &_swigt__p_TCanvas,
+  &_swigt__p_TChain,
+  &_swigt__p_TFile,
+  &_swigt__p_TLatex,
   &_swigt__p_TString,
-  &_swigt__p_TTree,
-  &_swigt__p___hidden__indata,
   &_swigt__p_char,
-  &_swigt__p_std__vectorT_TBranch_p_t,
-  &_swigt__p_std__vectorT_TString_t,
-  &_swigt__p_std__vectorT___hidden__indata_t,
-  &_swigt__p_std__vectorT_double_t,
-  &_swigt__p_std__vectorT_float_p_t,
-  &_swigt__p_std__vectorT_float_t,
-  &_swigt__p_std__vectorT_int_t,
-  &_swigt__p_std__vectorT_std__vectorT_TString_t_t,
-  &_swigt__p_std__vectorT_std__vectorT_double_t_t,
-  &_swigt__p_std__vectorT_std__vectorT_float_t_p_t,
+  &_swigt__p_rocCurveCollection,
+  &_swigt__p_std__vectorT_TChain_p_t,
 };
 
+static swig_cast_info _swigc__p_TCanvas[] = {  {&_swigt__p_TCanvas, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_TChain[] = {  {&_swigt__p_TChain, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_TFile[] = {  {&_swigt__p_TFile, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_TLatex[] = {  {&_swigt__p_TLatex, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_TString[] = {  {&_swigt__p_TString, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_TTree[] = {  {&_swigt__p_TTree, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p___hidden__indata[] = {  {&_swigt__p___hidden__indata, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_TBranch_p_t[] = {  {&_swigt__p_std__vectorT_TBranch_p_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_TString_t[] = {  {&_swigt__p_std__vectorT_TString_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT___hidden__indata_t[] = {  {&_swigt__p_std__vectorT___hidden__indata_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_double_t[] = {  {&_swigt__p_std__vectorT_double_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_float_p_t[] = {  {&_swigt__p_std__vectorT_float_p_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_float_t[] = {  {&_swigt__p_std__vectorT_float_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_int_t[] = {  {&_swigt__p_std__vectorT_int_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_std__vectorT_TString_t_t[] = {  {&_swigt__p_std__vectorT_std__vectorT_TString_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_std__vectorT_double_t_t[] = {  {&_swigt__p_std__vectorT_std__vectorT_double_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__vectorT_std__vectorT_float_t_p_t[] = {  {&_swigt__p_std__vectorT_std__vectorT_float_t_p_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_rocCurveCollection[] = {  {&_swigt__p_rocCurveCollection, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_TChain_p_t[] = {  {&_swigt__p_std__vectorT_TChain_p_t, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
+  _swigc__p_TCanvas,
+  _swigc__p_TChain,
+  _swigc__p_TFile,
+  _swigc__p_TLatex,
   _swigc__p_TString,
-  _swigc__p_TTree,
-  _swigc__p___hidden__indata,
   _swigc__p_char,
-  _swigc__p_std__vectorT_TBranch_p_t,
-  _swigc__p_std__vectorT_TString_t,
-  _swigc__p_std__vectorT___hidden__indata_t,
-  _swigc__p_std__vectorT_double_t,
-  _swigc__p_std__vectorT_float_p_t,
-  _swigc__p_std__vectorT_float_t,
-  _swigc__p_std__vectorT_int_t,
-  _swigc__p_std__vectorT_std__vectorT_TString_t_t,
-  _swigc__p_std__vectorT_std__vectorT_double_t_t,
-  _swigc__p_std__vectorT_std__vectorT_float_t_p_t,
+  _swigc__p_rocCurveCollection,
+  _swigc__p_std__vectorT_TChain_p_t,
 };
 
 
@@ -5621,10 +5528,6 @@ SWIG_init(void) {
   
   SWIG_InstallConstants(d,swig_const_table);
   
-  SWIG_Python_SetConstant(d, "MAXBRANCHLENGTH",SWIG_From_int(static_cast< int >(40000)));
-  PyDict_SetItemString(md,(char *)"cvar", SWIG_globals());
-  SWIG_addvarlink(SWIG_globals(),(char *)"indata_meanPadding",Swig_var_indata_meanPadding_get, Swig_var_indata_meanPadding_set);
-  SWIG_addvarlink(SWIG_globals(),(char *)"indata_doscaling",Swig_var_indata_doscaling_get, Swig_var_indata_doscaling_set);
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else

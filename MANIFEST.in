@@ -3,25 +3,16 @@ include README.rst
 include CHANGELOG.rst
 
 # environment setup
-include DeepJetCore/lxplus_env.sh
-include DeepJetCore/gpu_env.sh
+recursive-include DeepJetCore *.sh
 
 # makefile
 include DeepJetCore/compiled/Makefile
 
-
 # build scripts
-include DeepJetCore/compiled/interface/*.cxx
-include DeepJetCore/compiled/interface/*.i
-include DeepJetCore/compiled/interface/*.h
-include DeepJetCore/compiled/src/*.c
-include DeepJetCore/compiled/src/*.cpp
-include DeepJetCore/compiled/src/*.C
+recursive-include DeepJetCore/compiled *.c *.C *.cpp *.h *.i *.py *.cxx
 
 #shared libs
-include *.so
-graft DeepJetCore/compiled
+# recursive-include DeepJetCore/compiled *.so
 
 # scripts
 graft DeepJetCore/bin
-

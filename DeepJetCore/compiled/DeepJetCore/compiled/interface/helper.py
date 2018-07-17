@@ -9,12 +9,12 @@ if _swig_python_version_info >= (2, 7, 0):
     def swig_import_helper():
         import importlib
         pkg = __name__.rpartition('.')[0]
-        mname = '.'.join((pkg, '_friendTreeInjector')).lstrip('.')
+        mname = '.'.join((pkg, '_helper')).lstrip('.')
         try:
             return importlib.import_module(mname)
         except ImportError:
-            return importlib.import_module('_friendTreeInjector')
-    _friendTreeInjector = swig_import_helper()
+            return importlib.import_module('_helper')
+    _helper = swig_import_helper()
     del swig_import_helper
 elif _swig_python_version_info >= (2, 6, 0):
     def swig_import_helper():
@@ -22,20 +22,20 @@ elif _swig_python_version_info >= (2, 6, 0):
         import imp
         fp = None
         try:
-            fp, pathname, description = imp.find_module('_friendTreeInjector', [dirname(__file__)])
+            fp, pathname, description = imp.find_module('_helper', [dirname(__file__)])
         except ImportError:
-            import _friendTreeInjector
-            return _friendTreeInjector
+            import _helper
+            return _helper
         try:
-            _mod = imp.load_module('_friendTreeInjector', fp, pathname, description)
+            _mod = imp.load_module('_helper', fp, pathname, description)
         finally:
             if fp is not None:
                 fp.close()
         return _mod
-    _friendTreeInjector = swig_import_helper()
+    _helper = swig_import_helper()
     del swig_import_helper
 else:
-    import _friendTreeInjector
+    import _helper
 del _swig_python_version_info
 
 try:
@@ -95,39 +95,18 @@ except __builtin__.Exception:
         pass
     _newclass = 0
 
-class friendTreeInjector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, friendTreeInjector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, friendTreeInjector, name)
-    __repr__ = _swig_repr
 
-    def __init__(self, *args):
-        this = _friendTreeInjector.new_friendTreeInjector(*args)
-        try:
-            self.this.append(this)
-        except __builtin__.Exception:
-            self.this = this
-    __swig_destroy__ = _friendTreeInjector.delete_friendTreeInjector
-    __del__ = lambda self: None
+def prependXRootD(path):
+    return _helper.prependXRootD(path)
+prependXRootD = _helper.prependXRootD
 
-    def setSourceTreeName(self, sourcetreename):
-        return _friendTreeInjector.friendTreeInjector_setSourceTreeName(self, sourcetreename)
+def isApprox(a, b, eps=0.001):
+    return _helper.isApprox(a, b, eps)
+isApprox = _helper.isApprox
 
-    def addFromFile(self, *args):
-        return _friendTreeInjector.friendTreeInjector_addFromFile(self, *args)
-
-    def createChain(self):
-        return _friendTreeInjector.friendTreeInjector_createChain(self)
-
-    def getChain(self):
-        return _friendTreeInjector.friendTreeInjector_getChain(self)
-
-    def showList(self):
-        return _friendTreeInjector.friendTreeInjector_showList(self)
-friendTreeInjector_swigregister = _friendTreeInjector.friendTreeInjector_swigregister
-friendTreeInjector_swigregister(friendTreeInjector)
-
+def deltaPhi(phi1, phi2):
+    return _helper.deltaPhi(phi1, phi2)
+deltaPhi = _helper.deltaPhi
 # This file is compatible with both classic and new-style classes.
 
 
