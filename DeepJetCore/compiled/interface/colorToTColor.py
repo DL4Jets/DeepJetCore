@@ -9,12 +9,12 @@ if _swig_python_version_info >= (2, 7, 0):
     def swig_import_helper():
         import importlib
         pkg = __name__.rpartition('.')[0]
-        mname = '.'.join((pkg, '_friendTreeInjector')).lstrip('.')
+        mname = '.'.join((pkg, '_colorToTColor')).lstrip('.')
         try:
             return importlib.import_module(mname)
         except ImportError:
-            return importlib.import_module('_friendTreeInjector')
-    _friendTreeInjector = swig_import_helper()
+            return importlib.import_module('_colorToTColor')
+    _colorToTColor = swig_import_helper()
     del swig_import_helper
 elif _swig_python_version_info >= (2, 6, 0):
     def swig_import_helper():
@@ -22,20 +22,20 @@ elif _swig_python_version_info >= (2, 6, 0):
         import imp
         fp = None
         try:
-            fp, pathname, description = imp.find_module('_friendTreeInjector', [dirname(__file__)])
+            fp, pathname, description = imp.find_module('_colorToTColor', [dirname(__file__)])
         except ImportError:
-            import _friendTreeInjector
-            return _friendTreeInjector
+            import _colorToTColor
+            return _colorToTColor
         try:
-            _mod = imp.load_module('_friendTreeInjector', fp, pathname, description)
+            _mod = imp.load_module('_colorToTColor', fp, pathname, description)
         finally:
             if fp is not None:
                 fp.close()
         return _mod
-    _friendTreeInjector = swig_import_helper()
+    _colorToTColor = swig_import_helper()
     del swig_import_helper
 else:
-    import _friendTreeInjector
+    import _colorToTColor
 del _swig_python_version_info
 
 try:
@@ -95,39 +95,14 @@ except __builtin__.Exception:
         pass
     _newclass = 0
 
-class friendTreeInjector(_object):
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, friendTreeInjector, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, friendTreeInjector, name)
-    __repr__ = _swig_repr
 
-    def __init__(self, *args):
-        this = _friendTreeInjector.new_friendTreeInjector(*args)
-        try:
-            self.this.append(this)
-        except __builtin__.Exception:
-            self.this = this
-    __swig_destroy__ = _friendTreeInjector.delete_friendTreeInjector
-    __del__ = lambda self: None
+def lineToTLineStyle(str):
+    return _colorToTColor.lineToTLineStyle(str)
+lineToTLineStyle = _colorToTColor.lineToTLineStyle
 
-    def setSourceTreeName(self, sourcetreename):
-        return _friendTreeInjector.friendTreeInjector_setSourceTreeName(self, sourcetreename)
-
-    def addFromFile(self, *args):
-        return _friendTreeInjector.friendTreeInjector_addFromFile(self, *args)
-
-    def createChain(self):
-        return _friendTreeInjector.friendTreeInjector_createChain(self)
-
-    def getChain(self):
-        return _friendTreeInjector.friendTreeInjector_getChain(self)
-
-    def showList(self):
-        return _friendTreeInjector.friendTreeInjector_showList(self)
-friendTreeInjector_swigregister = _friendTreeInjector.friendTreeInjector_swigregister
-friendTreeInjector_swigregister(friendTreeInjector)
-
+def colorToTColor(str):
+    return _colorToTColor.colorToTColor(str)
+colorToTColor = _colorToTColor.colorToTColor
 # This file is compatible with both classic and new-style classes.
 
 
