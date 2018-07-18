@@ -1,18 +1,17 @@
 # metadata
-include README.rst
-include CHANGELOG.rst
+include *.rst
+
+# sample root datasets
+recursive-include DeepJetCore/datasets *.root
 
 # environment setup
-recursive-include DeepJetCore *.sh
+recursive-include DeepJetCore/ *.sh
 
 # makefile
 include DeepJetCore/compiled/Makefile
 
-# build scripts
-recursive-include DeepJetCore/compiled *.c *.C *.cpp *.h *.i *.py *.cxx
-
-#shared libs
-# recursive-include DeepJetCore/compiled *.so
+# build libs
+graft DeepJetCore/compiled
 
 # scripts
 graft DeepJetCore/bin

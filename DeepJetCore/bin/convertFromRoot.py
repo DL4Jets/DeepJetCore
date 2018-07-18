@@ -18,12 +18,13 @@ from pdb import set_trace
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
-from DataCollection import DataCollection
+from DeepJetCore.DataCollection import DataCollection
 
 import imp
 try:
     imp.find_module('datastructures')
-    from datastructures import *
+    # from datastructures import *
+    import datastructures
     print('Found Datastructures submodule')
 except ImportError:
     print('\nDatastructures modules not found. Please define a DeepJetCore \
