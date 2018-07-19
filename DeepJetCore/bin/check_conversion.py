@@ -35,7 +35,7 @@ failed = [i for i in outputs if not grep(i, 'JOBSUB::SUCC')]
 
 if len(failed) == 0:
    print ('All jobs successfully completed, merging...')
-   from DataCollection import DataCollection
+   from DeepJetCore.DataCollection import DataCollection
    from glob import glob
    batch_args = [i for i in open('%s/submit.sub' % args.indir) if 'arguments' in i][0]
    batch_args = batch_args.split('=')[1].split('-')

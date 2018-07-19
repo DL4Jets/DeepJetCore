@@ -48,7 +48,7 @@ except NotImplementedError:
     print 'Unable to determine number of CPUs. \
     Using single threaded make.'
 options = [
-    '--directory=' + COMPILEPATH,
+#    '--directory=' + COMPILEPATH,
     '--makefile=Makefile',
 ]
 cmd.extend(options)
@@ -64,7 +64,7 @@ class DeepJetCoreBuild(build_py):
     def run(self):
         # run original build_py code
 	os.environ["CC"] = "g++"
-        call(cmd)
+        call(cmd, cwd=COMPILEPATH)
         # print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_py.run(self)
 
@@ -261,8 +261,11 @@ c_randomSelect = Extension(
     libraries=['boost_python', 'python2.7'],
     language='c++')
 
+# To Do: modify package DeepJetCore to allow find_packages()
+# to find all the subpackages recursively by adding this to __init__.py
+# __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 setup(name='DeepJetCore',
-      version='0.0.4',
+      version='0.0.5',
       description='The DeepJetCore Library: Deep Learning \
       for High-energy Physics',
       url='https://github.com/DL4J/DeepJetCore',
@@ -270,9 +273,10 @@ setup(name='DeepJetCore',
       author_email='swapneel.mehta@cern.ch',
       license='Apache',
       long_description=retrieveReadmeContent(),
-      packages=['DeepJetCore', 'DeepJetCore.preprocessing',
-                'DeepJetCore.training', 'DeepJetCore.evaluation',
-                'DeepJetCore.compiled'],
+      packages=['DeepJetCore',
+		'DeepJetCore.preprocessing',
+		'DeepJetCore.evaluation',
+		'DeepJetCore.training'],
       scripts=['./DeepJetCore/bin/plotLoss.py',
                './DeepJetCore/bin/plotLoss.py',
                './DeepJetCore/bin/batch_conversion.py',
