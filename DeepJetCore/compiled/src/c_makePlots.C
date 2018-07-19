@@ -1,4 +1,3 @@
-
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
@@ -12,7 +11,7 @@
 #include <string>
 #include <boost/python/exception_translator.hpp>
 #include <exception>
-#include "../interface/pythonToSTL.h"
+#include "pythonToSTL.h"
 #include "friendTreeInjector.h"
 #include "TROOT.h"
 #include "colorToTColor.h"
