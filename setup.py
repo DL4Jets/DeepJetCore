@@ -55,6 +55,8 @@ cmd.extend(options)
 # print "\n\n" + str(cmd) + "\n\n"
 
 
+quicklzcompile = ['gcc', '-shared', '-O2', '-fPIC', '-I./interface', '-c', 'src/quicklzpy.c', '-o', 'libquicklz.so'] 
+
 class DeepJetCoreBuild(build_py):
     '''
     Override the default `build` command
@@ -63,11 +65,10 @@ class DeepJetCoreBuild(build_py):
     '''
     def run(self):
         # run original build_py code
-	# os.environ["CC"] = "g++"
-        # call(cmd, cwd=COMPILEPATH)
-        # print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
+        call(quicklzcompile, cwd=COMPILEPATH)
+	os.environ["CC"] = "g++"
+        print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_py.run(self)
-
         # print "\n\n*********running custom build_py***********\n\n"
         # call(cmd)
 
@@ -137,18 +138,18 @@ module_lib_dirs = [
 boost_include_dirs = [
 	os.path.join(CONDA_PREFIX, 'include'),
 ]
-module_compiler_flags = root_flags + ['-fPIC', '-Wl,--export-dynamic']
+module_compiler_flags = root_flags + ['-std=c++11', '-fPIC', '-Wl,--export-dynamic']
 
 quicklz = Extension(
     'libquicklz',
     include_dirs=[os.path.join(COMPILEPATH, 'interface')],
-    sources=[os.path.join(COMPILEPATH, 'quicklzpy.c')],
+    sources=[os.path.join(COMPILEPATH, 'src', 'quicklzpy.c')],
     language='c')
 
 cpp_indata = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
+    sources=[os.path.join(COMPILEPATH, 'src',
         'indata_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
@@ -157,7 +158,7 @@ cpp_indata = Extension(
 cpp_colorToTColor = Extension(
     'DeepJetCore.compiled.colorToTColor',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
+    sources=[os.path.join(COMPILEPATH, 'src',
         'colorToTColor_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
@@ -166,7 +167,8 @@ cpp_colorToTColor = Extension(
 cpp_rocCurve = Extension(
     'DeepJetCore.compiled.rocCurve',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,'rocCurve_wrap.cxx')],
+    sources=[os.path.join(COMPILEPATH, 'src',
+	'rocCurve_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -174,7 +176,7 @@ cpp_rocCurve = Extension(
 cpp_rocCurveCollection = Extension(
     'DeepJetCore.compiled.rocCurveCollection',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
+    sources=[os.path.join(COMPILEPATH, 'src',
         'rocCurveCollection_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
@@ -183,7 +185,7 @@ cpp_rocCurveCollection = Extension(
 cpp_friendTreeInjector = Extension(
     'DeepJetCore.compiled.friendTreeInjector',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
+    sources=[os.path.join(COMPILEPATH, 'src',
         'friendTreeInjector_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
@@ -192,7 +194,7 @@ cpp_friendTreeInjector = Extension(
 cpp_helper = Extension(
     'DeepJetCore.compiled.helper',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
+    sources=[os.path.join(COMPILEPATH, 'src',
         'helper_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
@@ -310,8 +312,6 @@ setup(name='DeepJetCore',
           	'build_py': DeepJetCoreBuild,
       },
       ext_modules=[
-		quicklz,
-		cpp_colorToTColor,
 		cpp_indata,
 		cpp_friendTreeInjector,
 		cpp_rocCurve,

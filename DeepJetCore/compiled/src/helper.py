@@ -9,12 +9,12 @@ if _swig_python_version_info >= (2, 7, 0):
     def swig_import_helper():
         import importlib
         pkg = __name__.rpartition('.')[0]
-        mname = '.'.join((pkg, '_colorToTColor')).lstrip('.')
+        mname = '.'.join((pkg, '_helper')).lstrip('.')
         try:
             return importlib.import_module(mname)
         except ImportError:
-            return importlib.import_module('_colorToTColor')
-    _colorToTColor = swig_import_helper()
+            return importlib.import_module('_helper')
+    _helper = swig_import_helper()
     del swig_import_helper
 elif _swig_python_version_info >= (2, 6, 0):
     def swig_import_helper():
@@ -22,20 +22,20 @@ elif _swig_python_version_info >= (2, 6, 0):
         import imp
         fp = None
         try:
-            fp, pathname, description = imp.find_module('_colorToTColor', [dirname(__file__)])
+            fp, pathname, description = imp.find_module('_helper', [dirname(__file__)])
         except ImportError:
-            import _colorToTColor
-            return _colorToTColor
+            import _helper
+            return _helper
         try:
-            _mod = imp.load_module('_colorToTColor', fp, pathname, description)
+            _mod = imp.load_module('_helper', fp, pathname, description)
         finally:
             if fp is not None:
                 fp.close()
         return _mod
-    _colorToTColor = swig_import_helper()
+    _helper = swig_import_helper()
     del swig_import_helper
 else:
-    import _colorToTColor
+    import _helper
 del _swig_python_version_info
 
 try:
@@ -96,13 +96,13 @@ except __builtin__.Exception:
     _newclass = 0
 
 
-def lineToTLineStyle(str):
-    return _colorToTColor.lineToTLineStyle(str)
-lineToTLineStyle = _colorToTColor.lineToTLineStyle
+def isApprox(a, b, eps=0.001):
+    return _helper.isApprox(a, b, eps)
+isApprox = _helper.isApprox
 
-def colorToTColor(str):
-    return _colorToTColor.colorToTColor(str)
-colorToTColor = _colorToTColor.colorToTColor
+def deltaPhi(phi1, phi2):
+    return _helper.deltaPhi(phi1, phi2)
+deltaPhi = _helper.deltaPhi
 # This file is compatible with both classic and new-style classes.
 
 

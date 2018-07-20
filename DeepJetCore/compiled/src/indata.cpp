@@ -5,7 +5,7 @@
  *      Author: jkiesele
  */
 
-#include "../interface/indata.h"
+#include "indata.h"
 
 #include "TLeaf.h"
 
