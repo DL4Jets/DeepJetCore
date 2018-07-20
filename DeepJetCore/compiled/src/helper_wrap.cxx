@@ -3003,10 +3003,9 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_TString swig_types[0]
-#define SWIGTYPE_p_char swig_types[1]
-static swig_type_info *swig_types[3];
-static swig_module_info swig_module = {swig_types, 2, 0, 0, 0, 0};
+#define SWIGTYPE_p_char swig_types[0]
+static swig_type_info *swig_types[2];
+static swig_module_info swig_module = {swig_types, 1, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3111,7 +3110,6 @@ namespace swig {
 }
 
 
-extern TString prependXRootD(const TString& path);
 extern bool isApprox(const float& a , const float& b, float eps=0.001);
 extern float deltaPhi(const float& phi1, const float& phi2);
 
@@ -3241,31 +3239,6 @@ SWIG_From_float  (float value)
 #ifdef __cplusplus
 extern "C" {
 #endif
-SWIGINTERN PyObject *_wrap_prependXRootD(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  TString *arg1 = 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  TString result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:prependXRootD",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_TString,  0  | 0);
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "prependXRootD" "', argument " "1"" of type '" "TString const &""'"); 
-  }
-  if (!argp1) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "prependXRootD" "', argument " "1"" of type '" "TString const &""'"); 
-  }
-  arg1 = reinterpret_cast< TString * >(argp1);
-  result = prependXRootD((TString const &)*arg1);
-  resultobj = SWIG_NewPointerObj((new TString(static_cast< const TString& >(result))), SWIGTYPE_p_TString, SWIG_POINTER_OWN |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_isApprox__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   float *arg1 = 0 ;
@@ -3442,7 +3415,6 @@ fail:
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
-	 { (char *)"prependXRootD", _wrap_prependXRootD, METH_VARARGS, NULL},
 	 { (char *)"isApprox", _wrap_isApprox, METH_VARARGS, NULL},
 	 { (char *)"deltaPhi", _wrap_deltaPhi, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
@@ -3451,19 +3423,15 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static swig_type_info _swigt__p_TString = {"_p_TString", "TString *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
-  &_swigt__p_TString,
   &_swigt__p_char,
 };
 
-static swig_cast_info _swigc__p_TString[] = {  {&_swigt__p_TString, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
-  _swigc__p_TString,
   _swigc__p_char,
 };
 
