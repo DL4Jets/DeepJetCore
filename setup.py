@@ -63,8 +63,8 @@ class DeepJetCoreBuild(build_py):
     '''
     def run(self):
         # run original build_py code
-	os.environ["CC"] = "g++"
-        call(cmd, cwd=COMPILEPATH)
+	# os.environ["CC"] = "g++"
+        # call(cmd, cwd=COMPILEPATH)
         # print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
         build_py.run(self)
 
@@ -92,7 +92,7 @@ def retrieveReadmeContent():
     '''
     with open(os.path.join(BASEPATH, 'README.rst')) as f:
         return f.read()
-'''
+
 root_flags = [
 	'-pthread',
 	'-std=c++11',
@@ -116,7 +116,6 @@ root_flags = [
 	'-ldl',
 	'-rdynamic',
 ]
-'''
 
 root_flags = check_output(['root-config', '--cflags', '--libs', '--glibs']).replace('\n','').split(' ')
 cpp_compiler_flags = root_flags + ['-O2', '-fPIC', '-c']
@@ -155,15 +154,6 @@ cpp_indata = Extension(
     libraries=['python2.7'],
     language='c++')
 
-cpp_helper = Extension(
-    'DeepJetCore.compiled.helper',
-    extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(INTERFACEPATH,
-        'helper_wrap.cxx')],
-    include_dirs=cpp_lib_dirs,
-    libraries=['python2.7'],
-    language='c++')
-
 cpp_colorToTColor = Extension(
     'DeepJetCore.compiled.colorToTColor',
     extra_compile_args=cpp_compiler_flags,
@@ -195,6 +185,15 @@ cpp_friendTreeInjector = Extension(
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(INTERFACEPATH,
         'friendTreeInjector_wrap.cxx')],
+    include_dirs=cpp_lib_dirs,
+    libraries=['python2.7'],
+    language='c++')
+
+cpp_helper = Extension(
+    'DeepJetCore.compiled.helper',
+    extra_compile_args=cpp_compiler_flags,
+    sources=[os.path.join(INTERFACEPATH,
+        'helper_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -311,6 +310,18 @@ setup(name='DeepJetCore',
           	'build_py': DeepJetCoreBuild,
       },
       ext_modules=[
+		quicklz,
+		cpp_colorToTColor,
+		cpp_indata,
+		cpp_friendTreeInjector,
+		cpp_rocCurve,
+		cpp_rocCurveCollection,
+		cpp_helper,
+		c_makePlots,
+		c_makeROCs,
+		c_meanNormZeroPad,
+		c_randomSelect,
+		c_readArrThreaded,
 	])
 
 '''

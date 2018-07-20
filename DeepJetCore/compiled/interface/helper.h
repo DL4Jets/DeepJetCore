@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include "TString.h"
 
-TString prependXRootD(const TString& path);
+Tstring prependXRootD(const TString& path);
 
 bool isApprox(const float& a , const float& b, float eps=0.001);
 
