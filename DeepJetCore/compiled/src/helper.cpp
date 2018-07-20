@@ -9,7 +9,7 @@
 #include "../interface/helper.h"
 
 
-TString prependXRootD(const TString& path){
+/*TString prependXRootD(const TString& path){
 
     TString full_path = realpath(path, NULL);
     if(full_path.BeginsWith("/eos/cms/")){
@@ -20,7 +20,8 @@ TString prependXRootD(const TString& path){
         return newpath;
     }
     return path;
-}
+}*/
+
 bool isApprox(const float& a , const float& b, float eps){
     return fabs(a-b)<eps;
 }

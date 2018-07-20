@@ -11,9 +11,6 @@
 
 #include <dirent.h>
 #include <stdlib.h>
-#include "TString.h"
-
-Tstring prependXRootD(const TString& path);
 
 bool isApprox(const float& a , const float& b, float eps=0.001);
 
