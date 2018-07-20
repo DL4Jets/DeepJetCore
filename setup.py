@@ -18,11 +18,11 @@ print "\nDeepjetcore: ", DEEPJETCORE
 
 # Path to the `compiled` folder within `DeepJetCore`
 COMPILEPATH = os.path.join(DEEPJETCORE, 'compiled')
-print "\Compile Path: ", COMPILEPATH
+print "\nCompile Path: ", COMPILEPATH
 
 # Path to the `interface` folder within `DeepJetCore/compiled`
 INTERFACEPATH = os.path.join(COMPILEPATH, 'interface')
-print "\Compile Path: ", INTERFACEPATH
+print "\nCompile Path: ", INTERFACEPATH
 
 # Exporting the value to a variable for use to set paths
 CONDA_PREFIX = os.environ['CONDA_PREFIX']

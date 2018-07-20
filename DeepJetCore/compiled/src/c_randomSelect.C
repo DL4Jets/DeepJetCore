@@ -4,10 +4,6 @@
  *  Created on: 14 Aug 2017
  *      Author: jkiesele
  */
-
-
-
-
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
 #include "boost/python/numeric.hpp"
@@ -15,7 +11,6 @@
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
 #include <numeric> 
-
 #include <exception>
 #include <random>
 #include "TRandom3.h"

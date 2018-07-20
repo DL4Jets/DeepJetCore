@@ -1,5 +1,3 @@
-
-
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
@@ -8,18 +6,13 @@
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
 #include <exception>
-#include "../interface/pythonToSTL.h"
-#include "../interface/helper.h"
-
 #include <iostream>
-
 #include <pthread.h>
-
-
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "../interface/quicklz.h"
+#include "pythonToSTL.h"
+#include "helper.h"
+#include "quicklz.h"
 
 #define MAXCHUNK (0xffffffff - 400)
 

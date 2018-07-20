@@ -21,9 +21,9 @@
 #include <boost/python/exception_translator.hpp>
 #include <exception>
 #include "TStopwatch.h"
-#include "../interface/indata.h"
-#include "../interface/pythonToSTL.h"
-#include "../interface/helper.h"
+#include "indata.h"
+#include "pythonToSTL.h"
+#include "helper.h"
 #include <cmath>
 
 using namespace boost::python; //for some reason....
