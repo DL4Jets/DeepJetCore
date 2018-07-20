@@ -141,19 +141,16 @@ boost_include_dirs = [
 module_compiler_flags = root_flags + ['-fPIC', '-Wl,--export-dynamic']
 
 quicklz = Extension(
-    'quicklz',
-    include_dirs=[
-        os.path.join(COMPILEPATH, 'interface')],
-    sources=[
-	os.path.join(COMPILEPATH, 'quicklzpy.c')],
+    'libquicklz',
+    include_dirs=[os.path.join(COMPILEPATH, 'interface')],
+    sources=[os.path.join(COMPILEPATH, 'quicklzpy.c')],
     language='c')
-'''
+
 cpp_indata = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src', 'indata.cpp'),
-             os.path.join(INTERFACEPATH,
-                          'indata_wrap.cxx')],
+    sources=[os.path.join(INTERFACEPATH,
+        'indata_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -161,9 +158,8 @@ cpp_indata = Extension(
 cpp_helper = Extension(
     'DeepJetCore.compiled.helper',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src', 'helper.cpp'),
-             os.path.join(INTERFACEPATH,
-                          'helper_wrap.cxx')],
+    sources=[os.path.join(INTERFACEPATH,
+        'helper_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -171,9 +167,8 @@ cpp_helper = Extension(
 cpp_colorToTColor = Extension(
     'DeepJetCore.compiled.colorToTColor',
     extra_compile_args=cpp_compiler_flags,
-    sources=[
-    	os.path.join(INTERFACEPATH, 'colorToTColor_wrap.cxx')
-    ],
+    sources=[os.path.join(INTERFACEPATH,
+        'colorToTColor_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -181,10 +176,7 @@ cpp_colorToTColor = Extension(
 cpp_rocCurve = Extension(
     'DeepJetCore.compiled.rocCurve',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src',
-                          'rocCurve.cpp'),
-             os.path.join(INTERFACEPATH,
-                          'rocCurve_wrap.cxx')],
+    sources=[os.path.join(INTERFACEPATH,'rocCurve_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -192,10 +184,8 @@ cpp_rocCurve = Extension(
 cpp_rocCurveCollection = Extension(
     'DeepJetCore.compiled.rocCurveCollection',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src',
-                          'rocCurveCollection.cpp'),
-             os.path.join(INTERFACEPATH,
-                          'rocCurveCollection_wrap.cxx')],
+    sources=[os.path.join(INTERFACEPATH,
+        'rocCurveCollection_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -203,19 +193,17 @@ cpp_rocCurveCollection = Extension(
 cpp_friendTreeInjector = Extension(
     'DeepJetCore.compiled.friendTreeInjector',
     extra_compile_args=cpp_compiler_flags,
-    sources=[os.path.join(COMPILEPATH, 'src',
-                          'friendTreeInjector.cpp'),
-             os.path.join(INTERFACEPATH,
-                          'friendTreeInjector_wrap.cxx')],
+    sources=[os.path.join(INTERFACEPATH,
+        'friendTreeInjector_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
-'''
+
 c_meanNormZeroPad = Extension(
     'DeepJet.compiled.c_meanNormZeroPad',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'c_meanNormZeroPad.C')],
+        'c_meanNormZeroPad.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -225,7 +213,7 @@ c_makePlots = Extension(
     'DeepJet.compiled.c_makePlots',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'c_makePlots.C')],
+        'c_makePlots.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -235,7 +223,7 @@ c_makeROCs = Extension(
     'DeepJet.compiled.c_makeROCs',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'c_makeROCs.C')],
+        'c_makeROCs.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -245,7 +233,7 @@ c_readArrThreaded = Extension(
     'DeepJet.compiled.c_readArrThreaded',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'c_readArrThreaded.C')],
+        'c_readArrThreaded.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -255,7 +243,7 @@ c_randomSelect = Extension(
     'DeepJet.compiled.c_randomSelect',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-                          'c_randomSelect.C')],
+        'c_randomSelect.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -336,5 +324,5 @@ c_makePlots,
 c_makeROCs,
 c_meanNormZeroPad,
 c_randomSelect,
-c_readArrThreaded, 
-'''     
+c_readArrThreaded,
+'''

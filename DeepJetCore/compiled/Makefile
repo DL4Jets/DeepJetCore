@@ -31,7 +31,7 @@ endif
 all: $(MODULES_SHARED_LIBS)
 
 #helpers
-libquicklz.so: ./src/quicklz.c
+libquicklz.so: ./src/quicklz.c ./quicklzpy.c
 	gcc -shared -O2 -fPIC -I./interface -I./ -c -o $@ $<
 
 obj/%.o: ./src/%.cpp
