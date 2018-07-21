@@ -14,15 +14,15 @@ print "\nBasepath: ", BASEPATH
 # Path to the `DeepJetCore` folder within the package
 # DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
 DEEPJETCORE = './DeepJetCore'
-print "\nDeepjetcore: ", DEEPJETCORE
+# print "\nDeepjetcore: ", DEEPJETCORE
 
 # Path to the `compiled` folder within `DeepJetCore`
 COMPILEPATH = os.path.join(DEEPJETCORE, 'compiled')
-print "\nCompile Path: ", COMPILEPATH
+# print "\nCompile Path: ", COMPILEPATH
 
 # Path to the `interface` folder within `DeepJetCore/compiled`
 INTERFACEPATH = os.path.join(COMPILEPATH, 'interface')
-print "\nCompile Path: ", INTERFACEPATH
+# print "\nCompile Path: ", INTERFACEPATH
 
 # Exporting the value to a variable for use to set paths
 CONDA_PREFIX = os.environ['CONDA_PREFIX']
@@ -48,12 +48,11 @@ except NotImplementedError:
     print 'Unable to determine number of CPUs. \
     Using single threaded make.'
 options = [
-#    '--directory=' + COMPILEPATH,
-    '--makefile=Makefile',
+	'--directory=' + COMPILEPATH,
+	'--makefile=Makefile',
 ]
 cmd.extend(options)
-# print "\n\n" + str(cmd) + "\n\n"
-
+print "\n" + str(cmd) + "\n"
 
 quicklzcompile = ['gcc', '-shared', '-O2', '-fPIC', '-I./interface', '-c', 'src/quicklzpy.c', '-o', 'libquicklz.so'] 
 
@@ -65,12 +64,12 @@ class DeepJetCoreBuild(build_py):
     '''
     def run(self):
         # run original build_py code
-        call(quicklzcompile, cwd=COMPILEPATH)
-	os.environ["CC"] = "g++"
-        print "\n\n\n*****running original DeepJetCore build_py*****\n\n\n"
+        # call(quicklzcompile, cwd=COMPILEPATH)
+	# os.environ["CC"] = "g++"
+        call(cmd)
+        print "\n\tRunning original DeepJetCore build_py\n"
         build_py.run(self)
         # print "\n\n*********running custom build_py***********\n\n"
-        # call(cmd)
 
 class DeepJetCoreInstall(install):
     '''
@@ -93,7 +92,7 @@ def retrieveReadmeContent():
     '''
     with open(os.path.join(BASEPATH, 'README.rst')) as f:
         return f.read()
-
+'''
 root_flags = [
 	'-pthread',
 	'-std=c++11',
@@ -117,9 +116,10 @@ root_flags = [
 	'-ldl',
 	'-rdynamic',
 ]
+'''
 
 root_flags = check_output(['root-config', '--cflags', '--libs', '--glibs']).replace('\n','').split(' ')
-cpp_compiler_flags = root_flags + ['-O2', '-fPIC', '-c']
+cpp_compiler_flags = root_flags + ['-g', '-O2', '-fPIC', '-c']
 
 cpp_lib_dirs = [
     os.path.join(CONDA_PREFIX, 'lib'),
@@ -138,7 +138,7 @@ module_lib_dirs = [
 boost_include_dirs = [
 	os.path.join(CONDA_PREFIX, 'include'),
 ]
-module_compiler_flags = root_flags + ['-std=c++11', '-fPIC', '-Wl,--export-dynamic']
+module_compiler_flags = root_flags + ['-g', '-fPIC', '-Wl,--export-dynamic']
 
 quicklz = Extension(
     'libquicklz',
@@ -312,16 +312,6 @@ setup(name='DeepJetCore',
           	'build_py': DeepJetCoreBuild,
       },
       ext_modules=[
-		cpp_indata,
-		cpp_friendTreeInjector,
-		cpp_rocCurve,
-		cpp_rocCurveCollection,
-		cpp_helper,
-		c_makePlots,
-		c_makeROCs,
-		c_meanNormZeroPad,
-		c_randomSelect,
-		c_readArrThreaded,
 	])
 
 '''
