@@ -11,6 +11,7 @@
 
 #include <dirent.h>
 #include <stdlib.h>
+#include "TString.h"
 
 bool isApprox(const float& a , const float& b, float eps=0.001);
 
