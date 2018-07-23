@@ -47,14 +47,16 @@ try:
 except NotImplementedError:
     print 'Unable to determine number of CPUs. \
     Using single threaded make.'
-options = [
-  '--directory=' + COMPILEPATH,
-  '--makefile=Makefile',
-]
+options = ['--directory=' + COMPILEPATH,
+           '--makefile=Makefile']
+
 cmd.extend(options)
 print "\n" + str(cmd) + "\n"
 
-quicklzcompile = ['gcc', '-shared', '-O2', '-fPIC', '-I./interface', '-c', 'src/quicklzpy.c', '-o', 'libquicklz.so'] 
+quicklzcompile = ['gcc', '-shared', '-O2', '-fPIC',
+                  '-I./interface', '-c', 'src/quicklzpy.c',
+                  '-o', 'libquicklz.so']
+
 
 class DeepJetCoreBuild(build_py):
     '''
@@ -65,11 +67,12 @@ class DeepJetCoreBuild(build_py):
     def run(self):
         # run original build_py code
         # call(quicklzcompile, cwd=COMPILEPATH)
-  # os.environ["CC"] = "g++"
+        # os.environ["CC"] = "g++"
         call(cmd)
         print "\n\tRunning original DeepJetCore build_py\n"
         build_py.run(self)
         # print "\n\n*********running custom build_py***********\n\n"
+
 
 class DeepJetCoreInstall(install):
     '''
@@ -85,6 +88,7 @@ class DeepJetCoreInstall(install):
         # print "\n\n\n*****running original DeepJetCore install*****\n\n\n"
         install.run(self)
 
+
 def retrieveReadmeContent():
     '''
     Retrieve the description for the package
@@ -92,6 +96,8 @@ def retrieveReadmeContent():
     '''
     with open(os.path.join(BASEPATH, 'README.rst')) as f:
         return f.read()
+
+
 '''
 root_flags = [
   '-pthread',
