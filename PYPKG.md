@@ -1,5 +1,4 @@
 ## Installation
-===============
 
 * While installing on lxplus7 (based on CentOS 7.5), these are the steps you can follow. Ensure you have the correct OS before proceeding.
 
@@ -18,7 +17,7 @@
 
 ```
     $ wget https://raw.githubusercontent.com/SwapneelM/DeepJetCore/python-package/DeepJetCore/environment/djlt.yaml
-    $ conda create -n deepjetLinuxtest --file djlt.yaml
+    $ conda env create -f djlt.yaml -n deepjetLinuxtest
 ```
 
 * In case install fails, and you want to remove the environment then use:
@@ -36,6 +35,7 @@
 ```
 
 * Note: The Python package (DeepJetCore==0.0.5) is added as a dependency in the environment file itself so you should not have to install it separately, but in case PyPi is slow (>30s)/fails in downloading the package, remove the line with the package from the environment file and re-install the same environment. 
+[PyPi isn't working out at the moment so just clone it until the changes propagate to PyPi]
 
 * **Personally, I would recommend you clone the repository to follow what is happening and better understand the functioning of the library.**
 
@@ -66,15 +66,31 @@
     
 #### Common Errors
 
-* `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
+* `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink against a newer version (e.g. libstdc++.so.6.0.24) should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
+
+```
+    $ cd $CONDA_PREFIX/lib
+```
+  
+  - Check which version of libstdc++.so.6 is actually sym-linked and any other versions available with GLIBCXX (here we assume it is libstdc++.so.6.0.24)
+
+```
+    $ ls -ltr libstdc++.so.6*
+    $ strings libstdc++.so.6.0.* | grep 'GLIBCXX'
+    $ ln -sf libstdc++.so.6.0.24 libstdc++.so.6
+```
 
 * `'datastructures' submodule not found`: Please check if you have added the `DeepJet/modules` folder to the $PYTHONPATH environment variable.
 
-* Root linking errors: These vary so send me an email and I'll get back with a solution.
-
 * `libquicklz.so not found`: Check if you have added DeepJetCore/compiled folder to the path. It is either going to be in `$CONDA_PREFIX/lib/python2.7/site-packages/DeepJetCore(version)/compiled` or if you have cloned DeepJetCore then simply `DeepJetCore/DeepJetCore/compiled`
 
+* Tensorflow 1.9.0 requires setuptools <= 39.1.0 and you might have a different version installed. It can cause errors later so it is probably better to run an install with the requisite version AFTER activating the conda environment.
 
+```
+    $ pip install setuptools==39.1.0
+```
+
+* Root library linking errors; undefined symbols: These vary, and require different kinds of fixes so send me an email and I'll get back with a solution.
 
 
 
