@@ -60,7 +60,13 @@
     
 #### Common Errors
 
-* `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
+* `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink against a newer version (e.g. libstdc++.so.6.0.24) should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
+
+```
+    $ cd $CONDA_Prefix/lib
+    $ strings libstdc++.so.6.0.* | grep 'GLIBCXX' # check if there's a libstdc++ with the required version of GLIBCXX
+    $ ln -sf libstdc++.so.6.0.24 libstdc++.so.6
+```
 
 * `'datastructures' submodule not found`: Please check if you have added the `DeepJet/modules` folder to the $PYTHONPATH environment variable.
 
