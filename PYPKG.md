@@ -1,5 +1,4 @@
 ## Installation
-===============
 
 * While installing on lxplus7 (based on CentOS 7.5), these are the steps you can follow. Ensure you have the correct OS before proceeding.
 
