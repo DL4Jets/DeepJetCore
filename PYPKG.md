@@ -18,7 +18,7 @@
 
 ```
     $ wget https://raw.githubusercontent.com/SwapneelM/DeepJetCore/python-package/DeepJetCore/environment/djlt.yaml
-    $ conda create -n deepjetLinuxtest --file djlt.yaml
+    $ conda env create -f djlt.yaml -n deepjetLinuxtest
 ```
 
 #### Clone the DeepJet Repository
