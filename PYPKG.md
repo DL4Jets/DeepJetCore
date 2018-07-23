@@ -63,22 +63,28 @@
 * `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink against a newer version (e.g. libstdc++.so.6.0.24) should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
 
 ```
-    $ cd $CONDA_Prefix/lib
-    $ strings libstdc++.so.6.0.* | grep 'GLIBCXX' # check if there's a libstdc++ with the required version of GLIBCXX
+    $ cd $CONDA_PREFIX/lib
+```
+  
+  - Check which version of libstdc++.so.6 is actually sym-linked and any other versions available with GLIBCXX (here we assume it is libstdc++.so.6.0.24)
+
+```
+    $ ls -ltr libstdc++.so.6*
+    $ strings libstdc++.so.6.0.* | grep 'GLIBCXX'
     $ ln -sf libstdc++.so.6.0.24 libstdc++.so.6
 ```
 
 * `'datastructures' submodule not found`: Please check if you have added the `DeepJet/modules` folder to the $PYTHONPATH environment variable.
 
-* Root linking errors: These vary so send me an email and I'll get back with a solution.
-
 * `libquicklz.so not found`: Check if you have added DeepJetCore/compiled folder to the path. It is either going to be in `$CONDA_PREFIX/lib/python2.7/site-packages/DeepJetCore(version)/compiled` or if you have cloned DeepJetCore then simply `DeepJetCore/DeepJetCore/compiled`
 
-* Tensorflow 1.9.0 requires setuptools 39.1.0 and you might have a different version installed. It doesn't cause errors but it's better to run an install with the requisite version AFTER activating the conda environment.
+* Tensorflow 1.9.0 requires setuptools <= 39.1.0 and you might have a different version installed. It can cause errors later so it is probably better to run an install with the requisite version AFTER activating the conda environment.
 
 ```
     $ pip install setuptools==39.1.0
 ```
+
+* Root library linking errors; undefined symbols: These vary, and require different kinds of fixes so send me an email and I'll get back with a solution.
 
 
 
