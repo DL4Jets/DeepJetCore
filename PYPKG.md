@@ -21,6 +21,12 @@
     $ conda create -n deepjetLinuxtest --file djlt.yaml
 ```
 
+* In case install fails, and you want to remove the environment then use:
+
+```   
+    $ conda env remove -n deepjetpkg
+```
+
 #### Clone the DeepJet Repository
 
 * DeepJetCore is a set of scripts aimed at providing a supervised learning environment for Physics. A set of examples for understanding usage of DeepJetCore is provided in DeepJet that allows users to understand and add their own architectures and datastructures to retrieve root files and train models on the data.

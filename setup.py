@@ -48,8 +48,8 @@ except NotImplementedError:
     print 'Unable to determine number of CPUs. \
     Using single threaded make.'
 options = [
-	'--directory=' + COMPILEPATH,
-	'--makefile=Makefile',
+  '--directory=' + COMPILEPATH,
+  '--makefile=Makefile',
 ]
 cmd.extend(options)
 print "\n" + str(cmd) + "\n"
@@ -65,7 +65,7 @@ class DeepJetCoreBuild(build_py):
     def run(self):
         # run original build_py code
         # call(quicklzcompile, cwd=COMPILEPATH)
-	# os.environ["CC"] = "g++"
+  # os.environ["CC"] = "g++"
         call(cmd)
         print "\n\tRunning original DeepJetCore build_py\n"
         build_py.run(self)
@@ -94,41 +94,40 @@ def retrieveReadmeContent():
         return f.read()
 '''
 root_flags = [
-	'-pthread',
-	'-std=c++11',
-	'-Wno-deprecated-declarations',
-	'-m64',
-	'-lCore',
-	'-lRIO',
-	'-lNet',
-	'-lHist',
-	'-lGraf',
-	'-lGraf3d',
-	'-lGpad',
-	'-lTree',
-	'-lRint',
-	'-lPostscript',
-	'-lMatrix',
-	'-lPhysics',
-	'-lMathCore',
-	'-lThread',
-	'-lm',
-	'-ldl',
-	'-rdynamic',
+  '-pthread',
+  '-std=c++11',
+  '-Wno-deprecated-declarations',
+  '-m64',
+  '-lCore',
+  '-lRIO',
+  '-lNet',
+  '-lHist',
+  '-lGraf',
+  '-lGraf3d',
+  '-lGpad',
+  '-lTree',
+  '-lRint',
+  '-lPostscript',
+  '-lMatrix',
+  '-lPhysics',
+  '-lMathCore',
+  '-lThread',
+  '-lm',
+  '-ldl',
+  '-rdynamic',
 ]
 '''
 
-root_flags = check_output(['root-config', '--cflags', '--libs', '--glibs']).replace('\n','').split(' ')
+root_flags = check_output(['root-config', '--cflags',
+                           '--libs', '--glibs']).replace('\n', '').split(' ')
 cpp_compiler_flags = root_flags + ['-g', '-O2', '-fPIC', '-c']
 
 cpp_lib_dirs = [
     os.path.join(CONDA_PREFIX, 'lib'),
     os.path.join(COMPILEPATH, 'interface'),
-    '/usr/local/lib/',
 ]
 cpp_include_dirs = [
     os.path.join(CONDA_PREFIX, 'include'),
-    '/usr/local/include'
 ]
 
 module_lib_dirs = [
@@ -136,7 +135,7 @@ module_lib_dirs = [
     os.path.join(COMPILEPATH, 'interface'),
 ]
 boost_include_dirs = [
-	os.path.join(CONDA_PREFIX, 'include'),
+    os.path.join(CONDA_PREFIX, 'include'),
 ]
 module_compiler_flags = root_flags + ['-g', '-fPIC', '-Wl,--export-dynamic']
 
@@ -150,7 +149,7 @@ cpp_indata = Extension(
     'DeepJetCore.compiled.indata',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'indata_wrap.cxx')],
+                          'indata_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -159,7 +158,7 @@ cpp_colorToTColor = Extension(
     'DeepJetCore.compiled.colorToTColor',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'colorToTColor_wrap.cxx')],
+                          'colorToTColor_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -168,7 +167,7 @@ cpp_rocCurve = Extension(
     'DeepJetCore.compiled.rocCurve',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-	'rocCurve_wrap.cxx')],
+                          'rocCurve_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -177,7 +176,7 @@ cpp_rocCurveCollection = Extension(
     'DeepJetCore.compiled.rocCurveCollection',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'rocCurveCollection_wrap.cxx')],
+                          'rocCurveCollection_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -186,7 +185,7 @@ cpp_friendTreeInjector = Extension(
     'DeepJetCore.compiled.friendTreeInjector',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'friendTreeInjector_wrap.cxx')],
+                          'friendTreeInjector_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -195,7 +194,7 @@ cpp_helper = Extension(
     'DeepJetCore.compiled.helper',
     extra_compile_args=cpp_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'helper_wrap.cxx')],
+                          'helper_wrap.cxx')],
     include_dirs=cpp_lib_dirs,
     libraries=['python2.7'],
     language='c++')
@@ -204,7 +203,7 @@ c_meanNormZeroPad = Extension(
     'DeepJet.compiled.c_meanNormZeroPad',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'c_meanNormZeroPad.C')],
+                          'c_meanNormZeroPad.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -214,7 +213,7 @@ c_makePlots = Extension(
     'DeepJet.compiled.c_makePlots',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'c_makePlots.C')],
+                          'c_makePlots.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -224,7 +223,7 @@ c_makeROCs = Extension(
     'DeepJet.compiled.c_makeROCs',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'c_makeROCs.C')],
+                          'c_makeROCs.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -234,7 +233,7 @@ c_readArrThreaded = Extension(
     'DeepJet.compiled.c_readArrThreaded',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'c_readArrThreaded.C')],
+                          'c_readArrThreaded.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -244,7 +243,7 @@ c_randomSelect = Extension(
     'DeepJet.compiled.c_randomSelect',
     extra_compile_args=module_compiler_flags,
     sources=[os.path.join(COMPILEPATH, 'src',
-        'c_randomSelect.C')],
+                          'c_randomSelect.C')],
     include_dirs=module_lib_dirs,
     runtime_library_dirs=[boost_include_dirs],
     libraries=['boost_python', 'python2.7'],
@@ -263,9 +262,9 @@ setup(name='DeepJetCore',
       license='Apache',
       long_description=retrieveReadmeContent(),
       packages=['DeepJetCore',
-		'DeepJetCore.preprocessing',
-		'DeepJetCore.evaluation',
-		'DeepJetCore.training'],
+                'DeepJetCore.preprocessing',
+                'DeepJetCore.evaluation',
+                'DeepJetCore.training'],
       scripts=['./DeepJetCore/bin/plotLoss.py',
                './DeepJetCore/bin/plotLoss.py',
                './DeepJetCore/bin/batch_conversion.py',
@@ -277,42 +276,42 @@ setup(name='DeepJetCore',
                './DeepJetCore/bin/convertToTF.py'],
       python_requires='~=2.7',
       install_requires=[
-		'cycler',
-		'funcsigs',
-		'functools32',
-		'h5py',
-		'tensorflow',
-		'Keras',
-		'matplotlib',
-		'mock',
-		'pbr',
-		'protobuf',
-		'pyparsing',
-		'python-dateutil',
-		'pytz',
-		'PyYAML',
-	        'subprocess32'
+              'cycler',
+              'funcsigs',
+              'functools32',
+              'h5py',
+              'tensorflow',
+              'Keras',
+              'matplotlib',
+              'mock',
+              'pbr',
+              'protobuf',
+              'pyparsing',
+              'python-dateutil',
+              'pytz',
+              'PyYAML',
+              'subprocess32'
       ],
       include_package_data=True,
       zip_safe=False,
       classifiers=[
-          	'Development Status :: 3 - Alpha',
-          	'License :: OSI Approved :: Apache Software License',
-          	'Intended Audience :: Developers',
-          	'Intended Audience :: Science/Research',
-          	'Operating System :: Unix',
-          	'Programming Language :: Python :: 2.7',
+          'Development Status :: 3 - Alpha',
+          'License :: OSI Approved :: Apache Software License',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Science/Research',
+          'Operating System :: Unix',
+          'Programming Language :: Python :: 2.7',
       ],
       keywords='deep-learning physics jets cern cms',
       project_urls={
-          	'Documentation': 'https://github.com/SwapneelM/DeepJetCore/wiki',
-          	'Source': 'https://github.com/SwapneelM/DeepJetCore',
+          'Documentation': 'https://github.com/SwapneelM/DeepJetCore/wiki',
+          'Source': 'https://github.com/SwapneelM/DeepJetCore',
       },
       cmdclass={
-          	'build_py': DeepJetCoreBuild,
+          'build_py': DeepJetCoreBuild,
       },
       ext_modules=[
-	])
+      ])
 
 '''
 quicklz,
