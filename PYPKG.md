@@ -29,6 +29,7 @@
 ```
 
 * Note: The Python package (DeepJetCore==0.0.5) is added as a dependency in the environment file itself so you should not have to install it separately, but in case PyPi is slow (>30s)/fails in downloading the package, remove the line with the package from the environment file and re-install the same environment. 
+[PyPi isn't working out at the moment so just clone it until the changes propagate to PyPi]
 
 * **Personally, I would recommend you clone the repository to follow what is happening and better understand the functioning of the library.**
 
