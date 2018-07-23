@@ -68,7 +68,11 @@
 
 * `libquicklz.so not found`: Check if you have added DeepJetCore/compiled folder to the path. It is either going to be in `$CONDA_PREFIX/lib/python2.7/site-packages/DeepJetCore(version)/compiled` or if you have cloned DeepJetCore then simply `DeepJetCore/DeepJetCore/compiled`
 
+* Tensorflow 1.9.0 requires setuptools 39.1.0 and you might have a different version installed. It doesn't cause errors but it's better to run an install with the requisite version AFTER activating the conda environment.
 
+```
+    $ pip install setuptools==39.1.0
+```
 
 
 
