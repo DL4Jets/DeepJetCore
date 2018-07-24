@@ -24,13 +24,13 @@ QUICKLZ_SRC := ./src/quicklzpy.c
 
 # Helper files for modules
 HELPERS := $(wildcard src/*.cxx)
-HELPERS_OBJ_FILES := $(addprefix obj/,$(notdir $(HELPERS:.cxx=.o)))
-HELPERS_SHARED_LIBS := $(addprefix ./obj,$(notdir $(HELPERS_OBJ_FILES:.o=.so)))
+HELPERS_OBJ_FILES := $(addprefix ./obj ,$(notdir $(HELPERS:.cxx=.o)))
+HELPERS_SHARED_LIBS := $(addprefix ./lib ,$(notdir $(HELPERS_OBJ_FILES:.o=.so)))
 
 # DeepJet modules
 MODULES := $(wildcard src/*.C)
-MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
-MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
+MODULES_OBJ_FILES := $(addprefix ./obj ,$(notdir $(MODULES:.C=.o)))
+MODULES_SHARED_LIBS := $(addprefix ./lib ,$(notdir $(MODULES:.C=.so)))
 
 UNAME_S := $(shell uname -s)
 # Remove Linux flags in OSX
