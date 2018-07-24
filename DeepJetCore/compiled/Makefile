@@ -24,8 +24,8 @@ QUICKLZ_SRC := ./src/quicklzpy.c
 
 # Helper files for modules
 HELPERS := $(wildcard src/*.cxx)
-HELPERS_OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cxx=.o)))
-HELPERS_SHARED_LIBS := $(addprefix ./obj,$(notdir $(OBJ_FILES:.o=.so)))
+HELPERS_OBJ_FILES := $(addprefix obj/,$(notdir $(HELPERS:.cxx=.o)))
+HELPERS_SHARED_LIBS := $(addprefix ./obj,$(notdir $(HELPERS_OBJ_FILES:.o=.so)))
 
 # DeepJet modules
 MODULES := $(wildcard src/*.C)
