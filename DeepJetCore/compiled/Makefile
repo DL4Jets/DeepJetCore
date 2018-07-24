@@ -42,7 +42,7 @@ all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FIL
 
 # quicklz for compression
 libquicklz.so: $(QUICKLZ_SRC)
-	gcc -shared -I./interface -O2 -fPIC $< -o $@
+	gcc -shared -I./interface -I$(PYTHON_INCLUDE) -O2 -fPIC $< -o $@
 
 $(HELPERS_OBJ_FILES): $(HELPERS)
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
