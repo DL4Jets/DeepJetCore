@@ -20,38 +20,45 @@ LINUXADD=-Wl,--export-dynamic
 ROOTSTUFF=`root-config --cflags --libs --glibs` -g
 CFLAGS=
 
-CPP_FILES := $(wildcard src/*.cpp)
-OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+QUICKLZ_SRC := ./src/quicklzpy.c
 
+# Helper files for modules
+HELPERS := $(wildcard src/*.cxx)
+HELPERS_OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cxx=.o)))
+HELPERS_SHARED_LIBS := $(addprefix ./obj,$(notdir $(OBJ_FILES:.o=.so)))
+
+# DeepJet modules
 MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
 UNAME_S := $(shell uname -s)
-# remove linux flags in osx
+# Remove Linux flags in OSX
 ifeq ($(UNAME_S),Darwin)
     LINUXADD=""
 endif
 
-all: $(MODULES_SHARED_LIBS)
+all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS)
 
-#helpers
-libquicklz.so:
-	gcc -shared -I./interface -O2 -fPIC src/quicklz.c -o libquicklz.so
+# quicklz for compression
+libquicklz.so: $(QUICKLZ_SRC)
+	gcc -shared -I./interface -O2 -fPIC $< -o $@
 
-obj/%.o: src/%.cpp
+$(HELPERS_OBJ_FILES): $(HELPERS)
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
 
-#pack helpers in lib
-./obj/%.so: $(OBJ_FILES)
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) obj/*.o -o $@ 
+# pack helpers in shared lib
+$(HELPERS_SHARED_LIBS): $(HELPERS_OBJ_FILES)
+	g++ -shared $(LINUXADD) $(ROOTSTUFF) $< -o $@
 
-%.so: %.o ./obj/%.so libquicklz.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -L$(BOOST_LIB)  -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $(@) 
+$(MODULES_OBJ_FILES): $(MODULES) 
+	g++ $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c $< -o $@ 
 
+$(MODULES_SHARED_LIBS): $(MODULES_OBJ_FILES) $(HELPERS_SHARED_LIBS) libquicklz.so
+	g++ -shared $(LINUXADD) $(ROOTSTUFF) -lquicklz -L./ -L$(BOOST_LIB)  -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $@ 
 
-%.o: src/%.C 
-	g++   $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
+# Avoiding future filename clashes
+.PHONY: clean 
 
 clean: 
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) obj/*.so libquicklz.so
+	rm -f libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS) 
