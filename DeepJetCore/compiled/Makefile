@@ -45,7 +45,7 @@ all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FIL
 libquicklz.so: $(QUICKLZ_SRC)
 	gcc -shared -I$(INTERFACE) -I$(PYTHON_INCLUDE) -O2 -fPIC $< -o $@
 
-obj/%.o: cpp/*.cpp
+obj/%.o: cpp/%.cpp
 	g++ $(CFLAGS) $(ROOTSTUFF) -I$(PYTHON_INCLUDE) -I$(INTERFACE) -O2 -fPIC -c -o $@ $< 
 
 # pack helpers in shared lib
