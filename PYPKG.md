@@ -17,7 +17,7 @@
 
 ```
     $ wget https://raw.githubusercontent.com/SwapneelM/DeepJetCore/python-package/DeepJetCore/environment/djlt.yaml
-    $ conda env create -f djlt.yaml -n deepjetLinuxtest
+    $ conda env create -f djlt.yaml -n deepjetpkg
 ```
 
 * In case install fails, and you want to remove the environment then use:
@@ -46,8 +46,8 @@
 ```
     $ git clone -b python-package https://github.com/SwapneelM/DeepJetCore/
     $ cd DeepJetCore 
-    $ conda activate deepjetLinuxtest
-    $ python setup.py build install 
+    $ conda activate deepjetpkg
+    (deepjetpkg) $ python setup.py build install 
 ```
 
 * This step will take a while as it compiles all the dependencies and figures out the linking of libraries.
@@ -59,7 +59,7 @@
 ```
     $ conda activate deepjetpkg
     $ cd DeepJet
-    $ source pypkg_env.sh
+   (deepjetpkg) $ source pypkg_env.sh
 ```
 
 * Now that you have installed the libraries, follow the [README.md](https://github.com/SwapneelM/DeepJet) for DeepJet in order to better understand the instructions and execution of commands within the library.
@@ -75,9 +75,9 @@
   - Check which version of libstdc++.so.6 is actually sym-linked and any other versions available with GLIBCXX (here we assume it is libstdc++.so.6.0.24)
 
 ```
-    $ ls -ltr libstdc++.so.6*
-    $ strings libstdc++.so.6.0.* | grep 'GLIBCXX'
-    $ ln -sf libstdc++.so.6.0.24 libstdc++.so.6
+    (deepjetpkg) $ ls -ltr libstdc++.so.6*
+    (deepjetpkg) $ strings libstdc++.so.6.0.* | grep 'GLIBCXX'
+    (deepjetpkg) $ ln -sf libstdc++.so.6.0.24 libstdc++.so.6
 ```
 
 * `'datastructures' submodule not found`: Please check if you have added the `DeepJet/modules` folder to the $PYTHONPATH environment variable.
@@ -87,10 +87,23 @@
 * Tensorflow 1.9.0 requires setuptools <= 39.1.0 and you might have a different version installed. It can cause errors later so it is probably better to run an install with the requisite version AFTER activating the conda environment.
 
 ```
-    $ pip install setuptools==39.1.0
+    (deepjetpkg) $ pip install setuptools==39.1.0
+```
+- Update: This has been added to the environment file so if you face this issue, you have probably set up an older version of the environment. Just install setuptools as shown above to resolve the error.
+
+* `pkg_resources.ResolutionError: Script 'convertFromRoot.py' not found in scripts/`: This is probably a result of an incorrect/incomplete install of DeepJetCore and can be resolved by uninstalling and reinstalling the package in your conda environment.
+
+```
+    (deepjetpkg) $ pip uninstall DeepJetCore # library names ignore case
+    (deepjetpkg) $ cd DeepJetCore
+    (deepjetpkg) $ python setup.py build install  
 ```
 
-* Root library linking errors; undefined symbols: These vary, and require different kinds of fixes so send me an email and I'll get back with a solution.
+
+* Root library linking errors; undefined symbols: Ensure that `$LD_PRELOAD` and `$LD_LIBRARY_PATH` have been set according to the paths in `pypkg_env.sh` file in DeepJet.
+
+**Other errors require different kinds of fixes so open an issue or send me an email and I'll get back to you with a solution.**
+
 
 
 
