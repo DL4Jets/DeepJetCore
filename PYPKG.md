@@ -26,7 +26,8 @@
     $ conda env remove -n deepjetpkg
 ```
 
-*Conda automatically allows you to use `source activate <env_name>` for environments but it would be better if you follow the conda installation instructions to enable the command `conda` by setting the conda path in your ~/.bashrc file*
+
+***Note:** Conda automatically allows you to use `source activate <env_name>` for environments but it would be better if you follow the conda installation instructions to enable the command `conda` by setting the conda path in your ~/.bashrc file*
 
 ```
     $ echo ". path/to/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc
@@ -39,6 +40,7 @@
     $ echo export PATH="/afs/cern.ch/work/s/smehta/miniconda3/bin:$PATH" >> ~/.bashrc
     $ source ~/.bashrc
 ```
+
 
 ### Clone the DeepJet Repository
 
