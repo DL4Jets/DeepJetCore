@@ -2,7 +2,7 @@
 
 * While installing on lxplus7 (based on CentOS 7.5), these are the steps you can follow. Ensure you have the correct OS before proceeding.
 
-#### Anaconda Setup
+### Anaconda Setup
 
 * Note: This will require disk space, especially if you work with multiple conda environments so ensure you have enough disk space (at least 12 GB).
 
@@ -40,7 +40,7 @@
     $ source ~/.bashrc
 ```
 
-#### Clone the DeepJet Repository
+### Clone the DeepJet Repository
 
 * DeepJetCore is a set of scripts aimed at providing a supervised learning environment for Physics. A set of examples for understanding usage of DeepJetCore is provided in DeepJet that allows users to understand and add their own architectures and datastructures to retrieve root files and train models on the data.
 
@@ -66,7 +66,7 @@
 
 - This step will take a while as it compiles all the dependencies and figures out the linking of libraries.
 
-#### Activate and Use DeepJet/DeepJetCore
+### Activate and Use DeepJet/DeepJetCore
 
 * Currently, you will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh` 
 
@@ -78,7 +78,7 @@
 
 * Now that you have installed the libraries, follow the [README.md](https://github.com/SwapneelM/DeepJet) for DeepJet in order to better understand the instructions and execution of commands within the library.
     
-#### Common Errors
+### Common Errors
 
 * `libstdc++.so.6 : GLIBCXX...` version not found: Your libstdc++.so.6 has probably been symlinked against an older version of libstdc++.so.6 (e.g. libstdc++.so.6.0.19). Recreating this symlink against a newer version (e.g. libstdc++.so.6.0.24) should do the job for you. [This could prove a useful StackOverflow reference point](https://stackoverflow.com/a/16445803/5087991)
 
