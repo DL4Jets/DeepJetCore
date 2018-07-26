@@ -71,7 +71,7 @@ dependencies:
   - readline=7.0=ha6073c6_4
   - scikit-learn=0.19.1=py27h445a80a_0
   - scipy=1.1.0=py27hfc37229_0
-  - setuptools=39.2.0=py27_0
+  - setuptools=39.1.0=py27_0
   - six=1.11.0=py27h5f960f1_1
   - snappy=1.1.7=hbae5bb6_3
   - sqlite=3.24.0=h84994c4_0
