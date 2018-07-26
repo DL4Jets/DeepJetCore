@@ -6,8 +6,8 @@
  */
 
 
-#include "rocCurveCollection.h"
-#include "colorToTColor.h"
+#include "../interface/rocCurveCollection.h"
+#include "../interface/colorToTColor.h"
 #include "rocCurve.h"
 #include "TCanvas.h"
 #include "TROOT.h"

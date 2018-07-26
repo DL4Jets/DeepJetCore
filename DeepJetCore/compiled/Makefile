@@ -20,7 +20,6 @@ LINUXADD=-Wl,--export-dynamic
 ROOTSTUFF=`root-config --cflags --libs --glibs` -g
 CFLAGS=
 
-QUICKLZ_SRC := ./src/quicklzpy.c
 INTERFACE := ./interface
 
 # Helper files for modules
@@ -40,9 +39,10 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS)
+# all: libquicklz.so obj/%.o lib/%.so %.o %.so
 
 # quicklz for compression
-libquicklz.so: $(QUICKLZ_SRC)
+libquicklz.so: src/quicklz.c
 	gcc -shared -I$(INTERFACE) -I$(PYTHON_INCLUDE) -O2 -fPIC $< -o $@
 
 obj/%.o: cpp/%.cpp
