@@ -112,7 +112,7 @@
     (deepjetpkg) $ cd DeepJetCore
     (deepjetpkg) $ python setup.py build install  
 ```
-
+- If that doesn't work then the current fallback solution is to reinstall miniconda altogether.
 
 * Root library linking errors; undefined symbols: Ensure that `$LD_PRELOAD` and `$LD_LIBRARY_PATH` have been set according to the paths in `pypkg_env.sh` file in DeepJet. Then recompile the shared libs or reinstall DeepJetCore to re-link the shared libs.
 
