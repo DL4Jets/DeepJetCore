@@ -57,7 +57,7 @@
 * Currently, you will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh` 
 
 ```
-    $ conda activate deepjetLinuxtest
+    $ conda activate deepjetpkg
     $ cd DeepJet
     $ source pypkg_env.sh
 ```
