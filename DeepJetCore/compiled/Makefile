@@ -55,8 +55,8 @@ lib/%.so: obj/%.o
 %.o: src/%.C 
 	g++ $(ROOTSTUFF) -O2 -I$(INTERFACE) -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c $< -o $@ 
 
-%.so: %.o  $(HELPERS_SHARED_LIBS) libquicklz.so
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) -lquicklz -L./ -L$(BOOST_LIB)  -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $@ 
+%.so: %.o  $(HELPERS_SHARED_LIBS)
+	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L./lib -lquicklz -L./ -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $@ 
 
 # Avoiding future filename clashes
 .PHONY: clean 
