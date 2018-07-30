@@ -13,7 +13,7 @@ Setup python packages (CERN)
 ==========
 It is essential to perform all these steps on lxplus7. Simple ssh to 'lxplus7' instead of 'lxplus'
 
-Pre-Installtion: Anaconda setup (only once)
+Pre-Installation: Anaconda setup (only once)
 Download miniconda3
 ```
 cd <afs work directory: you need some disk space for this!>
