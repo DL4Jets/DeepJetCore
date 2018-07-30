@@ -23,9 +23,9 @@ CFLAGS=
 INTERFACE := ./interface
 
 # Helper files for modules
-HELPERS := $(wildcard cpp/*.cpp)
+HELPERS := $(wildcard cxx_cpp/*.cpp)
 HELPERS_OBJ_FILES := $(addprefix ./obj/, $(notdir $(HELPERS:.cpp=.o)))
-HELPERS_SHARED_LIBS := $(addprefix ./lib/, $(notdir $(HELPERS:.cpp=.so)))
+HELPERS_SHARED_LIBS := $(addprefix ./, $(notdir $(HELPERS:.cpp=.so)))
 
 # DeepJet modules
 MODULES := $(wildcard src/*.C)
@@ -45,18 +45,18 @@ all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FIL
 libquicklz.so: src/quicklz.c
 	gcc -shared -I$(INTERFACE) -I$(PYTHON_INCLUDE) -O2 -fPIC $< -o $@
 
-obj/%.o: cpp/%.cpp
-	g++ $(CFLAGS) $(ROOTSTUFF) -I$(PYTHON_INCLUDE) -I$(INTERFACE) -O2 -fPIC -c -o $@ $< 
+obj/%.o: cxx_cpp/%.cpp
+	g++ $(CFLAGS) $(ROOTSTUFF) -I$(PYTHON_INCLUDE) -I$(INTERFACE) -I$(BOOST_INC) -fPIC -c -o $@ $< 
 
 # pack helpers in shared lib
-lib/%.so: obj/%.o 
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) $< -o $@
+%.so: obj/%.o 
+	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7 $< -o $@
 
 %.o: src/%.C 
 	g++ $(ROOTSTUFF) -O2 -I$(INTERFACE) -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c $< -o $@ 
 
 %.so: %.o  $(HELPERS_SHARED_LIBS)
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L./lib -lquicklz -L./ -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $@ 
+	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7 -L./ -lquicklz -l:indata.so -l:rocCurve.so -l:rocCurveCollection.so -l:helper.so -l:friendTreeInjector.so $< -o $@ 
 
 # Avoiding future filename clashes
 .PHONY: clean 

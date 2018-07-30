@@ -9,7 +9,7 @@ from multiprocessing import cpu_count
 
 # os.environ["CXX"] = "g++"
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
-print "\nBasepath: ", BASEPATH
+# print "\nBasepath: ", BASEPATH
 
 # Path to the `DeepJetCore` folder within the package
 # DEEPJETCORE = os.path.join(BASEPATH, 'DeepJetCore')
@@ -51,7 +51,7 @@ options = ['--directory=' + COMPILEPATH,
            '--makefile=Makefile']
 
 cmd.extend(options)
-print "\n" + str(cmd) + "\n"
+# print "\n" + str(cmd) + "\n"
 
 quicklzcompile = ['gcc', '-shared', '-O2', '-fPIC',
                   '-I./interface', '-c', 'src/quicklzpy.c',
@@ -69,7 +69,8 @@ class DeepJetCoreBuild(build_py):
         # call(quicklzcompile, cwd=COMPILEPATH)
         # os.environ["CC"] = "g++"
         call(cmd)
-        print "\n\tRunning original DeepJetCore build_py\n"
+        print "\n\tFixing broken ROOT script activateROOT in conda\n"
+	call(['cp', 'DeepJetCore/environment/activateROOT.sh', '$CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh'])
         build_py.run(self)
         # print "\n\n*********running custom build_py***********\n\n"
 
