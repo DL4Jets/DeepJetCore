@@ -11,7 +11,7 @@ dependencies:
   - root-numpy=4.4.0=root6.04_py2.7
   - blas=1.0=mkl
   - blosc=1.14.3=hdbcaa40_0
-  - boost=1.65.1=py27_4
+  - boost=1.61.0=py27_0
   - bzip2=1.0.6=h14c3975_5
   - ca-certificates=2018.03.07=0
   - cairo=1.14.12=h7636065_2
