@@ -105,9 +105,7 @@ class training_base(object):
         self.renewtokens=renewtokens
         
         
-        self.inputData = os.path.abspath(args.inputDataCollection) \
-												 if ',' not in args.inputDataCollection else \
-														[os.path.abspath(i) for i in args.inputDataCollection.split(',')]
+        self.inputData = os.path.abspath(args.inputDataCollection) if ',' not in args.inputDataCollection else [os.path.abspath(i) for i in args.inputDataCollection.split(',')]
         self.outputDir=args.outputDir
         # create output dir
         
@@ -266,13 +264,13 @@ class training_base(object):
         self.val_data.writeToFile(self.outputDir+'valsamples.dc')
         
         #make sure tokens don't expire
-        from .tokenTools import checkTokens, renew_token_process
+        from DeepJetCore.training import tokenTools
         from thread import start_new_thread
         
         if self.renewtokens:
             print('starting afs backgrounder')
-            checkTokens()
-            start_new_thread(renew_token_process,())
+            tokenTools.checkTokens()
+            start_new_thread(tokenTools.renew_token_process,())
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
@@ -293,10 +291,10 @@ class training_base(object):
         
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
-        from .DeepJet_callbacks import DeepJet_callbacks
+        from DeepJetCore.training import DeepJet_callbacks
         
         
-        callbacks=DeepJet_callbacks(self.keras_model,
+        callbacks=DeepJet_callbacks.DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
                                     lr_factor=lr_factor,
                                     lr_patience=lr_patience, 
