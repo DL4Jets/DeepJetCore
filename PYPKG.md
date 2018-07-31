@@ -61,7 +61,7 @@
 
 ```
     $ git clone -b python-package https://github.com/SwapneelM/DeepJetCore/
-    $ cd DeepJetCore 
+    $ cd DeepJet 
     $ source pypkg_env.sh
     (deepjetpkg) $ cd ../DeepJetCore  # both have to lie in the same parent directory
     (deepjetpkg) $ make clean install 
