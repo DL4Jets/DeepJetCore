@@ -27,17 +27,17 @@
 ```
 
 
-***Note:** Conda automatically allows you to use `source activate <env_name>` for environments but it would be better if you follow the conda installation instructions to enable the command `conda` by setting the conda path in your ~/.bashrc file*
+***Recommended:** Conda allows you to use `source activate <env_name>` for environments but it would be better if you follow the conda installation instructions (during miniconda3 installation) to enable the command `conda` by setting the conda path in your ~/.bashrc file*
 
 ```
-    $ echo ". path/to/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc
+    $ echo ". /afs/cern.ch/your/username/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc
     $ source ~/.bashrc
 ```
 
-*Otherwise replace `conda activate/deactivate` with `source activate/deactivate` where necessary and add this as suggested by miniconda during installation of the environment.*
+***Not Recommended:** Replace `conda activate/deactivate` with `source activate/deactivate` in `pypkg_env.sh` and add the following lines as suggested by miniconda during installation of the environment.*
 
 ```
-    $ echo export PATH="/afs/cern.ch/work/s/smehta/miniconda3/bin:$PATH" >> ~/.bashrc
+    $ echo export PATH="/afs/cern.ch/work/your/username/miniconda3/bin:$PATH" >> ~/.bashrc
     $ source ~/.bashrc
 ```
 
@@ -61,21 +61,23 @@
 
 ```
     $ git clone -b python-package https://github.com/SwapneelM/DeepJetCore/
-    $ cd DeepJetCore 
-    $ conda activate deepjetpkg
-    (deepjetpkg) $ python setup.py build install 
+    $ cd DeepJet 
+    $ source pypkg_env.sh
+    (deepjetpkg) $ cd ../DeepJetCore  # both have to lie in the same parent directory
+    (deepjetpkg) $ make clean install 
 ```
 
 - This step will take a while as it compiles all the dependencies and figures out the linking of libraries.
 
 ### Activate and Use DeepJet/DeepJetCore
 
-* Currently, you will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh` 
+* You will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh`. We have a script which does this for you so all you need to do is the following:
 
 ```
-    $ conda activate deepjetpkg
     $ cd DeepJet
-   (deepjetpkg) $ source pypkg_env.sh
+    $ source pypkg_env.sh
+    (deepjetpkg) $ cd ../DeepJetCore
+    (deepjetpkg) $ make clean install
 ```
 
 * Now that you have installed the libraries, follow the [README.md](https://github.com/SwapneelM/DeepJet) for DeepJet in order to better understand the instructions and execution of commands within the library.
@@ -117,6 +119,13 @@
 - If that doesn't work then the current fallback solution is to reinstall miniconda altogether.
 
 * Root library linking errors; undefined symbols: Ensure that `$LD_PRELOAD` and `$LD_LIBRARY_PATH` have been set according to the paths in `pypkg_env.sh` file in DeepJet. Then recompile the shared libs or reinstall DeepJetCore to re-link the shared libs.
+
+```
+    $ cd DeepJet
+    $ source pypkg_env.sh
+    (deepjetpkg) $ cd ../DeepJetCore
+    (deepjetpkg) $ make clean install
+```
 
 **Other errors require different kinds of fixes so open an issue or send me an email and I'll get back to you with a solution.**
 
