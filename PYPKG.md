@@ -34,7 +34,7 @@
     $ source ~/.bashrc
 ```
 
-***Not Recommended:** Replace `conda activate/deactivate` with `source activate/deactivate` where necessary and add this as suggested by miniconda during installation of the environment.*
+***Not Recommended:** Replace `conda activate/deactivate` with `source activate/deactivate` in `pypkg_env.sh` and add the following lines as suggested by miniconda during installation of the environment.*
 
 ```
     $ echo export PATH="/afs/cern.ch/work/your/username/miniconda3/bin:$PATH" >> ~/.bashrc
