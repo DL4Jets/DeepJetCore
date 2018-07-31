@@ -1,4 +1,24 @@
+import imp
+try:
+    imp.find_module('Losses')
+    from Losses import *
+except ImportError:
+    print 'No Losses module found, ignoring at your own risk'
+    global_loss_list = {}
 
+try:
+    imp.find_module('Layers')
+    from Layers import *
+except ImportError:
+    print 'No Layers module found, ignoring at your own risk'
+    global_layers_list = {}
+
+try:
+    imp.find_module('Metrics')
+    from Metrics import *
+except ImportError:
+    print 'No metrics module found, ignoring at your own risk'
+    global_metrics_list = {}
 
 def getLayer(model, name):
     for layer in model.layers:
@@ -60,3 +80,16 @@ def loadModelAndFixLayers(filename,fixOnlyContaining):
     fixLayersContaining(m, fixOnlyContaining)
                 
     return m
+
+def load_model(filename):
+    from keras.models import load_model
+    
+    
+    custom_objs = {}
+    custom_objs.update(global_loss_list)
+    custom_objs.update(global_layers_list)
+    custom_objs.update(global_metrics_list)
+    model=load_model(filename, custom_objects=custom_objs)
+    
+    return model
+    

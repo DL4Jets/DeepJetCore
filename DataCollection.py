@@ -224,6 +224,42 @@ class DataCollection(object):
         while (count+1)*self.__batchsize <= self.nsamples:
             count+=1
         return count
+    
+    def validate(self, remove=True):
+        '''
+        checks if all samples in the collection can be read properly.
+        removes the invalid samples from the sample list.
+        Also removes the original link to the root file, so recover cannot be run
+        (this might be changed in future implementations)
+        '''
+        for i in range(len(self.samples)):
+            td=copy.deepcopy(self.dataclass)
+            fullpath=self.getSamplePath(self.samples[i])
+            print('reading '+fullpath, str(self.sampleentries[i]))
+            try:
+                td.readIn(fullpath)
+                print(td.nsamples, td.x[0].shape[0], td.y[0].shape[0])
+                if td.nsamples != td.x[0].shape[0] or td.nsamples !=  td.y[0].shape[0]:
+                    print("not right length")
+                    raise Exception("not right length")
+                del td
+                continue
+            except Exception as e:
+                del self.samples[i]
+                del self.originRoots[i]
+                self.nsamples -= self.sampleentries[i]
+                del self.sampleentries[i]
+                
+    def removeEntry(self,relative_path_to_entry):
+        for i in range(len(self.samples)):
+            if relative_path_to_entry==self.samples[i]:
+                print('removing '+self.samples[i]+" - "+str(self.sampleentries[i]))
+                del self.samples[i]
+                del self.originRoots[i]
+                self.nsamples -= self.sampleentries[i]
+                del self.sampleentries[i]
+                break
+                 
         
     def writeToFile(self,filename):
         import pickle
@@ -531,7 +567,9 @@ class DataCollection(object):
             
             try:
                 fileTimeOut(sample,120) #once available copy to ram
-                os.system('cp '+sample+' '+ramdisksample)
+                os_ret=os.system('cp '+sample+' '+ramdisksample)
+                if os_ret:
+                    raise Exception("copy to ramdisk not successful for "+sample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
                 #wrlck.acquire()
                 td.writeOut(newpath)
