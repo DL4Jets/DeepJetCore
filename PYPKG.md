@@ -71,11 +71,13 @@
 
 ### Activate and Use DeepJet/DeepJetCore
 
-* You will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh` 
+* You will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh`. We have a script which does this for you so all you need to do is the following:
 
 ```
     $ cd DeepJet
     $ source pypkg_env.sh
+    (deepjetpkg) $ cd ../DeepJetCore
+    (deepjetpkg) $ make clean install
 ```
 
 * Now that you have installed the libraries, follow the [README.md](https://github.com/SwapneelM/DeepJet) for DeepJet in order to better understand the instructions and execution of commands within the library.
@@ -117,6 +119,13 @@
 - If that doesn't work then the current fallback solution is to reinstall miniconda altogether.
 
 * Root library linking errors; undefined symbols: Ensure that `$LD_PRELOAD` and `$LD_LIBRARY_PATH` have been set according to the paths in `pypkg_env.sh` file in DeepJet. Then recompile the shared libs or reinstall DeepJetCore to re-link the shared libs.
+
+```
+    $ cd DeepJet
+    $ source pypkg_env.sh
+    (deepjetpkg) $ cd ../DeepJetCore
+    (deepjetpkg) $ make clean install
+```
 
 **Other errors require different kinds of fixes so open an issue or send me an email and I'll get back to you with a solution.**
 
