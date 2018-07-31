@@ -20,10 +20,13 @@ LINUXADD=-Wl,--export-dynamic
 ROOTSTUFF=`root-config --cflags --libs --glibs` -g
 CFLAGS=
 
-INTERFACE := ./interface
+INTERFACE=./interface
 
 # Helper files for modules
-HELPERS := $(wildcard cxx_cpp/*.cpp)
+SWIG_WRAPPERS := $(wildcard cxx/*.cxx)
+SWIG_OBJ_FILES := $(addprefix ./swigobj/, $(notdir $(SWIG_WRAPPERS:.cxx=.o)))
+
+HELPERS := $(wildcard cpp/*.cpp)
 HELPERS_OBJ_FILES := $(addprefix ./obj/, $(notdir $(HELPERS:.cpp=.o)))
 HELPERS_SHARED_LIBS := $(addprefix ./, $(notdir $(HELPERS:.cpp=.so)))
 
@@ -38,28 +41,42 @@ ifeq ($(UNAME_S),Darwin)
     LINUXADD=""
 endif
 
-all: libquicklz.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS)
+all: libquicklz.so $(HELPERS_OBJ_FILES) $(SWIG_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS)
 # all: libquicklz.so obj/%.o lib/%.so %.o %.so
 
 # quicklz for compression
 libquicklz.so: src/quicklz.c
-	gcc -shared -I$(INTERFACE) -I$(PYTHON_INCLUDE) -O2 -fPIC $< -o $@
+	gcc -Wall -O2 -fPIC -shared -I$(INTERFACE) -I$(PYTHON_INCLUDE) -L$(PYTHON_LIB) -lpython2.7 $< -o $@
 
-obj/%.o: cxx_cpp/%.cpp
-	g++ $(CFLAGS) $(ROOTSTUFF) -I$(PYTHON_INCLUDE) -I$(INTERFACE) -I$(BOOST_INC) -fPIC -c -o $@ $< 
+swigobj/%.o: cxx/%.cxx libquicklz.so
+	g++ -Wall -fPIC $(CFLAGS) $(ROOTSTUFF) -I$(PYTHON_INCLUDE) -I$(INTERFACE) -I$(BOOST_INC) -c -o $@ $< 
 
-# pack helpers in shared lib
-%.so: obj/%.o 
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7 $< -o $@
+obj/%.o: cpp/%.cpp libquicklz.so
+	g++ -Wall -fPIC $(CFLAGS) $(ROOTSTUFF) -I$(INTERFACE) -c -o $@ $< 
 
-%.o: src/%.C 
-	g++ $(ROOTSTUFF) -O2 -I$(INTERFACE) -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c $< -o $@ 
+# compile helpers with wrappers in shared lib
+indata.so: obj/indata.o swigobj/indata_wrap.o
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(PYTHON_LIB) -lpython2.7 $^ -o $@
 
+helper.so: obj/helper.o swigobj/helper_wrap.o
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(PYTHON_LIB) -lpython2.7 $^ -o $@
+
+friendTreeInjector.so: obj/friendTreeInjector.o swigobj/friendTreeInjector_wrap.o
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(PYTHON_LIB) -lpython2.7 $^ -o $@
+
+rocCurve.so: obj/rocCurve.o swigobj/rocCurve_wrap.o
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(PYTHON_LIB) -lpython2.7 $^ -o $@
+
+rocCurveCollection.so: obj/rocCurveCollection.o swigobj/rocCurveCollection_wrap.o
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L./ -lquicklz -L$(PYTHON_LIB) -lpython2.7 $^ -o $@
+
+%.o: src/%.C $(HELPERS_SHARED_LIBS) 
+	g++ -Wall -fPIC $(ROOTSTUFF) -O2 -I$(INTERFACE) -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -c $< -o $@ 
 %.so: %.o  $(HELPERS_SHARED_LIBS)
-	g++ -shared $(LINUXADD) $(ROOTSTUFF) -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7 -L./ -lquicklz -l:indata.so -l:rocCurve.so -l:rocCurveCollection.so -l:helper.so -l:friendTreeInjector.so $< -o $@ 
+	g++ -Wall -shared $(LINUXADD) $(ROOTSTUFF) -L$(BOOST_LIB) -lboost_python -L$(PYTHON_LIB) -lpython2.7 -L./ -lquicklz -l:indata.so -l:rocCurve.so -l:rocCurveCollection.so -l:helper.so -l:friendTreeInjector.so $< -o $@ 
 
 # Avoiding future filename clashes
 .PHONY: clean 
 
 clean: 
-	rm -f libquicklz.so *.o *.so $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS) 
+	rm -f libquicklz.so *.o *.so $(SWIG_OBJ_FILES) $(HELPERS_OBJ_FILES) $(HELPERS_SHARED_LIBS) $(MODULES_OBJ_FILES) $(MODULES_SHARED_LIBS) 

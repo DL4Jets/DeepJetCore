@@ -14,9 +14,9 @@ friendTreeInjector::friendTreeInjector(const TString& sourcetreename):
         chain_(0),
         sourcetree_('/'+sourcetreename){}
 
-friendTreeInjector::~friendTreeInjector(){
-	resetChain();
-}
+//friendTreeInjector::~friendTreeInjector(){
+//	resetChain();
+//}
 
 void friendTreeInjector::addFromFile(const TString& filename, const TString& alias){
 
@@ -80,7 +80,7 @@ void friendTreeInjector::createChain(){
 		throw std::runtime_error("friendTreeInjector::createChain: treename is empty");
 	}
 
-	resetChain();
+	//resetChain();
 	chain_ = new TChain();
 	friendchains_ = std::vector<TChain*> (treesandfriends_.at(0).size()-1,0);
 	for(size_t i=0;i<treesandfriends_.at(0).size()-1;i++){
@@ -111,7 +111,5 @@ void friendTreeInjector::createChain(){
 
 }
 
-void friendTreeInjector::resetChain(){
-
-}
+//void friendTreeInjector::resetChain(){}
 
