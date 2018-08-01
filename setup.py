@@ -68,6 +68,7 @@ class DeepJetCoreBuild(build_py):
         # run original build_py code
         # call(quicklzcompile, cwd=COMPILEPATH)
         # os.environ["CC"] = "g++"
+	call(['ln', '-sf', 'libstdc++.so.6.0.24', 'libstdc++.so.6'], cwd=os.join(CONDA_PREFIX, 'lib'))
         call(cmd)
         print "\n\tFixing broken ROOT script activateROOT in conda\n"
 	call(['cp', 'DeepJetCore/environment/activateROOT.sh', '$CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh'])
