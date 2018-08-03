@@ -52,7 +52,14 @@ def merge_successful():
     alldc=[]
     for s in successful:
         in_path=output_dir+'/conversion.'+str(s)+'.dc'
-        alldc.append(DataCollection(in_path))
+        dc=None
+        try: 
+            dc=DataCollection(in_path)
+        except Exception as e:
+            print('problems adding '+in_path+" will continue nevertheless... (error see below)")
+            print(e)
+        if dc:
+            alldc.append(DataCollection(in_path))
     print("merging DataCollections")
     merged = sum(alldc)
     print("saving merged DataCollection")

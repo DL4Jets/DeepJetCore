@@ -13,7 +13,8 @@ parser.add_argument("batch_dir", help="batch directory")
 parser.add_argument("-c", help="output class", default="")
 parser.add_argument("--testdatafor", default='')
 parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
-parser.add_argument("--nomeans", action='store_true', help='where to get means/std, in case already computed')
+parser.add_argument("--meansfrom", default="", help='where to get means/std, in case already computed')
+parser.add_argument("--useexistingsplit", default=False, help='use an existing file split (potentially dangerous)')
 args = parser.parse_args()
 
 args.infile = os.path.abspath(args.infile)
@@ -46,11 +47,12 @@ cd {cmssw_version}/src ;
 echo setting up cmssw env ; 
 eval `scram runtime -sh` ; 
 cp -rL {djc} . ; 
-mkdir {DJ_base_name} ;
+mkdir -p {DJ_base_name} ;
 cp -rL {DJ}/modules {DJ_base_name}/ ; 
 cp {DJ}/* {DJ_base_name}/ ; 
 cd {batchdir}/{cmssw_version}/src/DeepJetCore/compiled ;  
 pwd ; 
+echo compiling DeepJetCore ;
 make clean; 
 make -j4; 
 cd {batchdir}/{cmssw_version}/src/{DJ_base_name} ; 
@@ -62,7 +64,7 @@ export PYTHONPATH=`pwd`/../:$PYTHONPATH
 export LD_LIBRARY_PATH=`pwd`/compiled:$LD_LIBRARY_PATH
 export PATH=`pwd`/bin:$PATH
 
-echo compiling {DJ_base_name} ;
+echo "compiling {DJ_base_name} (if needed)";
 echo {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules
 cd {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules ; 
 make clean; 
@@ -91,8 +93,9 @@ os.system(fullcommand)
 djc_cmssw=args.batch_dir+'/'+cmssw_version +'/src/DeepJetCore'
 
 
-if not (args.nomeans or args.testdatafor):
+if not (len(args.meansfrom) or args.testdatafor):
    #Run a fisrt round of root conversion to get the means/std and weights
+   print('creating a dummy datacollection for means/norms and weighter (can take a while)...')
    cmd = [
       'convertFromRoot.py', 
       '-i', args.infile,
@@ -108,8 +111,14 @@ if not (args.nomeans or args.testdatafor):
    if code != 0:
       raise RuntimeError('The first round of root conversion failed with message: \n\n%s' % err)
    else:
-       print('Means/norms produced successfully')
+       print('means/norms/weighter produced successfully')
 
+elif args.meansfrom:
+    if not os.path.exists(args.meansfrom):
+        raise Exception("The file "+args.meansfrom+" does not exist")
+    print('using means/weighter from '+args.meansfrom)
+    os.mkdir(args.out)
+    os.system('cp '+args.meansfrom+' '+args.out+'/batch_template.dc')
 
 inputs = [i for i in open(args.infile)]
 
@@ -121,14 +130,17 @@ def chunkify(l, n):
 if not args.infile.endswith('.txt'):
    raise ValueError('The code assumes that the input files has .txt extension')
 
+
+print('splitting input file...')
 txt_template = args.infile.replace('.txt', '.%s.txt')
 batch_txts = []
 nchunks = 0
 for idx, chunk in enumerate(chunkify(inputs, len(inputs)/args.nchunks)):
    name = txt_template % idx
    batch_txts.append(name)
-   with open(name, 'w') as cfile:
-      cfile.write(''.join(chunk))
+   if not args.useexistingsplit:
+       with open(name, 'w') as cfile:
+          cfile.write(''.join(chunk))
    nchunks = idx
 
 

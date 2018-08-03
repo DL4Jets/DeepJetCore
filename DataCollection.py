@@ -225,7 +225,7 @@ class DataCollection(object):
             count+=1
         return count
     
-    def validate(self, remove=True):
+    def validate(self, remove=True, skip_first=0):
         '''
         checks if all samples in the collection can be read properly.
         removes the invalid samples from the sample list.
@@ -233,18 +233,25 @@ class DataCollection(object):
         (this might be changed in future implementations)
         '''
         for i in range(len(self.samples)):
+            if i < skip_first: continue
             td=copy.deepcopy(self.dataclass)
             fullpath=self.getSamplePath(self.samples[i])
-            print('reading '+fullpath, str(self.sampleentries[i]))
+            print('reading '+fullpath, str(self.sampleentries[i]), str(i), '/', str(len(self.samples)))
             try:
                 td.readIn(fullpath)
-                print(td.nsamples, td.x[0].shape[0], td.y[0].shape[0])
-                if td.nsamples != td.x[0].shape[0] or td.nsamples !=  td.y[0].shape[0]:
-                    print("not right length")
-                    raise Exception("not right length")
+                for x in td.x:
+                    if td.nsamples != x.shape[0]:
+                        print("not right length")
+                        raise Exception("not right length")
+                for y in td.y:
+                    if td.nsamples != y.shape[0]:
+                        print("not right length")
+                        raise Exception("not right length")
+                
                 del td
                 continue
             except Exception as e:
+                print('problem with file, removing ', fullpath)
                 del self.samples[i]
                 del self.originRoots[i]
                 self.nsamples -= self.sampleentries[i]
@@ -465,6 +472,7 @@ class DataCollection(object):
                 self.originRoots
                 )            
             self.weighter.printHistos(outputDir)
+            
         
         if redo_meansandweights:
             logging.info('producing means and norms')

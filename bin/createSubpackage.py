@@ -22,6 +22,7 @@ environment_file='''
 #! /bin/bash
 THISDIR=`pwd`
 export {subpackage}=$( cd "$( dirname "${BASH_SOURCE}" )" && pwd -P)
+export DEEPJETCORE_SUBPACKAGE=${subpackage}
 cd {deepjetcore}
 if command -v nvidia-smi > /dev/null
 then
@@ -29,9 +30,9 @@ then
 else
         source lxplus_env.sh
 fi
-export PYTHONPATH=`pwd`/modules:$PYTHONPATH
-export PYTHONPATH=`pwd`/modules/datastructures:$PYTHONPATH
-cd $THISDIR
+cd ${subpackage}
+export PYTHONPATH=${subpackage}/modules:$PYTHONPATH
+export PYTHONPATH=${subpackage}/modules/datastructures:$PYTHONPATH
 '''.format(deepjetcore=deepjetcore, 
            subpackage=args.subpackage_name.upper(),
            subpackage_dir=os.path.abspath(subpackage_dir),
@@ -48,7 +49,7 @@ mkdir -p {subpackage_dir}/Train
 
 datastructure_template='''
 from DeepJetCore.TrainData import TrainData
-import numpy as np
+import numpy 
 
 class TrainData_template(TrainData):
     def __init__(self):
