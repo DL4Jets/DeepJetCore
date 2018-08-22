@@ -21,8 +21,20 @@ class newline_callbacks_begin(Callback):
         self.outputDir=outputDir
         self.loss=[]
         self.val_loss=[]
-        self.full_logs=[]
+        self.full_logs=self.initFullLogs()
         self.plotLoss=plotLoss
+
+    def initFullLogs(self):
+        """ by default start an empty vector, but if a loss file is already presented, it uses its contents instead """
+        import os
+        full_logs=[]
+        lossfile=os.path.join( self.outputDir, 'full_info.log')       
+        if os.path.isfile(lossfile):
+            with open(lossfile,'r') as f:
+                full_logs+=json.loads(f.read())
+                print ('\n***callbacks***\n full_logs initiated with additional {0} epochs logged in {1}'.format(len(full_logs),lossfile))
+        return full_logs
+
         
     def on_epoch_end(self,epoch, epoch_logs={}):
         import os
@@ -44,7 +56,9 @@ class newline_callbacks_begin(Callback):
         for vv in epoch_logs:
             normed[vv] = float(epoch_logs[vv])
         self.full_logs.append(normed)
-        lossfile=os.path.join( self.outputDir, 'full_info.log')
+        
+        print('\n***callbacks***\n full logs size corresponds to {0} epochs'.format(len(self.full_logs)))
+        lossfile=os.path.join( self.outputDir, 'full_info.log')       
         with open(lossfile, 'w') as out:
             out.write(json.dumps(self.full_logs))
             
