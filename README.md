@@ -1,4 +1,4 @@
-
+***For the bleeding-edge version of DeepJetCore check out the [python-package branch](https://github.com/SwapneelM/DeepJetCore/blob/python-package/PYPKG.md)***
 
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
