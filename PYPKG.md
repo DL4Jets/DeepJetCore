@@ -1,7 +1,7 @@
 DeepJetCore
 ===========
 
-This is the latest (development) version of DeepJetCore currently available.
+This is the latest (development) release of the DeepJetCore Framework.
 
 ## Installation
 
