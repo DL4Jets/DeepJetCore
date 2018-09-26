@@ -123,7 +123,7 @@ class testDescriptor(object):
                 print('Extending the output with the configured prediction functor output')
                 formatstring.extend( getattr(td,'predictionFunctorClasses') )
                 all_write = np.concatenate([all_write,
-                                            [getattr(td,'predictionFunctor')(p) for p in prediction]],
+                                            getattr(td,'predictionFunctor')(prediction)],                                           
                                            axis=1)
 
             if all_write.ndim == 2:
