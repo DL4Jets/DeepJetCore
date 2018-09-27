@@ -118,12 +118,18 @@ class testDescriptor(object):
             else:
                 all_write = prediction
 
-            #if a prediction functor was set, it's output is also added to the final predictions
+            #if a prediction functor was set and the corresponding predictionFunctorClasses
+            #its output is also added to the final predictions
+            #predictionFunctorClasses: an array of strings labelling extra variables to add to the tree 
+            #predictionFunctor: receives the numpy array with the predictions for N events
+            #                   returns MxN numpy array 
+            #                   where M=len(predictionFunctorClasses)
+            #                   and   N=no. events
             if hasattr(td, 'predictionFunctor') and hasattr(td,'predictionFunctorClasses'):
                 print('Extending the output with the configured prediction functor output')
                 formatstring.extend( getattr(td,'predictionFunctorClasses') )
                 all_write = np.concatenate([all_write,
-                                            [getattr(td,'predictionFunctor')(p) for p in prediction]],
+                                            getattr(td,'predictionFunctor')(prediction)],                                           
                                            axis=1)
 
             if all_write.ndim == 2:
