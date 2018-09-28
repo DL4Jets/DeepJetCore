@@ -404,11 +404,15 @@ class DataCollection(object):
     def createTestDataForDataCollection(
             self, collectionfile, inputfile, 
             outputDir, outname = 'dataCollection.dc',
-            batch_mode = False):
+            batch_mode = False,
+            traind=None):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
         self.dataclass.weight=True #False
+        if traind: 
+            print('[createTestDataForDataCollection] dataclass is overriden by user request')
+            self.dataclass=traind
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,

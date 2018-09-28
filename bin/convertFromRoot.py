@@ -88,6 +88,7 @@ dc.meansnormslimit = int(args.nforweighter)
 if len(nchilds):
     dc.nprocs=int(nchilds)  
 
+traind=None
 if class_name in class_options:
     traind = class_options[class_name]
 elif not recover and not testdatafor:
@@ -100,7 +101,8 @@ if testdatafor:
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
         outname = args.batch if args.batch else 'dataCollection.dc',
-        batch_mode = bool(args.batch)
+        batch_mode = bool(args.batch),
+        traind=traind(class_args) if traind else None
     )    
 elif recover:
     dc.recoverCreateDataFromRootFromSnapshot(recover)        
