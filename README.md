@@ -1,4 +1,5 @@
 
+* For the latest version of the package please refer [PYPKG.md](https://github.com/SwapneelM/DeepJetCore/blob/python-package/PYPKG.md)
 
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
