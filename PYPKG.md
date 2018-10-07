@@ -46,7 +46,6 @@ This is the latest (development) release of the DeepJetCore Framework.
     $ source ~/.bashrc
 ```
 
-
 ### Clone the DeepJet Repository
 
 * DeepJetCore is a set of scripts aimed at providing a supervised learning environment for Physics. A set of examples for understanding usage of DeepJetCore is provided in DeepJet that allows users to understand and add their own architectures and datastructures to retrieve root files and train models on the data.
@@ -75,6 +74,12 @@ This is the latest (development) release of the DeepJetCore Framework.
 - This step will take a while as it compiles all the dependencies and figures out the linking of libraries.
 
 ### Activate and Use DeepJet/DeepJetCore
+
+* Fix a bug with the original root environment script that was installed from the NLeSC channel.
+
+```
+    $ cp activateROOT.sh  $CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh  
+```
 
 * You will need to set some environment variables each time you activate the virtual environment which are provided in the file `pypkg_env.sh`. We have a script which does this for you so all you need to do is the following:
 
@@ -132,7 +137,7 @@ This is the latest (development) release of the DeepJetCore Framework.
     (deepjetpkg) $ make clean install
 ```
 
-**Other errors require different kinds of fixes so open an issue or send me an email and I'll get back to you with a solution.**
+**Other errors require different kinds of fixes so feel free to either open an issue or send me an email and I'll get back to you with a solution.**
 
 
 
