@@ -1,4 +1,5 @@
 
+*Check out the [DeepJetCore wiki](https://github.com/DL4Jets/DeepJetCore/wiki) for an overview of the package.*
 
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
