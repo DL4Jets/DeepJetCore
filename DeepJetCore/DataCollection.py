@@ -412,6 +412,8 @@ class DataCollection(object):
         import os
         outputDir+='/'
         if os.path.isdir(outputDir) and dir_check:
+            # TODO #2: Why is this necessary? 
+            # Can't we ask and force overwrite?
             raise Exception('output dir must not exist')
         elif not os.path.isdir(outputDir):
             os.mkdir(outputDir)
@@ -589,6 +591,7 @@ class DataCollection(object):
         alldone=False
         results=[]
         import time
+        # TODO #1: This might not be the best way to do it.
         try:
             while not alldone:
                 nrunning=0
