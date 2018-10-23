@@ -62,12 +62,12 @@ class DeepJetCoreBuild(build_py):
     '''
     Override the default `build` command
     to implement custom commands
-    -- deprecated in DeepJetCorev0.0.5
     '''
     def run(self):
         # run original build_py code
         # call(quicklzcompile, cwd=COMPILEPATH)
         # os.environ["CC"] = "g++"
+	call(['ln', '-sf', 'libstdc++.so.6.0.24', 'libstdc++.so.6'], cwd=os.path.join(CONDA_PREFIX, 'lib'))
         call(cmd)
         print "\n\tFixing broken ROOT script activateROOT in conda\n"
 	call(['cp', 'DeepJetCore/environment/activateROOT.sh', '$CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh'])
@@ -79,7 +79,6 @@ class DeepJetCoreInstall(install):
     '''
     Override the default `install` command
     to implement custom commands
-    -- deprecated in DeepJetCorev0.0.5
     '''
     def run(self):
         # if BUILDFLAG==0:
@@ -260,7 +259,7 @@ c_randomSelect = Extension(
 # to find all the subpackages recursively by adding this to __init__.py
 # __path__ = __import__('pkgutil').extend_path(__path__, __name__)
 setup(name='DeepJetCore',
-      version='0.0.5',
+      version='1.0.0',
       description='The DeepJetCore Library: Deep Learning \
       for High-energy Physics',
       url='https://github.com/DL4J/DeepJetCore',

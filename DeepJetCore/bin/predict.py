@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-
 import imp
+from keras.models import load_model
+from DeepJetCore.evaluation import evaluation
+from argparse import ArgumentParser
+from keras import backend as K
+
 try:
     imp.find_module('setGPU')
     import setGPU
 except ImportError:
     found = False
-    
-from keras.models import load_model
-from DeepJetCore.evaluation import testDescriptor
-from argparse import ArgumentParser
-from keras import backend as K
-import imp
+
 try:
     imp.find_module('Losses')
     from Losses import *
@@ -58,7 +57,7 @@ custom_objs.update(global_metrics_list)
 model=load_model(args.inputModel, custom_objects=custom_objs)
 
 
-td=testDescriptor(addnumpyoutput = args.numpy)
+td=evaluation.testDescriptor(addnumpyoutput = args.numpy)
 if args.use:
 	td.use_only = [int(i) for i in args.use.split(',')]
 

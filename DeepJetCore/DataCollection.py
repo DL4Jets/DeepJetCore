@@ -92,7 +92,7 @@ class DataCollection(object):
         if type(self.dataclass) != type(other.dataclass):
             raise ValueError(
                 'The two DataCollections were made with a'
-                ' different data class type! (%s, and %s)' % (type(self.dataclass), type(other.dataclass))
+                ' different data class type! %s, and %s' % (type(self.dataclass), type(other.dataclass))
                 )
         if self.weighter != other.weighter:
             raise ValueError(
@@ -507,7 +507,7 @@ class DataCollection(object):
         def writeData_async(index,woq,wrlck):
             
             import copy
-            from stopwatch import stopwatch
+            from DeepJetCore.stopwatch import stopwatch
             sw=stopwatch()
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
@@ -710,7 +710,6 @@ class DataCollection(object):
         import shutil
         import uuid
         import os
-        import copy
         import threading
         import time
         print('start generator')
@@ -735,7 +734,7 @@ class DataCollection(object):
                 
             def start(self):
                 if self.max < 1:
-                    raise ValueError('I got an invalid number of files to open (%d)' % self.max)
+                    raise ValueError('I got an invalid number of files to open %d' % self.max)
                 for i in range(self.max):
                     self.__readNext()
                     time.sleep(1)

@@ -5,8 +5,8 @@ Created on 7 Apr 2017
 '''
 from __future__ import print_function
 
-from .ReduceLROnPlateau import ReduceLROnPlateau
-from ..evaluation import plotLoss
+from DeepJetCore.training import ReduceLROnPlateau
+from DeepJetCore.evaluation import evaluation
 
 from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
@@ -22,7 +22,7 @@ class newline_callbacks_begin(Callback):
         self.loss=[]
         self.val_loss=[]
         self.full_logs=[]
-        self.plotLoss=plotLoss
+        self.plotLoss=evaluation.plotLoss
         
     def on_epoch_end(self,epoch, epoch_logs={}):
         import os
@@ -49,7 +49,7 @@ class newline_callbacks_begin(Callback):
             out.write(json.dumps(self.full_logs))
             
         if self.plotLoss:
-            plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
+            evaluation.plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, epoch_logs={}):
@@ -124,7 +124,7 @@ class DeepJet_callbacks(object):
         
         
         if lr_patience>0:
-            self.reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=lr_factor, patience=lr_patience, 
+            self.reduce_lr = ReduceLROnPlateau.ReduceLROnPlateau(monitor='val_loss', factor=lr_factor, patience=lr_patience, 
                                     mode='min', verbose=1, epsilon=lr_epsilon,
                                      cooldown=lr_cooldown, min_lr=lr_minimum)
             self.callbacks.append(self.reduce_lr)
