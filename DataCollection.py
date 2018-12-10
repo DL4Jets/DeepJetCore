@@ -408,11 +408,11 @@ class DataCollection(object):
             traind=None):
         import copy
         self.readFromFile(collectionfile)
-        self.dataclass.remove=False
-        self.dataclass.weight=True #False
         if traind: 
             print('[createTestDataForDataCollection] dataclass is overriden by user request')
             self.dataclass=traind
+        self.dataclass.remove=False
+        self.dataclass.weight=True #False
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
