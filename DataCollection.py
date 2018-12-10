@@ -668,7 +668,8 @@ class DataCollection(object):
                     #immediately send the next
                     continue
                   
-                    
+
+                results = sorted(results, key=lambda x:x[0])    
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
