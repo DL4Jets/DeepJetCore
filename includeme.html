@@ -1,47 +1,159 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics &mdash; DeepJetCore 2.7.4b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
     
-    <title>DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics &#8212; DeepJetCore 2.7.4b documentation</title>
-    
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '2.7.4b',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Welcome to DeepJetCore’s documentation!" href="index.html" />
+    <link rel="prev" title="Welcome to DeepJetCore’s documentation!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
    
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  <div class="wy-grid-for-nav">
 
-  </head>
-  <body role="document">
-  
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+          
+            <a href="index.html" class="icon icon-home"> DeepJetCore
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.7.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setup-python-packages-cern">Setup python packages (CERN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-installation-anaconda-setup-only-once">Pre-Installation: Anaconda setup (only once)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compiling-deepjetcore">Compiling DeepJetCore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeepJetCore</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/includeme.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="deepjetcore-training-and-evaluation-of-deep-neural-networks-for-high-energy-physics">
 <h1>DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics<a class="headerlink" href="#deepjetcore-training-and-evaluation-of-deep-neural-networks-for-high-energy-physics" title="Permalink to this headline">¶</a></h1>
@@ -53,13 +165,13 @@
 </ul>
 <p>This package provides the basic functions for out-of-memory training, resampling, and basic evaluation.</p>
 <dl class="docutils">
-<dt>The actual training data structures and DNN models must be defined in an additional user package. The data structures (defining the structure of the training data as numpy arrays), must inherit from the <code class="docutils literal"><span class="pre">TrainData</span></code> class, and must be reachable in the <code class="docutils literal"><span class="pre">$PYTHONPATH</span></code> as ::</dt>
+<dt>The actual training data structures and DNN models must be defined in an additional user package. The data structures (defining the structure of the training data as numpy arrays), must inherit from the <code class="docutils literal notranslate"><span class="pre">TrainData</span></code> class, and must be reachable in the <code class="docutils literal notranslate"><span class="pre">$PYTHONPATH</span></code> as ::</dt>
 <dd>from datastructure import *</dd>
 </dl>
 <p>A script to set it up will be provided eventually. For reference, please see: <a class="reference external" href="https://github.com/DL4Jets/DeepJet/tree/master/modules">modules</a>.</p>
 <div class="section" id="setup-python-packages-cern">
 <h2>Setup python packages (CERN)<a class="headerlink" href="#setup-python-packages-cern" title="Permalink to this headline">¶</a></h2>
-<p><strong>It is essential to perform all these steps on lxplus7. Simple ssh to &#8216;lxplus7&#8217; instead of &#8216;lxplus&#8217;</strong></p>
+<p><strong>It is essential to perform all these steps on lxplus7. Simple ssh to ‘lxplus7’ instead of ‘lxplus’</strong></p>
 </div>
 <div class="section" id="pre-installation-anaconda-setup-only-once">
 <h2>Pre-Installation: Anaconda setup (only once)<a class="headerlink" href="#pre-installation-anaconda-setup-only-once" title="Permalink to this headline">¶</a></h2>
@@ -72,12 +184,12 @@
 $ wget <a class="reference external" href="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh">https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh</a>
 $ bash Miniconda3-latest-Linux-x86_64.sh</dd>
 </dl>
-<p>Please follow the installation process. If you don&#8217;t know what an option does, please answer &#8216;yes&#8217;.
+<p>Please follow the installation process. If you don’t know what an option does, please answer ‘yes’.
 After installation, you have to log out and log in again for changes to take effect.
-If you don&#8217;t use bash, you might have to add the conda path to your .rc file</p>
+If you don’t use bash, you might have to add the conda path to your .rc file</p>
 <dl class="docutils">
 <dt>::</dt>
-<dd>$ export PATH=&#8221;&lt;your miniconda directory&gt;/miniconda3/bin:$PATH&#8221;</dd>
+<dd>$ export PATH=”&lt;your miniconda directory&gt;/miniconda3/bin:$PATH”</dd>
 </dl>
 <p>This has to be only done once.</p>
 </div>
@@ -91,7 +203,7 @@ $ git clone <a class="reference external" href="https://github.com/DL4Jets/DeepJ
 $ cd DeepJetCore/environment
 $ ./setupEnv.sh deepjetLinux3.conda</dd>
 </dl>
-<p>For enabling gpu support add <code class="docutils literal"><span class="pre">gpu</span></code> as an additional option to the last command.
+<p>For enabling gpu support add <code class="docutils literal notranslate"><span class="pre">gpu</span></code> as an additional option to the last command.
 This will take a while. Please log out and in again once the installation is finised.</p>
 </div>
 <div class="section" id="compiling-deepjetcore">
@@ -116,65 +228,60 @@ $ make -j4</dd>
 </div>
 
 
+           </div>
+           
           </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to DeepJetCore’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, S. Mehta, M. Verzetti, J. Kieseler, M. Stoye
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">DeepJetCore: Training and Evaluation of Deep Neural Networks for High-energy Physics</a><ul>
-<li><a class="reference internal" href="#setup-python-packages-cern">Setup python packages (CERN)</a></li>
-<li><a class="reference internal" href="#pre-installation-anaconda-setup-only-once">Pre-Installation: Anaconda setup (only once)</a></li>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#compiling-deepjetcore">Compiling DeepJetCore</a></li>
-<li><a class="reference internal" href="#usage">Usage</a></li>
-</ul>
-</li>
-</ul>
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Welcome to DeepJetCore&#8217;s documentation!</a></li>
-  </ul></li>
-</ul>
-</div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/includeme.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2019, S. Mehta, M. Verzetti, J. Kieseler, M. Stoye.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
-      |
-      <a href="_sources/includeme.rst.txt"
-          rel="nofollow">Page source</a>
-    </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
 
     
-
     
-  </body>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
 </html>
