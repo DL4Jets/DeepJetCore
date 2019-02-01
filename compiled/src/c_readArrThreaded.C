@@ -29,10 +29,12 @@ class readThread{
 public:
     readThread(long arrpointer,
             const std::string& filenamein,
+            const std::string& orig_filenamein,
             long size,bool rmwhendone){
 
         arrbuf=(float*)(void*)arrpointer;
         infile=filenamein;
+        orig_infile=orig_filenamein;
         length=size;
         length*=sizeof(float);
         pthread=new pthread_t();
@@ -84,6 +86,7 @@ private:
     int id;
     bool removewhendone;
     qlz_state_decompress *state_decompress;
+    std::string orig_infile;
 };
 
 
@@ -151,7 +154,11 @@ void * readThread::readArrThread( void *ptr ){
 
     if(allread!=thisthread->length){
         fclose(ifile);
-        throw std::runtime_error("readArrThread:target array size does not match ");
+        std::string moreinfo="\nexpected: ";
+        moreinfo+=std::to_string(thisthread->length);
+        moreinfo+=" got: ";
+        moreinfo+=std::to_string(allread);
+        throw std::runtime_error("readArrThread:target array size does not match "+thisthread->orig_infile+moreinfo);
     }
     fclose(ifile);
     thisthread->done=1;//atomic
@@ -175,6 +182,7 @@ size_t acounter=0;
 
 bool readBlocking(long arrpointer,
         std::string filenamein,
+        std::string orig_filenamein,
         const boost::python::list shape,
         bool rmwhendone){
 
@@ -183,7 +191,7 @@ bool readBlocking(long arrpointer,
     for(const auto& s:sshape)
         length*=s;
 
-    readThread * t=new readThread(arrpointer,filenamein,length,rmwhendone);
+    readThread * t=new readThread(arrpointer,filenamein,orig_filenamein,length,rmwhendone);
     t->readBlocking();
     bool succ=t->isDone();
     delete t;
@@ -192,6 +200,7 @@ bool readBlocking(long arrpointer,
 
 int startReading(long arrpointer,
         std::string filenamein,
+        std::string orig_filenamein,
         const boost::python::list shape,
         bool rmwhendone){
 
@@ -200,7 +209,7 @@ int startReading(long arrpointer,
     for(const auto& s:sshape)
         length*=s;
 
-    readThread * t=new readThread(arrpointer,filenamein,length,rmwhendone);
+    readThread * t=new readThread(arrpointer,filenamein,orig_filenamein,length,rmwhendone);
     t->start();
     if(allreads.at(acounter) && !allreads.at(acounter)->isDone())
         throw std::out_of_range("c_readArrThreaded::startReading: overflow. Increase number of maximum threads (setMax)");

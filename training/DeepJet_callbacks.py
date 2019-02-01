@@ -14,6 +14,40 @@ from time import time
 from pdb import set_trace
 import json
 from keras import backend as K
+import matplotlib
+import os
+matplotlib.use('Agg') 
+
+
+class plot_loss_or_metric(Callback):
+    def __init__(self,outputDir,metrics):
+        self.metrics=metrics
+        self.outputDir=outputDir
+        
+    def on_epoch_end(self,epoch, epoch_logs={}):
+        lossfile=os.path.join( self.outputDir, 'full_info.log')
+        allinfo_history=None
+        with open(lossfile, 'r') as infile:
+            allinfo_history=json.load(infile)
+            
+        nepochs=len(allinfo_history)
+        allnumbers=[[] for i in range(len(self.metrics))]
+        epochs=[]
+        for i in range(nepochs):
+            epochs.append(i)
+            for j in range(len(self.metrics)):
+                allnumbers[j].append(allinfo_history[i][self.metrics[j]])
+        
+        import matplotlib.pyplot as plt
+        for j in range(len(self.metrics)):
+            f = plt.figure()
+            plt.plot(epochs,allnumbers[j],'r',label=self.metrics[j])
+            plt.ylabel(self.metrics[j])
+            plt.xlabel('epoch')
+            #plt.legend()
+            f.savefig(self.outputDir+'/'+self.metrics[j]+'.pdf')
+            plt.close()
+    
 
 class newline_callbacks_begin(Callback):
     
@@ -40,11 +74,16 @@ class newline_callbacks_begin(Callback):
         with open(learnfile, 'a') as f:
             f.write(str(float(K.get_value(self.model.optimizer.lr)))+'\n')
         
+        lossfile=os.path.join( self.outputDir, 'full_info.log')
+        if os.path.isfile(lossfile):
+            with open(lossfile, 'r') as infile:
+                self.full_logs=json.load(infile)
+            
         normed = {}
         for vv in epoch_logs:
             normed[vv] = float(epoch_logs[vv])
         self.full_logs.append(normed)
-        lossfile=os.path.join( self.outputDir, 'full_info.log')
+        
         with open(lossfile, 'w') as out:
             out.write(json.dumps(self.full_logs))
             
@@ -109,7 +148,9 @@ class DeepJet_callbacks(object):
                  outputDir='',
                  minTokenLifetime=5,
                  checkperiod=10,
-                 plotLossEachEpoch=True):
+                 checkperiodoffset=0,
+                 plotLossEachEpoch=True, 
+                 additional_plots=None):
         
 
         
@@ -136,7 +177,8 @@ class DeepJet_callbacks(object):
         self.callbacks.append(self.modelbestcheck)
         
         if checkperiod>0:
-            self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_epoch{epoch:02d}.h5", verbose=1,period=checkperiod, save_weights_only=False)
+            self.modelcheckperiod=ModelCheckpoint(outputDir+"/KERAS_check_model_block_"+str(checkperiodoffset)+"_epoch_{epoch:02d}.h5", 
+                                                  verbose=1,period=checkperiod, save_weights_only=False)
             self.callbacks.append(self.modelcheckperiod)
         
         self.modelcheck=saveCheckPointDeepJet(outputDir,model)
@@ -148,7 +190,10 @@ class DeepJet_callbacks(object):
                                           verbose=1, mode='min')
             self.callbacks.append(self.stopping)
         
-  
+        if additional_plots:
+            self.additionalplots = plot_loss_or_metric(outputDir,additional_plots)
+            self.callbacks.append(self.additionalplots)
+            
         self.history=History()
         self.timer = Losstimer()
         

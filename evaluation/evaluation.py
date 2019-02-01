@@ -118,6 +118,20 @@ class testDescriptor(object):
             else:
                 all_write = prediction
 
+            #if a prediction functor was set and the corresponding predictionFunctorClasses
+            #its output is also added to the final predictions
+            #predictionFunctorClasses: an array of strings labelling extra variables to add to the tree 
+            #predictionFunctor: receives the numpy array with the predictions for N events
+            #                   returns MxN numpy array 
+            #                   where M=len(predictionFunctorClasses)
+            #                   and   N=no. events
+            if hasattr(td, 'predictionFunctor') and hasattr(td,'predictionFunctorClasses'):
+                print('Extending the output with the configured prediction functor output')
+                formatstring.extend( getattr(td,'predictionFunctorClasses') )
+                all_write = np.concatenate([all_write,
+                                            getattr(td,'predictionFunctor')(prediction)],                                           
+                                           axis=1)
+
             if all_write.ndim == 2:
                 all_write = np.concatenate([all_write, weights], axis=1)
                 formatstring.append('weight')
@@ -218,7 +232,10 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     individual=False,
                     xaxis="",
                     nbins=200,
-                    treename='deepntuplizer/tree'):#['solid?udsg','hatched?c']): 
+                    treename='deepntuplizer/tree',
+                    xmin=-1,
+                    experimentlabel="",lumilabel="",prelimlabel="",
+                    npoints=500):#['solid?udsg','hatched?c']): 
     
     import copy
     
@@ -268,7 +285,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         outpdffile,allcuts,cmsstyle, 
                         firstcomment,secondcomment,
                         invalidlist,extralegcopy,logY,
-                        individual,xaxis,nbins,treename)
+                        individual,xaxis,nbins,treename,xmin,
+                        experimentlabel,lumilabel,prelimlabel)
         
         except Exception as e:
             print('error for these inputs:')

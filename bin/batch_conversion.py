@@ -1,4 +1,4 @@
-#! /bin/env python
+#!/bin/env python
 
 from argparse import ArgumentParser
 from pdb import set_trace
@@ -10,38 +10,98 @@ parser.add_argument("infile", help="set input sample description (output from th
 parser.add_argument("nchunks", type=int, help="number of jobs to be submitted")
 parser.add_argument("out", help="output path")
 parser.add_argument("batch_dir", help="batch directory")
-parser.add_argument("-c", help="output class")
+parser.add_argument("-c", help="output class", default="")
 parser.add_argument("--testdatafor", default='')
-parser.add_argument("--nomeans", action='store_true', help='where to get means/std, in case already computed')
+parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
+parser.add_argument("--meansfrom", default="", help='where to get means/std, in case already computed')
+parser.add_argument("--useexistingsplit", default=False, help='use an existing file split (potentially dangerous)')
 args = parser.parse_args()
 
-deep_jet_base = [i for i in os.environ['PYTHONPATH'].split(':') if 'DeepJet' in i]
-if len(deep_jet_base) != 1:
-   raise RuntimeError('I cannot find the project root directory')
-deep_jet_base = os.path.realpath(deep_jet_base[0].split('environment')[0])
+args.infile = os.path.abspath(args.infile)
+args.out = os.path.abspath(args.out)
+args.batch_dir = os.path.abspath(args.batch_dir)
 
-proc = subprocess.Popen(
-   'voms-proxy-info', 
-   stdout=subprocess.PIPE, 
-   stderr=subprocess.PIPE
-)
-if proc.wait() <> 0:
-   print "You should have a valid grid proxy to run this!"
-   exit()
+if len(args.c)<1:
+    print("please specify and output class")
+    exit(-1)
 
-if not os.path.isdir(args.batch_dir):
-   os.mkdir(args.batch_dir)
+cmssw_version='CMSSW_10_0_0'
+
+deep_jet_base = os.environ['DEEPJETCORE_SUBPACKAGE']
+if len(deep_jet_base) < 1:
+   raise RuntimeError('I cannot find the project root directory. DEEPJETCORE_SUBPACKAGE needs to be defined')
+
+
+deep_jet_base_name = os.path.basename(deep_jet_base)
+deep_jet_core  = os.path.abspath((os.environ['DEEPJETCORE']))
+
+   
+print('creating CMSSW based installation of DeepJetCore to run on sl6 nodes')
+
+fullcommand='''
+source deactivate ; 
+cd {batchdir} ; 
+export SCRAM_ARCH=slc6_amd64_gcc630 ; 
+scramv1 project CMSSW {cmssw_version} ; 
+cd {cmssw_version}/src ; 
+echo setting up cmssw env ; 
+eval `scram runtime -sh` ; 
+cp -rL {djc} . ; 
+mkdir -p {DJ_base_name} ;
+cp -rL {DJ}/modules {DJ_base_name}/ ; 
+cp {DJ}/* {DJ_base_name}/ ; 
+cd {batchdir}/{cmssw_version}/src/DeepJetCore/compiled ;  
+pwd ; 
+echo compiling DeepJetCore ;
+make clean; 
+make -j4; 
+cd {batchdir}/{cmssw_version}/src/{DJ_base_name} ; 
+echo sourcing {batchdir}/{cmssw_version}/src/DeepJetCore ;
+
+cd {batchdir}/{cmssw_version}/src/DeepJetCore
+export DEEPJETCORE=`pwd`
+export PYTHONPATH=`pwd`/../:$PYTHONPATH
+export LD_LIBRARY_PATH=`pwd`/compiled:$LD_LIBRARY_PATH
+export PATH=`pwd`/bin:$PATH
+
+echo "compiling {DJ_base_name} (if needed)";
+echo {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules
+cd {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules ; 
+make clean; 
+make -j4 ; 
+'''.format(DJ=deep_jet_base,DJ_base_name=deep_jet_base_name,  djc=deep_jet_core, batchdir=args.batch_dir,cmssw_version=cmssw_version)
+
+#print(fullcommand)
+#exit()
+
+if os.path.isdir(args.out):
+    print ("output dir must not exists")
+    exit(-2)
+
+if os.path.isdir(args.batch_dir):
+    print ("batch dir must not exists")
+os.mkdir(args.batch_dir)
 
 if not os.path.isdir('%s/batch' % args.batch_dir):
-   os.mkdir('%s/batch' % args.batch_dir)
+   os.mkdir('%s/batch' % args.batch_dir)   
+   
 
-if not (args.nomeans or args.testdatafor):
+
+os.system(fullcommand)
+
+
+djc_cmssw=args.batch_dir+'/'+cmssw_version +'/src/DeepJetCore'
+
+
+if not (len(args.meansfrom) or args.testdatafor):
    #Run a fisrt round of root conversion to get the means/std and weights
+   print('creating a dummy datacollection for means/norms and weighter (can take a while)...')
    cmd = [
-      './convertFromRoot.py', 
+      'convertFromRoot.py', 
       '-i', args.infile,
       '-c', args.c, 
       '-o', args.out, 
+      '--nforweighter', args.nforweighter,
       '--means'
       ]
    proc  = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -50,7 +110,15 @@ if not (args.nomeans or args.testdatafor):
    
    if code != 0:
       raise RuntimeError('The first round of root conversion failed with message: \n\n%s' % err)
+   else:
+       print('means/norms/weighter produced successfully')
 
+elif args.meansfrom:
+    if not os.path.exists(args.meansfrom):
+        raise Exception("The file "+args.meansfrom+" does not exist")
+    print('using means/weighter from '+args.meansfrom)
+    os.mkdir(args.out)
+    os.system('cp '+args.meansfrom+' '+args.out+'/batch_template.dc')
 
 inputs = [i for i in open(args.infile)]
 
@@ -62,24 +130,34 @@ def chunkify(l, n):
 if not args.infile.endswith('.txt'):
    raise ValueError('The code assumes that the input files has .txt extension')
 
+
+print('splitting input file...')
 txt_template = args.infile.replace('.txt', '.%s.txt')
 batch_txts = []
 nchunks = 0
 for idx, chunk in enumerate(chunkify(inputs, len(inputs)/args.nchunks)):
    name = txt_template % idx
    batch_txts.append(name)
-   with open(name, 'w') as cfile:
-      cfile.write(''.join(chunk))
+   if not args.useexistingsplit:
+       with open(name, 'w') as cfile:
+          cfile.write(''.join(chunk))
    nchunks = idx
 
+
 batch_template = '''#!/bin/bash
-sleep $(shuf -i1-600 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
+sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
 echo "JOBSUB::RUN job running"
 trap "echo JOBSUB::FAIL job killed" SIGTERM
-cd {DJ}/environment/
-source lxplus_env.sh
-cd {DJ}/convertFromRoot/
-./convertFromRoot.py "$@"
+BASEDIR=`pwd`
+cd {djc_cmssw}
+eval `scram runtime -sh` #get glibc libraries
+export PATH={djc_cmssw}/bin:$PATH
+export LD_LIBRARY_PATH={djc_cmssw}/compiled:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH={djc_cmssw}/../{DJ}/modules:$LD_LIBRARY_PATH
+export PYTHONPATH={djc_cmssw}/../:$PYTHONPATH
+export PYTHONPATH={djc_cmssw}/../{DJ}/modules:$PYTHONPATH
+cd $BASEDIR
+convertFromRoot.py "$@"
 exitstatus=$?
 if [ $exitstatus != 0 ]
 then
@@ -87,7 +165,7 @@ echo JOBSUB::FAIL job failed with status $exitstatus
 else
 echo JOBSUB::SUCC job ended sucessfully
 fi
-'''.format(DJ=deep_jet_base)
+'''.format(DJ=deep_jet_base_name,djc_cmssw=djc_cmssw)
 batch_script = '%s/batch.sh' % args.batch_dir
 with open(batch_script, 'w') as bb:
    bb.write(batch_template)
@@ -101,13 +179,13 @@ arguments             = -i {INFILE} -c {CLASS} -o {OUT} --nothreads --batch conv
 output                = batch/con_out.$(ProcId).out
 error                 = batch/con_out.$(ProcId).err
 log                   = batch/con_out.$(ProcId).log
-send_credential       = True
++MaxRuntime = 86399
 getenv = True
 use_x509userproxy = True
 queue {NJOBS}
 '''.format(
    EXE = os.path.realpath(batch_script),
-   NJOBS = nchunks,
+   NJOBS = nchunks+1,
    INFILE = txt_template % '$(ProcId)',
    CLASS = args.c,
    OUT = os.path.realpath(args.out),
@@ -115,3 +193,5 @@ queue {NJOBS}
    MEANS = means_file,
 )
    )
+   
+print('condor submit file can be found in '+ args.batch_dir+'\nuse check_conversion.py ' + args.batch_dir + ' to to check jobs')
