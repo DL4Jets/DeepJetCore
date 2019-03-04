@@ -200,7 +200,10 @@ void makePlots(
 
     allhistos.at(0)->Draw("AXIS");
     for(size_t i=0;i<s_names.size();i++){
-        allhistos.at(i)->Draw("same,hist");
+    	if(makeWidthProfile)
+    		allhistos.at(i)->Draw("same,e2");
+    	else
+    		allhistos.at(i)->Draw("same,hist");
     }
     leg->Draw("same");
 

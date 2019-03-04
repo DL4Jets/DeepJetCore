@@ -224,6 +224,49 @@ class DataCollection(object):
         while (count+1)*self.__batchsize <= self.nsamples:
             count+=1
         return count
+    
+    def validate(self, remove=True, skip_first=0):
+        '''
+        checks if all samples in the collection can be read properly.
+        removes the invalid samples from the sample list.
+        Also removes the original link to the root file, so recover cannot be run
+        (this might be changed in future implementations)
+        '''
+        for i in range(len(self.samples)):
+            if i < skip_first: continue
+            td=copy.deepcopy(self.dataclass)
+            fullpath=self.getSamplePath(self.samples[i])
+            print('reading '+fullpath, str(self.sampleentries[i]), str(i), '/', str(len(self.samples)))
+            try:
+                td.readIn(fullpath)
+                for x in td.x:
+                    if td.nsamples != x.shape[0]:
+                        print("not right length")
+                        raise Exception("not right length")
+                for y in td.y:
+                    if td.nsamples != y.shape[0]:
+                        print("not right length")
+                        raise Exception("not right length")
+                
+                del td
+                continue
+            except Exception as e:
+                print('problem with file, removing ', fullpath)
+                del self.samples[i]
+                del self.originRoots[i]
+                self.nsamples -= self.sampleentries[i]
+                del self.sampleentries[i]
+                
+    def removeEntry(self,relative_path_to_entry):
+        for i in range(len(self.samples)):
+            if relative_path_to_entry==self.samples[i]:
+                print('removing '+self.samples[i]+" - "+str(self.sampleentries[i]))
+                del self.samples[i]
+                del self.originRoots[i]
+                self.nsamples -= self.sampleentries[i]
+                del self.sampleentries[i]
+                break
+                 
         
     def writeToFile(self,filename):
         import pickle
@@ -361,11 +404,15 @@ class DataCollection(object):
     def createTestDataForDataCollection(
             self, collectionfile, inputfile, 
             outputDir, outname = 'dataCollection.dc',
-            batch_mode = False):
+            batch_mode = False,
+            traind=None):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
         self.dataclass.weight=True #False
+        if traind: 
+            print('[createTestDataForDataCollection] dataclass is overriden by user request')
+            self.dataclass=traind
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
@@ -429,6 +476,7 @@ class DataCollection(object):
                 self.originRoots
                 )            
             self.weighter.printHistos(outputDir)
+            
         
         if redo_meansandweights:
             logging.info('producing means and norms')
@@ -531,7 +579,9 @@ class DataCollection(object):
             
             try:
                 fileTimeOut(sample,120) #once available copy to ram
-                os.system('cp '+sample+' '+ramdisksample)
+                os_ret=os.system('cp '+sample+' '+ramdisksample)
+                if os_ret:
+                    raise Exception("copy to ramdisk not successful for "+sample)
                 td.readFromRootFile(ramdisksample,self.means, self.weighter) 
                 #wrlck.acquire()
                 td.writeOut(newpath)

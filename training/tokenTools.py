@@ -48,9 +48,13 @@ def checkTokens(cutofftime_hours=48):
     
     import datetime
     thistime=datetime.datetime.now()
-    day,month,year=kdate.split('/')
+    month,day,year=kdate.split('/')
     hour,minu,sec=ktime.split(':')
-    tokentime=datetime.datetime(2000+int(year),int(month),int(day),int(hour))
+    try:
+        tokentime=datetime.datetime(2000+int(year),int(month),int(day),int(hour))
+    except:
+        print 'Failed to set token time with mm/dd/yy, attempting dd/mm/yy permutation'
+        tokentime=datetime.datetime(2000+int(year),int(day),int(month),int(hour))
 
     diff=tokentime-thistime
     diff=diff.total_seconds()

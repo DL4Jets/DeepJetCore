@@ -52,6 +52,9 @@ class training_base(object):
 				parser=None
 				):
         
+        import sys
+        scriptname=sys.argv[0]
+        
         if parser is None: parser = ArgumentParser('Run the training')
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
@@ -106,6 +109,7 @@ class training_base(object):
         self.compiled=False
         self.checkpointcounter=0
         self.renewtokens=renewtokens
+        self.callbacks=None
         
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
@@ -127,12 +131,8 @@ class training_base(object):
         self.outputDir+='/'
         
         #copy configuration to output dir
-        # move this part to the individual subpackage
-        #if isNewTraining:
-        #    djsource= os.environ['DEEPJET']
-        #    shutil.copytree(djsource+'/modules/models', self.outputDir+'models')
-        #    shutil.copyfile(sys.argv[0],self.outputDir+sys.argv[0])
-
+        shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+        
             
             
         self.train_data = collection_class()
@@ -140,9 +140,10 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.002)
-            
-        self.val_data=self.train_data.split(splittrainandtest)
+            self.train_data.split(0.02)
+            self.val_data=self.train_data
+        else:    
+            self.val_data=self.train_data.split(splittrainandtest)
         
 
 
@@ -205,13 +206,17 @@ class training_base(object):
         
     def compileModel(self,
                      learningrate,
+                     clipnorm=None,
                      **compileargs):
         if not self.keras_model:
             raise Exception('set model first') 
 
         from keras.optimizers import Adam
         self.startlearningrate=learningrate
-        self.optimizer = Adam(lr=self.startlearningrate)
+        if clipnorm:
+            self.optimizer = Adam(lr=self.startlearningrate,clipnorm=clipnorm)
+        else:
+            self.optimizer = Adam(lr=self.startlearningrate)
         self.keras_model.compile(optimizer=self.optimizer,**compileargs)
         self.compiled=True
 
@@ -251,8 +256,9 @@ class training_base(object):
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
-                   maxqsize=20, 
+                   maxqsize=5, 
                    checkperiod=10,
+                   additional_plots=None,
                    **trainargs):
         
         
@@ -290,7 +296,7 @@ class training_base(object):
         print('total sample size: '+str(self.train_data.nsamples))
         #exit()
         
-        if self.train_data.maxFilesOpen<0:
+        if self.train_data.maxFilesOpen<0 or True:
             self.train_data.maxFilesOpen=nfilespre
             self.val_data.maxFilesOpen=min(int(nfilespre/2),1)
         
@@ -299,7 +305,7 @@ class training_base(object):
         from .DeepJet_callbacks import DeepJet_callbacks
         
         
-        callbacks=DeepJet_callbacks(self.keras_model,
+        self.callbacks=DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
                                     lr_factor=lr_factor,
                                     lr_patience=lr_patience, 
@@ -307,18 +313,21 @@ class training_base(object):
                                     lr_cooldown=lr_cooldown, 
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir,
-                                    checkperiod=checkperiod)
-        nepochs=nepochs-self.trainedepoches
+                                    checkperiod=checkperiod,
+                                    checkperiodoffset=self.trainedepoches,
+                                    additional_plots=additional_plots)
+        
+        
         print('starting training')
         self.keras_model.fit_generator(self.train_data.generator() ,
                             steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
-                            epochs=nepochs,
-                            callbacks=callbacks.callbacks,
+                            epochs=nepochs-self.trainedepoches,
+                            callbacks=self.callbacks.callbacks,
                             validation_data=self.val_data.generator(),
                             validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
                             max_q_size=maxqsize,**trainargs)
         
-        
+        self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")
         
         import copy
@@ -327,7 +336,7 @@ class training_base(object):
         del self.train_data
         self.train_data=tmpdc
         
-        return self.keras_model, callbacks.history
+        return self.keras_model, self.callbacks.history
     
     
         

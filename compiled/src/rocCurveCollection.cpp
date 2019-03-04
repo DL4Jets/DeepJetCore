@@ -44,7 +44,8 @@ void rocCurveCollection::addROC(const TString& name, const TString& probability,
 
 
 void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
-        const TString&outfile, TCanvas* cv, TFile * f, std::vector<TChain*>* chainvec,double xmin_in){
+        const TString&outfile, TCanvas* cv, TFile * f, std::vector<TChain*>* chainvec,const double xmin_in,
+		TString experimentlabel,TString lumilabel,TString prelimlabel){
 
     gROOT->SetBatch();
 
@@ -184,35 +185,38 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         haxis.GetXaxis()->SetRangeUser(xmin,1);
 
     if(cmsstyle_){
-
-
-        //add CMS labels
-        TLatex *tex = new TLatex(0.18,0.865,"CMS Simulation");
-        tex->SetNDC(true);
-        tex->SetTextFont(61);
-        tex->SetTextSize(0.08);
-        tex->SetLineWidth(2);
-        tex->Draw();
-
-        tex = new TLatex(0.57,0.865,"#it{Preliminary}");
-        tex->SetNDC(true);
-        tex->SetTextFont(42);
-        tex->SetTextSize(0.05);
-        tex->SetLineWidth(2);
-        tex->Draw();
-
-        tex = new TLatex(.97,0.955,"#sqrt{s}=13 TeV, Phase 1");
-        tex->SetNDC(true);
-        tex->SetTextAlign(31);
-        tex->SetTextFont(42);
-        tex->SetTextSize(0.05);
-        tex->SetLineWidth(2);
-        tex->Draw();
-
-        //haxis.GetXaxis()->SetTitle("b-jet efficiency");
-
-        haxis.GetXaxis()->SetRangeUser(0,1);
+    	if(experimentlabel.Length()<1)experimentlabel="CMS Simulation";
+    	if(prelimlabel.Length()<1)prelimlabel="#it{Preliminary}";
+    	if(lumilabel.Length()<1)lumilabel="#sqrt{s}=13 TeV, Phase 1";
     }
+
+
+    //add CMS labels
+    TLatex *tex = new TLatex(0.18,0.855,experimentlabel);
+    tex->SetNDC(true);
+    tex->SetTextFont(61);
+    tex->SetTextSize(0.08);
+    tex->SetLineWidth(2);
+    tex->Draw();
+
+
+    tex = new TLatex(0.57,0.865,prelimlabel);
+    tex->SetNDC(true);
+    tex->SetTextFont(42);
+    tex->SetTextSize(0.05);
+    tex->SetLineWidth(2);
+    tex->Draw();
+
+
+    tex = new TLatex(.97,0.955,lumilabel);
+    tex->SetNDC(true);
+    tex->SetTextAlign(31);
+    tex->SetTextFont(42);
+    tex->SetTextSize(0.05);
+    tex->SetLineWidth(2);
+    tex->Draw();
+
+
     leg_->Draw("same");
     ///////
     if(extralegendtries_.size()){
@@ -238,7 +242,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     for(auto& t:additionaltext_)
         t->Draw();
     //comment lines
-    TLatex *tex = new TLatex(0.18,0.805,comment0_);
+    tex = new TLatex(0.18,0.805,comment0_);
     tex->SetNDC(true);
     tex->SetTextFont(42);
     tex->SetTextSize(0.05);

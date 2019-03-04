@@ -398,16 +398,19 @@ class TrainData(object):
                 for i in range(len(self.w_list)):
                     self.readthreadids.append(startReading(self.w_list[i].ctypes.data,
                                                            filebase+'w.'+str(i),
+                                                           fileprefix,
                                                            list(self.w_list[i].shape),
                                                            isRamDisk))
                 for i in range(len(self.x_list)):
                     self.readthreadids.append(startReading(self.x_list[i].ctypes.data,
                                                            filebase+'x.'+str(i),
+                                                           fileprefix,
                                                            list(self.x_list[i].shape),
                                                            isRamDisk))
                 for i in range(len(self.y_list)):
                     self.readthreadids.append(startReading(self.y_list[i].ctypes.data,
                                                            filebase+'y.'+str(i),
+                                                           fileprefix,
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
                 
@@ -429,16 +432,19 @@ class TrainData(object):
                 for i in range(len(self.w_list)):
                     (readBlocking(self.w_list[i].ctypes.data,
                                                            filebase+'w.'+str(i),
+                                                           fileprefix,
                                                            list(self.w_list[i].shape),
                                                            isRamDisk))
                 for i in range(len(self.x_list)):
                     (readBlocking(self.x_list[i].ctypes.data,
                                                            filebase+'x.'+str(i),
+                                                           fileprefix,
                                                            list(self.x_list[i].shape),
                                                            isRamDisk))
                 for i in range(len(self.y_list)):
                     (readBlocking(self.y_list[i].ctypes.data,
                                                            filebase+'y.'+str(i),
+                                                           fileprefix,
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
                 
@@ -673,9 +679,10 @@ class TrainData(object):
         counter=0
         if self.remove or self.weight:
             for fname in filenames:
+                fileTimeOut(fname, 120)
                 nparray = self.readTreeFromRootToTuple(fname, branches=branches)
                 weighter.addDistributions(nparray)
-                del nparray
+                #del nparray
                 showprog.show(counter)
                 counter=counter+1
             weighter.createRemoveProbabilitiesAndWeights(self.referenceclass)
@@ -684,24 +691,33 @@ class TrainData(object):
         
     
 
-    def _normalize_input_(self, weighter, npy_array):
+    def _normalize_input_(self, weighter, npy_array, oversample=1):
         weights = None
         if self.weight:
             weights=weighter.getJetWeights(npy_array)
             self.w = [weights for _ in self.y]
         elif self.remove:
-            notremoves=weighter.createNotRemoveIndices(npy_array)
-            if self.undefTruth:
-                undef=npy_array[self.undefTruth].sum(axis=1)
-                notremoves-=undef
-            print(' to created remove indices')
-            weights=notremoves
-
-            print('remove')
-            self.x = [x[notremoves > 0] for x in self.x]
-            self.y = [y[notremoves > 0] for y in self.y]
-            weights=weights[notremoves > 0]
-            self.w = [weights for _ in self.y]
+            x_in=self.x
+            y_in=self.y
+            for i in range(oversample):
+                notremoves=weighter.createNotRemoveIndices(npy_array)
+                if self.undefTruth:
+                    undef=npy_array[self.undefTruth].sum(axis=1)
+                    notremoves-=undef
+                print(' to created remove indices', i)
+                weights=notremoves
+                
+                print('remove', i)
+                if not i:
+                    self.x = [x[notremoves > 0] for x in x_in]
+                    self.y = [y[notremoves > 0] for y in y_in]
+                else:
+                    self.x = [self.x[i].concatenate(x_in[i][notremoves > 0]) for i in range(len(self.x))]
+                    self.y = [self.y[i].concatenate(y_in[i][notremoves > 0]) for i in range(len(self.y))]
+                    
+            self.w = [numpy.zeros(self.x[0].shape)+1 for _ in self.y]
+                    
+                
             newnsamp=self.x[0].shape[0]
             print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
             self.nsamples = newnsamp
