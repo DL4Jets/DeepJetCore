@@ -18,3 +18,5 @@ __pycache__
 *.json
 .DS_Store
 #*.*#
+build/
+*.egg
