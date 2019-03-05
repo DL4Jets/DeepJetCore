@@ -19,4 +19,4 @@ __pycache__
 .DS_Store
 #*.*#
 build/
-*.egg
+*.egg-info/
