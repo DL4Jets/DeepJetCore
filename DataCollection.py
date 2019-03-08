@@ -839,6 +839,7 @@ class DataCollection(object):
                 counter+=1
                 if counter>=maxval:
                     counter=0   
+                    self.filelist = shuffle(self.filelist)
                 return counter 
             
             def __del__(self):
