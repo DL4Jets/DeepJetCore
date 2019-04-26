@@ -1,7 +1,8 @@
 #activate deepjetLinux3_gpu if no other conda env is already active
 if [ -z "$CONDA_PREFIX" ]
 then
-		source activate deepjetLinux3
+   source deactivate
+   source activate deepjetLinux3
 fi
 
 export DEEPJETCORE=`pwd`
