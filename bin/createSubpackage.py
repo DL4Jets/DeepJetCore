@@ -45,6 +45,7 @@ mkdir -p {subpackage_dir}/modules
 mkdir -p {subpackage_dir}/modules/datastructures
 mkdir -p {subpackage_dir}/scripts
 mkdir -p {subpackage_dir}/Train
+mkdir -p {subpackage_dir}/example_data
 '''.format(subpackage_dir=subpackage_dir)
 
 datastructure_template='''
@@ -57,7 +58,7 @@ class TrainData_template(TrainData):
 
         self.treename="tree" #input root tree name
         
-        self.truthclasses=[] #truth classes for classification
+        self.truthclasses=[''] #truth classes for classification
         
         self.weightbranchX='branchx' #needs to be specified
         self.weightbranchY='branchy' #needs to be specified
