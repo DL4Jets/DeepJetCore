@@ -63,4 +63,11 @@ The environment is set up.
 Usage
 ==========
 
-For a practical example application of the DeepJetCore package, please refer to https://github.com/DL4Jets/DeepJet
+DeepJetCore is only a set of tools and wrappers and does not provide ready-to-use training code.
+However, an example package containing more specific code examples (referred to as 'subpackage' in the following) can be created once everything is compiled using the script ``createSubpackage.py``.
+This subpackage will include an example dataset which gets generated on the fly (size about 150 MB).
+More instructions are printed by the script creating the subpackage.
+This subpackage can serve as a reference for own projects.
+
+
+

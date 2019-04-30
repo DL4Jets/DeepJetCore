@@ -645,6 +645,16 @@ class TrainData(object):
             nparray = tree2array(tree, stop=limit, branches=usebranches)
             return nparray
         
+    def read_truthclasses(self,filename):
+        npy_array = self.readTreeFromRootToTuple(filename)
+        arl=[]
+        for c in self.truthclasses:
+            a = numpy.asarray(npy_array[c])
+            a = a.reshape((a.shape[0],1))
+            arl.append(a)
+            
+        return numpy.concatenate(arl,axis=-1)
+        
     def make_means(self, nparray):
         from preprocessing import meanNormProd
         return meanNormProd(nparray)

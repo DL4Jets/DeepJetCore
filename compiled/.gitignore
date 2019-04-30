@@ -1,3 +1,7 @@
 *.so
 *.o
 obj/*.o
+classdict.cxx
+classdict.rootmap
+classdict_rdict.pcm
+

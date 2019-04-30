@@ -541,5 +541,24 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     #print(array)
     return array
 
-
-
+def read2DArray(filename, treename, branchname, nevents, xsize, ysize):
+    from DeepJetCore.compiled import c_arrayReads
+    
+    array = numpy.zeros((nevents,xsize, ysize,1) , dtype='float32')
+    
+    c_arrayReads.read2DArray(array,filename, treename, branchname)
+    
+    return array
+    
+    
+    
+    
+def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize):
+    from DeepJetCore.compiled import c_arrayReads
+    
+    array = numpy.zeros((nevents,xsize, ysize,zsize,1) , dtype='float32')
+    
+    c_arrayReads.read3DArray(array,filename, treename, branchname)
+    
+    return array
+    

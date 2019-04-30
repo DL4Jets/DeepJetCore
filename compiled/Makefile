@@ -24,6 +24,8 @@ CFLAGS=
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
+BINS := $(patsubst bin/%.cpp, %, $(wildcard bin/*.cpp))
+
 MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
@@ -34,8 +36,19 @@ ifeq ($(UNAME_S),Darwin)
 	LINUXADD=""
 endif
 
-all: $(MODULES_SHARED_LIBS)
 
+all: $(MODULES_SHARED_LIBS) make_example_data classdict.so
+
+classdict.cxx: src/LinkDef.h
+	rootcling -v4 -f $@  -rmf classdict.rootmap -rml classdict.so  $^
+
+classdict.so:
+	g++ -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
+	
+make_example_data: to_bin/make_example_data.cpp libdeepjetcorehelpers.so classdict.cxx
+	g++ $(CFLAGS) $(LINUXADD) $(ROOTSTUFF) -I./interface  $< -o $@
+	mv make_example_data ../bin/
+	
 #helpers
 libquicklz.so:
 	gcc -shared -O2 -fPIC src/quicklz.c -o libquicklz.so
@@ -44,8 +57,8 @@ obj/%.o: src/%.cpp
 	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
 
 #pack helpers in lib
-libdeepjetcorehelpers.so: $(OBJ_FILES)
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) obj/*.o -o $@ 
+libdeepjetcorehelpers.so: $(OBJ_FILES) 
+	g++ -shared $(LINUXADD) -fPIC $(ROOTSTUFF) obj/*.o -o $@ 
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
 	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -L$(BOOST_LIB)  -lboost_python -L$(PYTHON_LIB) -lpython2.7  $< -o $(@) 
@@ -55,5 +68,6 @@ libdeepjetcorehelpers.so: $(OBJ_FILES)
 	g++   $(ROOTSTUFF) -O2 -I./interface -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -fPIC -c -o $(@) $<
 
 
+
 clean: 
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so
+	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so classdict.so

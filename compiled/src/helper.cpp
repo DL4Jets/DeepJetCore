@@ -7,6 +7,7 @@
 
 
 #include "../interface/helper.h"
+#include <stdexcept>
 
 
 TString prependXRootD(const TString& path){
@@ -31,4 +32,19 @@ float deltaPhi(const float& a, const float& b){
     while (delta >= pi)  delta-= 2* pi;
     while (delta < -pi)  delta+= 2* pi;
     return delta;
+}
+
+
+
+void checkTObject(const TObject* o, TString msg){
+    TString mesg = msg;
+    mesg += ": " ;
+    const char * name  = o->GetName();
+    mesg += (TString)name;
+    if(!o || o->IsZombie()){
+        throw std::runtime_error(mesg.Data());
+    }
+
+
+
 }
