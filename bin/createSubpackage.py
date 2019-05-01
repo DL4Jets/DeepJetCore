@@ -23,15 +23,12 @@ subpackage_dir=args.subpackage_parent_dir+'/'+args.subpackage_name
 environment_file='''
 #! /bin/bash
 THISDIR=`pwd`
+cd {deepjetcore}
+source env.sh
+cd $THISDIR
 export {subpackage}=$( cd "$( dirname "${BASH_SOURCE}" )" && pwd -P)
 export DEEPJETCORE_SUBPACKAGE=${subpackage}
-cd {deepjetcore}
-if command -v nvidia-smi > /dev/null
-then
-        source gpu_env.sh
-else
-        source lxplus_env.sh
-fi
+
 cd ${subpackage}
 export PYTHONPATH=${subpackage}/modules:$PYTHONPATH
 export PYTHONPATH=${subpackage}/modules/datastructures:$PYTHONPATH
