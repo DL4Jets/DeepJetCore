@@ -19,16 +19,17 @@ fi
 envfile=djcenv.conda
 envname="${envfile%.*}${addstring}"
 pipfile="${envfile%.*}.pip"
-pipfile_gpu="${envfile%.*}_gpu.pip"
+pipfilegpu="${envfile%.*}_gpu.pip"
+
 
 conda create --copy --name $envname python=2.7.13 
 conda install --name $envname --file $envfile
 
-
 source activate $envname
+
 if [ $addstring ]
 then
-   pip install -r $pipfile_gpu
+   pip install -r $pipfilegpu
    pip install setGPU
 else
    pip install -r $pipfile
