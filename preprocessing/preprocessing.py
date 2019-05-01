@@ -1,9 +1,7 @@
 import numpy
 #import scipy
 #from scipy.sparse import csc_matrix
-"""
-author Markus stoye, A collection of tools for data pre-processing in ML for DeepJet. The basic assumption is that Tuple is a recarray where the fiels are the features. 
-"""
+
 from array import array
 import logging
 
@@ -550,8 +548,16 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize):
     
     return array
     
+def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per_element):
+    from DeepJetCore.compiled import c_arrayReads
     
+    array = numpy.zeros((nevents,xsize, ysize,1) , dtype='float32')
     
+    c_arrayReads.read2DArray(array,filename, treename, branchname)
+    
+    array = numpy.squeeze(array, axis=-1)
+    
+    return array
     
 def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize):
     from DeepJetCore.compiled import c_arrayReads

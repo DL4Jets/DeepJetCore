@@ -340,7 +340,9 @@ class training_base(object):
     
     
         
-
+    def change_learning_rate(self, new_lr):
+        import keras.backend as K
+        K.set_value(self.keras_model.optimizer.lr, new_lr)
         
         
         

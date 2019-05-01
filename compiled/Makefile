@@ -42,7 +42,7 @@ all: $(MODULES_SHARED_LIBS) make_example_data classdict.so
 classdict.cxx: src/LinkDef.h
 	rootcling -v4 -f $@  -rmf classdict.rootmap -rml classdict.so  $^
 
-classdict.so:
+classdict.so: classdict.cxx
 	g++ -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
 	
 make_example_data: to_bin/make_example_data.cpp libdeepjetcorehelpers.so classdict.cxx
@@ -70,4 +70,4 @@ libdeepjetcorehelpers.so: $(OBJ_FILES)
 
 
 clean: 
-	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so classdict.so
+	rm -f $(OBJ_FILES) $(SHARED_LIBS) $(MODULES_SHARED_LIBS) $(MODULES_OBJ_FILES) libdeepjetcorehelpers.so libquicklz.so classdict.so classdict.cxx classdict.rootmap classdict_rdict.pcm
