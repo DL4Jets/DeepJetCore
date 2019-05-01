@@ -63,9 +63,11 @@ class TrainData_example(TrainData):
         
         self.truthclasses=['isA','isB','isC'] #truth classes for classification
         
-        self.weightbranchX='isA' #needs to be specified
-        self.weightbranchY='isB' #needs to be specified
+        self.weightbranchX='isA' #needs to be specified if weighter is used
+        self.weightbranchY='isB' #needs to be specified if weighter is used
         
+        #there is no need to resample/reweight
+        self.weight=False
         #does not do anything in this configuration
         self.referenceclass='flatten'
         self.weight_binX = numpy.array([0,40000],dtype=float) 
@@ -226,21 +228,18 @@ with  open(subpackage_dir+'/modules/Metrics.py','w') as lfile:
     
 if args.nodata:
     exit()
-print('creating example data...')
-os.system('cd '+subpackage_dir+'/example_data;  make_example_data')
+print('creating example data... (10 training files, 1 test file, 1000 events each)')
+os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
 
 
 print('example data can be found in '+subpackage_dir+'/example_data.')
 print('Before using the subpackage, please log out, log in again and then source the "env.sh" file in the subpackage directory (not in DeepJetCore).')
 print('to convert to example TrainData format use:')
-print('convertFromRoot.py -i '+subpackage_dir+'/example_data/files.txt -o <output dir> -c TrainData_example')
-
-
-
-
-
-
-
+print('convertFromRoot.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
+print('to convert the test data use:')
+print('convertFromRoot.py -i '+subpackage_dir+'/example_data/test_files.txt -o <test output dir> --testdatafor <train output dir>/dataCollection.dc ')
+print('\nAn example to run the training can be found in '+subpackage_dir+'/Train/training_example.py')
+print('It can be run with: \npython '+subpackage_dir+'/Train/training_example.py <train output dir>/dataCollection.dc <train output dir>')
 
 
 

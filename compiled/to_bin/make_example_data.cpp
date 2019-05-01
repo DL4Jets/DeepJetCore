@@ -53,6 +53,8 @@ public:
     //not protected
        std::vector<std::vector<float> > addImage(const std::vector<std::vector<float> >&, const std::vector<std::vector<float> >&);
 
+       std::vector<std::vector<float> > divideImage(const std::vector<std::vector<float> >&, const std::vector<std::vector<float> >&);
+
        std::vector<float>  addImage(const std::vector<float>&, const std::vector<float>&);
 
 
@@ -70,19 +72,34 @@ private:
 };
 
 
-int main(){
+int main(int argc, char* argv[]){
+    int nevents=500;
+    int nfiles=10;
+    int ntest=1;
+
+    if(argc>1)
+        nevents=atoi(argv[1]);
+    if(argc>2)
+        nfiles=atoi(argv[2]);
+    if(argc>3)
+        ntest=atoi(argv[3]);
+
 
     dataGenerator gen;
 
-    std::ofstream outtxtfile("files.txt");
+    std::ofstream outtxtfile("train_files.txt");
+    std::ofstream testouttxtfile("test_files.txt");
 
 
-    for(int i=0;i<10;i++){
+    for(int i=0;i<nfiles+ntest;i++){
         TString fname="out_";
         fname+=i;
         fname+=".root";
 
-        outtxtfile << fname << std::endl;
+        if(i < nfiles)
+            outtxtfile << fname << std::endl;
+        else
+            testouttxtfile << fname << std::endl;
 
         TFile f(fname,"RECREATE");
         TTree * t = new TTree("tree","tree");
@@ -90,15 +107,26 @@ int main(){
         std::vector<float> imagetot;
         std::vector<float> * imagetotp = &imagetot;
         t->Branch("image",&imagetotp);
+
         std::vector<std::vector<float> > imagetot2d;
         std::vector<std::vector<float> > * imagetot2dp = &imagetot2d;
         t->Branch("image2d",&imagetot2dp);
+
+        std::vector<std::vector<float> > sigfrac2d;
+        std::vector<std::vector<float> > * sigfrac2dp = &sigfrac2d;
+        t->Branch("sigfrac2d",&sigfrac2dp);
+
         std::vector<float> xcoords;
         std::vector<float> * xcoordsp = &xcoords;
         t->Branch("xcoords",&xcoordsp);
+
         std::vector<float> ycoords;
         std::vector<float> * ycoordsp = &ycoords;
         t->Branch("ycoords",&ycoords);
+
+        float sigsum=0;
+        t->Branch("sigsum",&sigsum);
+
         int size;
         t->Branch("size",&size);
         int isA,isB,isC;
@@ -113,7 +141,7 @@ int main(){
 
         int type=0;
 
-        for(size_t e=0;e<2000;e++){
+        for(size_t e=0;e<(size_t)nevents;e++){
             gen.setType(type);
             if(type==0){
                 isA=1;isB=0;isC=0;
@@ -132,6 +160,10 @@ int main(){
 
             gen.gen();
             auto s  = gen.getImageSeq();
+            sigsum=0;
+            for(const auto& sc:s)
+                sigsum+=sc;
+
             auto s2d = gen.getImage();
             gen.setType(3);
             gen.gen();
@@ -141,6 +173,8 @@ int main(){
             imagetot = gen.addImage(s,bg);
 
             imagetot2d = gen.addImage(s2d,bg2d);
+
+            sigfrac2d = gen.divideImage(s2d,imagetot2d);
 
             t ->Fill();
         }
@@ -181,8 +215,8 @@ void dataGenerator::gen(){
        xhi = 5;
        ylow = -5;
        yhi = 5;
-       xw = rand_->Uniform(3,10);
-       yw = rand_->Uniform(2,15);
+       xw = rand_->Uniform(3,4);
+       yw = rand_->Uniform(2,4);
     }
 
     float xc  = rand_->Uniform(xlow,xhi);
@@ -231,6 +265,15 @@ std::vector<float>  dataGenerator::addImage(const std::vector<float>& a, const s
 
     for(size_t i=0;i<a.size();i++)
         out.at(i) += b.at(i);
+    return out;
+}
+
+
+std::vector<std::vector<float> > dataGenerator::divideImage(const std::vector<std::vector<float> >& a, const std::vector<std::vector<float> >& b){
+    auto out = a;
+    for(size_t i=0;i<a.size();i++)
+        for(size_t j=0;j<a.at(i).size();j++)
+            out.at(i).at(j) /= b.at(i).at(j);
     return out;
 }
 
