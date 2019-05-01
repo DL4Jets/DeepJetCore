@@ -551,7 +551,7 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize):
 def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per_element):
     from DeepJetCore.compiled import c_arrayReads
     
-    array = numpy.zeros((nevents,xsize, ysize,1) , dtype='float32')
+    array = numpy.zeros((nevents,list_size, n_feat_per_element,1) , dtype='float32')
     
     c_arrayReads.read2DArray(array,filename, treename, branchname)
     
