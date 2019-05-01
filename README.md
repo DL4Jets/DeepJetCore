@@ -39,9 +39,9 @@ mkdir <your working dir>
 cd <your working dir>
 git clone https://github.com/DL4Jets/DeepJetCore
 cd DeepJetCore/environment
-./setupEnv.sh deepjetLinux3.conda
+./setup_djcenv.sh #opt: gpu
 ```
-For enabling gpu support add 'gpu' as an additional option to the last command.
+For enabling gpu support add 'gpu' (without quotes) as an additional option to the last command.
 This will take a while. Please log out and in again once the installation is finised.
 
 Compiling DeepJetCore
@@ -51,7 +51,7 @@ When the installation was successful, the DeepJetCore tools need to be compiled.
 ```
 cd <your working dir>
 cd DeepJetCore
-source lxplus_env.sh / gpu_env.sh
+source env.sh
 cd compiled
 make -j4
 ```
