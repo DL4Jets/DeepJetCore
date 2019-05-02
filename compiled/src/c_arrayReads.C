@@ -50,8 +50,10 @@ void read2DArray(boost::python::numeric::array numpyarray,
     if(nx)
         ny = (int) boost::python::len(numpyarray[0][0]);
 
-    if(!nentries || nentries != tree->GetEntries())
+    if(!nentries || nentries != tree->GetEntries()){
+        std::cerr << "read2DArray: tree/array entries don't match" << std::endl;
         throw std::runtime_error("read2DArray: tree/array entries don't match");
+    }
 
 
     std::vector<std::vector<float> > *inarr = 0;
@@ -59,8 +61,10 @@ void read2DArray(boost::python::numeric::array numpyarray,
 
     tree->GetEntry(0);
 
-    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size())
+    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size()){
+        std::cerr << "read2DArray: tree/array dimensions don't match" << std::endl;
         throw std::runtime_error("read2DArray: tree/array dimensions don't match");
+    }
 
     for(int e=0;e<nentries;e++){
         tree->GetEntry(e);
@@ -104,8 +108,10 @@ void read3DArray(boost::python::numeric::array numpyarray,
     if(ny)
         nz = (int) boost::python::len(numpyarray[0][0][0]);
 
-    if(!nentries || nentries != tree->GetEntries())
+    if(!nentries || nentries != tree->GetEntries()){
+        std::cerr << "read3DArray: tree/array entries don't match" << std::endl;
         throw std::runtime_error("read3DArray: tree/array entries don't match");
+    }
 
 
     std::vector<std::vector<std::vector<float> > > * inarr = 0;
@@ -113,9 +119,10 @@ void read3DArray(boost::python::numeric::array numpyarray,
 
     tree->GetEntry(0);
 
-    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size())
+    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size()){
+        std::cerr << "read3DArray: tree/array dimensions don't match" << std::endl;
         throw std::runtime_error("read3DArray: tree/array dimensions don't match");
-
+    }
 
     for(int e=0;e<nentries;e++){
         tree->GetEntry(e);
@@ -166,12 +173,10 @@ void read4DArray(boost::python::numeric::array numpyarray,
     if(nz)
         nf = (int) boost::python::len(numpyarray[0][0][0][0]);
 
-    if(!nentries || nentries != tree->GetEntries())
+    if(!nentries || nentries != tree->GetEntries()){
+        std::cerr << "read4DArray: tree/array entries don't match" << std::endl;
         throw std::runtime_error("read4DArray: tree/array entries don't match");
-
-    if(nx%rebinx || ny%rebiny || nz%rebinz || nf%rebinf)
-        throw std::runtime_error("read4DArray: rebinning factor does not match bins");
-
+    }
 
     std::vector<std::vector<std::vector<std::vector<float> > > > * inarr = 0;
     tree->SetBranchAddress(branchname_std.data(),&inarr);

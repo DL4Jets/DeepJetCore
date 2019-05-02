@@ -541,6 +541,10 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
 
 def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
                 rebinx=1,rebiny=1):
+    
+    if xsize%rebinx or ysize%rebiny:
+        raise Exception("rebinning factors don't not match the bin counts")
+    
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize, ysize,1) , dtype='float32')
@@ -550,6 +554,8 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
     return array
     
 def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per_element):
+    
+    
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,list_size, n_feat_per_element,1) , dtype='float32')
@@ -562,6 +568,10 @@ def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per
     
 def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
                 rebinx=1,rebiny=1,rebinz=1):
+    
+    if xsize%rebinx or ysize%rebiny or zsize%rebinz:
+        raise Exception("rebinning factors don't not match the bin counts")
+    
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize, ysize,zsize,1) , dtype='float32')
@@ -572,6 +582,10 @@ def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
 
 def read4DArray(filename, treename, branchname, nevents, xsize, ysize, zsize, fsize,
                 rebinx=1,rebiny=1,rebinz=1,rebinf=1):
+    
+    if xsize%rebinx or ysize%rebiny or zsize%rebinz or fsize%rebinf:
+        raise Exception("rebinning factors don't not match the bin counts")
+    
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize, ysize,zsize,fsize,1) , dtype='float32')
