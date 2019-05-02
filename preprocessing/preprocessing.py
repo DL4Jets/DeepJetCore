@@ -539,12 +539,13 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     #print(array)
     return array
 
-def read2DArray(filename, treename, branchname, nevents, xsize, ysize):
+def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
+                rebinx=1,rebiny=1):
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize, ysize,1) , dtype='float32')
     
-    c_arrayReads.read2DArray(array,filename, treename, branchname)
+    c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny)
     
     return array
     
@@ -553,18 +554,29 @@ def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per
     
     array = numpy.zeros((nevents,list_size, n_feat_per_element,1) , dtype='float32')
     
-    c_arrayReads.read2DArray(array,filename, treename, branchname)
+    c_arrayReads.read2DArray(array,filename, treename, branchname,1,1)
     
     array = numpy.squeeze(array, axis=-1)
     
     return array
     
-def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize):
+def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
+                rebinx=1,rebiny=1,rebinz=1):
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize, ysize,zsize,1) , dtype='float32')
     
-    c_arrayReads.read3DArray(array,filename, treename, branchname)
+    c_arrayReads.read3DArray(array,filename, treename, branchname,rebinx,rebiny,rebinz)
+    
+    return array
+
+def read4DArray(filename, treename, branchname, nevents, xsize, ysize, zsize, fsize,
+                rebinx=1,rebiny=1,rebinz=1,rebinf=1):
+    from DeepJetCore.compiled import c_arrayReads
+    
+    array = numpy.zeros((nevents,xsize, ysize,zsize,fsize,1) , dtype='float32')
+    
+    c_arrayReads.read4DArray(array,filename, treename, branchname,rebinx,rebiny,rebinz,rebinf)
     
     return array
     
