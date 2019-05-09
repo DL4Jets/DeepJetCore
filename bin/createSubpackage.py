@@ -45,6 +45,9 @@ mkdir -p {subpackage_dir}/modules/datastructures
 mkdir -p {subpackage_dir}/scripts
 mkdir -p {subpackage_dir}/Train
 mkdir -p {subpackage_dir}/example_data
+mkdir -p {subpackage_dir}/cpp_analysis/src
+mkdir -p {subpackage_dir}/cpp_analysis/interface
+mkdir -p {subpackage_dir}/cpp_analysis/bin
 '''.format(subpackage_dir=subpackage_dir)
 
 datastructure_template='''
@@ -290,6 +293,57 @@ metrics_template='''
 global_metrics_list = {}
 '''
 
+makefile_template='''
+CPP_FILES := $(wildcard src/*.cpp)
+OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+LD_FLAGS := `root-config --cflags --glibs`  -lMathMore -L${DEEPJETCORE}/compiled -ldeepjetcorehelpers
+CC_FLAGS := -fPIC -g -Wall `root-config --cflags`
+CC_FLAGS += -I./interface -I${DEEPJETCORE}/compiled/interface
+#CC_FLAGS += -MMD
+
+
+all: $(patsubst bin/%.cpp, %, $(wildcard bin/*.cpp))
+
+#compile the module helpers if necessary
+../modules/libdeepjethelpers.so:
+        cd ../modules; make; cd -
+
+%: bin/%.cpp  $(OBJ_FILES) ${DEEPJETCORE}/compiled/libdeepjetcorehelpers.so
+        g++ $(CC_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $< -o $@ 
+
+
+obj/%.o: src/%.cpp
+        g++ $(CC_FLAGS) -c -o $@ $<
+
+
+clean: 
+        rm -f obj/*.o obj/*.d
+        rm -f %
+'''
+
+bin_template='''
+
+#include "TString.h"
+#include "friendTreeInjector.h"
+#include <iostream>
+
+int main(int argc, char* argv[]){
+    if(argc<2) return -1;
+
+    TString infile = argv[1];
+
+    friendTreeInjector intree;
+    intree.addFromFile(infile);
+    intree.setSourceTreeName("tree");
+
+    intree.createChain();
+
+    auto c = intree.getChain();
+
+    std::cout << c->GetEntries() <<std::endl;
+
+}
+'''
 
 ######## create the structure ########
 
@@ -313,6 +367,12 @@ with  open(subpackage_dir+'/modules/Losses.py','w') as lfile:
     lfile.write(losses_template)
 with  open(subpackage_dir+'/modules/Metrics.py','w') as lfile:
     lfile.write(metrics_template)
+    
+with  open(subpackage_dir+'/cpp_analysis/Makefile','w') as lfile:
+    lfile.write(makefile_template)
+    
+with  open(subpackage_dir+'/cpp_analysis/bin/example.cpp','w') as lfile:
+    lfile.write(bin_template)
     
 if args.nodata:
     exit()

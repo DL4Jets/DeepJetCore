@@ -18,7 +18,8 @@ public:
 	~friendTreeInjector();
 
 	void setSourceTreeName(const TString& sourcetreename){
-		sourcetree_=sourcetreename;
+		sourcetree_='/'+sourcetreename;
+
 	}
 
 	void addFromFile(const TString& filename, const TString& alias="");

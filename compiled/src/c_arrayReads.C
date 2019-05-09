@@ -20,6 +20,7 @@
 #include "../interface/pythonToSTL.h"
 #include "../interface/helper.h"
 #include <cmath>
+#include "../interface/NDBranchReader.h"
 
 
 using namespace boost::python; //for some reason....

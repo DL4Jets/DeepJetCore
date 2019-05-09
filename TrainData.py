@@ -612,6 +612,9 @@ class TrainData(object):
         if  branches==None:
             branches=self.allbranchestoberead
             
+        if branches is None or len(branches) == 0:
+            return numpy.array([],dtype='float32')
+            
         #print(branches)
         #remove duplicates
         usebranches=list(set(branches))
@@ -662,7 +665,10 @@ class TrainData(object):
     def produceMeansFromRootFile(self,filename, limit=500000):
         from preprocessing import meanNormProd
         nparray = self.readTreeFromRootToTuple(filename, limit=limit)
-        means = self.make_means(nparray)
+        means = numpy.array([],dtype='float32')
+        if len(nparray):
+            means = self.make_means(nparray)
+        
         del nparray
         return means
     

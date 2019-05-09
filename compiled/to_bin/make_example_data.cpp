@@ -54,13 +54,14 @@ public:
        std::vector<std::vector<float> > addImage(const std::vector<std::vector<float> >&, const std::vector<std::vector<float> >&);
 
        std::vector<std::vector<float> > divideImage(const std::vector<std::vector<float> >&, const std::vector<std::vector<float> >&);
+       std::vector<float>  divideImage(const std::vector<float> &, const std::vector<float> &);
 
        std::vector<float>  addImage(const std::vector<float>&, const std::vector<float>&);
 
 
 private:
 
-    std::vector<std::vector<float> > makeImage(float xc, float yc, float xw, float yw)const;
+    std::vector<std::vector<float> > makeImage(float xc, float yc, float xw, float yw, float scale)const;
 
 
     std::vector<std::vector<float> > image_;
@@ -111,6 +112,10 @@ int main(int argc, char* argv[]){
         std::vector<std::vector<float> > imagetot2d;
         std::vector<std::vector<float> > * imagetot2dp = &imagetot2d;
         t->Branch("image2d",&imagetot2dp);
+
+        std::vector<float> sigfrac;
+        std::vector<float> * sigfracp = &sigfrac;
+        t->Branch("sigfrac",&sigfracp);
 
         std::vector<std::vector<float> > sigfrac2d;
         std::vector<std::vector<float> > * sigfrac2dp = &sigfrac2d;
@@ -176,6 +181,8 @@ int main(int argc, char* argv[]){
 
             sigfrac2d = gen.divideImage(s2d,imagetot2d);
 
+            sigfrac = gen.divideImage(s,imagetot);
+
             t ->Fill();
         }
         t->Write();
@@ -222,13 +229,14 @@ void dataGenerator::gen(){
     float xc  = rand_->Uniform(xlow,xhi);
     float yc  = rand_->Uniform(ylow,yhi);
 
+    float scale = rand_->Uniform(0.1,3.);
 
-    image_ = makeImage(xc,yc,xw,yw);
+    image_ = makeImage(xc,yc,xw,yw,scale);
 
 }
 
 
-std::vector<std::vector<float> > dataGenerator::makeImage(float xc, float yc, float xw, float yw)const{
+std::vector<std::vector<float> > dataGenerator::makeImage(float xc, float yc, float xw, float yw, float scale)const{
 
     //to 'size' coordinates
     xc = (float)size_ * xc;
@@ -243,7 +251,7 @@ std::vector<std::vector<float> > dataGenerator::makeImage(float xc, float yc, fl
         double xcontr = exp(-dx*dx/(2.*xw*xw));
         for(size_t y=0;y<out.size();y++){
             double dy = (float)y-yc;
-            double ycontr = exp(-dy*dy/(2.*yw*yw));
+            double ycontr = scale*exp(-dy*dy/(2.*yw*yw));
             out.at(x).at(y) = xcontr*ycontr;
         }
     }
@@ -277,6 +285,12 @@ std::vector<std::vector<float> > dataGenerator::divideImage(const std::vector<st
     return out;
 }
 
+std::vector<float>  dataGenerator::divideImage(const std::vector<float> &a, const std::vector<float> &b){
+    auto out = a;
+    for(size_t i=0;i<a.size();i++)
+        out.at(i)/=b.at(i);
+    return out;
+}
 
 
 std::vector<float>  dataGenerator::getImageSeq()const{
