@@ -37,7 +37,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 
-all: $(MODULES_SHARED_LIBS) make_example_data classdict.so
+all: $(MODULES_SHARED_LIBS) $(patsubst to_bin/%.cpp, %, $(wildcard to_bin/*.cpp)) classdict.so
 
 classdict.cxx: src/LinkDef.h
 	rootcling -v4 -f $@  -rmf classdict.rootmap -rml classdict.so  $^
@@ -45,9 +45,14 @@ classdict.cxx: src/LinkDef.h
 classdict.so: classdict.cxx
 	g++ -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
 	
-make_example_data: to_bin/make_example_data.cpp libdeepjetcorehelpers.so classdict.cxx
-	g++ $(CFLAGS) $(LINUXADD) $(ROOTSTUFF) -I./interface  $< -o $@
-	mv make_example_data ../bin/
+#make_example_data: to_bin/make_example_data.cpp libdeepjetcorehelpers.so classdict.cxx
+#	g++ $(CFLAGS) $(LINUXADD) $(ROOTSTUFF) -I./interface  $< -o $@
+#	mv make_example_data ../bin/
+	
+	
+%: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx
+	g++ $(CFLAGS) $(LINUXADD) $(ROOTSTUFF) -I./interface  $< -o $@ 
+	mv $@ ../bin/
 	
 #helpers
 libquicklz.so:
