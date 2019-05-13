@@ -31,7 +31,8 @@ void read2DArray(boost::python::numeric::array numpyarray,
         std::string treename_std,
         std::string branchname_std,
         int rebinx=1,
-        int rebiny=1
+        int rebiny=1,
+        bool zeropad=false
         ) {
 
 
@@ -61,7 +62,7 @@ void read2DArray(boost::python::numeric::array numpyarray,
 
     tree->GetEntry(0);
 
-    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size()){
+    if(!zeropad && (nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size())){
         std::cerr << "read2DArray: tree/array dimensions don't match" << std::endl;
         throw std::runtime_error("read2DArray: tree/array dimensions don't match");
     }
@@ -87,7 +88,8 @@ void read3DArray(boost::python::numeric::array numpyarray,
         std::string branchname_std,
         int rebinx=1,
         int rebiny=1,
-        int rebinz=1) {
+        int rebinz=1,
+        bool zeropad=false) {
 
 
     TFile * tfile = new TFile(filename_std.data(),"READ");
@@ -119,7 +121,7 @@ void read3DArray(boost::python::numeric::array numpyarray,
 
     tree->GetEntry(0);
 
-    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size()){
+    if(!zeropad && (nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size())){
         std::cerr << "read3DArray: tree/array dimensions don't match" << std::endl;
         throw std::runtime_error("read3DArray: tree/array dimensions don't match");
     }
@@ -149,7 +151,8 @@ void read4DArray(boost::python::numeric::array numpyarray,
         int rebinx=1,
         int rebiny=1,
         int rebinz=1,
-        int rebinf=1) {
+        int rebinf=1,
+        bool zeropad=false) {
 
 
     TFile * tfile = new TFile(filename_std.data(),"READ");
@@ -183,8 +186,8 @@ void read4DArray(boost::python::numeric::array numpyarray,
 
     tree->GetEntry(0);
 
-    if(nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size()
-            || nf*rebinf!=(int)inarr->at(0).at(0).at(0).size())
+    if(!zeropad && (nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size()
+            || nf*rebinf!=(int)inarr->at(0).at(0).at(0).size()))
         throw std::runtime_error("read3DArray: tree/array dimensions don't match");
 
     for(int e=0;e<nentries;e++){
