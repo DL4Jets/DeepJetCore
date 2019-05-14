@@ -44,6 +44,7 @@ parser.add_argument('--use', help='coma-separated list of prediction indexes to 
 parser.add_argument('--labels', action='store_true', help='store true labels in the trees')
 parser.add_argument('--monkey_class', default='', help='allows to read the data with a different TrainData, it is actually quite dangerous if you do not know what you are doing')
 parser.add_argument('--numpy', help='switches on numpy rec-array output in addition to root files. Will produce ONE large file (can become big)', action='store_true' , default=False )
+parser.add_argument('--flat', help='Flatten the output to force it to maximum 1D', action='store_false' , default=False )
 
 args = parser.parse_args()
 
@@ -60,7 +61,7 @@ model=load_model(args.inputModel, custom_objects=custom_objs)
 
 td=testDescriptor(addnumpyoutput = args.numpy)
 if args.use:
-	td.use_only = [int(i) for i in args.use.split(',')]
+    td.use_only = [int(i) for i in args.use.split(',')]
 
 from DeepJetCore.DataCollection import DataCollection
 
@@ -73,7 +74,8 @@ os.mkdir(args.outputDir)
 td.makePrediction(
     model, testd, args.outputDir,
     store_labels = args.labels,
-    monkey_class = args.monkey_class
+    monkey_class = args.monkey_class,
+    flatten_everything =  args.flat
 )
 
 td.writeToTextFile(args.outputDir+'/tree_association.txt')

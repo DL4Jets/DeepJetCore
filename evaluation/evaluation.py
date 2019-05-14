@@ -54,8 +54,113 @@ class testDescriptor(object):
         self.use_only = []
         self.addnumpyoutput=addnumpyoutput
         
+    
     def makePrediction(self, model, testdatacollection, outputDir, 
+                       ident='', store_labels = False, monkey_class='',
+                       flatten_everything=True): 
+        
+        if not hasattr(testdatacollection.dataclass,'formatPrediction'):
+            return self.makePrediction_compat(model,testdatacollection,outputDir,ident,
+                                              store_labels,monkey_class)
+        
+        if hasattr(testdatacollection.dataclass, 'customlabels'):
+            print('Warning: customlabels are replaced by the formatPrediction function and will be ignored')
+            
+            
+        import numpy as np        
+        import os
+        monkey_class_obj = None
+        if monkey_class:
+            module, classname = tuple(monkey_class.split(':'))
+            _temp = __import__(module, globals(), locals(), [classname], -1) 
+            monkey_class_obj = getattr(_temp, classname)
+        
+        outputDir=os.path.abspath(outputDir)
+        
+        if len(ident)>0:
+            ident='_'+ident
+        
+        self.__sourceroots=[]
+        self.__predictroots=[]
+        self.metrics=[]
+        
+        
+        for i in range(len(testdatacollection.samples)):
+            sample=testdatacollection.samples[i]
+            originroot=testdatacollection.originRoots[i]
+            outrootfilename=os.path.splitext(os.path.basename(originroot))[0]+'_predict'+ident+'.root'
+            
+            fullpath=testdatacollection.getSamplePath(sample)
+            if monkey_class_obj is not None:
+                testdatacollection.dataclass = monkey_class_obj()
+            td=testdatacollection.dataclass
+            
+            td.readIn(fullpath)
+            
+            
+
+            features=td.x
+            #labels=td.y #not needed - maybe we can add this as option so all info is in the output trees (no friends)
+            weights=None
+            if len(td.w):
+                weights=td.w
+            
+            prediction = model.predict(features)
+            if not isinstance(prediction, list):
+                prediction=[prediction]
+            
+            prediction, formatstring = td.formatPrediction(prediction)
+            if len(formatstring) < len(prediction):
+                formatstring.extend(['auto_pred_'+str(i) for i in range(len(prediction)-len(formatstring))])
+            
+            if weights is not None:
+                prediction.append(weights)
+                formatstring.append('weight')
+            ###### prediction functor needs to be adapted!!
+            
+            #######NEW
+            if self.use_only:
+                prediction = [prediction[i] for i in self.use_only]
+                formatstring = [formatstring[i] for i in self.use_only]
+            
+                
+            
+            cont_pred = [np.ascontiguousarray(prediction[i], dtype=np.float32) for i in range(len(prediction))]
+            c_storeTensor.store([p.ctypes.data for p in cont_pred], 
+                                [a.shape for a in prediction], 
+                                outputDir+'/'+outrootfilename,
+                                formatstring,
+                                flatten_everything)
+            
+            self.__sourceroots.append(originroot)
+            self.__predictroots.append(outputDir+'/'+outrootfilename)
+            
+            print('written prediction output '+outputDir+'/'+outrootfilename)
+   
+        if self.addnumpyoutput: 
+            print('addnumpyoutput: currently not supported (anymore), please request re-implementation')  
+                
+    
+    #compatibility mode!    
+    def makePrediction_compat(self, model, testdatacollection, outputDir, 
                        ident='', store_labels = False, monkey_class=''): 
+        
+        deprwarning='''
+
+WARNING! makePrediction is being run in compatibilty mode. This mode will soon be deprecated.
+The new prediction mode requires to define a function of the TrainData class that takes as input the prediction of the network \
+and as output a list of formatted predictions and associated names.
+Each list item will be assigned an own branch name in the output tree
+def formatPrediction(self, predicted_list):
+    
+    format_names = [name1, name2, ...]
+    out_pred = [predicted_list[1],predicted_list[0]] #e.g. if the order should be swapped
+
+    return out_pred,  format_names
+    
+        '''
+        
+        print(deprwarning)
         import numpy as np        
         from root_numpy import array2root
         import os
@@ -106,7 +211,9 @@ class testDescriptor(object):
 
             features=td.x
             labels=td.y
-            weights=td.w[0]
+            weights=None
+            if td.w is not None and len(td.w):
+                weights=td.w[0]
             
             
             
@@ -133,8 +240,9 @@ class testDescriptor(object):
                                            axis=1)
 
             if all_write.ndim == 2:
-                all_write = np.concatenate([all_write, weights], axis=1)
-                formatstring.append('weight')
+                if weights is not None:
+                    all_write = np.concatenate([all_write, weights], axis=1)
+                    formatstring.append('weight')
                 if not all_write.shape[1] == len(formatstring):
                     print(formatstring, ' vs ', all_write.shape[1])
                     raise ValueError('Prediction output does not match with the provided targets!')
@@ -153,6 +261,7 @@ class testDescriptor(object):
                     else:
                         fullnumpyarray=np.array(all_write)
             else:
+                raise Exception("tensor output not supported (anymore) in compatibilty prediction mode!")
                 c_storeTensor.store(np.ascontiguousarray(all_write, dtype=np.float32).ctypes.data, list(np.shape(all_write)), outputDir+'/'+outrootfilename)
                 self.__sourceroots.append(originroot)
                 self.__predictroots.append(outputDir+'/'+outrootfilename)
