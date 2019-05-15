@@ -187,9 +187,13 @@ void read4DArray(boost::python::numeric::array numpyarray,
     tree->GetEntry(0);
 
     if(!zeropad && (nx*rebinx!=(int)inarr->size() || ny*rebiny!=(int)inarr->at(0).size() || nz*rebinz!=(int)inarr->at(0).at(0).size()
-            || nf*rebinf!=(int)inarr->at(0).at(0).at(0).size()))
-        throw std::runtime_error("read3DArray: tree/array dimensions don't match");
-
+            || nf*rebinf!=(int)inarr->at(0).at(0).at(0).size())){
+        std::cout << "nx*rebinx "<<nx*rebinx<<", in "<< inarr->size()<<'\n';
+        std::cout << "ny*rebiny "<<ny*rebiny<<", in "<< inarr->at(0).size()<<'\n';
+        std::cout << "nz*rebinz "<<nz*rebinz<<", in "<< inarr->at(0).at(0).size()<<'\n';
+        std::cout << "nf*rebinf "<<nf*rebinf<<", in "<< inarr->at(0).at(0).at(0).size()<<'\n';
+        throw std::runtime_error("read4DArray: tree/array dimensions don't match");
+    }
     for(int e=0;e<nentries;e++){
         tree->GetEntry(e);
         for(size_t x=0;x<inarr->size();x++){
@@ -200,6 +204,7 @@ void read4DArray(boost::python::numeric::array numpyarray,
                     int npz = (int)z/rebinz;
                     for(size_t f=0;f<inarr->at(x)[y][z].size();f++){
                         int npf = (int)f/rebinf;
+                       // std::cout << e <<", "<< npx <<", "<< npy <<", "<< npz <<", "<< npf << ": "<< f<< std::endl;
                         numpyarray[e][npx][npy][npz][npf][0] += inarr->at(x)[y][z][f];
                     }
                 }
