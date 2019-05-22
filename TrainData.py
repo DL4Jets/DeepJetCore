@@ -222,43 +222,52 @@ class TrainData(object):
 
     def writeOut(self,fileprefix):
         
-        import h5py
-        fileTimeOut(fileprefix,120)
-        h5f = h5py.File(fileprefix, 'w')
+        from shutil import copyfile
+        import tempfile
+        #this is a workaround because hdf5 files written on eos are unreadable...
+        final_output_file=fileprefix
         
-        # try "lzf", too, faster, but less compression
-        def _writeoutListinfo(arrlist,fidstr,h5F):
-            arr=numpy.array([len(arrlist)])
-            h5F.create_dataset(fidstr+'_listlength',data=arr)
-            for i in range(len(arrlist)):
-                idstr=fidstr+str(i)
-                h5F.create_dataset(idstr+'_shape',data=arrlist[i].shape)
+        with tempfile.NamedTemporaryFile(suffix='.meta') as t:
+            fileprefix = t.name
             
-        def _writeoutArrays(arrlist,fidstr,h5F):    
-            for i in range(len(arrlist)):
-                idstr=fidstr+str(i)
-                arr=arrlist[i]
-                if "meta" in fileprefix[-4:]:
+            print('temp output ',fileprefix)
+        
+            import h5py
+            fileTimeOut(fileprefix,120)
+            h5f = h5py.File(fileprefix, 'w')
+            
+            # try "lzf", too, faster, but less compression
+            def _writeoutListinfo(arrlist,fidstr,h5F):
+                arr=numpy.array([len(arrlist)])
+                h5F.create_dataset(fidstr+'_listlength',data=arr)
+                for i in range(len(arrlist)):
+                    idstr=fidstr+str(i)
+                    h5F.create_dataset(idstr+'_shape',data=arrlist[i].shape)
+                
+            def _writeoutArrays(arrlist,fidstr,h5F):    
+                for i in range(len(arrlist)):
+                    idstr=fidstr+str(i)
+                    arr=arrlist[i]
                     from DeepJetCore.compiled.c_readArrThreaded import writeArray
                     if arr.dtype!='float32':
                         arr=arr.astype('float32')
-                    writeArray(arr.ctypes.data,fileprefix[:-4]+fidstr+'.'+str(i),list(arr.shape))
-                else:
-                    h5F.create_dataset(idstr, data=arr, compression="lzf")
-        
-        
-        arr=numpy.array([self.nsamples],dtype='int')
-        h5f.create_dataset('n', data=arr)
-
-        _writeoutListinfo(self.w,'w',h5f)
-        _writeoutListinfo(self.x,'x',h5f)
-        _writeoutListinfo(self.y,'y',h5f)
-
-        _writeoutArrays(self.w,'w',h5f)
-        _writeoutArrays(self.x,'x',h5f)
-        _writeoutArrays(self.y,'y',h5f)
-        
-        h5f.close()
+                    writeArray(arr.ctypes.data,final_output_file[:-4]+fidstr+'.'+str(i),list(arr.shape))
+            
+            
+            arr=numpy.array([self.nsamples],dtype='int')
+            h5f.create_dataset('n', data=arr)
+            
+            _writeoutListinfo(self.w,'w',h5f)
+            _writeoutListinfo(self.x,'x',h5f)
+            _writeoutListinfo(self.y,'y',h5f)
+            
+            _writeoutArrays(self.w,'w',h5f)
+            _writeoutArrays(self.x,'x',h5f)
+            _writeoutArrays(self.y,'y',h5f)
+            
+            h5f.close()
+            
+            copyfile(fileprefix, final_output_file)
        
     
         
