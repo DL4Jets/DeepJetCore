@@ -230,7 +230,6 @@ class TrainData(object):
         with tempfile.NamedTemporaryFile(suffix='.meta') as t:
             fileprefix = t.name
             
-            print('temp output ',fileprefix)
         
             import h5py
             fileTimeOut(fileprefix,120)
