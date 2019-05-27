@@ -160,6 +160,23 @@ class TrainData(object):
         self.w=[numpy.array([])]
         
         self.nsamples=None
+        
+    def skim(self, event=0):
+        xs=[]
+        ys=[]
+        ws=[]
+        
+        for x in self.x:
+            xs.append(x[event:event+1,...])
+        for y in self.y:
+            ys.append(y[event:event+1,...])
+        for w in self.w:
+            ws.append(w[event:event+1,...])
+        self.clear()
+        self.nsamples=1
+        self.x=xs
+        self.y=ys
+        self.w=ws 
     
     def defineCustomPredictionLabels(self, labels):
         self.customlabels=labels

@@ -32,6 +32,7 @@ export DEEPJETCORE_SUBPACKAGE=${subpackage}
 cd ${subpackage}
 export PYTHONPATH=${subpackage}/modules:$PYTHONPATH
 export PYTHONPATH=${subpackage}/modules/datastructures:$PYTHONPATH
+export PATH=${subpackage}/scripts:$PATH
 '''.format(deepjetcore=deepjetcore, 
            subpackage=args.subpackage_name.upper(),
            subpackage_dir=os.path.abspath(subpackage_dir),

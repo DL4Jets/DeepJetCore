@@ -259,6 +259,7 @@ class training_base(object):
                    maxqsize=5, 
                    checkperiod=10,
                    additional_plots=None,
+                   additional_callbacks=None,
                    **trainargs):
         
         
@@ -317,6 +318,10 @@ class training_base(object):
                                     checkperiodoffset=self.trainedepoches,
                                     additional_plots=additional_plots)
         
+        if additional_callbacks is not None:
+            if not isinstance(additional_callbacks, list):
+                additional_callbacks=[additional_callbacks]
+            self.callbacks.callbacks.extend(additional_callbacks)
         
         print('starting training')
         self.keras_model.fit_generator(self.train_data.generator() ,

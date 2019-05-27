@@ -199,3 +199,61 @@ class DeepJet_callbacks(object):
         
   
         self.callbacks.extend([ self.nl_end, self.history,self.timer])
+        
+        
+        
+from DeepJetCore.TrainData import TrainData
+
+class PredictCallback(Callback):
+    
+    def __init__(self, 
+                 samplefile='',
+                 function_to_apply=None, #needs to be function(counter,[model_input], [predict_output], [truth])
+                 after_n_batches=50,
+                 on_epoch_end=False,
+                 use_event=0
+                 ):
+        super(PredictCallback, self).__init__()
+        self.samplefile=samplefile
+        self.function_to_apply=function_to_apply
+        
+        self.after_n_batches=after_n_batches
+        self.run_on_epoch_end=on_epoch_end
+        
+        if self.run_on_epoch_end and self.after_n_batches>=0:
+            print('PredictCallback: can only be used on epoch end OR after n batches, falling back to epoch end')
+            self.after_n_batches=0
+        
+        self.td=TrainData()
+        self.td.readIn(samplefile)
+        self.td.skim(event=use_event)
+        
+    def on_train_begin(self, logs=None):
+        pass
+    
+    def predict_and_call(self,counter):
+        
+        predicted = self.model.predict(self.td.x)
+        if not isinstance(predicted, list):
+            predicted=[predicted]
+        
+        self.function_to_apply(counter,self.td.x,predicted,self.td.y)
+    
+    def on_epoch_end(self, epoch, logs=None):
+        if not self.run_on_epoch_end: return
+        self.predict_and_call(epoch)
+        
+    def on_batch_end(self, batch, logs=None):
+        if self.after_n_batches<=0: return
+        if batch%self.after_n_batches: return
+        self.predict_and_call(batch)
+        
+        
+           
+        
+        
+        
+        
+        
+        
+

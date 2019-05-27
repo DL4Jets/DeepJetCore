@@ -19,7 +19,7 @@ class dataGenerator{
 public:
 
 
-    dataGenerator():size_(32),type_(0),rand_(new TRandom3(123)){setSize(size_);}
+    dataGenerator(int seed=0):size_(24),type_(0),rand_(new TRandom3(seed)){setSize(size_);}
     ~dataGenerator(){delete rand_;}
 
     void gen();
@@ -77,6 +77,7 @@ int main(int argc, char* argv[]){
     int nevents=500;
     int nfiles=10;
     int ntest=1;
+    int seed=0;//also indicates starting counter
 
     if(argc>1)
         nevents=atoi(argv[1]);
@@ -84,18 +85,24 @@ int main(int argc, char* argv[]){
         nfiles=atoi(argv[2]);
     if(argc>3)
         ntest=atoi(argv[3]);
+    if(argc>4)
+        seed=atoi(argv[4]);
 
 
-    dataGenerator gen;
+    dataGenerator gen(seed);
 
-    std::ofstream outtxtfile("train_files.txt");
-    std::ofstream testouttxtfile("test_files.txt");
+    TString add="";
+    if(seed)
+        add+=seed;
+    std::ofstream outtxtfile((add+"train_files.txt").Data());
+    std::ofstream testouttxtfile((add+"test_files.txt").Data());
 
-
+    int counter=seed;
     for(int i=0;i<nfiles+ntest;i++){
         TString fname="out_";
-        fname+=i;
+        fname+=counter;
         fname+=".root";
+        counter++;
 
         if(i < nfiles)
             outtxtfile << fname << std::endl;
@@ -218,15 +225,15 @@ void dataGenerator::gen(){
         yw = 0.5*xw*rand_->Uniform(0.95,1.05);
 
         //for testing
-        xhi = 0.75;
-        xlow = 0.6;
+        xhi = 0.7;
+        xlow = 0.53;
     }
     else if(type_==2){ //class 2
         yw = rand_->Uniform(0.1,0.15);
         xw = 1.2*yw*rand_->Uniform(0.95,1.05);
 
-        xhi = 0.4;
-        xlow = 0.25;
+        xhi = 0.47;
+        xlow = 0.3;
     }
     else if(type_>2){
        xlow=-5;
