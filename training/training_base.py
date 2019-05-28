@@ -110,7 +110,9 @@ class training_base(object):
         self.checkpointcounter=0
         self.renewtokens=renewtokens
         self.callbacks=None
+        self.custom_optimizer=False
         
+        self.GAN_mode=False
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
 												 if ',' not in args.inputDataCollection else \
@@ -153,8 +155,6 @@ class training_base(object):
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         
-        print(shapes)
-        
         for s in shapes:
             self.keras_inputs.append(keras.layers.Input(shape=s))
             self.keras_inputsshapes.append(s)
@@ -188,6 +188,26 @@ class training_base(object):
         if not self.keras_model:
             raise Exception('Setting model not successful') 
         
+    def setGANModel(self, generator_func, discriminator_func):
+        '''
+        The inputs are functions that generate a keras Model 
+        The GAN output must match the discriminator input.
+        The first and only function argument of the discriminator must be the input.
+        The generator MUST get the same input. (e.g. both get a list of which one item is the
+        discriminator input, the other the generator input)
+        '''  
+        self.GAN_mode = True
+        self.create_generator     = generator_func
+        self.create_discriminator = discriminator_func
+        
+    def _create_gan(self,discriminator, generator, gan_input):
+        import keras
+        discriminator.trainable=False
+        x = generator(gan_input)
+        gan_output = discriminator(x)
+        gan = keras.models.Model(inputs=gan_input, outputs=gan_output)
+        return gan
+        
     def defineCustomPredictionLabels(self, labels):
         self.train_data.defineCustomPredictionLabels(labels)
         self.val_data.defineCustomPredictionLabels(labels)
@@ -204,30 +224,46 @@ class training_base(object):
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
         
+    def setCustomOptimizer(self,optimizer):
+        self.optimizer = optimizer
+        self.custom_optimizer=True
+        
     def compileModel(self,
                      learningrate,
                      clipnorm=None,
+                     discriminator_loss='binary_crossentropy',
+                     generator_loss='binary_crossentropy',
                      **compileargs):
-        if not self.keras_model:
+        if not self.keras_model and not self.GAN_mode:
             raise Exception('set model first') 
 
-        from keras.optimizers import Adam
         self.startlearningrate=learningrate
-        if clipnorm:
-            self.optimizer = Adam(lr=self.startlearningrate,clipnorm=clipnorm)
-        else:
-            self.optimizer = Adam(lr=self.startlearningrate)
-        self.keras_model.compile(optimizer=self.optimizer,**compileargs)
+        
+        if not self.custom_optimizer:
+            from keras.optimizers import Adam
+            if clipnorm:
+                self.optimizer = Adam(lr=self.startlearningrate,clipnorm=clipnorm)
+            else:
+                self.optimizer = Adam(lr=self.startlearningrate)
+            
+            
+        if self.GAN_mode:
+            #self.optimizer = 'adam' #FIXME
+            self.generator= self.create_generator(self.keras_inputs)
+            self.generator.compile(optimizer=self.optimizer,loss=generator_loss,**compileargs)
+            self.discriminator= self.create_discriminator(self.keras_inputs)
+            self.discriminator.compile(optimizer=self.optimizer,loss=discriminator_loss,**compileargs)
+            self.gan = self._create_gan(self.discriminator, self.generator, self.keras_inputs)
+            self.gan.compile(optimizer=self.optimizer,loss=generator_loss,**compileargs)
+        else:    
+            self.keras_model.compile(optimizer=self.optimizer,**compileargs)
         self.compiled=True
 
     def compileModelWithCustomOptimizer(self,
                                         customOptimizer,
                                         **compileargs):
-        if not self.keras_model:
-            raise Exception('set model first') 
-        self.optimizer = customOptimizer
-        self.keras_model.compile(optimizer=self.optimizer,**compileargs)
-        self.compiled=True
+        raise Exception('DEPRECATED: please use setCustomOptimizer before calling compileModel') 
+        
         
     def saveModel(self,outfile):
         self.keras_model.save(self.outputDir+outfile)
@@ -247,31 +283,13 @@ class training_base(object):
         #del f['optimizer_weights']
         #f.close()
         
-    def trainModel(self,
-                   nepochs,
-                   batchsize,
-                   stop_patience=-1, 
-                   lr_factor=0.5,
-                   lr_patience=-1, 
-                   lr_epsilon=0.003, 
-                   lr_cooldown=6, 
-                   lr_minimum=0.000001,
-                   maxqsize=5, 
-                   checkperiod=10,
-                   additional_plots=None,
-                   additional_callbacks=None,
-                   **trainargs):
+    def _initTraining(self,
+                      nepochs,
+                     batchsize,maxqsize):
         
         
-        # check a few things, e.g. output dimensions etc.
-        # need implementation, but probably TF update SWAPNEEL
-        customtarget=self.train_data.getCustomPredictionLabels()
-        if customtarget:
-            pass
-            # work on self.model.outputs
-            # check here if the output dimension of the model fits the custom labels
-        
-        # write only after the output classes have been added
+        self.train_data.setBatchSize(batchsize)
+        self.val_data.setBatchSize(batchsize)
         self.train_data.writeToFile(self.outputDir+'trainsamples.dc')
         self.val_data.writeToFile(self.outputDir+'valsamples.dc')
         
@@ -300,6 +318,33 @@ class training_base(object):
         if self.train_data.maxFilesOpen<0 or True:
             self.train_data.maxFilesOpen=nfilespre
             self.val_data.maxFilesOpen=min(int(nfilespre/2),1)
+        
+    def trainModel(self,
+                   nepochs,
+                   batchsize,
+                   stop_patience=-1, 
+                   lr_factor=0.5,
+                   lr_patience=-1, 
+                   lr_epsilon=0.003, 
+                   lr_cooldown=6, 
+                   lr_minimum=0.000001,
+                   maxqsize=5, 
+                   checkperiod=10,
+                   additional_plots=None,
+                   additional_callbacks=None,
+                   **trainargs):
+        
+        
+        # check a few things, e.g. output dimensions etc.
+        # need implementation, but probably TF update SWAPNEEL
+        customtarget=self.train_data.getCustomPredictionLabels()
+        if customtarget:
+            pass
+            # work on self.model.outputs
+            # check here if the output dimension of the model fits the custom labels
+        
+        # write only after the output classes have been added
+        self._initTraining(nepochs,batchsize,maxqsize)
         
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
@@ -343,13 +388,102 @@ class training_base(object):
         
         return self.keras_model, self.callbacks.history
     
+    def _create_noised_inputs(self, dnn_inputs, noise_in_shapes):
+        import copy
+        import numpy as np
+        gen_inputs = copy.deepcopy(dnn_inputs)
+        for n in range(len(noise_in_shapes)):
+            if len(noise_in_shapes[n]):
+                gen_inputs[n] = np.random.normal(0,1, noise_in_shapes[n])
+        return gen_inputs
     
+    def trainGAN(self, 
+                 nepochs,
+                 batchsize,
+                 noise_inputs=[],
+                 gan_skipping_factor=1,
+                 discr_skipping_factor=1,
+                 maxqsize=5):
+        
+        '''
+        This is just a first implementation.
+        in the end, it should follow the trainModel() function w.r.t. the interface (except for GAN specifics)
+        and support all the callbacks.
+        For that purpose, it is likely needed to copy and adapt this one:
+        https://github.com/keras-team/keras/blob/master/keras/engine/training_generator.py
+        
+        Also, savng the GAN and making sure weights are properly frozen etc needs to be implemented
+        '''
+        
+        
+        self._initTraining(nepochs,batchsize,maxqsize)
+        
+        print(self.keras_inputsshapes[0])
+        
+        import numpy as np
+        from sklearn.utils import shuffle
+        print(self.keras_inputs)
+        noise_in_shapes = [[] for i in range(len(self.keras_inputsshapes))]
+        for i in range(len(noise_in_shapes)):
+            if i in noise_inputs:
+                noise_in_shapes[i] = [batchsize] + self.keras_inputsshapes[i]
+                
+        nbatches_per_epoch = self.train_data.getNBatchesPerEpoch()
+        nepochs_train = nepochs - self.trainedepoches
+        _gen = self.train_data.generator()
+        for e in range(1,nepochs_train+1 ):
+            print('epoch ',e)
+            for batch in range(nbatches_per_epoch):
+                dnn_inputs, _ = _gen.next() #replace by noised ones
+                
+                if not batch%discr_skipping_factor:
+                    
+                    x_gen = self._create_noised_inputs(dnn_inputs, noise_in_shapes)
+
+                    generated_images = self.generator.predict(x_gen)
+                    
+                    y_dis = np.concatenate([np.zeros(batchsize, dtype='float32')+1.,
+                                          np.zeros(batchsize, dtype='float32')],axis=0)
+                    
+                    x_dis = [np.concatenate([dnn_inputs[i],generated_images[i]],axis=0) 
+                             for i in range(len(dnn_inputs))]
+                    
+                    self.discriminator.trainable=True
+                    self.discriminator.train_on_batch(x_dis, y_dis)
+                
+                
+                if not batch%gan_skipping_factor:
+                    #create new noise
+                    x_gen = self._create_noised_inputs(dnn_inputs, noise_in_shapes)
+                    y_gen = np.zeros(batchsize, dtype='float32')+1.
+                    
+                    self.discriminator.trainable=False
+                    self.gan.train_on_batch(x_gen, y_gen)
+                
+                #disc_outs = self.discriminator.evaluate(
+                #            x_gen, y_gen,
+                #            batch_size=batchsize)
+                #
+                #gan_outs = self.gan.evaluate(
+                #            x_gen, y_gen,
+                #            batch_size=batchsize)
+                
+                #print(disc_outs)
+                #print(gan_outs)
+                print(batch)
+                if not batch%100:
+                    from tools import quickplot
+                    quickplot(generated_images[0][0], "check.pdf")
+                
+            
+            
+        self.trainedepoches = nepochs
         
     def change_learning_rate(self, new_lr):
         import keras.backend as K
         K.set_value(self.keras_model.optimizer.lr, new_lr)
         
         
-        
+    
             
     
