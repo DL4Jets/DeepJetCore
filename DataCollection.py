@@ -747,7 +747,8 @@ class DataCollection(object):
         return out
     
         
-    
+    def replaceTruthForGAN(self, generated_array, original_truth):
+        return self.dataclass.replaceTruthForGAN(generated_array, original_truth)
         
     def generator(self):
         import numpy

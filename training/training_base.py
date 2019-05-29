@@ -12,6 +12,8 @@ import os
 from argparse import ArgumentParser
 import shutil
 from DeepJetCore.DataCollection import DataCollection
+from DeepJetCore.Losses import *
+from DeepJetCore.Layers import *
 from pdb import set_trace
 
 import imp
@@ -36,6 +38,8 @@ except ImportError:
     print('No metrics module found, ignoring at your own risk')
     global_metrics_list = {}
 custom_objects_list = {}
+custom_objects_list.update(djc_global_loss_list)
+custom_objects_list.update(djc_global_layers_list)
 custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
 custom_objects_list.update(global_metrics_list)
@@ -46,6 +50,7 @@ class training_base(object):
     def __init__(
 				self, splittrainandtest=0.85,
 				useweights=False, testrun=False,
+                testrun_fraction=0.1,
 				resumeSilently=False, 
 				renewtokens=True,
 				collection_class=DataCollection,
@@ -142,7 +147,7 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.02)
+            self.train_data.split(testrun_fraction)
             self.val_data=self.train_data
         else:    
             self.val_data=self.train_data.split(splittrainandtest)
@@ -202,7 +207,6 @@ class training_base(object):
         
     def _create_gan(self,discriminator, generator, gan_input):
         import keras
-        discriminator.trainable=False
         x = generator(gan_input)
         gan_output = discriminator(x)
         gan = keras.models.Model(inputs=gan_input, outputs=gan_output)
@@ -231,8 +235,12 @@ class training_base(object):
     def compileModel(self,
                      learningrate,
                      clipnorm=None,
-                     discriminator_loss='binary_crossentropy',
-                     generator_loss='binary_crossentropy',
+                     discriminator_loss=['binary_crossentropy'],
+                     generator_loss=None,
+                     print_models=False,
+                     discr_loss_weights=None,
+                     gan_loss_weights=None,
+                     metrics=None,
                      **compileargs):
         if not self.keras_model and not self.GAN_mode:
             raise Exception('set model first') 
@@ -248,15 +256,35 @@ class training_base(object):
             
             
         if self.GAN_mode:
-            #self.optimizer = 'adam' #FIXME
+            if metrics is None:
+                metrics=['accuracy']
+            else:
+                if not ('accuracy' in metrics):
+                    metrics = ['accuracy']+metrics
+                    
             self.generator= self.create_generator(self.keras_inputs)
-            self.generator.compile(optimizer=self.optimizer,loss=generator_loss,**compileargs)
+            if generator_loss is None:
+                generator_loss = [null_loss for i in range(len(self.generator.outputs))]
+            self.generator.compile(optimizer=self.optimizer,loss=generator_loss,metrics=metrics,**compileargs)
+            
             self.discriminator= self.create_discriminator(self.keras_inputs)
-            self.discriminator.compile(optimizer=self.optimizer,loss=discriminator_loss,**compileargs)
+            self.discriminator.compile(optimizer=self.optimizer,loss=discriminator_loss,loss_weights=discr_loss_weights,metrics=metrics,**compileargs)
+            
+            self.discriminator.trainable=False
             self.gan = self._create_gan(self.discriminator, self.generator, self.keras_inputs)
-            self.gan.compile(optimizer=self.optimizer,loss=generator_loss,**compileargs)
+            self.gan.compile(optimizer=self.optimizer,loss=discriminator_loss,loss_weights=gan_loss_weights,metrics=metrics,**compileargs)
+            
+            if print_models:
+                print('GENERATOR:')
+                print(self.generator.summary())
+                print('DISCRIMINATOR:')
+                print(self.discriminator.summary())
+                print('GAN:')
+                print(self.gan.summary())
         else:    
             self.keras_model.compile(optimizer=self.optimizer,**compileargs)
+            if print_models:
+                print(self.keras_model.summary())
         self.compiled=True
 
     def compileModelWithCustomOptimizer(self,
@@ -266,7 +294,12 @@ class training_base(object):
         
         
     def saveModel(self,outfile):
-        self.keras_model.save(self.outputDir+outfile)
+        if not self.GAN_mode:
+            self.keras_model.save(self.outputDir+outfile)
+        else:
+            self.gan.save(self.outputDir+'GAN_'+outfile)
+            self.generator.save(self.outputDir+'GEN_'+outfile)
+            self.discriminator.save(self.outputDir+'DIS_'+outfile)
         import tensorflow as tf
         import keras.backend as K
         tfsession=K.get_session()
@@ -388,102 +421,342 @@ class training_base(object):
         
         return self.keras_model, self.callbacks.history
     
-    def _create_noised_inputs(self, dnn_inputs, noise_in_shapes):
-        import copy
-        import numpy as np
-        gen_inputs = copy.deepcopy(dnn_inputs)
-        for n in range(len(noise_in_shapes)):
-            if len(noise_in_shapes[n]):
-                gen_inputs[n] = np.random.normal(0,1, noise_in_shapes[n])
-        return gen_inputs
     
-    def trainGAN(self, 
-                 nepochs,
-                 batchsize,
-                 noise_inputs=[],
+    
+    def trainGAN_exp(self,
+                     nepochs,
+                     batchsize,
                  gan_skipping_factor=1,
                  discr_skipping_factor=1,
-                 maxqsize=5):
+                     verbose=1,
+                     checkperiod=1,
+                     additional_plots=None,
+                   additional_callbacks=None):
         
-        '''
-        This is just a first implementation.
-        in the end, it should follow the trainModel() function w.r.t. the interface (except for GAN specifics)
-        and support all the callbacks.
-        For that purpose, it is likely needed to copy and adapt this one:
-        https://github.com/keras-team/keras/blob/master/keras/engine/training_generator.py
+        self._initTraining(nepochs,batchsize,maxqsize=5)
         
-        Also, savng the GAN and making sure weights are properly frozen etc needs to be implemented
-        '''
+        print('setting up callbacks')
+        from .DeepJet_callbacks import DeepJet_callbacks
         
+        #callbacks are just a placeholder for now
+        self.callbacks=DeepJet_callbacks(self.keras_model,
+                                    stop_patience=-1, 
+                                    lr_factor=.9,
+                                    lr_patience=-1, 
+                                    lr_epsilon=1, 
+                                    lr_cooldown=1, 
+                                    lr_minimum=1,
+                                    outputDir=self.outputDir,
+                                    checkperiod=checkperiod,
+                                    checkperiodoffset=self.trainedepoches,
+                                    additional_plots=additional_plots)
+        self.callbacks.callbacks=[]
+        #needs more dedicated callbacks
         
-        self._initTraining(nepochs,batchsize,maxqsize)
-        
-        print(self.keras_inputsshapes[0])
-        
-        import numpy as np
-        from sklearn.utils import shuffle
-        print(self.keras_inputs)
-        noise_in_shapes = [[] for i in range(len(self.keras_inputsshapes))]
-        for i in range(len(noise_in_shapes)):
-            if i in noise_inputs:
-                noise_in_shapes[i] = [batchsize] + self.keras_inputsshapes[i]
-                
-        nbatches_per_epoch = self.train_data.getNBatchesPerEpoch()
-        nepochs_train = nepochs - self.trainedepoches
-        _gen = self.train_data.generator()
-        for e in range(1,nepochs_train+1 ):
-            print('epoch ',e)
-            for batch in range(nbatches_per_epoch):
-                dnn_inputs, _ = _gen.next() #replace by noised ones
-                
-                if not batch%discr_skipping_factor:
-                    
-                    x_gen = self._create_noised_inputs(dnn_inputs, noise_in_shapes)
-
-                    generated_images = self.generator.predict(x_gen)
-                    
-                    y_dis = np.concatenate([np.zeros(batchsize, dtype='float32')+1.,
-                                          np.zeros(batchsize, dtype='float32')],axis=0)
-                    
-                    x_dis = [np.concatenate([dnn_inputs[i],generated_images[i]],axis=0) 
-                             for i in range(len(dnn_inputs))]
-                    
-                    self.discriminator.trainable=True
-                    self.discriminator.train_on_batch(x_dis, y_dis)
-                
-                
-                if not batch%gan_skipping_factor:
-                    #create new noise
-                    x_gen = self._create_noised_inputs(dnn_inputs, noise_in_shapes)
-                    y_gen = np.zeros(batchsize, dtype='float32')+1.
-                    
-                    self.discriminator.trainable=False
-                    self.gan.train_on_batch(x_gen, y_gen)
-                
-                #disc_outs = self.discriminator.evaluate(
-                #            x_gen, y_gen,
-                #            batch_size=batchsize)
-                #
-                #gan_outs = self.gan.evaluate(
-                #            x_gen, y_gen,
-                #            batch_size=batchsize)
-                
-                #print(disc_outs)
-                #print(gan_outs)
-                print(batch)
-                if not batch%100:
-                    from tools import quickplot
-                    quickplot(generated_images[0][0], "check.pdf")
-                
+        if additional_callbacks is not None:
+            if not isinstance(additional_callbacks, list):
+                additional_callbacks=[additional_callbacks]
+            self.callbacks.callbacks.extend(additional_callbacks)
             
-            
-        self.trainedepoches = nepochs
+        
+        
+        gan_history, _ = self.gan_fit_generator(generator=self.train_data.generator(),
+                               datacollection=self.train_data,
+                               steps_per_epoch=self.train_data.getNBatchesPerEpoch(),
+                               epochs=nepochs,
+                               verbose=verbose,
+                               callbacks_discriminator=self.callbacks.callbacks,
+                               callbacks_gan=None,
+                               validation_data=self.val_data.generator(),
+                               validation_steps=self.val_data.getNBatchesPerEpoch(),
+                               validation_freq=1,
+                               class_weight=None,
+                               gan_skipping_factor=gan_skipping_factor,
+                               discr_skipping_factor=discr_skipping_factor,
+                               max_queue_size=10,
+                               initial_epoch=0)
+        
+        self.saveModel("KERAS_model.h5")
+        return self.gan, gan_history
+    
         
     def change_learning_rate(self, new_lr):
         import keras.backend as K
-        K.set_value(self.keras_model.optimizer.lr, new_lr)
+        if self.GAN_mode:
+            K.set_value(self.discriminator.optimizer.lr, new_lr)
+            K.set_value(self.gan.optimizer.lr, new_lr)
+        else:
+            K.set_value(self.keras_model.optimizer.lr, new_lr)
         
         
     
+    def gan_fit_generator(self,
+                      generator,
+                      datacollection,
+                      steps_per_epoch=None,
+                      epochs=1,
+                      verbose=1,
+                      callbacks_discriminator=None,
+                      callbacks_gan=None,
+                      validation_data=None,
+                      validation_steps=None,
+                      class_weight=None,
+                      gan_skipping_factor=1,
+                      discr_skipping_factor=1,
+                      validation_freq=1,###TBI FIXME
+                      max_queue_size=10,
+                      initial_epoch=0,
+                      recover_discriminator=True
+                      ):
+        """See docstring for `Model.fit_generator`."""
+        
+        import keras
+        from sklearn.utils import shuffle
+        import keras.callbacks as cbks
+        #from keras.training_utils import should_run_validation
+        from keras.utils.generic_utils import to_list
+        import numpy as np
+        
+        epoch = initial_epoch
+        
+        do_validation = bool(validation_data)
+        #DEBUG self.discriminator._make_train_function()
+        #DEBUG self.gan._make_train_function()
+        if do_validation and False: #DEBUG
+            self.discriminator._make_test_function()
+            self.gan._make_test_function()
+        
+        
+        d_out_labels = ['dis_' + n for n in self.discriminator.metrics_names ]
+        g_out_labels = ['gan_' + n for n in self.gan.metrics_names ]
+        
+        d_callback_metrics = d_out_labels + ['val_' + n for n in d_out_labels]
+        g_callback_metrics = g_out_labels + ['val_' + n for n in g_out_labels]
+        
+        # prepare callbacks
+        self.discriminator.history = cbks.History()
+        self.gan.history = cbks.History()
+        _callbacks = [cbks.BaseLogger(
+            stateful_metrics=self.discriminator.stateful_metric_names)]
+        _callbacks += [cbks.BaseLogger(
+            stateful_metrics=self.gan.stateful_metric_names)]
+        
+        if verbose:
+            _callbacks.append(
+                cbks.ProgbarLogger(
+                    count_mode='steps',
+                    stateful_metrics=self.gan.stateful_metric_names)) #one model is enough here!#use only gan here
             
+        callbacks_gan = callbacks_gan or []
+        callbacks_discriminator = callbacks_discriminator or []
+        for c in callbacks_gan:
+            c.set_model(self.gan)
+        for c in callbacks_discriminator:
+            c.set_model(self.discriminator)
+        
+        _callbacks += (callbacks_gan) + (callbacks_discriminator) + [self.discriminator.history] + [self.gan.history]
+        callbacks = cbks.CallbackList(_callbacks)
+        
+        callbacks.set_params({
+            'epochs': epochs,
+            'steps': steps_per_epoch,
+            'verbose': verbose,
+            'do_validation': do_validation,
+            'metrics': d_callback_metrics + g_callback_metrics,
+        })
+        #newer keras callbacks._call_begin_hook('train')
+        callbacks.on_train_begin()
+        
+        enqueuer = None
+        val_enqueuer = None
+        
+        try:
+            if do_validation:
+                
+                val_data = validation_data
+                val_enqueuer_gen = val_data
+                              
+                output_generator = generator
+        
+            ## callbacks.model.stop_training = False ##FIXME TBI
+            # Construct epoch logs.
+            epoch_logs = {}
+            skip_gan_training = False
+            while epoch < epochs:
+                for m in self.discriminator.stateful_metric_functions:
+                    m.reset_states()
+                for m in self.gan.stateful_metric_functions:
+                    m.reset_states()
+                callbacks.on_epoch_begin(epoch)
+                steps_done = 0
+                batch_index = 0
+                while steps_done < steps_per_epoch:
+                    generator_output = next(output_generator)
+        
+                    if not hasattr(generator_output, '__len__'):
+                        raise ValueError('Output of generator should be '
+                                         'a tuple `(x, y, sample_weight)` '
+                                         'or `(x, y)`. Found: ' +
+                                         str(generator_output))
+        
+                    if len(generator_output) == 2:
+                        x, y = generator_output
+                        sample_weight = None
+                    elif len(generator_output) == 3:
+                        x, y, sample_weight = generator_output
+                    else:
+                        raise ValueError('Output of generator should be '
+                                         'a tuple `(x, y, sample_weight)` '
+                                         'or `(x, y)`. Found: ' +
+                                         str(generator_output))
+                    if x is None or len(x) == 0:
+                        # Handle data tensors support when no input given
+                        # step-size = 1 for data tensors
+                        batch_size = 1
+                    elif isinstance(x, list):
+                        batch_size = x[0].shape[0]
+                    elif isinstance(x, dict):
+                        batch_size = list(x.values())[0].shape[0]
+                    else:
+                        batch_size = x.shape[0]
+                    # build batch logs
+                    batch_logs = {'batch': batch_index, 'size': batch_size}
+                    callbacks.on_batch_begin(batch_index, batch_logs)
+        
+        
+                    #GAN training here 
+                    
+                    x_gen = self.generator.predict(x)
+                    
+                    #DEBUG - NEEDS CALLBACK
+                    # REMOVE IN FULL VERSION
+                    if False and steps_done%50:
+                        forplots = np.concatenate([x_gen[0][:4], x[0][:4]],axis=0)
+                        from tools import quickplot, plotgrid
+                        plotgrid(forplots, nplotsx=4, nplotsy=2, outname="merged.pdf")
+                        quickplot(x_gen[0][0], "gen.pdf")
+                        quickplot(x[0][0], "data.pdf")
+                    
+                    #this needs to be more generic and actually done for every list item
+                    #replaceTruthForGAN gives a list
+                    
+                    adapted_truth_data = datacollection.replaceTruthForGAN(
+                                                  generated_array=np.zeros(batch_size, dtype='float32')+1, 
+                                                  original_truth=y)
+                    
+                    adapted_truth_generated = datacollection.replaceTruthForGAN(
+                                                  generated_array=np.zeros(batch_size, dtype='float32'), 
+                                                  original_truth=y)
+                    
+                    y_dis = [np.concatenate([adapted_truth_data[i],adapted_truth_generated[i]],axis=0) \
+                             for i in range(len(adapted_truth_data))]
+                    
+                    x_dis = [np.concatenate([x[i],x_gen[i]],axis=0) 
+                                 for i in range(len(x))]
+                    
+                    y_dis_new =  [shuffle(n, random_state=steps_done) for n in y_dis]
+                    x_dis_new =  [shuffle(n, random_state=steps_done) for n in x_dis]
+                    
+                    y_dis_b1 = [y_dis_new[i][:batch_size,...] for i in range(len(y_dis_new))]
+                    y_dis_b2 = [y_dis_new[i][batch_size:,...] for i in range(len(y_dis_new))]
+                    
+                    x_dis_b1 = [x_dis_new[i][:batch_size,...] for i in range(len(x_dis_new))]
+                    x_dis_b2 = [x_dis_new[i][batch_size:,...] for i in range(len(x_dis_new))]
+                    
+                    #add [:batch_size,...]
+                    #to the above for cut-off
+                    # TBI TBI FIXME
+                    
+                    ## FIXME: cut in half to have same batch size everywhere
+                    # also here would be the place to implement weighting of discr versus gen
+                    
+                    if (not batch_index%discr_skipping_factor):
+                        self.discriminator.trainable=True
+                        outs = self.discriminator.train_on_batch(x_dis_b1, y_dis_b1,
+                                                    sample_weight=sample_weight,
+                                                    class_weight=class_weight)
+                        
+                        outs = self.discriminator.train_on_batch(x_dis_b2, y_dis_b2,
+                                                    sample_weight=sample_weight,
+                                                    class_weight=class_weight)
+                        
+                        outs = to_list(outs)
+                        
+                        if recover_discriminator:
+                            if outs[1] < 0.5:
+                                skip_gan_training=True
+                            else:
+                                skip_gan_training=False
+                        for l, o in zip(d_out_labels, outs):
+                            batch_logs[l] = o
+                            
+                    
+                    if (not skip_gan_training) and (not batch_index%gan_skipping_factor):
+                        self.discriminator.trainable=False
+                        y_gen = np.zeros(batch_size, dtype='float32')+1.
+                        outs = self.gan.train_on_batch(x, y_gen,
+                                                    sample_weight=sample_weight,
+                                                    class_weight=class_weight)
+                        outs = to_list(outs)
+                        for l, o in zip(g_out_labels, outs):
+                            batch_logs[l] = o    
+        
+                    #callbacks._call_batch_hook('train', 'end', batch_index, batch_logs)
+                    callbacks.on_batch_end(batch_index, batch_logs)
+        
+                    batch_index += 1
+                    steps_done += 1
+        
+                    # Epoch finished.
+                    if (steps_done >= steps_per_epoch and
+                            do_validation):
+                        # Note that `callbacks` here is an instance of
+                        # `keras.callbacks.CallbackList`
+                        
+                        ## this evaluate will get problems with the truth definition
+                        ## needs to be fixed in the generator? Or just make traindata do it?
+                        
+                        val_outs = self.discriminator.evaluate_generator(
+                                val_enqueuer_gen,
+                                validation_steps,
+                                #callbacks=callbacks,
+                                workers=0)
+                        
+                        val_outs = to_list(val_outs)
+                        # Same labels assumed.
+                        for l, o in zip(d_out_labels, val_outs):
+                            epoch_logs['val_' + l] = o
+                            
+                        val_outs = self.gan.evaluate_generator(
+                                val_enqueuer_gen,
+                                validation_steps,
+                                #callbacks=callbacks,
+                                workers=0)
+                        
+                        val_outs = to_list(val_outs)
+                        # Same labels assumed.
+                        for l, o in zip(g_out_labels, val_outs):
+                            epoch_logs['val_' + l] = o
+        
+                    #if callbacks.model.stop_training:  ##FIXME TBI
+                    #    break
+        
+                callbacks.on_epoch_end(epoch, epoch_logs)
+                epoch += 1
+                #if callbacks.model.stop_training:  ##FIXME TBI
+                #    break
+        
+        finally:
+            try:
+                if enqueuer is not None:
+                    enqueuer.stop()
+            finally:
+                if val_enqueuer is not None:
+                    val_enqueuer.stop()
+        
+        #callbacks._call_end_hook('train')
+        callbacks.on_train_end()
+        return self.gan.history , self.discriminator.history
+
+        
     

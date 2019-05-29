@@ -9,6 +9,8 @@ except ImportError:
     
 from keras.models import load_model
 from DeepJetCore.evaluation import testDescriptor
+from DeepJetCore.Losses import *
+from DeepJetCore.Layers import *
 from argparse import ArgumentParser
 from keras import backend as K
 import imp
@@ -53,6 +55,8 @@ if os.path.isdir(args.outputDir):
     raise Exception('output directory must not exists yet')
 
 custom_objs = {}
+custom_objs.update(djc_global_loss_list)
+custom_objs.update(djc_global_layers_list)
 custom_objs.update(global_loss_list)
 custom_objs.update(global_layers_list)
 custom_objs.update(global_metrics_list)
