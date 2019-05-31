@@ -86,3 +86,23 @@ class FeedForward(Layer):
 djc_global_layers_list['FeedForward']=FeedForward
     
     
+
+class ReduceSumEntirely(Layer):
+    def __init__(self,  **kwargs):
+        super(ReduceSumEntirely, self).__init__(**kwargs)
+        
+    
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0],1)
+    
+    def call(self, inputs):
+        red_axes=(inputs.shape[1:]).as_list()
+        red_axes = [i+1 for i in range(len(red_axes))]
+        return tf.expand_dims(tf.reduce_sum(inputs,axis=red_axes),axis=1)
+    
+    def get_config(self):
+        base_config = super(ReduceSumEntirely, self).get_config()
+        return dict(list(base_config.items()))
+    
+
+djc_global_layers_list['ReduceSumEntirely']=ReduceSumEntirely
