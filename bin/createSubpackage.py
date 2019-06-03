@@ -127,7 +127,7 @@ class TrainData_example(TrainData):
     def formatPrediction(self, predicted_list):
         
         format_names = ['prob_isA','prob_isB','prob_isC']
-        out_pred = [predicted_list[:,0],predicted_list[:,1],predicted_list[:,2]]
+        out_pred = [predicted_list[0][:,0],predicted_list[0][:,1],predicted_list[0][:,2]]
         
         return out_pred,  format_names
 
