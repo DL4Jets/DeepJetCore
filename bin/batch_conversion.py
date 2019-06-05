@@ -25,7 +25,6 @@ if len(args.c)<1:
     print("please specify and output class")
     exit(-1)
 
-cmssw_version='CMSSW_10_0_0'
 
 deep_jet_base = os.environ['DEEPJETCORE_SUBPACKAGE']
 if len(deep_jet_base) < 1:
@@ -35,44 +34,6 @@ if len(deep_jet_base) < 1:
 deep_jet_base_name = os.path.basename(deep_jet_base)
 deep_jet_core  = os.path.abspath((os.environ['DEEPJETCORE']))
 
-   
-print('creating CMSSW based installation of DeepJetCore to run on sl6 nodes')
-
-fullcommand='''
-source deactivate ; 
-cd {batchdir} ; 
-export SCRAM_ARCH=slc6_amd64_gcc630 ; 
-scramv1 project CMSSW {cmssw_version} ; 
-cd {cmssw_version}/src ; 
-echo setting up cmssw env ; 
-eval `scram runtime -sh` ; 
-cp -rL {djc} . ; 
-mkdir -p {DJ_base_name} ;
-cp -rL {DJ}/modules {DJ_base_name}/ ; 
-cp {DJ}/* {DJ_base_name}/ ; 
-cd {batchdir}/{cmssw_version}/src/DeepJetCore/compiled ;  
-pwd ; 
-echo compiling DeepJetCore ;
-make clean; 
-make -j4; 
-cd {batchdir}/{cmssw_version}/src/{DJ_base_name} ; 
-echo sourcing {batchdir}/{cmssw_version}/src/DeepJetCore ;
-
-cd {batchdir}/{cmssw_version}/src/DeepJetCore
-export DEEPJETCORE=`pwd`
-export PYTHONPATH=`pwd`/../:$PYTHONPATH
-export LD_LIBRARY_PATH=`pwd`/compiled:$LD_LIBRARY_PATH
-export PATH=`pwd`/bin:$PATH
-
-echo "compiling {DJ_base_name} (if needed)";
-echo {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules
-cd {batchdir}/{cmssw_version}/src/{DJ_base_name}/modules ; 
-make clean; 
-make -j4 ; 
-'''.format(DJ=deep_jet_base,DJ_base_name=deep_jet_base_name,  djc=deep_jet_core, batchdir=args.batch_dir,cmssw_version=cmssw_version)
-
-#print(fullcommand)
-#exit()
 
 if os.path.isdir(args.out):
     print ("output dir must not exists")
@@ -83,35 +44,28 @@ if os.path.isdir(args.batch_dir):
 os.mkdir(args.batch_dir)
 
 if not os.path.isdir('%s/batch' % args.batch_dir):
-   os.mkdir('%s/batch' % args.batch_dir)   
+    os.mkdir('%s/batch' % args.batch_dir)   
    
-
-
-os.system(fullcommand)
-
-
-djc_cmssw=args.batch_dir+'/'+cmssw_version +'/src/DeepJetCore'
-
 
 if not (len(args.meansfrom) or args.testdatafor):
-   #Run a fisrt round of root conversion to get the means/std and weights
-   print('creating a dummy datacollection for means/norms and weighter (can take a while)...')
-   cmd = [
-      'convertFromRoot.py', 
-      '-i', args.infile,
-      '-c', args.c, 
-      '-o', args.out, 
-      '--nforweighter', args.nforweighter,
-      '--means'
-      ]
-   proc  = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = proc.communicate()
-   code = proc.wait()
-   
-   if code != 0:
-      raise RuntimeError('The first round of root conversion failed with message: \n\n%s' % err)
-   else:
-       print('means/norms/weighter produced successfully')
+    #Run a fisrt round of root conversion to get the means/std and weights
+    print('creating a dummy datacollection for means/norms and weighter (can take a while)...')
+    cmd = [
+       'convertFromRoot.py', 
+       '-i', args.infile,
+       '-c', args.c, 
+       '-o', args.out, 
+       '--nforweighter', args.nforweighter,
+       '--means'
+       ]
+    proc  = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = proc.communicate()
+    code = proc.wait()
+    
+    if code != 0:
+        raise RuntimeError('The first round of root conversion failed with message: \n\n%s' % err)
+    else:
+        print('means/norms/weighter produced successfully')
 
 elif args.meansfrom:
     if not os.path.exists(args.meansfrom):
@@ -123,12 +77,12 @@ elif args.meansfrom:
 inputs = [i for i in open(args.infile)]
 
 def chunkify(l, n):
-   """Yield successive n-sized chunks from l."""
-   for i in range(0, len(l), n):
-      yield l[i:i + n]
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
 
 if not args.infile.endswith('.txt'):
-   raise ValueError('The code assumes that the input files has .txt extension')
+    raise ValueError('The code assumes that the input files has .txt extension')
 
 
 print('splitting input file...')
@@ -136,12 +90,12 @@ txt_template = args.infile.replace('.txt', '.%s.txt')
 batch_txts = []
 nchunks = 0
 for idx, chunk in enumerate(chunkify(inputs, len(inputs)/args.nchunks)):
-   name = txt_template % idx
-   batch_txts.append(name)
-   if not args.useexistingsplit:
-       with open(name, 'w') as cfile:
-          cfile.write(''.join(chunk))
-   nchunks = idx
+    name = txt_template % idx
+    batch_txts.append(name)
+    if not args.useexistingsplit:
+        with open(name, 'w') as cfile:
+            cfile.write(''.join(chunk))
+    nchunks = idx
 
 
 batch_template = '''#!/bin/bash
@@ -149,14 +103,8 @@ sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to a
 echo "JOBSUB::RUN job running"
 trap "echo JOBSUB::FAIL job killed" SIGTERM
 BASEDIR=`pwd`
-cd {djc_cmssw}
-eval `scram runtime -sh` #get glibc libraries
-export PATH={djc_cmssw}/bin:$PATH
-export LD_LIBRARY_PATH={djc_cmssw}/compiled:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH={djc_cmssw}/../{DJ}/modules:$LD_LIBRARY_PATH
-export PYTHONPATH={djc_cmssw}/../:$PYTHONPATH
-export PYTHONPATH={djc_cmssw}/../{DJ}/modules:$PYTHONPATH
-cd $BASEDIR
+cd {subpackage}
+source env.sh
 convertFromRoot.py "$@"
 exitstatus=$?
 if [ $exitstatus != 0 ]
@@ -165,15 +113,15 @@ echo JOBSUB::FAIL job failed with status $exitstatus
 else
 echo JOBSUB::SUCC job ended sucessfully
 fi
-'''.format(DJ=deep_jet_base_name,djc_cmssw=djc_cmssw)
+'''.format(subpackage=deep_jet_base)
 batch_script = '%s/batch.sh' % args.batch_dir
 with open(batch_script, 'w') as bb:
-   bb.write(batch_template)
+    bb.write(batch_template)
 
 means_file = '%s/batch_template.dc' % os.path.realpath(args.out) if not args.testdatafor else args.testdatafor
 option = '--usemeansfrom' if not args.testdatafor else '--testdatafor'
 with open('%s/submit.sub' % args.batch_dir, 'w') as bb:
-   bb.write('''
+    bb.write('''
 executable            = {EXE}
 arguments             = -i {INFILE} -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc {OPTION} {MEANS}
 output                = batch/con_out.$(ProcId).out

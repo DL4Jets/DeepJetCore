@@ -5,6 +5,7 @@ Created on 26 Feb 2017
 '''
 
 from __future__ import print_function
+import numpy as np
 
 import matplotlib
 #if no X11 use below
@@ -23,21 +24,29 @@ class Weighter(object):
         self.removeProbabilties=[]
         self.binweights=[]
         self.distributions=[]
-        self.xedges=[]
-        self.yedges=[]
+        self.xedges=[np.array([])]
+        self.yedges=[np.array([])]
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
     
     def __eq__(self, other):
         'A == B'
+        def _all(x):
+            if hasattr(x, 'all'):
+                return x.all()
+            if hasattr(x, '__iter__'):
+                return all(x)
+            else: return x
+            
         def comparator(this, that):
             'compares lists of np arrays'
-            return all((i == j).all() for i,j in zip(this, that))
+            return _all((i == j).all() for i,j in zip(this, that))
+        
         
         return self.Axixandlabel == other.Axixandlabel and \
-           all(self.axisX == other.axisX) and \
-           all(self.axisY == other.axisY) and \
+           _all(self.axisX == other.axisX) and \
+           _all(self.axisY == other.axisY) and \
            comparator(self.hists, other.hists) and \
            comparator(self.removeProbabilties, other.removeProbabilties) and \
            self.classes == other.classes and \
@@ -45,8 +54,8 @@ class Weighter(object):
            self.undefTruth == other.undefTruth and \
            comparator(self.binweights, other.binweights) and \
            comparator(self.distributions, other.distributions) and \
-           (self.xedges == other.xedges).all() and \
-           (self.yedges == other.yedges).all()
+           _all(self.xedges == other.xedges) and \
+           _all(self.yedges == other.yedges)
     
     def __ne__(self, other):
         'A != B'
