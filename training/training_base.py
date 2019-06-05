@@ -282,7 +282,7 @@ class training_base(object):
                 print('GAN:')
                 print(self.gan.summary())
         else:    
-            self.keras_model.compile(optimizer=self.optimizer,**compileargs)
+            self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
             if print_models:
                 print(self.keras_model.summary())
         self.compiled=True

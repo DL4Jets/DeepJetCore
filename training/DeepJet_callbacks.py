@@ -216,6 +216,7 @@ class PredictCallback(Callback):
         super(PredictCallback, self).__init__()
         self.samplefile=samplefile
         self.function_to_apply=function_to_apply
+        self.counter=0
         
         self.after_n_batches=after_n_batches
         self.run_on_epoch_end=on_epoch_end
@@ -240,13 +241,16 @@ class PredictCallback(Callback):
         self.function_to_apply(counter,self.td.x,predicted,self.td.y)
     
     def on_epoch_end(self, epoch, logs=None):
+        self.counter=0
         if not self.run_on_epoch_end: return
         self.predict_and_call(epoch)
         
     def on_batch_end(self, batch, logs=None):
         if self.after_n_batches<=0: return
-        if batch%self.after_n_batches: return
-        self.predict_and_call(batch)
+        self.counter+=1
+        if self.counter>self.after_n_batches: 
+            self.counter=0
+            self.predict_and_call(batch)
         
         
            
