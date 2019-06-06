@@ -147,7 +147,7 @@ int main(int argc, char* argv[]){
         int type=0;
 
         for(size_t e=0;e<(size_t)nevents;e++){
-            /*
+
             gen.setType(type);
             if(type==0){
                 isA=1;isB=0;isC=0;
@@ -162,13 +162,7 @@ int main(int argc, char* argv[]){
             type++;
             if(type>2)
                 type=0;
-*/
 
-
-            ///testing
-            gen.setType(1);
-            gen.gen();
-            ///testing
 
             auto s  = gen.getImageSeq();
             sigsum=0;
