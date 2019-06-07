@@ -64,12 +64,23 @@ class training_base(object):
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
         parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
-        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+        parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default=-1)
         parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
+        parser.add_argument("--submitbatch",  help="submits the job to condor" , default=False, action="store_true")
+        parser.add_argument("--isbatchrun",   help="is batch run", default=False, action="store_true")
+        
         
         args = parser.parse_args()
         self.args = args
-        import os
+        import sys
+        self.argstring = sys.argv
+        #sanity check
+        if args.isbatchrun:
+            args.submitbatch=False
+            resumeSilently=True
+            
+        if args.submitbatch:
+            print('submitting batch job. Model will be compiled for testing before submission')
         
         
         import matplotlib
@@ -114,8 +125,12 @@ class training_base(object):
         self.compiled=False
         self.checkpointcounter=0
         self.renewtokens=renewtokens
+        if args.isbatchrun:
+            self.renewtokens=False
         self.callbacks=None
         self.custom_optimizer=False
+        self.copied_script=""
+        self.submitbatch=args.submitbatch
         
         self.GAN_mode=False
         
@@ -138,10 +153,12 @@ class training_base(object):
         self.outputDir+='/'
         
         #copy configuration to output dir
-        shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+        if not args.isbatchrun:
+            shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+            self.copied_script = self.outputDir+os.path.basename(scriptname)
+        else:
+            self.copied_script = scriptname
         
-            
-            
         self.train_data = collection_class()
         self.train_data.readFromFile(self.inputData)
         self.train_data.useweights=useweights
@@ -168,11 +185,11 @@ class training_base(object):
             kfile = self.outputDir+'/KERAS_check_model_last.h5' \
 							 if os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5') else \
 							 self.outputDir+'/KERAS_model.h5'
-            if not os.path.isfile(kfile):
-                print('you cannot resume a training that did not train for at least one epoch.\nplease start a new training.')
-                exit()
-            self.loadModel(kfile)
-            self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
+            if os.path.isfile(kfile):
+                self.loadModel(kfile)
+                self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
+            else:
+                print('no model found in existing output dir, starting training from scratch')
         
         
     def __del__(self):
@@ -320,6 +337,11 @@ class training_base(object):
                       nepochs,
                      batchsize,maxqsize):
         
+        
+        if self.submitbatch:
+            from DeepJetCore.training.batchTools import submit_batch
+            submit_batch(self)
+            exit() #don't delete this!
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)

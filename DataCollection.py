@@ -828,7 +828,9 @@ class DataCollection(object):
                 
                 
             def __getLast(self):
+                #print('joining...') #DEBUG PERF
                 self.tdlist[self.lastcounter].readIn_join(wasasync=True,waitforStart=True)
+                #print('joined') #DEBUG PERF
                 td=self.tdlist[self.lastcounter]
                 #print('got ',self.lastcounter)
                 
@@ -911,10 +913,13 @@ class DataCollection(object):
         #
         psamples=0 #for random shuffling
         nepoch=0
+        shufflecounter=0
+        shufflecounter2=0
         while 1:
             if processedbatches == totalbatches:
                 processedbatches=0
                 nepoch+=1
+                shufflecounter2+=1
             
             lastbatchrest=0
             if processedbatches == 0: #reset buffer and start new
@@ -974,7 +979,9 @@ class DataCollection(object):
                 else:
                     
                     #randomly^2 shuffle - not needed every time
-                    if psamples%2==0 and nepoch%2==1:
+                    if shufflecounter>1 and shufflecounter2>1:
+                        shufflecounter=0
+                        shufflecounter2=0
                         for i in range(0,dimx):
                             td.x[i]=shuffle(td.x[i], random_state=psamples)
                         for i in range(0,dimy):
@@ -982,7 +989,7 @@ class DataCollection(object):
                         for i in range(0,dimw):
                             td.w[i]=shuffle(td.w[i], random_state=psamples)
                     
-                    
+                    shufflecounter+=1
                     
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):

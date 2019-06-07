@@ -96,15 +96,19 @@ class newline_callbacks_end(Callback):
         
         
 class Losstimer(Callback):
-    def __init__(self, every = 5):
+    def __init__(self, every = 50):
         self.points = []
         self.every = every
+        self.counter=0
 
     def on_train_begin(self, logs):
         self.start = time()
 
     def on_batch_end(self, batch, logs):
-        if (batch % self.every) != 0: return
+        if (self.counter != self.every): 
+            self.counter+=1
+            return
+        self.counter = 0
         elapsed = time() - self.start
         cop = {}
         for i, j in logs.iteritems():
