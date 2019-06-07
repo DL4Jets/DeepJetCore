@@ -15,6 +15,7 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.Losses import *
 from DeepJetCore.Layers import *
 from pdb import set_trace
+from keras.utils import multi_gpu_model
 
 import imp
 try:
@@ -96,7 +97,7 @@ class training_base(object):
         else:
             os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
             os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-            print('running on GPU '+str(args.gpu))
+            print('running on GPU(s) '+str(args.gpu))
         
         if args.gpufraction>0 and args.gpufraction<1:
             import sys
@@ -113,6 +114,11 @@ class training_base(object):
         
         import keras
                 
+        self.ngpus=1
+        if (not args.gpu<0) and len(args.gpu):
+            self.ngpus=len([i for i in args.gpu.split(',')])
+            print('running on '+str(self.ngpus)+ ' gpus')
+            
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
         self.keras_model=None
@@ -262,6 +268,10 @@ class training_base(object):
         if not self.keras_model and not self.GAN_mode:
             raise Exception('set model first') 
 
+        if self.ngpus>1:
+            print('Model being compiled for '+str(self.ngpus)+' gpus')
+            self.keras_model = multi_gpu_model(self.keras_model, gpus=self.ngpus)
+            
         self.startlearningrate=learningrate
         
         if not self.custom_optimizer:
