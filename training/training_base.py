@@ -81,7 +81,7 @@ class training_base(object):
             resumeSilently=True
             
         if args.submitbatch:
-            print('submitting batch job. Model will be compiled for testing before submission')
+            print('submitting batch job. Model will be compiled for testing before submission (GPU settings being ignored)')
         
         
         import matplotlib
@@ -268,7 +268,7 @@ class training_base(object):
         if not self.keras_model and not self.GAN_mode:
             raise Exception('set model first') 
 
-        if self.ngpus>1:
+        if self.ngpus>1 and not self.submitbatch:
             print('Model being compiled for '+str(self.ngpus)+' gpus')
             self.keras_model = multi_gpu_model(self.keras_model, gpus=self.ngpus)
             

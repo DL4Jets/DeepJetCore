@@ -284,20 +284,22 @@ training_template='''
 from DeepJetCore.training.training_base import training_base
 import keras
 from keras.models import Model
-from keras.layers import Dense, Conv2D, Flatten #etc
+from keras.layers import Dense, Conv2D, Flatten, BatchNormalization #etc
 
 def my_model(Inputs,nclasses,nregressions,otheroption):
     
     x = Inputs[0] #this is the self.x list from the TrainData data structure
+    x = BatchNormalization(momentum=0.9)(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
+    x = BatchNormalization(momentum=0.9)(x)
     x = Conv2D(8,(4,4),strides=(2,2),activation='relu', padding='valid')(x)
     x = Conv2D(4,(4,4),strides=(2,2),activation='relu', padding='valid')(x)
     x = Flatten()(x)
     x = Dense(32, activation='relu')(x)
     
-    x = Dense(nclasses)(x)
+    x = Dense(nclasses, activation='softmax')(x)
     
     predictions = [x]
     return Model(inputs=Inputs, outputs=predictions)
@@ -305,9 +307,11 @@ def my_model(Inputs,nclasses,nregressions,otheroption):
 def my_regression_model(Inputs,nclasses,nregressions,otheroption):
     
     x = Inputs[0] #this is the self.x list from the TrainData data structure
+    x = BatchNormalization(momentum=0.9)(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
     x = Conv2D(8,(4,4),activation='relu', padding='same')(x)
+    x = BatchNormalization(momentum=0.9)(x)
     x = Conv2D(8,(4,4),strides=(2,2),activation='relu', padding='valid')(x)
     x = Conv2D(4,(4,4),strides=(2,2),activation='relu', padding='valid')(x)
     x = Flatten()(x)

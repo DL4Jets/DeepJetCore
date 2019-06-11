@@ -148,7 +148,7 @@ int main(int argc, char* argv[]){
 
         for(size_t e=0;e<(size_t)nevents;e++){
 
-            gen.setType(type);
+            gen.setType(type+1);
             if(type==0){
                 isA=1;isB=0;isC=0;
             }
@@ -212,21 +212,21 @@ void dataGenerator::gen(){
         yw = 0.5*xw*rand_->Uniform(0.95,1.05);
 
         //for testing
-        xhi = 0.75;
-        xlow = 0.6;
+       // xhi = 0.75;
+       // xlow = 0.6;
     }
     else if(type_==2){ //class 2
         yw = rand_->Uniform(0.1,0.15);
         xw = 1.2*yw*rand_->Uniform(0.95,1.05);
 
-        xhi = 0.4;
-        xlow = 0.25;
+       // xhi = 0.4;
+       // xlow = 0.25;
     }
     else if(type_>2){
-       xlow=-5;
-       xhi = 5;
-       ylow = -5;
-       yhi = 5;
+      // xlow=-5;
+      // xhi = 5;
+      // ylow = -5;
+      // yhi = 5;
        xw = rand_->Uniform(3,4);
        yw = rand_->Uniform(2,4);
     }
