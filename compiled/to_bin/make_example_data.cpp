@@ -163,6 +163,7 @@ int main(int argc, char* argv[]){
             if(type>2)
                 type=0;
 
+            gen.gen();
 
             auto s  = gen.getImageSeq();
             sigsum=0;
@@ -170,8 +171,6 @@ int main(int argc, char* argv[]){
                 sigsum+=sc;
 
             auto s2d = gen.getImage();
-            gen.setType(2);
-            gen.gen();
             auto bg = gen.getImageSeq();
             auto bg2d = gen.getImage();
 
