@@ -85,20 +85,20 @@ else:
         
     with open('%s/submit.sub' % args.indir) as submit_file:
         parse_procs = False
-        for line in sub_lines:
-            if 'queue ' in line:
-                parse_procs = True
-        
-            if parse_args:
+        for line in submit_file:
+       
+            if parse_procs:
                 if line.startswith(')'):
                     break
                 proc_lines.append(line.strip())
             else:
                 general_lines.append(line)
+                if 'queue ' in line:
+                    parse_procs = True
     
     idxs = [int(os.path.basename(i).split('.')[1]) for i in failed]
     with open('%s/rescue.sub' % args.indir, 'w') as jdl:
         jdl.write(''.join(general_lines))
         jdl.write('\n'.join(proc_lines[i] for i in idxs))
-        jdl.write(')\n')
+        jdl.write('\n)\n')
     print 'rescue file created'
