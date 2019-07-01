@@ -9,8 +9,8 @@ except ImportError:
     
 from keras.models import load_model
 from DeepJetCore.evaluation import testDescriptor
-from DeepJetCore.Losses import *
-from DeepJetCore.Layers import *
+from DeepJetCore.DJCLosses import *
+from DeepJetCore.DJCLayers import *
 from argparse import ArgumentParser
 from keras import backend as K
 import imp

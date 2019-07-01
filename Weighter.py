@@ -43,6 +43,9 @@ class Weighter(object):
             'compares lists of np arrays'
             return _all((i == j).all() for i,j in zip(this, that))
         
+        #empty
+        if len(self.Axixandlabel) == len(other.Axixandlabel) and len(self.Axixandlabel) == 0:
+            return True
         
         return self.Axixandlabel == other.Axixandlabel and \
            _all(self.axisX == other.axisX) and \

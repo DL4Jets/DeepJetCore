@@ -12,8 +12,8 @@ import os
 from argparse import ArgumentParser
 import shutil
 from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.Losses import *
-from DeepJetCore.Layers import *
+from DeepJetCore.DJCLosses import *
+from DeepJetCore.DJCLayers import *
 from pdb import set_trace
 from keras.utils import multi_gpu_model
 
@@ -55,7 +55,8 @@ class training_base(object):
 				resumeSilently=False, 
 				renewtokens=True,
 				collection_class=DataCollection,
-				parser=None
+				parser=None,
+                recreate_silently=False
 				):
         
         import sys
@@ -148,15 +149,20 @@ class training_base(object):
         
         isNewTraining=True
         if os.path.isdir(self.outputDir):
-            if not resumeSilently:
+            if not (resumeSilently or recreate_silently):
                 var = raw_input('output dir exists. To recover a training, please type "yes"\n')
                 if not var == 'yes':
                     raise Exception('output directory must not exists yet')
-            isNewTraining=False     
+            isNewTraining=False
+            if recreate_silently:
+                isNewTraining=True     
         else:
             os.mkdir(self.outputDir)
         self.outputDir = os.path.abspath(self.outputDir)
         self.outputDir+='/'
+        
+        if recreate_silently:
+            os.system('rm -rf '+ self.outputDir +'*')
         
         #copy configuration to output dir
         if not args.isbatchrun:
