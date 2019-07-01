@@ -12,6 +12,7 @@ convertFromRoot is a small program that converts the root files produced with th
 
 import sys
 import os
+import tempfile
 
 from argparse import ArgumentParser
 from pdb import set_trace
@@ -19,26 +20,11 @@ import logging
 logging.getLogger().setLevel(logging.INFO)
 
 from DeepJetCore.DataCollection import DataCollection
-
-import imp
-try:
-    imp.find_module('datastructures')
-    from datastructures import *
-except ImportError:
-    print('datastructure modules not found. Please define a DeepJetCore submodule')
-   
-
-class_options=[]
-import inspect, sys
-for name, obj in inspect.getmembers(sys.modules['datastructures']):
-    if inspect.isclass(obj) and 'TrainData' in name:
-        class_options.append(obj)
-      
-class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_options)
-
+from DeepJetCore.conversion.conversion import class_options
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
 parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
+parser.add_argument("--inRange", nargs=2, type=int, help="Input line numbers")
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
 parser.add_argument("-o",  help="set output path", metavar="PATH")
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
@@ -81,6 +67,37 @@ if infile:
 if outPath:
     logging.info("outPath = %s" % outPath)
 
+if args.inRange is not None:
+    relative_to_absolute = ''
+    if not args.noRelativePaths:
+        new_list_directory = os.getenv('TMPDIR', '/tmp')
+        pos = 0
+        # count the number of slashes
+        while True:
+            pos = new_list_directory.find('/', pos) + 1
+            if pos == 0:
+                break
+
+            relative_to_absolute += '../'
+
+        if new_list_directory.endswith('/'):
+            relative_to_absolute = relative_to_absolute[:-3]
+
+        relative_to_absolute += os.path.dirname(os.path.realpath(infile))[1:] + '/'
+    
+    with tempfile.NamedTemporaryFile(delete=False, dir=os.getenv('TMPDIR', '/tmp')) as my_infile:
+        with open(infile) as source:
+            do_write = False
+            for iline, line in enumerate(source):
+                if iline == args.inRange[0]:
+                    do_write = True
+                elif iline == args.inRange[1]:
+                    break
+                if do_write:
+                    my_infile.write(relative_to_absolute + line)
+
+    infile = my_infile.name
+
 # MAIN BODY #
 dc = DataCollection(nprocs = (1 if args.nothreads else -1), 
                     useRelativePaths=True if not args.noRelativePaths else False)  
@@ -95,7 +112,8 @@ elif not recover and not testdatafor:
     print('available classes:')
     for key, val in class_options.iteritems():
         print(key)
-    raise Exception('wrong class selection')        
+    raise Exception('wrong class selection')
+
 if testdatafor:
     logging.info('converting test data, no weights applied')
     dc.createTestDataForDataCollection(
@@ -117,7 +135,3 @@ else:
         usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
         batch_mode = bool(args.batch)
         )
-
-
-
-

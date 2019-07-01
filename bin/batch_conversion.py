@@ -2,7 +2,6 @@
 
 from argparse import ArgumentParser
 from pdb import set_trace
-import subprocess
 import os
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
@@ -11,10 +10,12 @@ parser.add_argument("nchunks", type=int, help="number of jobs to be submitted")
 parser.add_argument("out", help="output path")
 parser.add_argument("batch_dir", help="batch directory")
 parser.add_argument("-c", help="output class", default="")
+parser.add_argument("--classArgs",  help="Arguments to pass to output class")
 parser.add_argument("--testdatafor", default='')
 parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
 parser.add_argument("--meansfrom", default="", help='where to get means/std, in case already computed')
 parser.add_argument("--useexistingsplit", default=False, help='use an existing file split (potentially dangerous)')
+parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
 args = parser.parse_args()
 
 args.infile = os.path.abspath(args.infile)
@@ -50,22 +51,29 @@ if not os.path.isdir('%s/batch' % args.batch_dir):
 if not (len(args.meansfrom) or args.testdatafor):
     #Run a fisrt round of root conversion to get the means/std and weights
     print('creating a dummy datacollection for means/norms and weighter (can take a while)...')
-    cmd = [
-       'convertFromRoot.py', 
-       '-i', args.infile,
-       '-c', args.c, 
-       '-o', args.out, 
-       '--nforweighter', args.nforweighter,
-       '--means'
-       ]
-    proc  = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    code = proc.wait()
+
+    from DeepJetCore.DataCollection import DataCollection
+    from DeepJetCore.conversion.conversion import class_options
+
+    try:
+        cls = class_options[args.c]
+    except KeyError:
+        raise Exception('wrong class selection')
+
+    if not args.classArgs:
+        args.classArgs = tuple()
+
+    dc = DataCollection(nprocs=-1,
+                        useRelativePaths=(True if not args.noRelativePaths else False))
+    dc.meansnormslimit = int(args.nforweighter)
+    try:
+        dc.convertListOfRootFiles(args.infile, cls(*args.classArgs), args.out, means_only=True, output_name='batch_template.dc')
     
-    if code != 0:
-        raise RuntimeError('The first round of root conversion failed with message: \n\n%s' % err)
-    else:
-        print('means/norms/weighter produced successfully')
+    except:
+        print 'The first round of root conversion failed'
+        raise
+
+    print('means/norms/weighter produced successfully')
 
 elif args.meansfrom:
     if not os.path.exists(args.meansfrom):
@@ -74,29 +82,19 @@ elif args.meansfrom:
     os.mkdir(args.out)
     os.system('cp '+args.meansfrom+' '+args.out+'/batch_template.dc')
 
-inputs = [i for i in open(args.infile)]
-
-def chunkify(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
-
 if not args.infile.endswith('.txt'):
     raise ValueError('The code assumes that the input files has .txt extension')
 
+with open(args.infile) as source:
+    num_inputs = len(source.read().split('\n'))
+
+chunk_size = num_inputs / args.nchunks
 
 print('splitting input file...')
-txt_template = args.infile.replace('.txt', '.%s.txt')
-batch_txts = []
-nchunks = 0
-for idx, chunk in enumerate(chunkify(inputs, len(inputs)/args.nchunks)):
-    name = txt_template % idx
-    batch_txts.append(name)
-    if not args.useexistingsplit:
-        with open(name, 'w') as cfile:
-            cfile.write(''.join(chunk))
-    nchunks = idx
+range_indices = []
 
+for start in range(0, num_inputs, chunk_size):
+    range_indices.append((start, start + chunk_size))
 
 batch_template = '''#!/bin/bash
 sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
@@ -118,28 +116,37 @@ batch_script = '%s/batch.sh' % args.batch_dir
 with open(batch_script, 'w') as bb:
     bb.write(batch_template)
 
-means_file = '%s/batch_template.dc' % os.path.realpath(args.out) if not args.testdatafor else args.testdatafor
-option = '--usemeansfrom' if not args.testdatafor else '--testdatafor'
+options = []
+if args.noRelativePaths:
+    options.append('--noRelativePaths')
+if args.testdatafor:
+    options.append('--testdatafor ' + args.testdatafor)
+else:
+    options.append('--usemeansfrom %s/batch_template.dc' % os.path.realpath(args.out))
+
+option = ' '.join(options)
+
 with open('%s/submit.sub' % args.batch_dir, 'w') as bb:
-    bb.write('''
-executable            = {EXE}
-arguments             = -i {INFILE} -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc {OPTION} {MEANS}
-output                = batch/con_out.$(ProcId).out
-error                 = batch/con_out.$(ProcId).err
-log                   = batch/con_out.$(ProcId).log
+    bb.write('''executable            = {EXE}
+arguments             = -i {INFILE} --inRange $(START) $(STOP) -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc {OPTION}
+output                = {BATCH_DIR}/batch/con_out.$(ProcId).out
+error                 = {BATCH_DIR}/batch/con_out.$(ProcId).err
+log                   = {BATCH_DIR}/batch/con_out.$(ProcId).log
 +MaxRuntime = 86399
++JobFlavour = "microcentury"
 getenv = True
-use_x509userproxy = True
-queue {NJOBS}
-'''.format(
-   EXE = os.path.realpath(batch_script),
-   NJOBS = nchunks+1,
-   INFILE = txt_template % '$(ProcId)',
-   CLASS = args.c,
-   OUT = os.path.realpath(args.out),
-   OPTION = option,
-   MEANS = means_file,
+#use_x509userproxy = True
+queue START STOP from (
+{RANGE_INDICES}
 )
-   )
+'''.format(
+    EXE = os.path.realpath(batch_script),
+    INFILE = args.infile,
+    CLASS = args.c,
+    OUT = os.path.realpath(args.out),
+    OPTION = option,
+    BATCH_DIR = args.batch_dir,
+    RANGE_INDICES = '\n'.join('%d %d' % rng for rng in range_indices)
+))
    
 print('condor submit file can be found in '+ args.batch_dir+'\nuse check_conversion.py ' + args.batch_dir + ' to to check jobs')
