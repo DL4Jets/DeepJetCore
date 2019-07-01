@@ -58,10 +58,22 @@ def merge_successful():
         except Exception as e:
             print('problems adding '+in_path+" will continue nevertheless... (error see below)")
             print(e)
+            dc=0
         if dc:
             alldc.append(DataCollection(in_path))
     print("merging DataCollections")
-    merged = sum(alldc)
+    merged = alldc[0]
+    merged_c=1
+    for i in range(1,len(alldc)):
+        try: 
+            merged += alldc[i]
+            merged_c+=1
+        except Exception as e:
+            print(e)
+            print('...continue adding nevertheless')
+        
+    if merged_c != len(alldc):
+        print('lost '+str(100* (1. - float(merged_c)/float(len(alldc)))) +'%')
     print("saving merged DataCollection")
     merged.writeToFile('%s/dataCollection.dc' % output_dir)
     print('successfully merged to %s/dataCollection.dc' % output_dir)

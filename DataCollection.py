@@ -49,6 +49,9 @@ class DataCollection(object):
         self.meansnormslimit=500000 
         if infile:
             self.readFromFile(infile)
+            #check for consistency
+            if not len(self.samples):
+                raise Exception("no valid datacollection found in "+infile)
         
     def clear(self):
         self.samples=[]
@@ -668,7 +671,7 @@ class DataCollection(object):
                     #immediately send the next
                     continue
                   
-                    
+                results = sorted(results, key=lambda x:x[0])    
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:

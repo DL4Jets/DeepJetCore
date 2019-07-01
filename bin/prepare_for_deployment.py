@@ -13,6 +13,8 @@ args = parser.parse_args()
 from keras.models import load_model
 from keras import backend as K
 from tensorflow.python.tools import optimize_for_inference_lib
+from DeepJetCore.DJCLosses import *
+from DeepJetCore.DJCLayers import *
 
 import tensorflow as tf
 sess = tf.Session()

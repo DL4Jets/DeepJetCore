@@ -20,6 +20,14 @@ except ImportError:
     print 'No metrics module found, ignoring at your own risk'
     global_metrics_list = {}
 
+
+
+custom_objs = {}
+custom_objs.update(global_loss_list)
+custom_objs.update(global_layers_list)
+custom_objs.update(global_metrics_list)
+    
+    
 def getLayer(model, name):
     for layer in model.layers:
         if layer.name == name:
@@ -84,11 +92,6 @@ def loadModelAndFixLayers(filename,fixOnlyContaining):
 def load_model(filename):
     from keras.models import load_model
     
-    
-    custom_objs = {}
-    custom_objs.update(global_loss_list)
-    custom_objs.update(global_layers_list)
-    custom_objs.update(global_metrics_list)
     model=load_model(filename, custom_objects=custom_objs)
     
     return model

@@ -221,6 +221,7 @@ class PredictCallback(Callback):
         self.samplefile=samplefile
         self.function_to_apply=function_to_apply
         self.counter=0
+        self.call_counter=0
         
         self.after_n_batches=after_n_batches
         self.run_on_epoch_end=on_epoch_end
@@ -231,10 +232,14 @@ class PredictCallback(Callback):
         
         self.td=TrainData()
         self.td.readIn(samplefile)
-        self.td.skim(event=use_event)
+        if use_event>=0:
+            self.td.skim(event=use_event)
         
     def on_train_begin(self, logs=None):
         pass
+    
+    def reset(self):
+        self.call_counter=0
     
     def predict_and_call(self,counter):
         
@@ -242,7 +247,8 @@ class PredictCallback(Callback):
         if not isinstance(predicted, list):
             predicted=[predicted]
         
-        self.function_to_apply(counter,self.td.x,predicted,self.td.y)
+        self.function_to_apply(self.call_counter,self.td.x,predicted,self.td.y)
+        self.call_counter+=1
     
     def on_epoch_end(self, epoch, logs=None):
         self.counter=0
