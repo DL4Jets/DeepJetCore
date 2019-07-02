@@ -47,7 +47,7 @@ output                = {outdir}batch.out
 error                 = {outdir}batch.err
 log                   = {outdir}batch.log
 getenv = True
-#+MaxRuntime = 431999
++MaxRuntime = 431999
 request_GPUs = {ngpus}
 request_cpus = 4
 queue 1
