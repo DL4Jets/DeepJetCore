@@ -74,7 +74,6 @@ class Weighter(object):
             self.classes=['']
         
     def addDistributions(self,Tuple):
-        import numpy
         selidxs=[]
         
         ytuple=Tuple[self.nameY]
@@ -87,11 +86,11 @@ class Weighter(object):
             for c in self.classes:
                 selidxs.append(labeltuple[c]>0)
         else:
-            selidxs=[numpy.zeros(len(xtuple),dtype='int')<1]
+            selidxs=[np.zeros(len(xtuple),dtype='int')<1]
             
         
         for i in range(len(self.classes)):
-            tmphist,xe,ye=numpy.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
+            tmphist,xe,ye=np.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
             self.xedges=xe
             self.yedges=ye
             if len(self.distributions)==len(self.classes):
@@ -100,13 +99,12 @@ class Weighter(object):
                 self.distributions.append(tmphist)
             
     def printHistos(self,outdir):
-        import numpy
         def plotHist(hist,outname):
             import matplotlib.pyplot as plt
             H=hist.T
             fig = plt.figure()
             ax = fig.add_subplot(111)
-            X, Y = numpy.meshgrid(self.xedges, self.yedges)
+            X, Y = np.meshgrid(self.xedges, self.yedges)
             ax.pcolormesh(X, Y, H)
             if self.axisX[0]>0:
                 ax.set_xscale("log", nonposx='clip')
@@ -127,7 +125,6 @@ class Weighter(object):
             
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
-        import numpy
         referenceidx=-1
         if not referenceclass=='flatten':
             try:
@@ -143,16 +140,16 @@ class Weighter(object):
         
         self.refclassidx=referenceidx
         
-        refhist=numpy.zeros((len(self.axisX)-1,len(self.axisY)-1), dtype='float32')
+        refhist=np.zeros((len(self.axisX)-1,len(self.axisY)-1), dtype='float32')
         refhist += 1
         
         if referenceidx >= 0:
             refhist=self.distributions[referenceidx]
-            refhist=refhist/numpy.amax(refhist)
+            refhist=refhist/np.amax(refhist)
         
     
         def divideHistos(a,b):
-            out=numpy.array(a)
+            out=np.array(a)
             for i in range(a.shape[0]):
                 for j in range(a.shape[1]):
                     if b[i][j]:
@@ -169,15 +166,15 @@ class Weighter(object):
             tmphist=self.distributions[i]
             #print(tmphist)
             #print(refhist)
-            if numpy.amax(tmphist):
-                tmphist=tmphist/numpy.amax(tmphist)
+            if np.amax(tmphist):
+                tmphist=tmphist/np.amax(tmphist)
             else:
                 print('Warning: class '+self.classes[i]+' empty.')
             ratio=divideHistos(refhist,tmphist)
-            ratio=ratio/numpy.amax(ratio)#norm to 1
+            ratio=ratio/np.amax(ratio)#norm to 1
             #print(ratio)
             ratio[ratio<0]=1
-            ratio[ratio==numpy.nan]=1
+            ratio[ratio==np.nan]=1
             weighthists.append(ratio)
             ratio=1-ratio#make it a remove probability
             probhists.append(ratio)
@@ -187,20 +184,19 @@ class Weighter(object):
         
         #make it an average 1
         for i in range(len(self.binweights)):
-            self.binweights[i]=self.binweights[i]/numpy.average(self.binweights[i])
+            self.binweights[i]=self.binweights[i]/np.average(self.binweights[i])
     
     
         
         
     def createNotRemoveIndices(self,Tuple):
-        import numpy
         if len(self.removeProbabilties) <1:
             print('removeProbabilties bins not initialised. Cannot create indices per jet')
             raise Exception('removeProbabilties bins not initialised. Cannot create indices per jet')
         
         tuplelength=len(Tuple)
         
-        notremove=numpy.zeros(tuplelength)
+        notremove=np.zeros(tuplelength)
         counter=0
         xaverage=[]
         norm=[]
@@ -221,7 +217,7 @@ class Weighter(object):
             
             for index, classs in enumerate(self.classes):
                 if  useonlyoneclass or 1 == jet[classs]:
-                    rand=numpy.random.ranf()
+                    rand=np.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
                     
                     if rand < prob and index != self.refclassidx:
@@ -234,7 +230,10 @@ class Weighter(object):
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
             
-                    counter=counter+1            
+                    counter += 1
+                    break
+            else:
+                counter += 1
         
             
         if not len(notremove) == counter:
@@ -246,12 +245,11 @@ class Weighter(object):
     
         
     def getJetWeights(self,Tuple):
-        import numpy
         countMissedJets = 0  
         if len(self.binweights) <1:
             raise Exception('weight bins not initialised. Cannot create weights per jet')
         
-        weight = numpy.zeros(len(Tuple))
+        weight = np.zeros(len(Tuple))
         jetcount=0
         
         useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0

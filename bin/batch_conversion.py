@@ -1,8 +1,10 @@
 #!/bin/env python
 
-from argparse import ArgumentParser
-from pdb import set_trace
 import os
+import logging
+from argparse import ArgumentParser
+
+logging.getLogger().setLevel(logging.INFO)
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
 parser.add_argument("infile", help="set input sample description (output from the check.py script)", metavar="FILE")
@@ -16,6 +18,8 @@ parser.add_argument("--nforweighter", default='500000', help='set number of samp
 parser.add_argument("--meansfrom", default="", help='where to get means/std, in case already computed')
 parser.add_argument("--useexistingsplit", default=False, help='use an existing file split (potentially dangerous)')
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
+parser.add_argument("--jobFlavour", default='espresso', help="CERN HTCondor job flavour (espresso, microcentury, longlunch, workday)")
+parser.add_argument("--cmst3", action="store_true", help="Submit jobs with cmst3 accounting group.")
 args = parser.parse_args()
 
 args.infile = os.path.abspath(args.infile)
@@ -97,7 +101,7 @@ for start in range(0, num_inputs, chunk_size):
     range_indices.append((start, start + chunk_size))
 
 batch_template = '''#!/bin/bash
-sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
+#sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
 echo "JOBSUB::RUN job running"
 trap "echo JOBSUB::FAIL job killed" SIGTERM
 BASEDIR=`pwd`
@@ -133,9 +137,11 @@ output                = {BATCH_DIR}/batch/con_out.$(ProcId).out
 error                 = {BATCH_DIR}/batch/con_out.$(ProcId).err
 log                   = {BATCH_DIR}/batch/con_out.$(ProcId).log
 +MaxRuntime = 86399
-+JobFlavour = "microcentury"
++JobFlavour = "{FLAVOUR}"
 getenv = True
 #use_x509userproxy = True
+accounting_group = {ACCTGRP}
++AccountingGroup = {ACCTGRP}   
 queue START STOP from (
 {RANGE_INDICES}
 )
@@ -146,6 +152,8 @@ queue START STOP from (
     OUT = os.path.realpath(args.out),
     OPTION = option,
     BATCH_DIR = args.batch_dir,
+    FLAVOUR = args.jobFlavour,
+    ACCTGRP = 'group_u_CMST3.all' if args.cmst3 else 'group_u_CMS.u_zh',
     RANGE_INDICES = '\n'.join('%d %d' % rng for rng in range_indices)
 ))
    

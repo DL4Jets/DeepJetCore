@@ -7,15 +7,23 @@ Created on 21 Feb 2017
 #from builtins import list
 from __future__ import print_function
 
+import os
+import copy
+import pickle
+import time
+import tempfile
+import shutil
+from stopwatch import stopwatch
+import numpy as np
 from Weighter import Weighter
 from TrainData import TrainData, fileTimeOut
 #for convenience
 import logging
 from pdb import set_trace
-import copy
 
 usenewformat=True
 
+logger = logging.getLogger(__name__)
 
 # super not-generic without safety belts
 #needs some revision
@@ -25,7 +33,6 @@ class BatchRandomInputGenerator(object):
         self.batchsize=batchsize
         
     def generateBatch(self):
-        import numpy as np
         randoms=[]
         for i in range(len(self.ranges)):
             randoms.append(np.full((1,self.batchsize),np.random.uniform(self.ranges[i][0], self.ranges[i][1], size=1)[0]))
@@ -52,6 +59,9 @@ class DataCollection(object):
             #check for consistency
             if not len(self.samples):
                 raise Exception("no valid datacollection found in "+infile)
+
+        # Running data conversion etc. on a batch farm
+        self.batch_mode = False
         
     def clear(self):
         self.samples=[]
@@ -143,7 +153,6 @@ class DataCollection(object):
     def __computeClassWeights(self,truthclassesarray):
         if not len(self.samples):
             raise Exception("DataCollection:computeClassWeights: no sample files associated")
-        import copy
         td=copy.deepcopy(self.dataclass)
         td.readIn(self.getSamplePath(self.samples[0]))
         arr=td.y[0]
@@ -272,23 +281,22 @@ class DataCollection(object):
                  
         
     def writeToFile(self,filename):
-        import pickle
-        fd=open(filename,'wb')
-        self.dataclass.clear()
-        pickle.dump(self.samples, fd,protocol=0 )
-        pickle.dump(self.sampleentries, fd,protocol=0 )
-        pickle.dump(self.originRoots, fd,protocol=0 )
-        pickle.dump(self.nsamples, fd,protocol=0 )
-        pickle.dump(self.useweights, fd,protocol=0 )
-        pickle.dump(self.__batchsize, fd,protocol=0 )
-        pickle.dump(self.dataclass, fd,protocol=0 )
-        pickle.dump(self.weighter, fd,protocol=0 )
-        #pickle.dump(self.means, fd,protocol=0 )
-        self.means.dump(fd)
-        fd.close()
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as fd:
+            self.dataclass.clear()
+            pickle.dump(self.samples, fd,protocol=0 )
+            pickle.dump(self.sampleentries, fd,protocol=0 )
+            pickle.dump(self.originRoots, fd,protocol=0 )
+            pickle.dump(self.nsamples, fd,protocol=0 )
+            pickle.dump(self.useweights, fd,protocol=0 )
+            pickle.dump(self.__batchsize, fd,protocol=0 )
+            pickle.dump(self.dataclass, fd,protocol=0 )
+            pickle.dump(self.weighter, fd,protocol=0 )
+            #pickle.dump(self.means, fd,protocol=0 )
+            self.means.dump(fd)
+
+        shutil.move(fd.name, filename)
         
     def readFromFile(self,filename):
-        import pickle
         fd=open(filename,'rb')
         self.samples=pickle.load(fd)
         self.sampleentries=pickle.load(fd)
@@ -300,7 +308,7 @@ class DataCollection(object):
         self.weighter=pickle.load(fd)
         self.means=pickle.load(fd)
         fd.close()
-        import os
+
         self.dataDir=os.path.dirname(os.path.abspath(filename))
         self.dataDir+='/'
         #don't check if files exist
@@ -318,8 +326,6 @@ class DataCollection(object):
         
         
     def readRootListFromFile(self,file):
-        import os
-        
         self.samples=[]
         self.sampleentries=[]
         self.originRoots=[]
@@ -347,8 +353,6 @@ class DataCollection(object):
         returns out
         modifies itself
         '''
-        import copy
-        
         
         out=DataCollection()
         itself=copy.deepcopy(self)
@@ -407,9 +411,8 @@ class DataCollection(object):
     def createTestDataForDataCollection(
             self, collectionfile, inputfile, 
             outputDir, outname = 'dataCollection.dc',
-            batch_mode = False,
             traind=None):
-        import copy
+
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
         self.dataclass.weight=True #False
@@ -419,13 +422,12 @@ class DataCollection(object):
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
-            dir_check = not batch_mode
+            dir_check = not self.batch_mode
         )
         self.writeToFile(outputDir+'/'+outname)
         
     
     def recoverCreateDataFromRootFromSnapshot(self, snapshotfile):
-        import os
         snapshotfile=os.path.abspath(snapshotfile)
         self.readFromFile(snapshotfile)
         td=self.dataclass
@@ -458,7 +460,6 @@ class DataCollection(object):
             print('createDataFromRoot: no input root file')
             raise Exception('createDataFromRoot: no input root file')
         
-        import os
         outputDir+='/'
         if os.path.isdir(outputDir) and dir_check:
             raise Exception('output dir must not exist')
@@ -468,11 +469,11 @@ class DataCollection(object):
         self.nsamples=0
         self.samples=[]
         self.sampleentries=[]
-        import copy
         self.dataclass=copy.deepcopy(dataclass)
         td=self.dataclass
         ##produce weighter from a larger dataset as one file
-        
+
+       
         if redo_meansandweights and (td.remove or td.weight):
             logging.info('producing weights and remove indices')
             self.weighter = td.produceBinWeighter(
@@ -488,32 +489,41 @@ class DataCollection(object):
                 )
         
         if means_only: return
-        self.__writeData_async_andCollect(0,outputDir)
-        
-        
+
+        if self.batch_mode:
+            for sample in self.originRoots:
+                self.__writeData(sample, outputDir)
+        else:
+            self.__writeData_async_andCollect(0, outputDir)
     
-    def __writeData(self,sample,means, weighter,outputDir,dataclass,number=-1):
-        import os
-        import copy
-        from stopwatch import stopwatch
+    def __writeData(self, sample, outputDir):
         sw=stopwatch()
-        td=copy.deepcopy(dataclass)
+        td=copy.deepcopy(self.dataclass)
         
         fileTimeOut(sample,120) #once available copy to ram
-        ramdisksample= '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
-        
-        def removefile():
-            os.system('rm -f '+ramdisksample)
-        
-        import atexit
-        atexit.register(removefile)
-        
-        os.system('cp '+sample+' '+ramdisksample)
+
+        if self.batch_mode:
+            tmpinput = sample
+
+            def removefile():
+                pass
+        else:
+            tmpinput = '/dev/shm/'+str(os.getpid())+os.path.basename(sample)
+            
+            def removefile():
+                os.system('rm -f '+tmpinput)
+            
+            import atexit
+            atexit.register(removefile)
+            
+            os_ret = os.system('cp '+sample+' '+tmpinput)
+            if os_ret:
+                raise Exception("copy to ramdisk not successful for "+sample)
+
         try:
-            td.readFromRootFile(ramdisksample,means, weighter) 
-            newname=os.path.basename(sample).rsplit('.', 1)[0]
-            if number>0:
-                newname+=str(number)
+            td.readFromRootFile(tmpinput, self.means, self.weighter)
+            sbasename = os.path.basename(sample)
+            newname = sbasename[:sbasename.rfind('.')]
             
             if usenewformat:
                 newname+='.meta'
@@ -526,66 +536,74 @@ class DataCollection(object):
             self.nsamples+=td.nsamples
             self.sampleentries.append(td.nsamples)
             td.clear()
-            self.writeToFile(outputDir+'/snapshot.dc')
-        except Exception as e:
+
+            if not self.batch_mode:
+                self.writeToFile(outputDir+'/snapshot.dc')
+                
+        finally:
             removefile()
-            raise e
-        removefile()
-        
         
     def __writeData_async_andCollect(self, startindex, outputDir):
         
         #set tree name to use
+        logger.info('setTreeName')
         import DeepJetCore.preprocessing
         DeepJetCore.preprocessing.setTreeName(self.dataclass.treename)
         
         from multiprocessing import Process, Queue, cpu_count, Lock
         wo_queue = Queue()
         writelock=Lock()
-        import os
         thispid=str(os.getpid())
-        if not os.path.isfile(outputDir+'/snapshot.dc'):
+        if not self.batch_mode and not os.path.isfile(outputDir+'/snapshot.dc'):
             self.writeToFile(outputDir+'/snapshot.dc')
         
         tempstoragepath='/dev/shm/'+thispid
         
-        print('creating dir '+tempstoragepath)
+        logger.info('creating dir '+tempstoragepath)
         os.system('mkdir -p '+tempstoragepath)
         
         def writeData_async(index,woq,wrlck):
+
+            logger.info('async started')
             
-            import copy
-            from stopwatch import stopwatch
             sw=stopwatch()
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
-            ramdisksample= tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
-            
-            def removefile():
-                os.system('rm -f '+ramdisksample)
-            
-            import atexit
-            atexit.register(removefile)
+
+            if self.batch_mode:
+                tmpinput = sample
+
+                def removefile():
+                    pass
+            else:
+                tmpinput = tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
+                
+                def removefile():
+                    os.system('rm -f '+tmpinput)
+                
+                import atexit
+                atexit.register(removefile)
+
+                logger.info('start cp')
+                os_ret=os.system('cp '+sample+' '+tmpinput)
+                if os_ret:
+                    raise Exception("copy to ramdisk not successful for "+sample)
+                
             success=False
             out_samplename=''
             out_sampleentries=0
-            newname=os.path.basename(sample).rsplit('.', 1)[0]
-            newname+=str(index)
-                
+            sbasename = os.path.basename(sample)
+            newname = sbasename[:sbasename.rfind('.')]
             if usenewformat:
                 newname+='.meta'
             else:
                 newname+='.z'
             newpath=os.path.abspath(outputDir+newname)
             
-            
-            
             try:
-                fileTimeOut(sample,120) #once available copy to ram
-                os_ret=os.system('cp '+sample+' '+ramdisksample)
-                if os_ret:
-                    raise Exception("copy to ramdisk not successful for "+sample)
-                td.readFromRootFile(ramdisksample,self.means, self.weighter) 
+                logger.info('readFromRootFile')
+                td.readFromRootFile(tmpinput, self.means, self.weighter)
+                logger.info('writeOut')
                 #wrlck.acquire()
                 td.writeOut(newpath)
                 #wrlck.release()
@@ -598,25 +616,22 @@ class DataCollection(object):
                 removefile()
                 woq.put((index,[success,out_samplename,out_sampleentries]))
                 
-                
             except:
                 print('problem in '+newname)
                 removefile()
                 woq.put((index,[False,out_samplename,out_sampleentries]))
                 raise 
-            
-            
-        
         
         def __collectWriteInfo(successful,samplename,sampleentries,outputDir):
             if not successful:
                 raise Exception("write not successful, stopping")
-            import os
+
             self.samples.append(samplename)
             self.nsamples+=sampleentries
             self.sampleentries.append(sampleentries)
-            self.writeToFile(outputDir+'/snapshot_tmp.dc')#avoid to overwrite directly
-            os.system('mv '+outputDir+'/snapshot_tmp.dc '+outputDir+'/snapshot.dc')
+            if not self.batch_mode:
+                self.writeToFile(outputDir+'/snapshot_tmp.dc')#avoid to overwrite directly
+                os.system('mv '+outputDir+'/snapshot_tmp.dc '+outputDir+'/snapshot.dc')
             
         processes=[]
         processrunning=[]
@@ -627,7 +642,6 @@ class DataCollection(object):
             processfinished.append(False)
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
-        #import os
         #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
         #    nchilds=cpu_count()-5
         if nchilds<1: 
@@ -640,7 +654,7 @@ class DataCollection(object):
         lastindex=startindex-1
         alldone=False
         results=[]
-        import time
+
         try:
             while not alldone:
                 nrunning=0
@@ -692,7 +706,7 @@ class DataCollection(object):
     def convertListOfRootFiles(
                     self, inputfile, dataclass, outputDir, 
                     takemeansfrom='', means_only = False,
-                    output_name = 'dataCollection.dc', batch_mode = False):
+                    output_name = 'dataCollection.dc'):
         newmeans=True
         if takemeansfrom:
             self.readFromFile(takemeansfrom)
@@ -701,7 +715,7 @@ class DataCollection(object):
         self.createDataFromRoot(
                     dataclass, outputDir, 
                     newmeans, means_only = means_only, 
-                    dir_check= not batch_mode
+                    dir_check= not self.batch_mode
                     )
         self.writeToFile(outputDir+'/'+output_name)
         
@@ -722,7 +736,6 @@ class DataCollection(object):
         return self.dataDir+'/'+samplefile
     
     def __stackData(self, dataclass, selector):
-        import numpy
         td=dataclass
         out=[]
         firstcall=True
@@ -743,9 +756,9 @@ class DataCollection(object):
             else:
                 for i in range(0,len(thislist)):
                     if selector == 'w':
-                        out[i] = numpy.append(out[i],thislist[i])
+                        out[i] = np.append(out[i],thislist[i])
                     else:
-                        out[i] = numpy.vstack((out[i],thislist[i]))
+                        out[i] = np.vstack((out[i],thislist[i]))
                 
         return out
     
@@ -754,15 +767,9 @@ class DataCollection(object):
         return self.dataclass.replaceTruthForGAN(generated_array, original_truth)
         
     def generator(self):
-        import numpy
-        import copy
         from sklearn.utils import shuffle
-        import shutil
         import uuid
-        import os
-        import copy
         import threading
-        import time
         print('start generator')
         #helper class
         class tdreader(object):
@@ -794,7 +801,6 @@ class DataCollection(object):
                 
             def __readNext(self):
                 #make sure this fast function has exited before getLast tries to read the file
-                import copy
                 readfilename=self.filelist[self.filecounter]
                 if len(filelist)>1:
                     self.tdlist[self.nextcounter].clear()
@@ -882,7 +888,7 @@ class DataCollection(object):
             ranges=td.generatePerBatch
             batchgen=BatchRandomInputGenerator(ranges, self.__batchsize)
         
-        xstored=[numpy.array([])]
+        xstored=[np.array([])]
         dimx=0
         ystored=[]
         dimy=0
@@ -927,7 +933,7 @@ class DataCollection(object):
             lastbatchrest=0
             if processedbatches == 0: #reset buffer and start new
                 #print('DataCollection: new turnaround')
-                xstored=[numpy.array([])]
+                xstored=[np.array([])]
                 dimx=0
                 ystored=[]
                 dimy=0
@@ -996,21 +1002,21 @@ class DataCollection(object):
                     
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
-                            xstored[i] = numpy.append(xstored[i],td.x[i])
+                            xstored[i] = np.append(xstored[i],td.x[i])
                         else:
-                            xstored[i] = numpy.vstack((xstored[i],td.x[i]))
+                            xstored[i] = np.vstack((xstored[i],td.x[i]))
                     
                     for i in range(0,dimy):
                         if(ystored[i].ndim==1):
-                            ystored[i] = numpy.append(ystored[i],td.y[i])
+                            ystored[i] = np.append(ystored[i],td.y[i])
                         else:
-                            ystored[i] = numpy.vstack((ystored[i],td.y[i]))
+                            ystored[i] = np.vstack((ystored[i],td.y[i]))
                     
                     for i in range(0,dimw):
                         if(wstored[i].ndim==1):
-                            wstored[i] = numpy.append(wstored[i],td.w[i])
+                            wstored[i] = np.append(wstored[i],td.w[i])
                         else:
-                            wstored[i] = numpy.vstack((wstored[i],td.w[i]))
+                            wstored[i] = np.vstack((wstored[i],td.w[i]))
                     
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
@@ -1030,15 +1036,15 @@ class DataCollection(object):
                 #print('batch complete, split')#DEBUG
                 
                 for i in range(0,dimx):
-                    splitted=numpy.split(xstored[i],[self.__batchsize])
+                    splitted=np.split(xstored[i],[self.__batchsize])
                     xstored[i] = splitted[1]
                     xout[i] = splitted[0]
                 for i in range(0,dimy):
-                    splitted=numpy.split(ystored[i],[self.__batchsize])
+                    splitted=np.split(ystored[i],[self.__batchsize])
                     ystored[i] = splitted[1]
                     yout[i] = splitted[0]
                 for i in range(0,dimw):
-                    splitted=numpy.split(wstored[i],[self.__batchsize])
+                    splitted=np.split(wstored[i],[self.__batchsize])
                     wstored[i] = splitted[1]
                     wout[i] = splitted[0]
             

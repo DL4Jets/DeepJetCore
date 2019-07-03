@@ -6,12 +6,15 @@ Created on 20 Feb 2017
 
 from __future__ import print_function
 
-
 from Weighter import Weighter
 from pdb import set_trace
+import os
+import time
 import numpy
 import logging
-
+import tempfile
+import copy
+import shutil
 import threading
 import multiprocessing
 
@@ -25,13 +28,12 @@ def fileTimeOut(fileName, timeOut):
     waits until the dir, the file should be stored in/read from, is accessible
     again, or the the timeout
     '''
-    import os
     filepath=os.path.dirname(fileName)
     if len(filepath) < 1:
         filepath = '.'
     if os.path.isdir(filepath):
         return
-    import time
+
     counter=0
     print('file I/O problems... waiting for filesystem to become available for '+fileName)
     while not os.path.isdir(filepath):
@@ -239,58 +241,56 @@ class TrainData(object):
 
     def writeOut(self,fileprefix):
         
-        from shutil import copyfile
-        import tempfile
+        import h5py
+        
         #this is a workaround because hdf5 files written on eos are unreadable...
         final_output_file=fileprefix
+
+        # with h5py >= 2.9 you can directly write to an open tempfile, but for now
+        # we'd need to use tempfile as a safe name generator
+        #with tempfile.NamedTemporaryFile(suffix='.meta', delete=False) as t:
+        #    h5f = h5py.File(t)
         
-        with tempfile.NamedTemporaryFile(suffix='.meta') as t:
-            fileprefix = t.name
-            
+        t = tempfile.NamedTemporaryFile(suffix='.meta', delete=False)
+        t.close()
+
+        h5f = h5py.File(t.name, 'w')
         
-            import h5py
-            fileTimeOut(fileprefix,120)
-            h5f = h5py.File(fileprefix, 'w')
+        # try "lzf", too, faster, but less compression
+        def _writeoutListinfo(arrlist,fidstr,h5F):
+            arr=numpy.array([len(arrlist)])
+            h5F.create_dataset(fidstr+'_listlength',data=arr)
+            for i in range(len(arrlist)):
+                idstr=fidstr+str(i)
+                h5F.create_dataset(idstr+'_shape',data=arrlist[i].shape)
             
-            # try "lzf", too, faster, but less compression
-            def _writeoutListinfo(arrlist,fidstr,h5F):
-                arr=numpy.array([len(arrlist)])
-                h5F.create_dataset(fidstr+'_listlength',data=arr)
-                for i in range(len(arrlist)):
-                    idstr=fidstr+str(i)
-                    h5F.create_dataset(idstr+'_shape',data=arrlist[i].shape)
-                
-            def _writeoutArrays(arrlist,fidstr,h5F):    
-                for i in range(len(arrlist)):
-                    idstr=fidstr+str(i)
-                    arr=arrlist[i]
-                    from DeepJetCore.compiled.c_readArrThreaded import writeArray
-                    if arr.dtype!='float32':
-                        arr=arr.astype('float32')
-                    writeArray(arr.ctypes.data,final_output_file[:-4]+fidstr+'.'+str(i),list(arr.shape))
-            
-            
-            arr=numpy.array([self.nsamples],dtype='int')
-            h5f.create_dataset('n', data=arr)
-            
-            _writeoutListinfo(self.w,'w',h5f)
-            _writeoutListinfo(self.x,'x',h5f)
-            _writeoutListinfo(self.y,'y',h5f)
-            
-            _writeoutArrays(self.w,'w',h5f)
-            _writeoutArrays(self.x,'x',h5f)
-            _writeoutArrays(self.y,'y',h5f)
-            
-            h5f.close()
-            
-            copyfile(fileprefix, final_output_file)
-       
-    
+        def _writeoutArrays(arrlist,fidstr,h5F):    
+            for i in range(len(arrlist)):
+                idstr=fidstr+str(i)
+                arr=arrlist[i]
+                from DeepJetCore.compiled.c_readArrThreaded import writeArray
+                if arr.dtype!='float32':
+                    arr=arr.astype('float32')
+                writeArray(arr.ctypes.data,final_output_file[:-4]+fidstr+'.'+str(i),list(arr.shape))
         
+        arr=numpy.array([self.nsamples],dtype='int')
+        h5f.create_dataset('n', data=arr)
+        
+        _writeoutListinfo(self.w,'w',h5f)
+        _writeoutListinfo(self.x,'x',h5f)
+        _writeoutListinfo(self.y,'y',h5f)
+        
+        _writeoutArrays(self.w,'w',h5f)
+        _writeoutArrays(self.x,'x',h5f)
+        _writeoutArrays(self.y,'y',h5f)
+        
+        h5f.close()
+            
+        shutil.copyfile(t.name, final_output_file)
        
     def __createArr(self,shapeinfo):
         import ctypes
-        import multiprocessing
+
         fulldim=1
         for d in shapeinfo:
             fulldim*=d 
@@ -306,7 +306,6 @@ class TrainData(object):
     
     def removeRamDiskFile(self):
         if hasattr(self, 'ramdiskfile'):
-            import os
             try:
                 if self.ramdiskfile and os.path.exists(self.ramdiskfile):
                     if "meta" in self.ramdiskfile[-4:]:
@@ -326,7 +325,6 @@ class TrainData(object):
         #print('read')
         
         import h5py
-        import multiprocessing
         
         #print('\ninit async read\n')
         
@@ -376,10 +374,7 @@ class TrainData(object):
             
             isRamDisk=len(ramdiskpath)>0
             if isRamDisk:
-                import shutil
                 import uuid
-                import os
-                import copy
                 unique_filename=''
                 
                 unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
@@ -493,7 +488,6 @@ class TrainData(object):
             if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
                 print('\nreadIn_join:read never started\n')
             
-            import time
             if waitforStart:
                 while (not hasattr(self, 'readthreadids')) and not self.readthread:
                     time.sleep(0.1)
@@ -538,7 +532,6 @@ class TrainData(object):
                 if self.readdone.value:
                     self.readthread.join(.1)
                     
-            import copy
             #move away from shared memory
             #this costs performance but seems necessary
             direct=False
@@ -593,7 +586,6 @@ class TrainData(object):
             self.x=self.x_list
             self.y=self.y_list
         else:
-            import copy
             self.w=copy.deepcopy(self.w_list)
             del self.w_list
             self.x=copy.deepcopy(self.x_list)
@@ -699,7 +691,6 @@ class TrainData(object):
     
     #overload if necessary
     def make_empty_weighter(self):
-        from Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
         

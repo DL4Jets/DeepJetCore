@@ -17,6 +17,7 @@ import tempfile
 from argparse import ArgumentParser
 from pdb import set_trace
 import logging
+logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
 from DeepJetCore.DataCollection import DataCollection
@@ -103,7 +104,9 @@ dc = DataCollection(nprocs = (1 if args.nothreads else -1),
                     useRelativePaths=True if not args.noRelativePaths else False)  
 dc.meansnormslimit = int(args.nforweighter)
 if len(nchilds):
-    dc.nprocs=int(nchilds)  
+    dc.nprocs=int(nchilds)
+if args.batch is not None:
+    dc.batch_mode = True
 
 traind=None
 if class_name in class_options:
@@ -119,7 +122,6 @@ if testdatafor:
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
         outname = args.batch if args.batch else 'dataCollection.dc',
-        batch_mode = bool(args.batch),
         traind=traind(class_args) if traind else None
     )    
 elif recover:
@@ -128,10 +130,13 @@ elif args.means:
     dc.convertListOfRootFiles(
         infile, traind(class_args) if class_args else traind(), outPath, 
         means_only=True, output_name='batch_template.dc'
-        )
+    )
 else:
+    logging.info('Start conversion')
     dc.convertListOfRootFiles(
         infile, traind(class_args) if class_args else traind(), outPath, 
         usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
-        batch_mode = bool(args.batch)
-        )
+    )
+
+if args.inRange is not None:
+    os.unlink(infile)
