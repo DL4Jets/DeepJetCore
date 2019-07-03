@@ -69,6 +69,7 @@ class training_base(object):
         parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default=-1)
         parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         parser.add_argument("--submitbatch",  help="submits the job to condor" , default=False, action="store_true")
+        parser.add_argument("--walltime",  help="sets the wall time for the batch job, format: 1d5h or 2d or 3h etc" , default='1d')
         parser.add_argument("--isbatchrun",   help="is batch run", default=False, action="store_true")
         
         
@@ -356,7 +357,7 @@ class training_base(object):
         
         if self.submitbatch:
             from DeepJetCore.training.batchTools import submit_batch
-            submit_batch(self)
+            submit_batch(self, self.args.walltime)
             exit() #don't delete this!
         
         self.train_data.setBatchSize(batchsize)
