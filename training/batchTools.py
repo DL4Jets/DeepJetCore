@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 #can pipe config from stdin to condor_submit!
 #executable, arguments
 
@@ -8,7 +10,7 @@
 from DeepJetCore.training.training_base import training_base
 import os, sys, stat
 
-def submit_batch(trainingbase):
+def submit_batch(trainingbase, walltime=None):
     
     subpackage = os.environ['DEEPJETCORE_SUBPACKAGE']
     
@@ -40,6 +42,23 @@ echo "job done"
     os.chmod(scriptpath, stat.S_IRWXU |
               stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     
+    if walltime is not None:
+        wt_days=0
+        wt_hours=0
+        rest=walltime
+        if 'd'  in walltime:
+            wt_days = int(rest.split('d')[0])
+            rest = rest.split('d')[1:]
+        if 'h'  in walltime:
+            wt_hours = int(''.join(rest).split('h')[0])
+        print('submitting for ', wt_days, 'days', wt_hours, 'hours')
+        walltime = wt_days*24*3600 + wt_hours*3600
+        
+    else:
+        walltime=1*24*3600 # 1 day standard
+    
+    
+    
     condor_file='''
 executable            = /bin/bash
 arguments             = {scriptpath}
@@ -47,12 +66,13 @@ output                = {outdir}batch.out
 error                 = {outdir}batch.err
 log                   = {outdir}batch.log
 getenv = True
-+MaxRuntime = 431999
++MaxRuntime = {walltime}
 request_GPUs = {ngpus}
 request_cpus = 4
 queue 1
     '''.format(scriptpath=scriptpath,
                outdir=trainingbase.outputDir,
+               walltime=str(walltime),
                ngpus=trainingbase.ngpus)
     
     with open(condorpath,'w') as condorfile:
