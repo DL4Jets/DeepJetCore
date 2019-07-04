@@ -67,11 +67,14 @@ if not (len(args.meansfrom) or args.testdatafor):
     if not args.classArgs:
         args.classArgs = tuple()
 
-    dc = DataCollection(nprocs=-1,
-                        useRelativePaths=(True if not args.noRelativePaths else False))
+    dc = DataCollection(nprocs=-1)
     dc.meansnormslimit = int(args.nforweighter)
     try:
-        dc.convertListOfRootFiles(args.infile, cls(*args.classArgs), args.out, means_only=True, output_name='batch_template.dc')
+        dc.convertListOfRootFiles(args.infile, cls(*args.classArgs), args.out,
+                                  means_only=True,
+                                  output_name='batch_template.dc',
+                                  relpath=('' if args.noRelativePaths else os.path.dirname(os.path.realpath(args.infile)))
+        )
     
     except:
         print 'The first round of root conversion failed'
