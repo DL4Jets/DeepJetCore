@@ -46,12 +46,11 @@ class DataCollection(object):
     '''
 
 
-    def __init__(self, infile = None, nprocs = -1,useRelativePaths=True):
+    def __init__(self, infile = None, nprocs = -1):
         '''
         Constructor
         '''
         self.clear()
-        self.useRelativePaths=useRelativePaths
         self.nprocs = nprocs       
         self.meansnormslimit=500000 
         if infile:
@@ -325,7 +324,7 @@ class DataCollection(object):
                 raise Exception('sample file not found')
         
         
-    def readRootListFromFile(self,file):
+    def readRootListFromFile(self, file, relpath=''):
         self.samples=[]
         self.sampleentries=[]
         self.originRoots=[]
@@ -338,8 +337,8 @@ class DataCollection(object):
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
-            if self.useRelativePaths:
-                self.originRoots.append(fdir+'/'+line)
+            if relpath:
+                self.originRoots.append(os.path.join(relpath, line))
             else:
                 self.originRoots.append(line)
 
@@ -408,10 +407,10 @@ class DataCollection(object):
         return out
     
     
-    def createTestDataForDataCollection(
-            self, collectionfile, inputfile, 
-            outputDir, outname = 'dataCollection.dc',
-            traind=None):
+    def createTestDataForDataCollection(self, collectionfile, inputfile, outputDir,
+            outname='dataCollection.dc',
+            traind=None,
+            relpath=''):
 
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
@@ -419,7 +418,7 @@ class DataCollection(object):
         if traind: 
             print('[createTestDataForDataCollection] dataclass is overriden by user request')
             self.dataclass=traind
-        self.readRootListFromFile(inputfile)
+        self.readRootListFromFile(inputfile, relpath=relpath)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
             dir_check = not self.batch_mode
@@ -703,15 +702,16 @@ class DataCollection(object):
             raise 
         os.system('rm -rf '+tempstoragepath)
         
-    def convertListOfRootFiles(
-                    self, inputfile, dataclass, outputDir, 
-                    takemeansfrom='', means_only = False,
-                    output_name = 'dataCollection.dc'):
+    def convertListOfRootFiles(self, inputfile, dataclass, outputDir, 
+            takemeansfrom='', means_only=False,
+            output_name='dataCollection.dc',
+            relpath=''):
+        
         newmeans=True
         if takemeansfrom:
             self.readFromFile(takemeansfrom)
             newmeans=False
-        self.readRootListFromFile(inputfile)
+        self.readRootListFromFile(inputfile, relpath=relpath)
         self.createDataFromRoot(
                     dataclass, outputDir, 
                     newmeans, means_only = means_only, 

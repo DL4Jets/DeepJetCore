@@ -68,24 +68,12 @@ if infile:
 if outPath:
     logging.info("outPath = %s" % outPath)
 
+if args.noRelativePaths:
+    relpath = ''
+else:
+    relpath = os.path.dirname(os.path.realpath(infile))
+
 if args.inRange is not None:
-    relative_to_absolute = ''
-    if not args.noRelativePaths:
-        new_list_directory = os.getenv('TMPDIR', '/tmp')
-        pos = 0
-        # count the number of slashes
-        while True:
-            pos = new_list_directory.find('/', pos) + 1
-            if pos == 0:
-                break
-
-            relative_to_absolute += '../'
-
-        if new_list_directory.endswith('/'):
-            relative_to_absolute = relative_to_absolute[:-3]
-
-        relative_to_absolute += os.path.dirname(os.path.realpath(infile))[1:] + '/'
-    
     with tempfile.NamedTemporaryFile(delete=False, dir=os.getenv('TMPDIR', '/tmp')) as my_infile:
         with open(infile) as source:
             do_write = False
@@ -95,13 +83,15 @@ if args.inRange is not None:
                 elif iline == args.inRange[1]:
                     break
                 if do_write:
-                    my_infile.write(relative_to_absolute + line)
+                    path = os.path.realpath(os.path.join(relpath, line))
+                    my_infile.write(path)
 
     infile = my_infile.name
+    # new infile will always have absolute path
+    relpath = ''
 
 # MAIN BODY #
-dc = DataCollection(nprocs = (1 if args.nothreads else -1), 
-                    useRelativePaths=True if not args.noRelativePaths else False)  
+dc = DataCollection(nprocs = (1 if args.nothreads else -1))
 dc.meansnormslimit = int(args.nforweighter)
 if len(nchilds):
     dc.nprocs=int(nchilds)
@@ -121,21 +111,26 @@ if testdatafor:
     logging.info('converting test data, no weights applied')
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
-        outname = args.batch if args.batch else 'dataCollection.dc',
-        traind=traind(class_args) if traind else None
+        outname=(args.batch if args.batch else 'dataCollection.dc'),
+        traind=(traind(class_args) if traind else None),
+        relpath=relpath
     )    
 elif recover:
     dc.recoverCreateDataFromRootFromSnapshot(recover)        
 elif args.means:
     dc.convertListOfRootFiles(
-        infile, traind(class_args) if class_args else traind(), outPath, 
-        means_only=True, output_name='batch_template.dc'
+        infile, traind(class_args) if class_args else traind(), outPath,
+        means_only=True,
+        output_name='batch_template.dc',
+        relpath=relpath
     )
 else:
     logging.info('Start conversion')
     dc.convertListOfRootFiles(
         infile, traind(class_args) if class_args else traind(), outPath, 
-        usemeansfrom, output_name = args.batch if args.batch else 'dataCollection.dc',
+        takemeansfrom=usemeansfrom,
+        output_name=(args.batch if args.batch else 'dataCollection.dc'),
+        relpath=relpath
     )
 
 if args.inRange is not None:
