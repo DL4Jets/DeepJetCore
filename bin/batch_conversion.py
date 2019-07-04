@@ -100,8 +100,8 @@ chunk_size = num_inputs / args.nchunks
 print('splitting input file...')
 range_indices = []
 
-for start in range(0, num_inputs, chunk_size):
-    range_indices.append((start, start + chunk_size))
+for idx, start in enumerate(range(0, num_inputs, chunk_size)):
+    range_indices.append((idx, start, start + chunk_size))
 
 batch_template = '''#!/bin/bash
 #sleep $(shuf -i1-300 -n1) #sleep a random amount of time between 1s and 10' to avoid bottlenecks in reaching afs
@@ -135,17 +135,17 @@ option = ' '.join(options)
 
 with open('%s/submit.sub' % args.batch_dir, 'w') as bb:
     bb.write('''executable            = {EXE}
-arguments             = -i {INFILE} --inRange $(START) $(STOP) -c {CLASS} -o {OUT} --nothreads --batch conversion.$(ProcId).dc {OPTION}
-output                = {BATCH_DIR}/batch/con_out.$(ProcId).out
-error                 = {BATCH_DIR}/batch/con_out.$(ProcId).err
-log                   = {BATCH_DIR}/batch/con_out.$(ProcId).log
+arguments             = -i {INFILE} --inRange $(START) $(STOP) -c {CLASS} -o {OUT} --nothreads --batch conversion.$(JOBIDX).dc {OPTION}
+output                = {BATCH_DIR}/batch/con_out.$(JOBIDX).out
+error                 = {BATCH_DIR}/batch/con_out.$(JOBIDX).err
+log                   = {BATCH_DIR}/batch/con_out.$(JOBIDX).log
 +MaxRuntime = 86399
 +JobFlavour = "{FLAVOUR}"
 getenv = True
 #use_x509userproxy = True
 accounting_group = {ACCTGRP}
 +AccountingGroup = {ACCTGRP}   
-queue START STOP from (
+queue JOBIDX START STOP from (
 {RANGE_INDICES}
 )
 '''.format(
@@ -157,7 +157,7 @@ queue START STOP from (
     BATCH_DIR = args.batch_dir,
     FLAVOUR = args.jobFlavour,
     ACCTGRP = 'group_u_CMST3.all' if args.cmst3 else 'group_u_CMS.u_zh',
-    RANGE_INDICES = '\n'.join('%d %d' % rng for rng in range_indices)
+    RANGE_INDICES = '\n'.join('%d %d %d' % rng for rng in range_indices)
 ))
    
 print('condor submit file can be found in '+ args.batch_dir+'\nuse check_conversion.py ' + args.batch_dir + ' to to check jobs')
