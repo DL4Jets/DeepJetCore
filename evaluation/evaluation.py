@@ -519,12 +519,13 @@ def make_association(txtfiles, input_branches=None, output_branches=None, limit=
     return truth, models
     
     
-
+    
+    
 def plotLoss(infilename,outfilename,range):
     
     import matplotlib
-    
-    matplotlib.use('Agg') 
+    #matplotlib.use('Agg') 
+    import matplotlib.pyplot as plt
     
     infile=open(infilename,'r')
     trainloss=[]
@@ -533,6 +534,12 @@ def plotLoss(infilename,outfilename,range):
     i=0
     automax=0
     automin=100
+    nlines=0
+    with open(infilename,'r') as tmpfile:
+        for line in tmpfile:
+            if len(line)<1: continue
+            nlines+=1
+        
     for line in infile:
         if len(line)<1: continue
         tl=float(line.split(' ')[0])
@@ -541,13 +548,12 @@ def plotLoss(infilename,outfilename,range):
         valloss.append(vl)
         epochs.append(i)
         i=i+1
-        if i==5:
-            automax=max(tl,vl)
+        if i - float(nlines)/2. > 1.:
+            automax=max(automax,tl,vl)
         automin=min(automin,vl,tl)
         
     
-    import matplotlib.pyplot as plt
-    f = plt.figure()
+    
     plt.plot(epochs,trainloss,'r',label='train')
     plt.plot(epochs,valloss,'b',label='val')
     plt.ylabel('loss')
@@ -556,8 +562,9 @@ def plotLoss(infilename,outfilename,range):
     if len(range)==2:
         plt.ylim(range)
     elif automax>0:
-        plt.ylim([automin*0.9,automax])
-    f.savefig(outfilename)
+        plt.ylim([automin*0.9,automax*1.1])
+    plt.show()
+    #plt.savefig(outfilename, format='pdf')
     plt.close()
     
 ######### old part - keep for reference, might be useful some day 

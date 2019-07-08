@@ -18,7 +18,7 @@ parser.add_argument("--nforweighter", default='500000', help='set number of samp
 parser.add_argument("--meansfrom", default="", help='where to get means/std, in case already computed')
 parser.add_argument("--useexistingsplit", default=False, help='use an existing file split (potentially dangerous)')
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
-parser.add_argument("--jobFlavour", default='espresso', help="CERN HTCondor job flavour (espresso, microcentury, longlunch, workday)")
+parser.add_argument("--jobFlavour", default='longlunch', help="CERN HTCondor job flavour (espresso, microcentury, longlunch, workday)")
 parser.add_argument("--cmst3", action="store_true", help="Submit jobs with cmst3 accounting group.")
 args = parser.parse_args()
 
@@ -139,7 +139,7 @@ arguments             = -i {INFILE} --inRange $(START) $(STOP) -c {CLASS} -o {OU
 output                = {BATCH_DIR}/batch/con_out.$(JOBIDX).out
 error                 = {BATCH_DIR}/batch/con_out.$(JOBIDX).err
 log                   = {BATCH_DIR}/batch/con_out.$(JOBIDX).log
-+MaxRuntime = 86399
+#+MaxRuntime = 86399
 +JobFlavour = "{FLAVOUR}"
 getenv = True
 #use_x509userproxy = True
