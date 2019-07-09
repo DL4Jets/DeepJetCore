@@ -688,7 +688,7 @@ class DataCollection(object):
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
-                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        logging.info('>>>> collected result %d of %d' % (thisidx+1,len(self.originRoots)))
                         __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
                         lastindex=thisidx        
                 
