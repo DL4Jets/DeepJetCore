@@ -38,6 +38,11 @@ fi
 
 cp activateROOT.sh  $CONDA_PREFIX/etc/conda/activate.d/activateROOT.sh 
 
+echo "please ignore the warning that come with the following installation"
+
+conda install -c menpo ffmpeg 
+
+echo "stop ignoring the warnings again"
 
 echo "environment set up. Please activate it with \"source activate ${envname}\""
 
