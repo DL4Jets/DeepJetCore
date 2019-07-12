@@ -85,7 +85,26 @@ class FeedForward(Layer):
 
 djc_global_layers_list['FeedForward']=FeedForward
     
+
+class Clip(Layer):
+    def __init__(self, min, max , **kwargs):
+        super(Clip, self).__init__(**kwargs)
+        self.min=min
+        self.max=max
     
+    def compute_output_shape(self, input_shape):
+        return input_shape
+    
+    def call(self, inputs):
+        return tf.clip_by_value(inputs, self.min, self.max)
+    
+    def get_config(self):
+        config = {'min': self.min, 'max': self.max}
+        base_config = super(Clip, self).get_config()
+        return dict(list(base_config.items()) + list(config.items() ))
+    
+djc_global_layers_list['Clip']=Clip
+
 
 class ReduceSumEntirely(Layer):
     def __init__(self,  **kwargs):

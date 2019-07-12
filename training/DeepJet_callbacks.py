@@ -211,7 +211,7 @@ from DeepJetCore.TrainData import TrainData
 class PredictCallback(Callback):
     
     def __init__(self, 
-                 samplefile='',
+                 samplefile,
                  function_to_apply=None, #needs to be function(counter,[model_input], [predict_output], [truth])
                  after_n_batches=50,
                  on_epoch_end=False,
