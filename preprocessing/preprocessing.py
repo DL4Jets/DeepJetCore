@@ -549,22 +549,27 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,1) , dtype='float32')
-    
-    c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny,zeropad)
+    ncut=0
+    c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny,zeropad, False, ncut)
     
     return array
     
 def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per_element,
-                zeropad=False):
+                zeropad=False, list_size_cut=False):
     
     
     from DeepJetCore.compiled import c_arrayReads
     
+    n_cut = numpy.array([0],dtype='int')
+    
     array = numpy.zeros((nevents,list_size, n_feat_per_element,1) , dtype='float32')
     
-    c_arrayReads.read2DArray(array,filename, treename, branchname,1,1,zeropad)
+    c_arrayReads.read2DArray(array,filename, treename, branchname,1,1,zeropad,list_size_cut,n_cut)
     
     array = numpy.squeeze(array, axis=-1)
+    
+    if list_size_cut:
+        return array, n_cut[0]
     
     return array
     

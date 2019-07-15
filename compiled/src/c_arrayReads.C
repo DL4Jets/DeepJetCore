@@ -30,9 +30,11 @@ void read2DArray(boost::python::numeric::array numpyarray,
         std::string filename_std,
         std::string treename_std,
         std::string branchname_std,
-        int rebinx=1,
-        int rebiny=1,
-        bool zeropad=false
+        int rebinx,
+        int rebiny,
+        bool zeropad,
+        bool x_cutoff,
+        boost::python::numeric::array x_ncut
         ) {
 
 
@@ -67,15 +69,23 @@ void read2DArray(boost::python::numeric::array numpyarray,
         throw std::runtime_error("read2DArray: tree/array dimensions don't match");
     }
 
+    int npe=0;
     for(int e=0;e<nentries;e++){
         tree->GetEntry(e);
+        if(inarr->size() > nx){
+            if(x_cutoff){
+                x_ncut[0]+=1;
+                continue;}
+            else throw std::out_of_range("read2DArray: x ([:,x,...]) out of range");
+        }
         for(size_t x=0;x<inarr->size();x++){
             int npx = (int)x/rebinx;
             for(size_t y=0;y<inarr->at(x).size();y++){
                 int npy = (int)y/rebiny;
-                numpyarray[e][npx][npy][0] += inarr->at(x)[y];
+                numpyarray[npe][npx][npy][0] += inarr->at(x)[y];
             }
         }
+        npe++;
     }
     tfile->Close();
     delete tfile;
