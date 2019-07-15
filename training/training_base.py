@@ -45,6 +45,26 @@ custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
 custom_objects_list.update(global_metrics_list)
 
+##helper
+
+from keras import Model
+class ModelMGPU(Model):
+    def __init__(self, ser_model, gpus):
+        pmodel = multi_gpu_model(ser_model, gpus)
+        self.__dict__.update(pmodel.__dict__)
+        self._smodel = ser_model
+
+    def __getattribute__(self, attrname):
+        '''Override load save and predict methods to be used from the serial-model. The
+           serial-model holds references to the weights in the multi-gpu model.
+           '''
+        if 'load' in attrname or 'save' in attrname or 'predict' in attrname:
+            return getattr(self._smodel, attrname)
+        else:
+            #return Model.__getattribute__(self, attrname)
+            return super(ModelMGPU, self).__getattribute__(attrname)
+
+
 
 class training_base(object):
     
@@ -277,7 +297,7 @@ class training_base(object):
 
         if self.ngpus>1 and not self.submitbatch:
             print('Model being compiled for '+str(self.ngpus)+' gpus')
-            self.keras_model = multi_gpu_model(self.keras_model, gpus=self.ngpus)
+            self.keras_model = ModelMGPU(self.keras_model, gpus=self.ngpus)
             
         self.startlearningrate=learningrate
         
