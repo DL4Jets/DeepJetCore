@@ -4,6 +4,30 @@ djc_global_layers_list={}
 from keras.layers import Layer
 import tensorflow as tf
 
+
+
+class SelectFeatures(Layer):
+    def __init__(self, index_left, index_right, **kwargs):
+        super(SelectFeatures, self).__init__(**kwargs)
+        self.index_left=index_left
+        self.index_right=index_right
+    
+    def compute_output_shape(self, input_shape):
+        return input_shape[:-1] + (self.index_right-self.index_left,)
+    
+    def call(self, inputs):
+        
+        return inputs[...,self.index_left:self.index_right]
+    
+    def get_config(self):
+        config = {'index_left': self.index_left,'index_right': self.index_right}
+        base_config = super(SelectFeatures, self).get_config()
+        return dict(list(base_config.items()) + list(config.items() ))
+    
+    
+djc_global_layers_list['SelectFeatures']=SelectFeatures
+
+
 class ScalarMultiply(Layer):
     def __init__(self, factor, **kwargs):
         super(ScalarMultiply, self).__init__(**kwargs)
