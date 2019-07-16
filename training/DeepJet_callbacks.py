@@ -215,13 +215,15 @@ class PredictCallback(Callback):
                  function_to_apply=None, #needs to be function(counter,[model_input], [predict_output], [truth])
                  after_n_batches=50,
                  on_epoch_end=False,
-                 use_event=0
+                 use_event=0,
+                 decay_function=None
                  ):
         super(PredictCallback, self).__init__()
         self.samplefile=samplefile
         self.function_to_apply=function_to_apply
         self.counter=0
         self.call_counter=0
+        self.decay_function=decay_function
         
         self.after_n_batches=after_n_batches
         self.run_on_epoch_end=on_epoch_end
@@ -252,6 +254,8 @@ class PredictCallback(Callback):
     
     def on_epoch_end(self, epoch, logs=None):
         self.counter=0
+        if self.decay_function is not None:
+            self.after_n_batches=self.decay_function(self.after_n_batches)
         if not self.run_on_epoch_end: return
         self.predict_and_call(epoch)
         
