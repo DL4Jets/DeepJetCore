@@ -57,7 +57,8 @@ echo "job done"
     else:
         walltime=1*24*3600 # 1 day standard
     
-    
+    ncpus=3
+    ncpus+=trainingbase.ngpus
     
     condor_file='''
 executable            = /bin/bash
@@ -68,12 +69,13 @@ log                   = {outdir}batch.log
 getenv = True
 +MaxRuntime = {walltime}
 request_GPUs = {ngpus}
-request_cpus = 4
+request_cpus = {ncpus}
 queue 1
     '''.format(scriptpath=scriptpath,
                outdir=trainingbase.outputDir,
                walltime=str(walltime),
-               ngpus=trainingbase.ngpus)
+               ngpus=trainingbase.ngpus,
+               ncpus=ncpus)
     
     with open(condorpath,'w') as condorfile:
         condorfile.write(condor_file)

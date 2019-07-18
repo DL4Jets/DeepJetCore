@@ -277,6 +277,8 @@ class training_base(object):
         self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
+        if self.ngpus>1:
+            self.compiled=False
         
     def setCustomOptimizer(self,optimizer):
         self.optimizer = optimizer
