@@ -170,6 +170,12 @@ class DataCollection(object):
         self.classweights=outdict
         
     
+    def prependToSampleFiles(self, path_to_prepend):
+        newsamples=[]
+        for s in self.samples:
+            newsamples.append(path_to_prepend+s)
+        self.samples=newsamples
+            
     def defineCustomPredictionLabels(self, labels):
         self.dataclass.defineCustomPredictionLabels(labels)
         

@@ -66,13 +66,13 @@ def fixLayersContaining(m, fixOnlyContaining, invert=False):
     return m
 
 def set_trainable(m, patterns, value):
-	if isinstance(patterns, basestring):
-		patterns = [patterns]
-	for layidx in range(len(m.layers)):
-		name = m.get_layer(index=layidx).name
-		if any(i in name for i in patterns):
-			m.get_layer(index=layidx).trainable = value
-	return m
+    if isinstance(patterns, basestring):
+        patterns = [patterns]
+    for layidx in range(len(m.layers)):
+        name = m.get_layer(index=layidx).name
+        if any(i in name for i in patterns):
+            m.get_layer(index=layidx).trainable = value
+    return m
 
 def setAllTrainable(m):
     for layidx in range(len(m.layers)):
@@ -95,4 +95,17 @@ def load_model(filename):
     model=load_model(filename, custom_objects=custom_objs)
     
     return model
+
+def apply_weights_where_possible(target_model, weight_model):
     
+    for layer_a in target_model.layers:
+        for layer_b in weight_model.layers:
+            if layer_a.name == layer_b.name:
+                try:
+                    layer_a.set_weights(layer_b.get_weights()) 
+                except:  
+                    print('unable to copy weights for layer ',  layer_a.name)
+                    print(layer_a.weights,'\n',layer_b.weights)
+    
+    
+    return target_model
