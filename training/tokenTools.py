@@ -21,9 +21,11 @@ def checkTokens(cutofftime_hours=48):
     if not renewtokens:
         return True
     import subprocess
+    import os
     
     klist=""
     try:
+        os.environ['LC_ALL']="en_US.UTF-8"
         klist=str(subprocess.check_output(['klist'],stderr=subprocess.STDOUT))
     except subprocess.CalledProcessError as inst:
         print('klist failed - no token?')#just ignore
