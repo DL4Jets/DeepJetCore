@@ -7,7 +7,11 @@ import os
 def sumDCandWrite(filelist, outname):
     alldc=[]
     for f in filelist:
-        dc = DataCollection(f)
+        try:
+            dc = DataCollection(f)
+        except:
+            print('read in of '+f +' not working, skip')
+            continue
         alldc.append(dc)
         rel  = os.path.relpath(dc.dataDir,os.getcwd())
         dc.prependToSampleFiles(rel+'/')
