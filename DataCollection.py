@@ -251,6 +251,7 @@ class DataCollection(object):
         '''
         for i in range(len(self.samples)):
             if i < skip_first: continue
+            if i >= len(self.samples): break
             td=copy.deepcopy(self.dataclass)
             fullpath=self.getSamplePath(self.samples[i])
             print('reading '+fullpath, str(self.sampleentries[i]), str(i), '/', str(len(self.samples)))
