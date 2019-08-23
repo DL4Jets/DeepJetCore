@@ -32,7 +32,7 @@ def locate_cuda():
     ldlibpath=locate_lib('libcudnn.so.7.6',ldlibpath)
     ldlibpath=locate_lib('libcudnn.so.7.5',ldlibpath)
     ldlibpath=locate_lib('libcudnn.so.7.4',ldlibpath)
-    
+    ldlibpath=locate_lib('libcusolver.so.10',ldlibpath)
     print(ldlibpath)
     
  
