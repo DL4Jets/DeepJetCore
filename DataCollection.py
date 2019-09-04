@@ -838,7 +838,7 @@ class DataCollection(object):
                     self.shuffleseed=0
                 #startRead(self.nextcounter,readfilename,self.shuffleseed)
                 self.tdopen[self.nextcounter]=True
-                self.filecounter=self.__increment(self.filecounter,self.nfiles)
+                self.filecounter=self.__increment(self.filecounter,self.nfiles,to_shuffle=True)
                 self.nextcounter=self.__increment(self.nextcounter,self.nfiles)
                 
                 
@@ -854,11 +854,12 @@ class DataCollection(object):
                 self.lastcounter=self.__increment(self.lastcounter,self.nfiles)
                 return td
                 
-            def __increment(self,counter,maxval):
+            def __increment(self,counter,maxval,to_shuffle):
                 counter+=1
                 if counter>=maxval:
-                    counter=0   
-                    self.filelist = shuffle(self.filelist)
+                    counter=0
+                    if to_shuffle:
+                        self.filelist = shuffle(self.filelist)
                 return counter 
             
             def __del__(self):
