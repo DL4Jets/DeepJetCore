@@ -854,7 +854,7 @@ class DataCollection(object):
                 self.lastcounter=self.__increment(self.lastcounter,self.nfiles)
                 return td
                 
-            def __increment(self,counter,maxval,to_shuffle):
+            def __increment(self,counter,maxval,to_shuffle=False):
                 counter+=1
                 if counter>=maxval:
                     counter=0
