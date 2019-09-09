@@ -426,6 +426,7 @@ class training_base(object):
                    checkperiod=10,
                    additional_plots=None,
                    additional_callbacks=None,
+                   load_in_mem = False,
                    **trainargs):
         
         
@@ -463,13 +464,25 @@ class training_base(object):
             self.callbacks.callbacks.extend(additional_callbacks)
         
         print('starting training')
-        self.keras_model.fit_generator(self.train_data.generator() ,
-                            steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
-                            epochs=nepochs-self.trainedepoches,
-                            callbacks=self.callbacks.callbacks,
-                            validation_data=self.val_data.generator(),
-                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                            max_q_size=maxqsize,**trainargs)
+        if load_in_mem:
+            print('make features')
+            X_train = self.train_data.getAllFeatures()
+            X_test = self.val_data.getAllFeatures()
+            print('make truth')
+            Y_train = self.train_data.getAllLabels()
+            Y_test = self.val_data.getAllLabels()
+            self.keras_model.fit(X_train, Y_train, batch_size=batchsize, epochs=nepochs,
+                                 callbacks=self.callbacks.callbacks,
+                                 validation_data=(X_test, Y_test),
+                                 **trainargs)
+        else:
+            self.keras_model.fit_generator(self.train_data.generator() ,
+                                           steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
+                                           epochs=nepochs-self.trainedepoches,
+                                           callbacks=self.callbacks.callbacks,
+                                           validation_data=self.val_data.generator(),
+                                           validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
+                                           max_q_size=maxqsize,**trainargs)
         
         self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")
