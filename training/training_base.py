@@ -482,7 +482,7 @@ class training_base(object):
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generator(),
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                                           max_q_size=maxqsize,**trainargs)
+                                           max_q_size=1,**trainargs)
         
         self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")
