@@ -15,7 +15,12 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from pdb import set_trace
-from keras.utils import multi_gpu_model
+import keras
+if float(keras.__version__[2:]) >= 2.2:
+    from keras.utils import multi_gpu_model
+else:
+    def multi_gpu_model(m, ngpus):
+        return m
 
 import imp
 try:
@@ -47,9 +52,11 @@ custom_objects_list.update(global_metrics_list)
 
 ##helper
 
-from keras import Model
+from keras.models import Model
 class ModelMGPU(Model):
     def __init__(self, ser_model, gpus):
+        if float(keras.__version__[2:]) < 2.2:
+            print('multi gpu option from keras >= 2.2.2 is NOT available for now. (see DJC issues 28 and 30)')
         pmodel = multi_gpu_model(ser_model, gpus)
         self.__dict__.update(pmodel.__dict__)
         self._smodel = ser_model
