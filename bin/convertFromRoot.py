@@ -70,7 +70,7 @@ if outPath:
 
 if args.noRelativePaths:
     relpath = ''
-else:
+elif not recover:
     relpath = os.path.dirname(os.path.realpath(infile))
 
 if args.inRange is not None:
