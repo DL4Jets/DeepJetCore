@@ -9,7 +9,7 @@
 #define DEEPJET_MODULES_INTERFACE_PYTHONTOSTL_H_
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 #include <vector>

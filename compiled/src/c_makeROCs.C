@@ -1,7 +1,7 @@
 #define BOOST_PYTHON_MAX_ARITY 40
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 //#include "boost/filesystem.hpp"

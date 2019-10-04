@@ -2,7 +2,7 @@
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 //#include "boost/filesystem.hpp"
@@ -36,12 +36,12 @@ enum modeen {en_flat,en_particlewise};
 
 // Functions to demonstrate extraction
 
-void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
+void priv_meanNormZeroPad(boost::python::numpy::ndarray& numpyarray,
         std::vector<__hidden::indata>   data,
         TFile* tfile, modeen mode);
 
 
-void priv_process(boost::python::numeric::array numpyarray,
+void priv_process(boost::python::numpy::ndarray numpyarray,
         const boost::python::list inl_norms,
         const boost::python::list inl_means ,
         const boost::python::list inl_branches,
@@ -56,7 +56,7 @@ void priv_process(boost::python::numeric::array numpyarray,
  * wrapper to create input to C++ only function
  * Can be generalised to doing it at the same time for many different sized branches
  */
-void process(boost::python::numeric::array numpyarray,
+void process(boost::python::numpy::ndarray numpyarray,
         const boost::python::list inl_norms,
         const boost::python::list inl_means ,
         const boost::python::list inl_branches,
@@ -70,7 +70,7 @@ void process(boost::python::numeric::array numpyarray,
 
 }
 
-void particlecluster(boost::python::numeric::array numpyarray,
+void particlecluster(boost::python::numpy::ndarray numpyarray,
         const boost::python::list inl_norms,
         const boost::python::list inl_means ,
         const boost::python::list inl_branches,
@@ -86,7 +86,7 @@ void particlecluster(boost::python::numeric::array numpyarray,
 }
 
 
-void priv_process(boost::python::numeric::array numpyarray,
+void priv_process(boost::python::numpy::ndarray numpyarray,
         const boost::python::list inl_norms,
         const boost::python::list inl_means ,
         const boost::python::list inl_branches,
@@ -124,7 +124,7 @@ void priv_process(boost::python::numeric::array numpyarray,
 
 //root-only functions
 //change all inputs except for in_data to vectors for simultaneous use
-void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
+void priv_meanNormZeroPad(boost::python::numpy::ndarray& numpyarray,
         std::vector<__hidden::indata>   datacollection,
         TFile* tfile, modeen mode){
 
@@ -177,7 +177,7 @@ void priv_meanNormZeroPad(boost::python::numeric::array& numpyarray,
 }
 
 
-void priv_particlecluster(boost::python::numeric::array& numpyarray,
+void priv_particlecluster(boost::python::numpy::ndarray& numpyarray,
         std::vector<__hidden::indata>   datacollection,
         TFile* tfile){
 
@@ -211,13 +211,13 @@ void particle_binner(
         std::string xbranch, std::string xcenter, int xbins, float xwidth,
         std::string ybranch, std::string ycenter, int ybins, float ywidth,
         //binned variables
-        boost::python::numeric::array numpyarray,
+        boost::python::numpy::ndarray numpyarray,
         const boost::python::list inl_norms,
         const boost::python::list inl_means ,
         const boost::python::list inl_branches,
         int nmax,
         //summed variables
-        boost::python::numeric::array sum_npy_array,
+        boost::python::numpy::ndarray sum_npy_array,
         const boost::python::list sum_inl_norms,
         const boost::python::list sum_inl_means ,
         const boost::python::list summed_branches
@@ -353,7 +353,7 @@ void particle_binner(
     tfile->Close();
     delete tfile;
 }
-void priv_fillDensityMap(boost::python::numeric::array numpyarray,
+void priv_fillDensityMap(boost::python::numpy::ndarray numpyarray,
         double norm,
         std::string in_branch,
         std::string in_weightbranch,
@@ -363,7 +363,7 @@ void priv_fillDensityMap(boost::python::numeric::array numpyarray,
         double offset, bool count=false
 );
 
-void fillDensityMap(boost::python::numeric::array numpyarray,
+void fillDensityMap(boost::python::numpy::ndarray numpyarray,
         double norm,
         std::string in_branch,
         std::string in_weightbranch,
@@ -376,7 +376,7 @@ void fillDensityMap(boost::python::numeric::array numpyarray,
             xbranch,xcenter,xbins,xwidth,
             ybranch,ycenter,ybins,ywidth,offset,false);
 }
-void fillCountMap(boost::python::numeric::array numpyarray,
+void fillCountMap(boost::python::numpy::ndarray numpyarray,
         double norm,
         std::string in_weightbranch,
         std::string filename, std::string counter_branch,
@@ -390,7 +390,7 @@ void fillCountMap(boost::python::numeric::array numpyarray,
             ybranch,ycenter,ybins,ywidth,offset,true);
 }
 
-void fillDensityLayers(boost::python::numeric::array numpyarray,
+void fillDensityLayers(boost::python::numpy::ndarray numpyarray,
         const boost::python::list  inl_norms,
         const boost::python::list  inl_means,
         const boost::python::list  in_branches,
@@ -550,7 +550,7 @@ void fillDensityLayers(boost::python::numeric::array numpyarray,
 
 }
 
-void priv_fillDensityMap(boost::python::numeric::array numpyarray,
+void priv_fillDensityMap(boost::python::numpy::ndarray numpyarray,
         double norm,
         std::string in_branch,
         std::string in_weightbranch,
@@ -666,7 +666,7 @@ void doScaling(bool doit){
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_meanNormZeroPad) {
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+   
     __hidden::indata();//for some reason exposing the class prevents segfaults. garbage collector?
     //anyway, it doesn't hurt, just leave this here
     def("process", &process);

@@ -3,7 +3,7 @@
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
@@ -323,7 +323,7 @@ if(debug)
 
 BOOST_PYTHON_MODULE(c_readArrThreaded) {
     //PyEval_InitThreads();
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+
 
     def("readBlocking", &readBlocking);
 

@@ -2,7 +2,7 @@
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 //#include "boost/filesystem.hpp"
@@ -249,7 +249,7 @@ void store(const boost::python::list _numpyarrays,
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_storeTensor) {
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+
     __hidden::indata();//for some reason exposing the class prevents segfaults. garbage collector?
     //anyway, it doesn't hurt, just leave this here
     def("store", &store);

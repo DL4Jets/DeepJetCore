@@ -2,7 +2,7 @@
 #define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 //#include "boost/filesystem.hpp"
@@ -26,7 +26,7 @@ using namespace boost::python; //for some reason....
 
 
 
-void read2DArray(boost::python::numeric::array numpyarray,
+void read2DArray(boost::python::numpy::ndarray numpyarray,
         std::string filename_std,
         std::string treename_std,
         std::string branchname_std,
@@ -34,7 +34,7 @@ void read2DArray(boost::python::numeric::array numpyarray,
         int rebiny,
         bool zeropad,
         bool x_cutoff,
-        boost::python::numeric::array x_ncut
+        boost::python::numpy::ndarray x_ncut
         ) {
 
 
@@ -92,7 +92,7 @@ void read2DArray(boost::python::numeric::array numpyarray,
 }
 
 
-void read3DArray(boost::python::numeric::array numpyarray,
+void read3DArray(boost::python::numpy::ndarray numpyarray,
         std::string filename_std,
         std::string treename_std,
         std::string branchname_std,
@@ -154,7 +154,7 @@ void read3DArray(boost::python::numeric::array numpyarray,
 }
 
 
-void read4DArray(boost::python::numeric::array numpyarray,
+void read4DArray(boost::python::numpy::ndarray numpyarray,
         std::string filename_std,
         std::string treename_std,
         std::string branchname_std,
@@ -228,7 +228,7 @@ void read4DArray(boost::python::numeric::array numpyarray,
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_arrayReads) {
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+
     def("read2DArray", &read2DArray);
     def("read3DArray", &read3DArray);
     def("read4DArray", &read4DArray);

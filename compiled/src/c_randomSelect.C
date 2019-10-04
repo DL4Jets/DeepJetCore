@@ -10,7 +10,7 @@
 
 #include <boost/python.hpp>
 #include "boost/python/extract.hpp"
-#include "boost/python/numeric.hpp"
+#include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
@@ -30,13 +30,13 @@ public:
     ~randomSelector(){
         delete rand_;
     }
-    void select(boost::python::numeric::array probs , boost::python::numeric::array indices, const size_t nselect);
+    void select(boost::python::numpy::ndarray probs , boost::python::numpy::ndarray indices, const size_t nselect);
 private:
     TRandom3* rand_;
 } sel;
 
 
-void randomSelector::select(boost::python::numeric::array  probs, boost::python::numeric::array  selects, const size_t nselect){
+void randomSelector::select(boost::python::numpy::ndarray  probs, boost::python::numpy::ndarray  selects, const size_t nselect){
 
     const size_t size = len(probs);
     if(nselect>size){
@@ -64,8 +64,8 @@ void randomSelector::select(boost::python::numeric::array  probs, boost::python:
 }
 
 //indices are initialised to 0, probs describe the remove probabilities
-void randSelect(boost::python::numeric::array probs,
-        boost::python::numeric::array indices,
+void randSelect(boost::python::numpy::ndarray probs,
+        boost::python::numpy::ndarray indices,
         int nentries){
 
     sel.select(probs,indices,nentries);
@@ -74,7 +74,7 @@ void randSelect(boost::python::numeric::array probs,
 
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_randomSelect) {
-    boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
+
 
     def("randSelect", &randSelect);
 }
