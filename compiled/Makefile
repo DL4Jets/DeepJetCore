@@ -4,9 +4,9 @@ PYTHON_INCLUDE = `python-config --includes`
 PYTHON_LIB=`python-config --libs`
 
 
-LINUXADD=-Wl,--export-dynamic
-ROOTSTUFF=`root-config  --cflags --libs --glibs`
-
+LINUXADD= #-Wl --export-dynamic
+ROOTSTUFF=`root-config --libs --glibs --ldflags`
+ROOTCFLAGS=`root-config  --cflags`
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
@@ -24,11 +24,11 @@ classdict.cxx: src/LinkDef.h
 	rootcling -v4 -f $@  -rmf classdict.rootmap -rml classdict.so  $^
 
 classdict.so: classdict.cxx
-	g++ $(ROOTSTUFF) -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
+	g++ $(ROOTCFLAGS) $(ROOTSTUFF) -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
 
 
 %: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx
-	g++ $(CFLAGS) -I./interface $(LINUXADD) $<  $(ROOTSTUFF)   -o  $@  
+	g++ $(CFLAGS) -I./interface $(LINUXADD) $<  $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
 	mv $@ ../bin/
 
 #helpers
@@ -36,18 +36,17 @@ libquicklz.so:
 	gcc -shared -O2 -fPIC src/quicklz.c -o libquicklz.so
 
 obj/%.o: src/%.cpp
-	g++ $(CFLAGS) $(ROOTSTUFF) -I./interface -O2 -fPIC -c -o $@ $< 
+	g++ $(CFLAGS)  $(ROOTCFLAGS) -I./interface -O2 -fPIC -c -o $@ $< 
 
 #pack helpers in lib
 libdeepjetcorehelpers.so: $(OBJ_FILES) 
-	g++ -shared $(LINUXADD) -fPIC $(ROOTSTUFF) obj/*.o -o $@ 
+	g++ -o $@ -shared -fPIC  $(LINUXADD) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python -lboost_numpy 
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
-	g++ -shared $(LINUXADD)  $(ROOTSTUFF) -lquicklz -L./ -ldeepjetcorehelpers -lboost_python $(PYTHON_LIB)   $< -o $(@) 
-
+	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python -lboost_numpy -L./ -ldeepjetcorehelpers 
 
 %.o: src/%.C 
-	g++   $(ROOTSTUFF) -O2 -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<
+	g++   $(ROOTCFLAGS) -O2 -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<
 
 
 
