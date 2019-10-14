@@ -1,4 +1,4 @@
-
+export DEEPJETCORE=`pwd`
 export PATH=`pwd`/bin:$PATH
 export PYTHONPATH=`pwd`/../:$PYTHONPATH
 if [ $LD_LIBRARY_PATH ]

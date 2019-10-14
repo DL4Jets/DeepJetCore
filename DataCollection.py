@@ -831,8 +831,12 @@ class DataCollection(object):
                             traceback.print_exc(file=sys.stdout)
                             raise d
                     
-                t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename,self.shuffleseed))    
-                t.start()
+                # don't remove these commented lines just yet 
+                # the whole generator call is moved to thread since keras 2.0.6 anyway  
+                #t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename,self.shuffleseed))    
+                #t.start()
+                
+                startRead(self.nextcounter,readfilename,self.shuffleseed)
                 self.shuffleseed+=1
                 if self.shuffleseed>1e5:
                     self.shuffleseed=0
@@ -1083,7 +1087,6 @@ class DataCollection(object):
                 else:
                     xout[-1]=batchgen.generateBatch()
                     
-            
             if self.useweights:
                 yield (xout,yout,wout)
             else:

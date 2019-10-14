@@ -16,7 +16,7 @@ from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from pdb import set_trace
 import keras
-if float(keras.__version__[2:]) >= 2.2:
+if float(keras.__version__[2:5]) >= 2.2:
     from keras.utils import multi_gpu_model
 else:
     def multi_gpu_model(m, ngpus):
@@ -491,7 +491,10 @@ class training_base(object):
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generator(),
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                                           max_q_size=1,**trainargs)
+                                           max_queue_size=1,
+                                           #max_q_size=1,
+                                           use_multiprocessing=True, #the threading one doe not loke DJC
+                                           **trainargs)
         
         self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")

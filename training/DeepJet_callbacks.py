@@ -25,7 +25,7 @@ class plot_loss_or_metric(Callback):
         self.metrics=metrics
         self.outputDir=outputDir
         
-    def on_epoch_end(self,epoch, epoch_logs={}):
+    def on_epoch_end(self,epoch, logs={}):
         lossfile=os.path.join( self.outputDir, 'full_info.log')
         allinfo_history=None
         with open(lossfile, 'r') as infile:
@@ -59,16 +59,16 @@ class newline_callbacks_begin(Callback):
         self.full_logs=[]
         self.plotLoss=plotLoss
         
-    def on_epoch_end(self,epoch, epoch_logs={}):
+    def on_epoch_end(self,epoch, logs={}):
         import os
         lossfile=os.path.join( self.outputDir, 'losses.log')
         print('\n***callbacks***\nsaving losses to '+lossfile)
-        self.loss.append(epoch_logs.get('loss'))
-        self.val_loss.append(epoch_logs.get('val_loss'))
+        self.loss.append(logs.get('loss'))
+        self.val_loss.append(logs.get('val_loss'))
         f = open(lossfile, 'a')
-        f.write(str(epoch_logs.get('loss')))
+        f.write(str(logs.get('loss')))
         f.write(" ")
-        f.write(str(epoch_logs.get('val_loss')))
+        f.write(str(logs.get('val_loss')))
         f.write("\n")
         f.close()    
         learnfile=os.path.join( self.outputDir, 'learn.log')
@@ -81,8 +81,8 @@ class newline_callbacks_begin(Callback):
                 self.full_logs=json.load(infile)
             
         normed = {}
-        for vv in epoch_logs:
-            normed[vv] = float(epoch_logs[vv])
+        for vv in logs:
+            normed[vv] = float(logs[vv])
         self.full_logs.append(normed)
         
         with open(lossfile, 'w') as out:
@@ -100,22 +100,28 @@ class batch_callback_begin(Callback):
         self.full_logs=[]
         self.plotLoss=plotLoss
 
-    def on_batch_end(self,batch,batch_logs={}):
+    def on_batch_end(self,batch,logs={}):
+        self.loss.append(logs.get('loss'))
+        self.val_loss.append(logs.get('val_loss'))
+         
+        
+    def on_epoch_end(self,epoch,logs={}):
         import os
         blossfile=os.path.join( self.outputDir, 'batch_losses.log')
-        self.loss.append(batch_logs.get('loss'))
-        self.val_loss.append(batch_logs.get('val_loss'))
         f = open(blossfile, 'a')
-        f.write(str(batch_logs.get('loss')))
-        f.write(" ")
-        f.write(str(batch_logs.get('val_loss')))
-        f.write("\n")
-        f.close()
-    def on_epoch_end(self,epoch,epoch_logs={}):
+        for i in range(len(self.loss)):
+            f.write(str(self.loss[i]))
+            f.write(" ")
+            f.write(str(self.val_loss[i]))
+            f.write("\n")
+        self.loss=[]
+        self.val_loss=[]
+        f.close()    
+        
         plotBatchLoss(self.outputDir+'/batch_losses.log',self.outputDir+'/batch_losses.pdf',[])
         
 class newline_callbacks_end(Callback):
-    def on_epoch_end(self,epoch, epoch_logs={}):
+    def on_epoch_end(self,epoch, logs={}):
         print('\n***callbacks end***\n')
         
         
@@ -128,7 +134,7 @@ class Losstimer(Callback):
     def on_train_begin(self, logs):
         self.start = time()
 
-    def on_batch_end(self, batch, logs):
+    def on_batch_end(self, batch, logs={}):
         if (self.counter != self.every): 
             self.counter+=1
             return
@@ -160,7 +166,7 @@ class saveCheckPointDeepJet(Callback):
     def __init__(self,outputDir,model):
         self.outputDir=outputDir
         self.djmodel=model
-    def on_epoch_end(self,epoch, epoch_logs={}):
+    def on_epoch_end(self,epoch, logs={}):
         self.djmodel.save(self.outputDir+"/KERAS_check_model_last.h5")
         
         
@@ -266,8 +272,7 @@ class PredictCallback(Callback):
         if use_event>=0:
             self.td.skim(event=use_event)
         
-    def on_train_begin(self, logs=None):
-        pass
+    
     
     def reset(self):
         self.call_counter=0
