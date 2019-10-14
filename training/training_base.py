@@ -434,6 +434,7 @@ class training_base(object):
                    additional_plots=None,
                    additional_callbacks=None,
                    load_in_mem = False,
+                   plot_batch_loss = False,
                    **trainargs):
         
         
@@ -463,7 +464,8 @@ class training_base(object):
                                     outputDir=self.outputDir,
                                     checkperiod=checkperiod,
                                     checkperiodoffset=self.trainedepoches,
-                                    additional_plots=additional_plots)
+                                    additional_plots=additional_plots,
+                                    batch_loss = plot_batch_loss)
         
         if additional_callbacks is not None:
             if not isinstance(additional_callbacks, list):
