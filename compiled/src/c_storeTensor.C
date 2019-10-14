@@ -250,6 +250,7 @@ void store(const boost::python::list _numpyarrays,
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_storeTensor) {
 
+    boost::python::numpy::initialize();
     __hidden::indata();//for some reason exposing the class prevents segfaults. garbage collector?
     //anyway, it doesn't hurt, just leave this here
     def("store", &store);

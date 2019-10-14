@@ -229,6 +229,7 @@ void read4DArray(boost::python::numpy::ndarray numpyarray,
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_arrayReads) {
 
+    boost::python::numpy::initialize();
     def("read2DArray", &read2DArray);
     def("read3DArray", &read3DArray);
     def("read4DArray", &read4DArray);

@@ -75,6 +75,7 @@ void randSelect(boost::python::numpy::ndarray probs,
 // Expose classes and methods to Python
 BOOST_PYTHON_MODULE(c_randomSelect) {
 
+    boost::python::numpy::initialize();
 
     def("randSelect", &randSelect);
 }
