@@ -55,7 +55,7 @@ custom_objects_list.update(global_metrics_list)
 from keras.models import Model
 class ModelMGPU(Model):
     def __init__(self, ser_model, gpus):
-        if float(keras.__version__[2:]) < 2.2:
+        if float(keras.__version__[2:5]) < 2.2:
             print('multi gpu option from keras >= 2.2.2 is NOT available for now. (see DJC issues 28 and 30)')
         pmodel = multi_gpu_model(ser_model, gpus)
         self.__dict__.update(pmodel.__dict__)
