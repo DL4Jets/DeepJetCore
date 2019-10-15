@@ -43,7 +43,7 @@ RUN cd /usr/share && \
 ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
 #/usr/local/lib is for root
-ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:/usr/local/lib:${PYTHONPATH}"
+ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
 ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
     
     

@@ -31,8 +31,8 @@ RUN cd /temproot/build && \
     rm -rf /temproot
 
 
-
-
+#ensure import ROOT
+ENV PYTHONPATH="/usr/local/lib:${PYTHONPATH}"
 
 
 
