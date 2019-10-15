@@ -5,11 +5,13 @@ print('importing tensorflow...')
 import tensorflow
 print(tensorflow.__file__)
 
-print('importing keras...')
+print('importing DeepJetCore base')
+import DeepJetCore
+print(DeepJetCore.__file__)
 
+
+print('importing DJC masked tf.keras as keras...')
 import keras
-
-print(keras.__file__)
 
 from keras import Input
 
@@ -29,11 +31,11 @@ model = keras.models.Model(inputs=a, outputs=b)
 model.compile(optimizer='adam',loss='mse')
 model.fit(x=features, y=truth, batch_size=100, epochs=20)
 
-print('loading DeepJetCore library...')
+print('loading DeepJetCore compiled library...')
 
 from DeepJetCore.compiled import c_arrayReads
 
-print('basic packages seem to work... testing conversion')
+print('basic packages seem to be compiled... testing conversion')
 
 import os
 djc_base = os.environ.get('DEEPJETCORE')
@@ -46,6 +48,7 @@ convertFromRoot.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
 os.system(script)
 
 print('testing batch explosion. Please check batch loss plot afterwards for smoothness. Warnings about the callback time can be ignored.')
+
 script='''
 #!/bin/bash
 cd {djc_base}/testing

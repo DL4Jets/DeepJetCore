@@ -784,7 +784,7 @@ class DataCollection(object):
                 
                 self.filelist=filelist
                 self.nfiles=len(filelist)
-                self.max=min(maxopen,len(filelist))
+                
                 self.tdlist=[]
                 self.tdopen=[]
                 self.tdclass=copy.deepcopy(tdclass)
@@ -798,14 +798,8 @@ class DataCollection(object):
                 self.shuffleseed=0
                 
             def start(self):
-                if self.max < 1:
-                    raise ValueError('I got an invalid number of files to open (%d)' % self.max)
-                for i in range(self.max):
-                    self.__readNext()
-                    time.sleep(1)
+                self.__readNext()
                     
-            
-                
             def __readNext(self):
                 #make sure this fast function has exited before getLast tries to read the file
                 readfilename=self.filelist[self.filecounter]

@@ -18,7 +18,7 @@ import shutil
 import threading
 import multiprocessing
 
-threadingfileandmem_lock=threading.Lock()
+#threadingfileandmem_lock=threading.Lock()
 #threadingfileandmem_lock.release()
 #multiproc_fileandmem_lock=multiprocessing.Lock()
 
@@ -347,68 +347,68 @@ class TrainData(object):
             return sharedlist, shapeinfos
         
         
-        with threadingfileandmem_lock:
-            try:
-                self.h5f = h5py.File(fileprefix,'r')
-            except:
-                raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
-            self.nsamples=self.h5f['n']
-            self.nsamples=self.nsamples[0]
-            if True or not hasattr(self, 'w_shapes'):
-                self.w_list,self.w_shapes=_readListInfo_('w')
-                self.x_list,self.x_shapes=_readListInfo_('x')
-                self.y_list,self.y_shapes=_readListInfo_('y')
+        
+        try:
+            self.h5f = h5py.File(fileprefix,'r')
+        except:
+            raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
+        self.nsamples=self.h5f['n']
+        self.nsamples=self.nsamples[0]
+        if True or not hasattr(self, 'w_shapes'):
+            self.w_list,self.w_shapes=_readListInfo_('w')
+            self.x_list,self.x_shapes=_readListInfo_('x')
+            self.y_list,self.y_shapes=_readListInfo_('y')
+        else:
+            print('\nshape known\n')
+            self.w_list,_=_readListInfo_('w')
+            self.x_list,_=_readListInfo_('x')
+            self.y_list,_=_readListInfo_('y')
+            
+        self.h5f.close()
+        del self.h5f
+        self.h5f=None
+        if shapesOnly:
+            return
+        
+        readfile=fileprefix
+        
+        isRamDisk=len(ramdiskpath)>0
+        if isRamDisk:
+            import uuid
+            unique_filename=''
+            
+            unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
+            if "meta" in readfile[-4:]:
+                filebase=readfile[:-4]
+                unique_filename = ramdiskpath+'/'+str(uuid.uuid4())
+                shutil.copyfile(filebase+'meta',unique_filename+'.meta')
+                for i in range(len(self.w_list)):
+                    shutil.copyfile(filebase+'w.'+str(i),unique_filename+'.w.'+str(i))
+                for i in range(len(self.x_list)):
+                    shutil.copyfile(filebase+'x.'+str(i),unique_filename+'.x.'+str(i))
+                for i in range(len(self.y_list)):
+                    shutil.copyfile(filebase+'y.'+str(i),unique_filename+'.y.'+str(i))
+                unique_filename+='.meta'
+                    
             else:
-                print('\nshape known\n')
-                self.w_list,_=_readListInfo_('w')
-                self.x_list,_=_readListInfo_('x')
-                self.y_list,_=_readListInfo_('y')
-                
-            self.h5f.close()
-            del self.h5f
-            self.h5f=None
-            if shapesOnly:
-                return
-            
-            readfile=fileprefix
-            
-            isRamDisk=len(ramdiskpath)>0
-            if isRamDisk:
-                import uuid
-                unique_filename=''
-                
                 unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
-                if "meta" in readfile[-4:]:
-                    filebase=readfile[:-4]
-                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())
-                    shutil.copyfile(filebase+'meta',unique_filename+'.meta')
-                    for i in range(len(self.w_list)):
-                        shutil.copyfile(filebase+'w.'+str(i),unique_filename+'.w.'+str(i))
-                    for i in range(len(self.x_list)):
-                        shutil.copyfile(filebase+'x.'+str(i),unique_filename+'.x.'+str(i))
-                    for i in range(len(self.y_list)):
-                        shutil.copyfile(filebase+'y.'+str(i),unique_filename+'.y.'+str(i))
-                    unique_filename+='.meta'
-                        
-                else:
-                    unique_filename = ramdiskpath+'/'+str(uuid.uuid4())+'.z'
-                    shutil.copyfile(fileprefix, unique_filename)
-                readfile=unique_filename
-                self.ramdiskfile=readfile
+                shutil.copyfile(fileprefix, unique_filename)
+            readfile=unique_filename
+            self.ramdiskfile=readfile
 
-            #create shared mem in sync mode
-            for i in range(len(self.w_list)):
-                self.w_list[i]=self.__createArr(self.w_shapes[i])
-                
-            for i in range(len(self.x_list)):
-                self.x_list[i]=self.__createArr(self.x_shapes[i])
-                
-            for i in range(len(self.y_list)):
-                self.y_list[i]=self.__createArr(self.y_shapes[i])
+        #create shared mem in sync mode
+        for i in range(len(self.w_list)):
+            self.w_list[i]=self.__createArr(self.w_shapes[i])
             
-            if read_async:
-                self.readdone=multiprocessing.Value('b',False)
-                        
+        for i in range(len(self.x_list)):
+            self.x_list[i]=self.__createArr(self.x_shapes[i])
+            
+        for i in range(len(self.y_list)):
+            self.y_list[i]=self.__createArr(self.y_shapes[i])
+        
+        if read_async:
+            self.readdone=multiprocessing.Value('b',False)
+                    
         if read_async:
             if "meta" in readfile[-4:]:
                 #new format
@@ -534,20 +534,14 @@ class TrainData(object):
                     
             #move away from shared memory
             #this costs performance but seems necessary
-            direct=False
-            with threadingfileandmem_lock:
-                if direct:
-                    self.w=self.w_list
-                    self.x=self.x_list
-                    self.y=self.y_list
-                else:
-                    self.w=copy.deepcopy(self.w_list)
-                    self.x=copy.deepcopy(self.x_list)
-                    self.y=copy.deepcopy(self.y_list)
-                    
-                del self.w_list
-                del self.x_list
-                del self.y_list
+            
+            self.w=copy.deepcopy(self.w_list)
+            self.x=copy.deepcopy(self.x_list)
+            self.y=copy.deepcopy(self.y_list)
+                
+            del self.w_list
+            del self.x_list
+            del self.y_list
             #in case of some errors during read-in
             
         except Exception as d:

@@ -408,8 +408,7 @@ class training_base(object):
         
         averagesamplesperfile=self.train_data.getAvEntriesPerFile()
         samplespreread=maxqsize*batchsize
-        nfilespre=max(int(samplespreread/averagesamplesperfile),2)
-        nfilespre+=1
+        nfilespre=max(int(samplespreread/averagesamplesperfile),1)
         nfilespre=min(nfilespre, len(self.train_data.samples)-1)
         #if nfilespre>15:nfilespre=15
         print('best pre read: '+str(nfilespre)+'  a: '+str(int(averagesamplesperfile)))
@@ -418,7 +417,7 @@ class training_base(object):
         
         if self.train_data.maxFilesOpen<0 or True:
             self.train_data.maxFilesOpen=nfilespre
-            self.val_data.maxFilesOpen=min(int(nfilespre/2),1)
+            self.val_data.maxFilesOpen=2
         
     def trainModel(self,
                    nepochs,
