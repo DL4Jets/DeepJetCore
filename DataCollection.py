@@ -829,7 +829,6 @@ class DataCollection(object):
                 # the whole generator call is moved to thread since keras 2.0.6 anyway  
                 #t=threading.Thread(target=startRead, args=(self.nextcounter,readfilename,self.shuffleseed))    
                 #t.start()
-                
                 startRead(self.nextcounter,readfilename,self.shuffleseed)
                 self.shuffleseed+=1
                 if self.shuffleseed>1e5:
@@ -947,13 +946,11 @@ class DataCollection(object):
                 dimw=0
                 lastbatchrest=0
                 
-                
+            
             else:
                 lastbatchrest=xstored[0].shape[0]
             
-            batchcomplete=False
-            
-            
+            batchcomplete=False   
             
             if lastbatchrest >= self.__batchsize:
                 batchcomplete = True
@@ -1034,8 +1031,6 @@ class DataCollection(object):
                     psamples=int(psamples)
                 
                 td.clear()
-
-
                 
             if batchcomplete:
                 

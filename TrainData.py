@@ -289,20 +289,7 @@ class TrainData(object):
         shutil.copyfile(t.name, final_output_file)
        
     def __createArr(self,shapeinfo):
-        import ctypes
-
-        fulldim=1
-        for d in shapeinfo:
-            fulldim*=d 
-        if fulldim < 0: #catch some weird things that happen when there is a file IO error
-            fulldim=0 
-        # reserve memory for array
-        shared_array_base = multiprocessing.RawArray(ctypes.c_float, int(fulldim))
-        shared_array = numpy.ctypeslib.as_array(shared_array_base)#.get_obj())
-        #print('giving shape',shapeinfo)
-        shared_array = shared_array.reshape(shapeinfo)
-        #print('gave shape',shapeinfo)
-        return shared_array
+        return numpy.ascontiguousarray(numpy.zeros(shape=shapeinfo), dtype=numpy.float32)
     
     def removeRamDiskFile(self):
         if hasattr(self, 'ramdiskfile'):
@@ -405,9 +392,7 @@ class TrainData(object):
             
         for i in range(len(self.y_list)):
             self.y_list[i]=self.__createArr(self.y_shapes[i])
-        
-        if read_async:
-            self.readdone=multiprocessing.Value('b',False)
+
                     
         if read_async:
             if "meta" in readfile[-4:]:
@@ -434,16 +419,6 @@ class TrainData(object):
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
                 
-                
-            else:
-                self.readthread=multiprocessing.Process(target=_read_arrs_, 
-                                                        args=(self.w_list,
-                                                              self.x_list,
-                                                              self.y_list,
-                                                              self.readdone,
-                                                              readfile,
-                                                              self,randomseed))
-                self.readthread.start()
         else:
             if "meta" in readfile[-4:]:
                 from DeepJetCore.compiled.c_readArrThreaded import readBlocking
@@ -467,10 +442,6 @@ class TrainData(object):
                                                            fileprefix,
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
-                
-            else:
-                self.readdone=multiprocessing.Value('b',False)
-                _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
             
             
         
@@ -516,21 +487,7 @@ class TrainData(object):
                         self.readIn(self.samplename)
                         return
                 
-            else: #will be removed at some point
-                while wasasync and (not self.readdone or not self.readdone.value): 
-                    if not self.readthread:
-                        time.sleep(.1)
-                        continue
-                    self.readthread.join(.1)
-                    counter+=1
-                    if counter>3000: #read failed. do synchronous read, safety option if threads died
-                        print('\nfalling back to sync read\n')
-                        self.readthread.terminate()
-                        self.readthread=None
-                        self.readIn(self.samplename)
-                        return
-                if self.readdone.value:
-                    self.readthread.join(.1)
+            
                     
             #move away from shared memory
             #this costs performance but seems necessary

@@ -22,7 +22,7 @@ RUN pip install uproot
 #RUN pip install gpustat
 #RUN pip install tensorflow-gpu==1.13.1
 
-RUN pip install tensorflow==1.13.1
+RUN pip install tensorflow==1.14
 ## RUN pip install Keras==2.0.5
 
 # DEEPJETCORE specifics

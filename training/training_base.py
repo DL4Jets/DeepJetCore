@@ -428,7 +428,7 @@ class training_base(object):
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
-                   maxqsize=5, 
+                   maxqsize=3, 
                    checkperiod=10,
                    additional_plots=None,
                    additional_callbacks=None,
@@ -490,7 +490,7 @@ class training_base(object):
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generator(),
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                                           max_queue_size=1,
+                                           max_queue_size=maxqsize,
                                            #max_q_size=1,
                                            use_multiprocessing=True, #the threading one doe not loke DJC
                                            **trainargs)
