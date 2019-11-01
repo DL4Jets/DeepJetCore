@@ -61,6 +61,7 @@ class DataCollection(object):
 
         # Running data conversion etc. on a batch farm
         self.batch_mode = False
+        self.no_copy_on_convert = False
         
     def clear(self):
         self.samples=[]
@@ -508,7 +509,7 @@ class DataCollection(object):
         
         fileTimeOut(sample,120) #once available copy to ram
 
-        if self.batch_mode:
+        if self.batch_mode or self.no_copy_on_convert:
             tmpinput = sample
 
             def removefile():
@@ -576,7 +577,7 @@ class DataCollection(object):
             td=copy.deepcopy(self.dataclass)
             sample=self.originRoots[index]
 
-            if self.batch_mode:
+            if self.batch_mode or self.no_copy_on_convert:
                 tmpinput = sample
 
                 def removefile():

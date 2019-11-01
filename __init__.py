@@ -9,3 +9,6 @@ except:
 import sys
 import tensorflow as tf
 sys.modules["keras"] = tf.keras
+
+import matplotlib
+matplotlib.use('Agg')
