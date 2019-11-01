@@ -451,7 +451,9 @@ class training_base(object):
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks
-        
+        minTokenLifetime = 5
+        if not self.renewtokens:
+            minTokenLifetime = -1
         
         self.callbacks=DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
@@ -464,7 +466,8 @@ class training_base(object):
                                     checkperiod=checkperiod,
                                     checkperiodoffset=self.trainedepoches,
                                     additional_plots=additional_plots,
-                                    batch_loss = plot_batch_loss)
+                                    batch_loss = plot_batch_loss,
+                                    minTokenLifetime = minTokenLifetime)
         
         if additional_callbacks is not None:
             if not isinstance(additional_callbacks, list):

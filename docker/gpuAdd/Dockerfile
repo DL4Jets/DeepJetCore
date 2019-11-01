@@ -6,6 +6,4 @@ FROM cernml4reco/djc_ubuntu
 
 RUN pip install gpustat 
 RUN pip install setGPU
-#this one is big
-RUN pip --no-cache-dir install tensorflow-gpu==1.14
 

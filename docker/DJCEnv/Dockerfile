@@ -12,20 +12,25 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get install -y locales
 
+RUN pip install --upgrade pip
+
 RUN pip install numpy
 RUN pip install root_numpy
 RUN pip install scikit-learn
 RUN pip install scikit-image
 RUN pip install h5py
-RUN pip install uproot
+RUN pip install uproot Pillow scipy seaborn
+RUN pip install scikit-learn
+RUN pip install scikit-image
 
-#RUN pip install gpustat
-#RUN pip install tensorflow-gpu==1.13.1
+#may be useful
+RUN pip install opencv-python
+RUN pip install easydict tqdm
+RUN pip install Cython
+RUN pip install numba
 
-RUN pip install tensorflow==1.14
-## RUN pip install Keras==2.0.5
+RUN pip --no-cache-dir install tensorflow==1.15
 
-# DEEPJETCORE specifics
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 RUN ldconfig
