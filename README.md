@@ -16,6 +16,8 @@ The package comes with a docker file in the subdirectory docker, which will set 
 
 **Users with access to Cernbox** can just run the prepared script at:
 ``/eos/home-j/jkiesele/singularity/run_deepjetcore.sh``
+Please run this script from your home directory. Sometimes you need to try two or three times - singularity is a bit weird. But once the contaienr is launched, everything works smoothly.
+The message about a missing user group can be safely ignored.
 
 
 Usage
