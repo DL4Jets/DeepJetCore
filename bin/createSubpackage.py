@@ -10,7 +10,7 @@ parser = ArgumentParser('script to create a DeepJetCore subpackage')
 
 parser.add_argument("subpackage_name", help="name of the subpackage")
 parser.add_argument("subpackage_parent_dir", help="parent directory of the subpackage (must be same as DeepJetCore)")
-parser.add_argument("--nodata", help="do NOT create example data", default=False, action="store_true")
+parser.add_argument("--data", help="create example data", default=False, action="store_true")
 
 args=parser.parse_args()
 
@@ -22,10 +22,8 @@ subpackage_dir=args.subpackage_parent_dir+'/'+args.subpackage_name
 
 environment_file='''
 #! /bin/bash
-THISDIR=`pwd`
-cd {deepjetcore}
-source env.sh
-cd $THISDIR
+
+
 export {subpackage}=$( cd "$( dirname "${BASH_SOURCE}" )" && pwd -P)
 export DEEPJETCORE_SUBPACKAGE=${subpackage}
 
@@ -473,7 +471,7 @@ with  open(subpackage_dir+'/cpp_analysis/Makefile','w') as lfile:
 with  open(subpackage_dir+'/cpp_analysis/bin/example.cpp','w') as lfile:
     lfile.write(bin_template)
     
-if args.nodata:
+if not args.data:
     exit()
 print('creating example data... (10 training files, 1 test file, 1000 events each)')
 os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
