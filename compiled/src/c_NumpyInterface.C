@@ -22,12 +22,12 @@ namespace p = boost::python;
 namespace np = boost::python::numpy;
 
 
-np::ndarray readFromFile(std::string filename){
+np::ndarray readFromFile(std::string filename, bool shapesOnly){
 
 
 
     FILE *ifile = fopen("testfile.djcd", "rb");
-    simpleArray<float> ifarr(ifile);
+    djc::simpleArray<float> ifarr(ifile);
     fclose(ifile);
 
     auto size = ifarr.size();

@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdexcept>
+#include <sys/stat.h>
 
 /*
  * Very simple template wrapper around fread and fwrite with error checks
@@ -22,6 +23,12 @@
 
 namespace djc{
 namespace io{
+
+inline bool fileExists(const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str(), &buffer) == 0);
+}
+
 //only linux
 inline std::string followFileName(FILE * ofile){
     char proclnk[0xFFF];

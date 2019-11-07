@@ -36,7 +36,7 @@ libquicklz.so:
 	gcc -shared -O2 -fPIC src/quicklz.c -o libquicklz.so
 
 obj/%.o: src/%.cpp
-	g++ $(CFLAGS)  $(ROOTCFLAGS) -I./interface -O2 -fPIC -c -o $@ $< 
+	g++ $(CFLAGS) $(PYTHON_INCLUDE) $(ROOTCFLAGS) -I./interface -O2 -fPIC -c -o $@ $< 
 
 #pack helpers in lib
 libdeepjetcorehelpers.so: $(OBJ_FILES) 

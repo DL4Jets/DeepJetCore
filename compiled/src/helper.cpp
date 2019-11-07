@@ -9,6 +9,34 @@
 #include "../interface/helper.h"
 #include <stdexcept>
 
+namespace p = boost::python;
+namespace np = boost::python::numpy;
+
+
+np::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr){
+
+    auto size = ifarr.size();
+    auto shape =  ifarr.shape();
+    for(const auto& s:shape){
+        if(s<0)
+            throw std::runtime_error("simpleArrayToNumpy: no conversion from ragged simpleArrys possible");
+    }
+
+    p::list pshape;
+    for(const auto& s:shape)
+        pshape.append(s);
+
+    p::tuple tshape(pshape);//not working
+
+    np::ndarray nparr = np::from_data((void*)ifarr.disownData(),
+            np::dtype::get_builtin<float>(),
+            p::make_tuple(size), p::make_tuple(sizeof(float)), p::object() );
+
+    nparr = nparr.reshape(tshape);
+    return nparr;
+
+}
+
 
 TString prependXRootD(const TString& path){
 

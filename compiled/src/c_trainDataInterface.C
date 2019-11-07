@@ -7,8 +7,8 @@
 
 
 #include "../interface/trainData.h"
+#include "../interface/helper.h"
 
-#define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
@@ -25,6 +25,10 @@ namespace np = boost::python::numpy;
  * write out a cpp traindata object from a python traindata object using
  * three lists: x, y, w
  * make choice for float here
+ *
+ * On longer term make this a real class wrapper. So far ok, still needs
+ * rework for ragged anyway
+ *
  */
 
 float * extractNumpyListElement(p::list x, int i, std::vector<int>& shape){
@@ -42,8 +46,8 @@ void writeToFile(p::list x, p::list y, p::list w, std::string filename){
     djc::trainData<float> td;
 
     int nx = p::extract<int>(x.attr("__len__")());
-    int ny = p::extract<int>(x.attr("__len__")());
-    int nw = p::extract<int>(x.attr("__len__")());
+    int ny = p::extract<int>(y.attr("__len__")());
+    int nw = p::extract<int>(w.attr("__len__")());
 
     std::vector<int> shape;
     for(int i=0;i<nx;i++){
@@ -55,14 +59,14 @@ void writeToFile(p::list x, p::list y, p::list w, std::string filename){
 
     for(int i=0;i<ny;i++){
         size_t idx = td.addTruthArray({0});
-        float * data = extractNumpyListElement(x,i,shape);
+        float * data = extractNumpyListElement(y,i,shape);
         td.truthArray(idx).assignData(data);
         td.truthArray(idx).assignShape(shape);
     }
 
     for(int i=0;i<nw;i++){
         size_t idx = td.addWeightArray({0});
-        float * data = extractNumpyListElement(x,i,shape);
+        float * data = extractNumpyListElement(w,i,shape);
         td.weightArray(idx).assignData(data);
         td.weightArray(idx).assignShape(shape);
     }
@@ -80,7 +84,6 @@ void writeToFile(p::list x, p::list y, p::list w, std::string filename){
  */
 
 
-np::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr);
 
 p::list readFromFile(std::string filename){
     p::list out;
@@ -108,36 +111,36 @@ p::list readFromFile(std::string filename){
     return out;
 }
 
-
-np::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr){
-
-    auto size = ifarr.size();
-    auto shape =  ifarr.shape();
-    for(const auto& s:shape){
-        if(s<0)
-            throw std::runtime_error("simpleArrayToNumpy: no conversion from ragged simpleArrys possible");
+p::list nestedToList(const std::vector<std::vector<int> >& v){
+    p::list out;
+    for(const auto& vv:v){
+        p::list tmp;
+        for(const auto& vvv:vv)
+            tmp.append(vvv);
+        out.append(tmp);
     }
-
-    p::list pshape;
-    for(const auto& s:shape)
-        pshape.append(s);
-
-    p::tuple tshape(pshape);//not working
-
-    np::ndarray nparr = np::from_data((void*)ifarr.disownData(),
-            np::dtype::get_builtin<float>(),
-            p::make_tuple(size), p::make_tuple(sizeof(float)), p::object() );
-
-    nparr = nparr.reshape(tshape);
-    return nparr;
-
+    return out;
 }
+
+p::list readShapesFromFile(std::string filename){
+    p::list out;
+    djc::trainData<float> td;
+    std::vector<std::vector<int> > fs,ts,ws;
+    td.readShapesFromFile(filename,fs,ts,ws);
+    out.append(nestedToList(fs));
+    out.append(nestedToList(ts));
+    out.append(nestedToList(ws));
+    return out;
+}
+
+
 
 BOOST_PYTHON_MODULE(c_trainDataInterface) {
     Py_Initialize();
     np::initialize();
     def("writeToFile", &writeToFile);
     def("readFromFile", &readFromFile);
+    def("readShapesFromFile", &readShapesFromFile);
 }
 
 

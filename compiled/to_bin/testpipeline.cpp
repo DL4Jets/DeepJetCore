@@ -24,15 +24,22 @@ using namespace djc;
 int main(){
     //create some data
 
-/*
-    trainData<float> bigtd;
+    bool write=false;
+    if(write){
+        trainData<float> bigtd;
 
-    auto fidx = bigtd.addFeatureArray({1200, 5*4000, 10});
-    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
-        bigtd.featureArray(fidx).data()[i]=i;
+        auto fidx = bigtd.addFeatureArray({100, 5*4000, 10});
+        for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
+            bigtd.featureArray(fidx).data()[i]=i;
 
-    bigtd.writeToFile("bigfile1.djctd");
+        fidx = bigtd.addTruthArray({100, 2, 3});
+        for(size_t i=0;i<bigtd.truthArray(fidx).size();i++)
+            bigtd.truthArray(fidx).data()[i]=i;
 
+        bigtd.writeToFile("bigfile1.djctd");
+
+
+        /*
     for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
         bigtd.featureArray(fidx).data()[i]=2*i;
 
@@ -44,13 +51,27 @@ int main(){
     bigtd.writeToFile("bigfile3.djctd");
     bigtd.writeToFile("bigfile4.djctd");
 
+         */
+        bigtd.clear();
+        return 1;
+    }
 
-    bigtd.clear();
+
+    trainData<float> test;
+    std::vector<std::vector<int> > fs, ts, ws;
+    std::cout << "reading" << std::endl;
+    test.readShapesFromFile("bigfile1.djctd",fs,ts,ws);
+
+    std::cout << fs.size() << " " << ts.size() << "  " << ws.size() << std::endl;
+    for(const auto& s: fs)
+            std::cout << s << std::endl;
+    for(const auto& s: ts)
+                std::cout << s << std::endl;
 
 
+    return 0;
+    /*
 
-    return 0; */
-/*
     std::vector<std::string> filenames = {"bigfile1.djctd",
             "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd",
             "bigfile1.djctd",
@@ -80,9 +101,9 @@ int main(){
         }
         gen.endEpoch();
     }
-*/
 
-  //  return 0;
+
+    return 0;
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
@@ -221,4 +242,5 @@ int main(){
     rbig.readFromFile("bigfile.djctd");
     std::cout << "done reading file "<< std::endl;
 
+*/
 }

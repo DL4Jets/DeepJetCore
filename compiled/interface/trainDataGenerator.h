@@ -15,6 +15,7 @@
 #include <random>
 #include <iterator>
 #include <thread>
+#include <iostream>
 
 namespace djc{
 
@@ -42,8 +43,16 @@ public:
         nbatches_ = ntotal_/batchsize_;
     }
 
+    void setFileTimeout(size_t seconds){
+        filetimeout_=seconds;
+    }
+
     size_t getNBatches()const{
         return nbatches_;
+    }
+
+    bool lastBatch()const{
+        return nprocessed_ >= nbatches_;
     }
 
     void beginEpoch();
@@ -55,6 +64,8 @@ public:
      * total sample size
      */
     trainData<T> getBatch(size_t batchsize=0);
+
+    static bool debug;
 
 private:
     void shuffleFilelist();
@@ -71,12 +82,16 @@ private:
     size_t nbatches_;
     size_t ntotal_;
     size_t nprocessed_;
+    size_t filetimeout_;
 };
+
+template<class T>
+bool trainDataGenerator<T>::debug = false;
 
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :
         randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
-                0), ntotal_(0), nprocessed_(0) {
+                0), ntotal_(0), nprocessed_(0),filetimeout_(10) {
 }
 
 template<class T>
@@ -100,7 +115,15 @@ void trainDataGenerator<T>::shuffleFilelist(){
 
 template<class T>
 void trainDataGenerator<T>::readBuffer(){
-    buffer_read.readFromFile(nextread_);
+    size_t ntries = 0;
+    while(ntries < filetimeout_){
+        if(io::fileExists(nextread_)){
+            buffer_read.readFromFile(nextread_);
+            return;
+        }
+        sleep(1);
+    }
+    throw std::runtime_error("trainDataGenerator<T>::readBuffer: file "+nextread_+ " could not be read.");
 }
 
 
@@ -120,7 +143,7 @@ void trainDataGenerator<T>::endEpoch(){
 
     //prepare for next epoch, pre-read first file
     if(readthread_){
-        readthread_->join();
+        readthread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
         delete readthread_;
     }
     buffer_store.clear();
@@ -151,6 +174,10 @@ trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
         buffer_store.append(buffer_read);
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
+
+        if(debug)
+            std::cout << "batch " << nprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
+            << " file read " << nextread_ << " totalfiles " << shuffled_infiles_.size() << std::endl;
 
         if(nprocessed_ + bufferelements < ntotal_){
             if (filecount_ >= shuffled_infiles_.size())

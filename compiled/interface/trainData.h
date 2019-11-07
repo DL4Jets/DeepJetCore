@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include "IO.h"
 
+#include <iostream>
+
 namespace djc{
 
 /*
@@ -86,11 +88,24 @@ public:
 
     void readFromFile(std::string filename);
 
+    //could use a readshape or something!
+    void readShapesFromFile(std::string filename,
+            std::vector<std::vector<int> >& feature_shapes,
+            std::vector<std::vector<int> >& truth_shapes,
+            std::vector<std::vector<int> >& weight_shapes);
+
+
     void clear();
 
 private:
     void writeArrayVector(const std::vector<simpleArray<T> >&, FILE *&) const;
     std::vector<simpleArray<T> > readArrayVector(FILE *&) const;
+    std::vector<std::vector<int> > getShapes(const std::vector<simpleArray<T> >& a)const;
+    template <class U>
+    void writeNested(const std::vector<std::vector<U> >& v, FILE *&)const;
+    template <class U>
+    void readNested( std::vector<std::vector<U> >& v, FILE *&)const;
+
     std::vector<simpleArray<T> > feature_arrays_;
     std::vector<simpleArray<T> > truth_arrays_;
     std::vector<simpleArray<T> > weight_arrays_;
@@ -175,10 +190,18 @@ void trainData<T>::writeToFile(std::string filename)const{
     FILE *ofile = fopen(filename.data(), "wb");
     float version = DJCDATAVERSION;
     io::writeToFile(&version, ofile);
-    writeArrayVector(feature_arrays_,ofile);
-    writeArrayVector(truth_arrays_,ofile);
-    writeArrayVector(weight_arrays_,ofile);
+
+    //shape infos only
+    writeNested(getShapes(feature_arrays_), ofile);
+    writeNested(getShapes(truth_arrays_), ofile);
+    writeNested(getShapes(weight_arrays_), ofile);
+
+    //data
+    writeArrayVector(feature_arrays_, ofile);
+    writeArrayVector(truth_arrays_, ofile);
+    writeArrayVector(weight_arrays_, ofile);
     fclose(ofile);
+
 }
 
 template<class T>
@@ -192,9 +215,37 @@ void trainData<T>::readFromFile(std::string filename){
     if(version != DJCDATAVERSION)
         throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
 
+    std::vector<std::vector<int> > dummy;
+    readNested(dummy, ifile);
+    readNested(dummy, ifile);
+    readNested(dummy, ifile);
+    dummy.clear();
+
     feature_arrays_ = readArrayVector(ifile);
     truth_arrays_ = readArrayVector(ifile);
     weight_arrays_ = readArrayVector(ifile);
+    fclose(ifile);
+
+}
+
+template<class T>
+void trainData<T>::readShapesFromFile(std::string filename,
+        std::vector<std::vector<int> >& feature_shapes,
+        std::vector<std::vector<int> >& truth_shapes,
+        std::vector<std::vector<int> >& weight_shapes){
+
+    FILE *ifile = fopen(filename.data(), "rb");
+    if(!ifile)
+        throw std::runtime_error("trainData<T>::readShapesFromFile: file "+filename+" could not be opened.");
+    float version = 0;
+    io::readFromFile(&version, ifile);
+    if(version != DJCDATAVERSION)
+        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
+
+    readNested(feature_shapes, ifile);
+    readNested(truth_shapes, ifile);
+    readNested(weight_shapes, ifile);
+
     fclose(ifile);
 
 }
@@ -223,6 +274,54 @@ std::vector<simpleArray<T> > trainData<T>::readArrayVector(FILE *& ifile) const{
     for(size_t i=0;i<size;i++)
         out.push_back(simpleArray<T> (ifile));
     return out;
+}
+
+template<class T>
+std::vector<std::vector<int> > trainData<T>::getShapes(const std::vector<simpleArray<T> >& a)const{
+    std::vector<std::vector<int> > out;
+    for(const auto& arr: a)
+        out.push_back(arr.shape());
+    return out;
+}
+
+template<class T>
+template <class U>
+void trainData<T>::writeNested(const std::vector<std::vector<U> >& v, FILE *& ofile)const{
+
+    size_t size = v.size();
+    io::writeToFile(&size, ofile);
+    for(size_t i=0;i<size;i++){
+        size_t nsize = v.at(i).size();
+        io::writeToFile(&nsize, ofile);
+        if(nsize==0)
+            continue;
+        io::writeToFile(&(v.at(i).at(0)),ofile,nsize);
+
+        std::cout << "vec " << i <<std::endl;
+        for(size_t j=0;j<nsize;j++)
+            std::cout << v.at(i).at(j) << std::endl;
+    }
+
+}
+
+template<class T>
+template <class U>
+void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)const{
+
+    size_t size = 0;
+    io::readFromFile(&size, ifile);
+    v.resize(size,std::vector<U>(0));
+    std::cout << "tot " << size << std::endl;
+    for(size_t i=0;i<size;i++){
+        size_t nsize = 0;
+        io::readFromFile(&nsize, ifile);
+        v.at(i).resize(nsize);
+        if(nsize==0)
+            continue;
+        std::cout << "vec " << i << " size "<< nsize << std::endl;
+        io::readFromFile(&(v.at(i).at(0)),ifile,nsize);
+    }
+
 }
 
 /*
