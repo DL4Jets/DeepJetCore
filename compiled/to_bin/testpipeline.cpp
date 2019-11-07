@@ -5,7 +5,7 @@
 #include "../interface/simpleArray.h"
 #include "../interface/trainData.h"
 
-
+#include "../interface/trainDataGenerator.h"
 
 std::ostream& operator<< (std::ostream& os, std::vector<int> v){
     for(const auto& i:v)
@@ -22,8 +22,67 @@ std::ostream& operator<< (std::ostream& os, std::vector<float> v){
 using namespace djc;
 
 int main(){
+    //create some data
+
+/*
+    trainData<float> bigtd;
+
+    auto fidx = bigtd.addFeatureArray({1200, 5*4000, 10});
+    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
+        bigtd.featureArray(fidx).data()[i]=i;
+
+    bigtd.writeToFile("bigfile1.djctd");
+
+    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
+        bigtd.featureArray(fidx).data()[i]=2*i;
+
+    bigtd.writeToFile("bigfile2.djctd");
+
+    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
+        bigtd.featureArray(fidx).data()[i]=3*i;
+
+    bigtd.writeToFile("bigfile3.djctd");
+    bigtd.writeToFile("bigfile4.djctd");
 
 
+    bigtd.clear();
+
+
+
+    return 0; */
+
+    std::vector<std::string> filenames = {"bigfile1.djctd",
+            "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd",
+            "bigfile1.djctd",
+                        "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd",
+                        "bigfile1.djctd",
+                                    "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd"};
+
+
+    trainDataGenerator<float> gen;
+
+    size_t batchsize=100;
+
+    gen.setFileList(filenames);
+    gen.setBatchSize(batchsize);
+    gen.setNTotal(3*480);
+
+    size_t nepochs=3;
+
+    for(size_t e=0;e<nepochs;e++){
+        std::cout << "epoch " << e << std::endl;
+        gen.beginEpoch();
+        //one epoch makes 4 batches
+        for(size_t i=0;i<gen.getNBatches();i++){
+            auto b = gen.getBatch();
+            std::cout << "batch with " << b.nElements() << " elements" <<std::endl;
+           // sleep(0.1);
+        }
+        gen.endEpoch();
+    }
+
+/*
+    return 0;
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
@@ -161,5 +220,5 @@ int main(){
     trainData<float> rbig;
     rbig.readFromFile("bigfile.djctd");
     std::cout << "done reading file "<< std::endl;
-
+*/
 }

@@ -87,7 +87,7 @@ public:
 
     /*
      * Splits on first axis.
-     * Returns the second part, leaves the first.
+     * Returns the first part, leaves the second.
      * does memcopy for both pats now
      */
     simpleArray<T> split(size_t splitindex);
@@ -268,11 +268,11 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     memcpy(odata, data_, splitpoint * sizeof(T));
     memcpy(rdata, data_ + splitpoint, remaining * sizeof(T));
     delete data_;
-    out.data_ = rdata;
-    data_ = odata;
+    out.data_ = odata;
+    data_ = rdata;
     out.shape_ = shape_;
-    out.shape_.at(0) =  shape_.at(0) - splitindex;
-    shape_.at(0) = splitindex;
+    out.shape_.at(0) = splitindex;
+    shape_.at(0) = shape_.at(0) - splitindex;
     out.size_ = sizeFromShape(out.shape_);
     size_ = sizeFromShape(shape_);
     return out;

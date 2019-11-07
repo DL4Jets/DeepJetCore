@@ -71,6 +71,13 @@ public:
      */
     trainData<T> split(size_t splitindex);
 
+    size_t nElements()const{
+        if(feature_arrays_.size())
+            return feature_arrays_.at(0).getFirstDimension();
+        else
+            return 0;
+    }
+
     void writeToFile(std::string filename)const;
 
     void readFromFile(std::string filename);
@@ -114,7 +121,7 @@ const size_t trainData<T>::addWeightArray(std::vector<int> shape){
  */
 template<class T>
 void trainData<T>::truncate(size_t position){
-    split(position);
+    *this = split(position);
 }
 
 /*
@@ -122,6 +129,12 @@ void trainData<T>::truncate(size_t position){
  */
 template<class T>
 void trainData<T>::append(const trainData<T>& td) {
+    //allow empty append
+    if (!feature_arrays_.size() && !truth_arrays_.size()
+            && !weight_arrays_.size()) {
+        *this = td;
+        return;
+    }
     if (feature_arrays_.size() != td.feature_arrays_.size()
             || truth_arrays_.size() != td.truth_arrays_.size()
             || weight_arrays_.size() != td.weight_arrays_.size()) {
