@@ -28,7 +28,7 @@ classdict.so: classdict.cxx
 
 
 %: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx
-	g++ $(CFLAGS) -I./interface $(LINUXADD) $<  $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
+	g++ $(CFLAGS) -I./interface $(LINUXADD) $< -L. -ldeepjetcorehelpers -lquicklz  $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
 	mv $@ ../bin/
 
 #helpers
