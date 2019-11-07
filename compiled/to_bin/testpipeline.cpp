@@ -50,7 +50,7 @@ int main(){
 
 
     return 0; */
-
+/*
     std::vector<std::string> filenames = {"bigfile1.djctd",
             "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd",
             "bigfile1.djctd",
@@ -80,9 +80,9 @@ int main(){
         }
         gen.endEpoch();
     }
+*/
 
-/*
-    return 0;
+  //  return 0;
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
@@ -220,5 +220,5 @@ int main(){
     trainData<float> rbig;
     rbig.readFromFile("bigfile.djctd");
     std::cout << "done reading file "<< std::endl;
-*/
+
 }

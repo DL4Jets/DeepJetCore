@@ -78,12 +78,35 @@ public:
     //     rowsplits_ = rowsplits;
     // }
 
+
+    /////////// potentially dangerous operations for conversions, use with care ///////
+
     /*
      * Move data memory location to another object
      * This will reset the array. Read shapes, row splits etc. before
      * performing this operation!
      */
     T * disownData();
+
+    /*
+     * Object will not own the data. Merely useful for conversion
+     * with immediate writing to file
+     */
+    void assignData(T *d){
+        if(data_ && !assigned_)
+            delete data_;
+        data_=d;
+        assigned_=true;
+    }
+
+    /*
+     * Assigns a shape without checking it or creating a new data
+     * array. Will recalculate total size
+     */
+    void assignShape(std::vector<int> s){
+        shape_=s;
+        size_ = sizeFromShape(s);
+    }
 
     /*
      * Splits on first axis.
@@ -136,17 +159,18 @@ private:
     std::vector<int> shape_;
     std::vector<int> rowsplits_;
     size_t size_;
+    bool assigned_;
 };
 
 template<class T>
 simpleArray<T>::simpleArray() :
-        data_(0), size_(0) {
+        data_(0), size_(0),assigned_(false) {
 
 }
 
 template<class T>
 simpleArray<T>::simpleArray(std::vector<int> shape) :
-        data_(0), size_(0) {
+        data_(0), size_(0),assigned_(false) {
     shape_ = shape;
     data_ = new T[sizeFromShape(shape_)];
     size_ = sizeFromShape(shape_);
@@ -155,6 +179,7 @@ simpleArray<T>::simpleArray(std::vector<int> shape) :
 template<class T>
 simpleArray<T>::simpleArray(FILE *& ifile):simpleArray<T>(){
     readFromFile(ifile);
+    assigned_=false;
 }
 
 template<class T>
@@ -179,10 +204,11 @@ simpleArray<T>::simpleArray(simpleArray<T> && a) :
         simpleArray<T>() {
     if (&a == this)
         return;
-    if (data_)
+    if (data_&& !assigned_)
         delete data_;
     data_ = a.data_;
     a.data_ = 0;
+    assigned_ = a.assigned_;
     size_ = a.size_;
     a.size_ = 0;
     shape_ = std::move(a.shape_);
@@ -193,11 +219,12 @@ template<class T>
 simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
     if (&a == this)
         return *this;
-    if (data_)
+    if (data_ && !assigned_)
         delete data_;
     data_ = a.data_;
     a.data_ = 0;
     size_ = a.size_;
+    assigned_ = a.assigned_;
     a.size_ = 0;
     shape_ = std::move(a.shape_);
     rowsplits_ = std::move(a.rowsplits_);
@@ -206,7 +233,7 @@ simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
 
 template<class T>
 void simpleArray<T>::clear() {
-    if (data_)
+    if (data_&& !assigned_)
         delete data_;
     data_ = 0;
     shape_.clear();
@@ -267,7 +294,8 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
 
     memcpy(odata, data_, splitpoint * sizeof(T));
     memcpy(rdata, data_ + splitpoint, remaining * sizeof(T));
-    delete data_;
+    if(!assigned_)
+        delete data_;
     out.data_ = odata;
     data_ = rdata;
     out.shape_ = shape_;
@@ -314,7 +342,8 @@ void simpleArray<T>::append(const simpleArray<T>& a) {
     T * ndata = new T[size_ + a.size_];
     memcpy(ndata, data_, size_ * sizeof(T));
     memcpy(ndata + size_, a.data_, a.size_ * sizeof(T));
-    delete data_;
+    if(!assigned_)
+        delete data_;
     data_ = ndata;
     size_ = size_ + a.size_;
     shape_ = targetshape;
@@ -373,7 +402,7 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
     if (&a == this) {
         return;
     }
-    if (data_)
+    if (data_&& !assigned_)
         delete data_;
     data_ = new T[a.size_];
     memcpy(data_, a.data_, a.size_ * sizeof(T));
@@ -381,6 +410,7 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
     size_ = a.size_;
     shape_ = a.shape_;
     rowsplits_ = a.rowsplits_;
+    assigned_=false;
 }
 
 template<class T>

@@ -14,7 +14,7 @@
 #include <stdint.h>
 #include <string>
 #include <stdexcept>
-
+#include "IO.h"
 #include "version.h"
 
 #define QUICKLZ_MAXCHUNK (0xffffffff - 400)
@@ -90,14 +90,13 @@ void quicklz<T>::readHeader(FILE *& ifile) {
     chunksizes_.clear();
     totalbytes_ = 0;
     float version = 0;
-    fread(&version, 1, sizeof(float), ifile);
+    io::readFromFile(&version, ifile);
     if(version != DJCDATAVERSION)
         throw std::runtime_error("quicklz<T>::readHeader: incompatible version");
-    fread(&nchunks_, 1, 1, ifile);
+    io::readFromFile(&nchunks_,  ifile);
     chunksizes_ = std::vector<size_t>(nchunks_, 0);
-    size_t vecbytesize = nchunks_ * sizeof(size_t);
-    fread(&chunksizes_[0], 1, vecbytesize, ifile);
-    fread(&totalbytes_, 1, sizeof(size_t), ifile);
+    io::readFromFile(&chunksizes_[0], ifile, nchunks_);
+    io::readFromFile(&totalbytes_, ifile);
 }
 
 
@@ -114,7 +113,7 @@ size_t quicklz<T>::readCompressedBlock(FILE *& ifile, T * arr){
 
     while (chunk < nchunks_ && totalbytes_) {
         src = new char[chunksizes_.at(chunk)];
-        fread(src, 1, chunksizes_.at(chunk), ifile);
+        io::readFromFile(src, ifile, 0, chunksizes_.at(chunk));
         readbytes += qlz_size_decompressed(src);
 
         allread += qlz_decompress(src, arr, state_decompress_);
@@ -130,8 +129,8 @@ size_t quicklz<T>::readCompressedBlock(FILE *& ifile, T * arr){
         moreinfo += std::to_string(allread);
         delete state_decompress_;
         state_decompress_ = 0;
-        throw std::runtime_error(
-                "quicklz::readCompressedBlock: expected size and uncompressed size don't match");
+        throw std::runtime_error((
+                "quicklz::readCompressedBlock: expected size and uncompressed size don't match: "+moreinfo));
     }
     return allread / sizeof(T);
 }
@@ -181,11 +180,11 @@ void quicklz<T>::writeCompressed(T * arr, size_t size, FILE *& ofile) {
         startbyte += uselength;
     }
     float version = DJCDATAVERSION;
-    fwrite(&version,1,sizeof(float),ofile);
-    fwrite(&nchunks,1,1,ofile);
-    fwrite(&chunksizes[0],1,chunksizes.size()*sizeof(size_t),ofile);
-    fwrite(&length, 1, sizeof(size_t), ofile);
-    fwrite(dst, len2, 1, ofile);
+    io::writeToFile(&version,ofile);
+    io::writeToFile(&nchunks,ofile);
+    io::writeToFile(&chunksizes[0],ofile,chunksizes.size());
+    io::writeToFile(&length, ofile);
+    io::writeToFile(dst, ofile, 0, len2);
 
     //end
     delete dst;

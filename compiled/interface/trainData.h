@@ -55,6 +55,10 @@ public:
         return weight_arrays_.at(idx);
     }
 
+    size_t nFeatureArrays()const{return feature_arrays_.size();}
+    size_t nTruthArrays()const{return truth_arrays_.size();}
+    size_t nWeightArrays()const{return weight_arrays_.size();}
+
     /*
      * truncate all along first axis
      */
