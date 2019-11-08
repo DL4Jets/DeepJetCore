@@ -27,7 +27,9 @@ float deltaPhi(const float& phi1, const float& phi2);
 
 void checkTObject(const TObject * o, TString msg);
 
-
+/**
+ * transfers ownership of the data to numpy array - no copy.
+ */
 boost::python::numpy::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr);
 
 #endif /* DEEPJET_MODULES_INTERFACE_HELPER_H_ */

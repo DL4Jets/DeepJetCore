@@ -72,7 +72,7 @@ class TrainData(object):
         self.yshapes=[]
         self.wshapes=[]
         
-        self.nsamples=None
+        self.sourcefile=""
         
     def skim(self, event=0):
         xs=[]
@@ -86,65 +86,49 @@ class TrainData(object):
         for w in self.w:
             ws.append(w[event:event+1,...])
         self.clear()
-        self.nsamples=1
         self.x=xs
         self.y=ys
         self.w=ws 
+        for s in self.xshapes:
+            s[0]=1
+        for s in self.yshapes:
+            s[0]=1
+        for s in self.wshapes:
+            s[0]=1
         
-    # to be defined by user implementation
-    def definePredictionToRoot(self, prediction):
-        pass 
+    def getNTotal(self):
+        if len(self.xshapes) == 0 or len(self.xshapes[0]) == 0:
+            return 0
+        return self.xshapes[0][0]
     
-    def _getShapes(self, arrlist):
-        
-        outl=[]
-        for x in arrlist:
-            outl.append(x.shape)
-        shapes=[]
-        for s in outl:
-            _sl=[]
-            for i in range(len(s)):
-                if i:
-                    _sl.append(s[i])
-            s=(_sl)
-            if len(s)==0:
-                s.append(1)
-            shapes.append(s)
-    
-    def getFeatureShapes(self):
-        if not len(self.xshapes):
-            self.xshapes = _getShapes(x)
-        return self.xshapes
+    def getKerasFeatureShapes(self):
+        return [a.shape[1:] for a in self.xshapes]
     
     def getInputShapes(self):
-        print('TrainData:getInputShapes: Deprecated, use getFeatureShapes instead')
-        return getFeatureShapes()
+        print('TrainData:getInputShapes: Deprecated, use getKerasFeatureShapes instead')
+        return getKerasFeatureShapes()
         
-    def getTruthShapes(self):
-        if not len(self.yshapes):
-            self.yshapes = _getShapes(y)
-        return self.yshapes
+    def getKerasTruthShapes(self):
+        return [a.shape[1:] for a in self.yshapes]
     
     def writeToFile(self,filename):
         ctd.writeToFile(self.x,self.y,self.w,filename)
        
-    def readFromFile(self,fileprefix,shapesOnly=False):
-        self.x=[]
-        self.y=[]
-        self.w=[]
-        if shapesOnly:
+    def readFromFile(self,infile,shapesOnly=False):
+        '''
+        For debugging or getting shapes.
+        Don't use this function for a generator, use the C++ Generator instead!
+        '''
+        self.clear()
+        self.sourcefile=infile
+
+        shapes = ctd.readShapesFromFile(infile)
+        self.xshapes = shapes[0]
+        self.yshapes = shapes[1]
+        self.wshapes = shapes[2]
             
-            ### needs rework
-            shapes = ctd.readShapesFromFile(fileprefix)
-            self.xshapes = shapes[0][1:]
-            self.yshapes = []
-            if len(shapes[1]):
-                self.yshapes = shapes[1][1:]
-            self.wshapes = []
-            if len(shapes[2]):
-                self.wshapes = shapes[2][1:]
-                
-            ###
+        ###
+        if shapesOnly:
             return
         l = ctd.readFromFile(fileprefix)
         self.x = l[0]
@@ -157,15 +141,20 @@ class TrainData(object):
         self.readFromFile(fileprefix,shapesOnly)
         
         
-    def convertFromSourceFile(self, filename, weighterobjects):
-        pass
-    
+        
+    ################# functions to be defined by the user    
+        
     def createWeighterObjects(self, allsourcefiles):
         '''
         Will be called on the full list of source files once.
         Can be used to create weighter objects or similar that can
-        then be applied to each individual conversion
+        then be applied to each individual conversion.
+        Should return a dictionary
         '''
-        return ()
+        return {}
+    
+    def convertFromSourceFile(self, filename, weighterobjects):
+        pass
+    
     
 

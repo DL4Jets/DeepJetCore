@@ -33,15 +33,13 @@ public:
     void setFileList(const std::vector<std::string>& files){
         orig_infiles_=files;
         shuffled_infiles_=orig_infiles_;
+        readNTotal();
     }
     void setBatchSize(size_t nelements){
         batchsize_=nelements;
         nbatches_ = ntotal_/batchsize_;
     }
-    void setNTotal(size_t n){
-        ntotal_=n;
-        nbatches_ = ntotal_/batchsize_;
-    }
+    size_t getNTotal()const{return ntotal_;}
 
     void setFileTimeout(size_t seconds){
         filetimeout_=seconds;
@@ -52,11 +50,10 @@ public:
     }
 
     bool lastBatch()const{
-        return nprocessed_ >= nbatches_;
+        return nsamplesprocessed_ >= ntotal_ - lastbatchsize_;
     }
 
-    void beginEpoch();
-    void endEpoch();
+    void prepareNextEpoch();
 
     /**
      * gets Batch. If batchsize is specified, it is up to the user
@@ -70,6 +67,7 @@ public:
 private:
     void shuffleFilelist();
     void readBuffer();
+    void readNTotal();
     std::vector<std::string> orig_infiles_;
     std::vector<std::string> shuffled_infiles_;
     int randomcount_;
@@ -81,7 +79,8 @@ private:
     size_t filecount_;
     size_t nbatches_;
     size_t ntotal_;
-    size_t nprocessed_;
+    size_t nsamplesprocessed_;
+    size_t lastbatchsize_;
     size_t filetimeout_;
 };
 
@@ -91,7 +90,7 @@ bool trainDataGenerator<T>::debug = false;
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :
         randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
-                0), ntotal_(0), nprocessed_(0),filetimeout_(10) {
+                0), ntotal_(0), nsamplesprocessed_(0),filetimeout_(10) {
 }
 
 template<class T>
@@ -127,19 +126,24 @@ void trainDataGenerator<T>::readBuffer(){
 }
 
 
-
-
 template<class T>
-void trainDataGenerator<T>::beginEpoch(){
-    if(!readthread_){//no pre-read going on
-        nprocessed_=0;
-        filecount_=0;
-        buffer_store.clear();
-        buffer_read.clear();
+void trainDataGenerator<T>::readNTotal(){
+    ntotal_=0;
+    for(const auto& f: orig_infiles_){
+        trainData<T> td;
+        std::vector<std::vector<int> > fs, ts, ws;
+        td.readShapesFromFile(f,fs, ts, ws);
+        //first dimension is always Nelements. At least features are filled
+        if(fs.size()<1 || fs.at(0).size()<1)
+            throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object");
+        ntotal_ += fs.at(0).at(0);
     }
+    nbatches_ = ntotal_/batchsize_;
 }
+
+
 template<class T>
-void trainDataGenerator<T>::endEpoch(){
+void trainDataGenerator<T>::prepareNextEpoch(){
 
     //prepare for next epoch, pre-read first file
     if(readthread_){
@@ -148,10 +152,10 @@ void trainDataGenerator<T>::endEpoch(){
     }
     buffer_store.clear();
     buffer_read.clear();
+    filecount_=0;
+    nsamplesprocessed_=0;
 
     shuffleFilelist();
-    filecount_=0;
-    nprocessed_=0;
     nextread_ = shuffled_infiles_.at(filecount_);
     readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
 }
@@ -163,7 +167,7 @@ trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
 
     if(!batchsize)
         batchsize=batchsize_;
-
+    lastbatchsize_=batchsize;
     while(bufferelements<batchsize){
         //if thread, read join
         if(readthread_){
@@ -176,10 +180,10 @@ trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
         bufferelements = buffer_store.nElements();
 
         if(debug)
-            std::cout << "batch " << nprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
+            std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
             << " file read " << nextread_ << " totalfiles " << shuffled_infiles_.size() << std::endl;
 
-        if(nprocessed_ + bufferelements < ntotal_){
+        if(nsamplesprocessed_ + bufferelements < ntotal_){
             if (filecount_ >= shuffled_infiles_.size())
                 throw std::runtime_error(
                         "trainDataGenerator<T>::getBatch: more batches requested than data in the sample");
@@ -189,7 +193,7 @@ trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
             readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
         }
     }
-    nprocessed_+=batchsize_;
+    nsamplesprocessed_+=batchsize;
     return buffer_store.split(batchsize);
 }
 

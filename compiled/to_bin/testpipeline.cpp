@@ -28,30 +28,19 @@ int main(){
     if(write){
         trainData<float> bigtd;
 
-        auto fidx = bigtd.addFeatureArray({100, 5*4000, 10});
+        auto fidx = bigtd.addFeatureArray({1000, 4000, 10});
         for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
             bigtd.featureArray(fidx).data()[i]=i;
 
-        fidx = bigtd.addTruthArray({100, 2, 3});
+        fidx = bigtd.addTruthArray({1000, 2, 3});
         for(size_t i=0;i<bigtd.truthArray(fidx).size();i++)
             bigtd.truthArray(fidx).data()[i]=i;
 
         bigtd.writeToFile("bigfile1.djctd");
+        bigtd.writeToFile("bigfile2.djctd");
+        bigtd.writeToFile("bigfile3.djctd");
+        bigtd.writeToFile("bigfile4.djctd");
 
-
-        /*
-    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
-        bigtd.featureArray(fidx).data()[i]=2*i;
-
-    bigtd.writeToFile("bigfile2.djctd");
-
-    for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
-        bigtd.featureArray(fidx).data()[i]=3*i;
-
-    bigtd.writeToFile("bigfile3.djctd");
-    bigtd.writeToFile("bigfile4.djctd");
-
-         */
         bigtd.clear();
         return 1;
     }
@@ -69,8 +58,7 @@ int main(){
                 std::cout << s << std::endl;
 
 
-    return 0;
-    /*
+
 
     std::vector<std::string> filenames = {"bigfile1.djctd",
             "bigfile2.djctd", "bigfile3.djctd","bigfile4.djctd",
@@ -84,26 +72,28 @@ int main(){
 
     size_t batchsize=100;
 
+    std::cout << "set files" <<std::endl;
     gen.setFileList(filenames);
     gen.setBatchSize(batchsize);
-    gen.setNTotal(3*480);
 
     size_t nepochs=3;
+    std::cout << "start" <<std::endl;
 
     for(size_t e=0;e<nepochs;e++){
         std::cout << "epoch " << e << std::endl;
-        gen.beginEpoch();
         //one epoch makes 4 batches
         for(size_t i=0;i<gen.getNBatches();i++){
             auto b = gen.getBatch();
             std::cout << "batch with " << b.nElements() << " elements" <<std::endl;
            // sleep(0.1);
         }
-        gen.endEpoch();
+        gen.prepareNextEpoch();
     }
 
 
     return 0;
+
+
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
@@ -242,5 +232,5 @@ int main(){
     rbig.readFromFile("bigfile.djctd");
     std::cout << "done reading file "<< std::endl;
 
-*/
+
 }

@@ -66,8 +66,8 @@ public:
     // row splits are indicated by a merged dimension with negative sign
     // always merge to previous dimension
     // e.g. A x B x C x D, where B is ragged would get shape
-    // -A*B x C x D
-    // Only one ragged dimension is supported!
+    // A x -A*B x C x D
+    // Only one ragged dimension is supported, first dimension MUST NOT be ragged
     // Still to be implemented. All read/write functions already include this data
     //
     // const std::vector<int>& rowsplits() const {
@@ -254,10 +254,7 @@ template<class T>
 size_t simpleArray<T>::getFirstDimension()const{
     if(!size_ || !shape_.size())
         return 0;
-    if(shape_.at(0)>0)
-        return shape_.at(0);
-    else
-        return rowsplits_.size();
+    return shape_.at(0);
 }
 
 template<class T>
@@ -417,8 +414,13 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
 template<class T>
 int simpleArray<T>::sizeFromShape(std::vector<int> shape) const {
     int size = 1;
-    for (const auto s : shape)
+    size_t previous=1;
+    for (const auto s : shape){
         size *= std::abs(s);
+        if(s<0)
+            size/=previous;
+        previous=s;
+    }
     return size;
 }
 template<class T>
@@ -437,6 +439,8 @@ void simpleArray<T>::checkSize(size_t idx)const{
         throw std::out_of_range("simpleArray<T>::checkSize: index out of range");
 }
 
+
+//no row split support here!!
 
 
 template<class T>

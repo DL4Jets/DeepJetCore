@@ -296,10 +296,6 @@ void trainData<T>::writeNested(const std::vector<std::vector<U> >& v, FILE *& of
         if(nsize==0)
             continue;
         io::writeToFile(&(v.at(i).at(0)),ofile,nsize);
-
-        std::cout << "vec " << i <<std::endl;
-        for(size_t j=0;j<nsize;j++)
-            std::cout << v.at(i).at(j) << std::endl;
     }
 
 }
@@ -311,14 +307,12 @@ void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)con
     size_t size = 0;
     io::readFromFile(&size, ifile);
     v.resize(size,std::vector<U>(0));
-    std::cout << "tot " << size << std::endl;
     for(size_t i=0;i<size;i++){
         size_t nsize = 0;
         io::readFromFile(&nsize, ifile);
         v.at(i).resize(nsize);
         if(nsize==0)
             continue;
-        std::cout << "vec " << i << " size "<< nsize << std::endl;
         io::readFromFile(&(v.at(i).at(0)),ifile,nsize);
     }
 
