@@ -8,7 +8,7 @@
 
 from argparse import ArgumentParser
 
-parser = ArgumentParser('simple program to convert root tuples to traindata format')
+parser = ArgumentParser('simple program to convert old (pre 2.0) traindata format to the new one')
 parser.add_argument("infile", help="input \"meta\" file")
 # process options
 args=parser.parse_args()

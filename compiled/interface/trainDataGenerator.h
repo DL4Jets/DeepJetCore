@@ -30,6 +30,9 @@ public:
     trainDataGenerator();
     ~trainDataGenerator();
 
+    /**
+     * Also opens all files (verify) and gets the total sample size
+     */
     void setFileList(const std::vector<std::string>& files){
         orig_infiles_=files;
         shuffled_infiles_=orig_infiles_;
@@ -62,8 +65,7 @@ public:
      */
     trainData<T> getBatch(size_t batchsize=0);
 
-    static bool debug;
-
+    bool debug;
 private:
     void shuffleFilelist();
     void readBuffer();
@@ -84,11 +86,9 @@ private:
     size_t filetimeout_;
 };
 
-template<class T>
-bool trainDataGenerator<T>::debug = false;
 
 template<class T>
-trainDataGenerator<T>::trainDataGenerator() :
+trainDataGenerator<T>::trainDataGenerator() :debug(false),
         randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
                 0), ntotal_(0), nsamplesprocessed_(0),filetimeout_(10) {
 }
@@ -96,6 +96,10 @@ trainDataGenerator<T>::trainDataGenerator() :
 template<class T>
 trainDataGenerator<T>::~trainDataGenerator(){
     if(readthread_){
+        //try{
+        //    delete readthread_;
+        //}catch(...){}
+        //buffer_read.clear();
         readthread_->join();
         delete readthread_;
     }
@@ -149,6 +153,11 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     if(readthread_){
         readthread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
         delete readthread_;
+
+        //try{ //brute force but might be ok
+        //    delete readthread_;
+        //}catch(...){}
+        //buffer_read.clear();
     }
     buffer_store.clear();
     buffer_read.clear();

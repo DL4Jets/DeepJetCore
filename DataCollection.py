@@ -5,13 +5,16 @@ Created on 21 Feb 2017
 '''
 
 
-'''
-So far self.nsamples might be not useful
-also,  _readNTotal might not be needed.
-Check at a later stage
-'''
-
+from DeepJetCore.TrainData import TrainData
 from DeepJetCore.compiled.c_dataGenerator import numpyGenerator
+import tempfile
+import pickle
+import shutil
+import os
+import keras 
+
+    
+
 
 class DataCollection(object):
     '''
@@ -82,8 +85,8 @@ class DataCollection(object):
         if not len(self.samples):
             return 0
         gen = numpyGenerator()
-        gen.setFileList(self.samples)
-        return gen.readNTotal()
+        gen.setFileList([self.dataDir+"/"+s for s in self.samples])
+        return gen.getNTotal()
         
         
     def removeLast(self):
@@ -165,7 +168,7 @@ class DataCollection(object):
             pickle.dump(self.samples, fd,protocol=0 )
             pickle.dump(self.sourceList, fd,protocol=0 )
             pickle.dump(self.dataclass, fd,protocol=0 )
-            pickle.dump(self.self.weighterobjects, fd, protocol=0)
+            pickle.dump(self.weighterobjects, fd, protocol=0)
 
         shutil.move(fd.name, filename)
         
@@ -525,34 +528,30 @@ class DataCollection(object):
                 
         return out
     
+    def prepareGenerator(self):
+        
+        self.gen = numpyGenerator()
+        self.gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
+        self.gen.setBatchSize(self.__batchsize)
         
     def generator(self):
-        
-        gen = numpyGenerator()
-        gen.setFileList(self.samples)
-        gen.setBatchSize(self.__batchsize)
-        gen.readNTotal() #also a good check if all files are accessible
-        self.__nsamples = gen.getNTotal()
-        
-        
         while(1):
-            
-            data = gen.getBatch(0)#in principle batch sizes can differ from batch to batch
-            xout = data[0]
-            yout = data[1]
-            wout = data[2]
-            
-            if gen.lastBatch(): # returns true if less than the previous batch size remains
-                gen.prepareNextEpoch()
-            
-            if len(wout)>0:
-                yield (xout,yout,wout)
-            else:
-                yield (xout,yout)
-            
-            
-
-    
-    
-    
+            try:
+                data = self.gen.getBatch(0)#in principle batch sizes can differ from batch to batch
+                xout = data[0]
+                yout = data[1]
+                wout = data[2]
+                
+                if self.gen.lastBatch(): # returns true if less than the previous batch size remains
+                    self.gen.prepareNextEpoch()
+                    print('DataCollection.generator: new epoch (for monitoring right now...)')
+                
+                if len(wout)>0:
+                    yield (xout,yout,wout)
+                else:
+                    yield (xout,yout)
+            except BaseException as e:
+                del gen
+                raise e 
+        
     

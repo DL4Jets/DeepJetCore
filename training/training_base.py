@@ -16,11 +16,7 @@ from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from pdb import set_trace
 import keras
-if float(keras.__version__[2:5]) >= 2.2:
-    from keras.utils import multi_gpu_model
-else:
-    def multi_gpu_model(m, ngpus):
-        return m
+from keras.utils import multi_gpu_model
 
 import imp
 try:
@@ -55,8 +51,6 @@ custom_objects_list.update(global_metrics_list)
 from keras.models import Model
 class ModelMGPU(Model):
     def __init__(self, ser_model, gpus):
-        if float(keras.__version__[2:5]) < 2.2:
-            print('multi gpu option from keras >= 2.2.2 is NOT available for now. (see DJC issues 28 and 30)')
         pmodel = multi_gpu_model(ser_model, gpus)
         self.__dict__.update(pmodel.__dict__)
         self._smodel = ser_model
@@ -121,7 +115,7 @@ class training_base(object):
             try:
                 imp.find_module('setGPU')
                 import setGPU
-            except ImportError:
+            except :
                 found = False
         else:
             os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
@@ -211,8 +205,7 @@ class training_base(object):
         
 
 
-        shapes=self.train_data.getInputShapes()
-        self.train_data.maxFilesOpen=-1
+        shapes=self.train_data.getKerasFeatureShapes()
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
@@ -243,35 +236,10 @@ class training_base(object):
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
-        self.keras_model=model(self.keras_inputs,
-                               self.train_data.getNClassificationTargets(),
-                               self.train_data.getNRegressionTargets(),
-                               **modelargs)
+        self.keras_model=model(self.keras_inputs,**modelargs)
         if not self.keras_model:
             raise Exception('Setting model not successful') 
         
-    def setGANModel(self, generator_func, discriminator_func):
-        '''
-        The inputs are functions that generate a keras Model 
-        The GAN output must match the discriminator input.
-        The first and only function argument of the discriminator must be the input.
-        The generator MUST get the same input. (e.g. both get a list of which one item is the
-        discriminator input, the other the generator input)
-        '''  
-        self.GAN_mode = True
-        self.create_generator     = generator_func
-        self.create_discriminator = discriminator_func
-        
-    def _create_gan(self,discriminator, generator, gan_input):
-        import keras
-        x = generator(gan_input)
-        gan_output = discriminator(x)
-        gan = keras.models.Model(inputs=gan_input, outputs=gan_output)
-        return gan
-        
-    def defineCustomPredictionLabels(self, labels):
-        self.train_data.defineCustomPredictionLabels(labels)
-        self.val_data.defineCustomPredictionLabels(labels)
     
     def saveCheckPoint(self,addstring=''):
         
@@ -406,18 +374,6 @@ class training_base(object):
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
         
-        averagesamplesperfile=self.train_data.getAvEntriesPerFile()
-        samplespreread=maxqsize*batchsize
-        nfilespre=max(int(samplespreread/averagesamplesperfile),1)
-        nfilespre=min(nfilespre, len(self.train_data.samples)-1)
-        #if nfilespre>15:nfilespre=15
-        print('best pre read: '+str(nfilespre)+'  a: '+str(int(averagesamplesperfile)))
-        print('total sample size: '+str(self.train_data.nsamples))
-        #exit()
-        
-        if self.train_data.maxFilesOpen<0 or True:
-            self.train_data.maxFilesOpen=nfilespre
-            self.val_data.maxFilesOpen=2
         
     def trainModel(self,
                    nepochs,
@@ -437,13 +393,6 @@ class training_base(object):
                    **trainargs):
         
         
-        # check a few things, e.g. output dimensions etc.
-        # need implementation, but probably TF update SWAPNEEL
-        customtarget=self.train_data.getCustomPredictionLabels()
-        if customtarget:
-            pass
-            # work on self.model.outputs
-            # check here if the output dimension of the model fits the custom labels
         
         # write only after the output classes have been added
         self._initTraining(nepochs,batchsize,maxqsize)
@@ -487,6 +436,8 @@ class training_base(object):
                                  validation_data=(X_test, Y_test),
                                  **trainargs)
         else:
+            self.train_data.prepareGenerator()
+            self.val_data.prepareGenerator()
             self.keras_model.fit_generator(self.train_data.generator() ,
                                            steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
                                            epochs=nepochs-self.trainedepoches,
@@ -495,7 +446,7 @@ class training_base(object):
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
                                            max_queue_size=maxqsize,
                                            #max_q_size=1,
-                                           use_multiprocessing=True, #the threading one doe not loke DJC
+                                           use_multiprocessing=False, #the threading one doe not loke DJC
                                            **trainargs)
         
         self.trainedepoches=nepochs

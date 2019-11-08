@@ -23,8 +23,6 @@ truth=dc.getAllLabels()
 print('producing weight array')
 weight=dc.getAllWeights()
 
-print('producing means and norms array')
-means=dc.means
 
 from numpy import save
 
@@ -38,4 +36,3 @@ for i in range(len(truth)):
 for i in range(len(weight)):
     save(args.outputFilePrefix+'_weights_'+str(i) +'.npy', weight[i])
     
-save(args.outputFilePrefix+'_meansandnorms.npy', means)

@@ -102,14 +102,14 @@ class TrainData(object):
         return self.xshapes[0][0]
     
     def getKerasFeatureShapes(self):
-        return [a.shape[1:] for a in self.xshapes]
+        return [a[1:] for a in self.xshapes]
     
     def getInputShapes(self):
         print('TrainData:getInputShapes: Deprecated, use getKerasFeatureShapes instead')
         return getKerasFeatureShapes()
         
     def getKerasTruthShapes(self):
-        return [a.shape[1:] for a in self.yshapes]
+        return [a[1:] for a in self.yshapes]
     
     def writeToFile(self,filename):
         ctd.writeToFile(self.x,self.y,self.w,filename)
@@ -122,6 +122,7 @@ class TrainData(object):
         self.clear()
         self.sourcefile=infile
 
+        print('infile',infile)
         shapes = ctd.readShapesFromFile(infile)
         self.xshapes = shapes[0]
         self.yshapes = shapes[1]
@@ -156,5 +157,6 @@ class TrainData(object):
     def convertFromSourceFile(self, filename, weighterobjects):
         pass
     
-    
+    def writeOutPrediction(self, predicted, features, truth, weights, outfilename):
+        pass
 
