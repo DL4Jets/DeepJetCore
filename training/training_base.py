@@ -236,7 +236,11 @@ class training_base(object):
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
-        self.keras_model=model(self.keras_inputs,**modelargs)
+        try:
+            self.keras_model=model(self.keras_inputs,**modelargs)
+        except BaseException as e:
+            print('problem in setting model. Reminder: since DJC 2.0, NClassificationTargets and RegressionTargets must not be specified anymore')
+            raise e
         if not self.keras_model:
             raise Exception('Setting model not successful') 
         
@@ -349,7 +353,7 @@ class training_base(object):
         
     def _initTraining(self,
                       nepochs,
-                     batchsize,maxqsize):
+                     batchsize):
         
         
         if self.submitbatch:
@@ -384,7 +388,6 @@ class training_base(object):
                    lr_epsilon=0.003, 
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
-                   maxqsize=3, 
                    checkperiod=10,
                    additional_plots=None,
                    additional_callbacks=None,
@@ -395,7 +398,7 @@ class training_base(object):
         
         
         # write only after the output classes have been added
-        self._initTraining(nepochs,batchsize,maxqsize)
+        self._initTraining(nepochs,batchsize)
         
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
@@ -436,15 +439,13 @@ class training_base(object):
                                  validation_data=(X_test, Y_test),
                                  **trainargs)
         else:
-            self.train_data.prepareGenerator()
-            self.val_data.prepareGenerator()
             self.keras_model.fit_generator(self.train_data.generator() ,
                                            steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
                                            epochs=nepochs-self.trainedepoches,
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generator(),
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                                           max_queue_size=maxqsize,
+                                           max_queue_size=1,
                                            #max_q_size=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC
                                            **trainargs)
@@ -472,7 +473,7 @@ class training_base(object):
                      additional_plots=None,
                    additional_callbacks=None):
         
-        self._initTraining(nepochs,batchsize,maxqsize=5)
+        self._initTraining(nepochs,batchsize)
         
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks

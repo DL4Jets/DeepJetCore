@@ -12,8 +12,11 @@ import pickle
 import shutil
 import os
 import keras 
-
-    
+import copy
+import time
+import logging
+from stopwatch import stopwatch
+logger = logging.getLogger(__name__)
 
 
 class DataCollection(object):
@@ -31,6 +34,7 @@ class DataCollection(object):
                 raise Exception("no valid datacollection found in "+infile)
             
         self.weighterobjects={}
+        self.batch_mode = False
         
     def clear(self):
         self.samples=[]
@@ -254,7 +258,7 @@ class DataCollection(object):
         finishedsamples=len(self.samples)
         
         self.__writeData_async_andCollect(finishedsamples,outputDir)
-        self.writeToFile(outputDir+'/dataCollection.dc')
+        self.writeToFile(outputDir+'/dataCollection.djcdc')
         
     
     def createDataFromRoot(
@@ -313,7 +317,7 @@ class DataCollection(object):
         td.clear()
         
         if not self.batch_mode:
-            self.writeToFile(outputDir+'/snapshot.dc')
+            self.writeToFile(outputDir+'/snapshot.djcdc')
             
         
     def __writeData_async_andCollect(self, startindex, outputDir):
@@ -323,8 +327,8 @@ class DataCollection(object):
         wo_queue = Queue()
         writelock=Lock()
         thispid=str(os.getpid())
-        if not self.batch_mode and not os.path.isfile(outputDir+'/snapshot.dc'):
-            self.writeToFile(outputDir+'/snapshot.dc')
+        if not self.batch_mode and not os.path.isfile(outputDir+'/snapshot.djcdc'):
+            self.writeToFile(outputDir+'/snapshot.djcdc')
         
         tempstoragepath='/dev/shm/'+thispid
         
@@ -362,12 +366,12 @@ class DataCollection(object):
             out_samplename=''
             out_sampleentries=0
             sbasename = os.path.basename(sample)
-            newname = sbasename[:sbasename.rfind('.')]+'djctd'
+            newname = sbasename[:sbasename.rfind('.')]+'.djctd'
             newpath=os.path.abspath(outputDir+newname)
             
             try:
-                logger.info('readFromSourceFile')
-                td.readFromSourceFile(tmpinput, self.weighterobjects)
+                logger.info('convertFromSourceFile')
+                td.convertFromSourceFile(tmpinput, self.weighterobjects)
                 logger.info('writeOut')
                 #wrlck.acquire()
                 td.writeToFile(newpath)
@@ -395,8 +399,8 @@ class DataCollection(object):
             self.nsamples+=sampleentries
             self.sampleentries.append(sampleentries)
             if not self.batch_mode:
-                self.writeToFile(outputDir+'/snapshot_tmp.dc')#avoid to overwrite directly
-                os.system('mv '+outputDir+'/snapshot_tmp.dc '+outputDir+'/snapshot.dc')
+                self.writeToFile(outputDir+'/snapshot_tmp.djcdc')#avoid to overwrite directly
+                os.system('mv '+outputDir+'/snapshot_tmp.djcdc '+outputDir+'/snapshot.djcdc')
             
         processes=[]
         processrunning=[]
@@ -470,11 +474,11 @@ class DataCollection(object):
         
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir, 
             takeweightersfrom='', means_only=False,
-            output_name='dataCollection.dc',
+            output_name='dataCollection.djcdc',
             relpath=''):
         
         newmeans=True
-        if takemeansfrom:
+        if takeweightersfrom:
             self.readFromFile(takeweightersfrom)
             newmeans=False
         self.readSourceListFromFile(inputfile, relpath=relpath)
@@ -528,23 +532,24 @@ class DataCollection(object):
                 
         return out
     
-    def prepareGenerator(self):
-        
-        self.gen = numpyGenerator()
-        self.gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
-        self.gen.setBatchSize(self.__batchsize)
-        
+    
     def generator(self):
+        
+        gen = numpyGenerator()
+        gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
+        gen.setBatchSize(self.__batchsize)
+        gen.debug = False
+        gen.prepareNextEpoch()
+        
         while(1):
             try:
-                data = self.gen.getBatch(0)#in principle batch sizes can differ from batch to batch
+                data = gen.getBatch(0)#in principle batch sizes can differ from batch to batch
                 xout = data[0]
                 yout = data[1]
                 wout = data[2]
                 
-                if self.gen.lastBatch(): # returns true if less than the previous batch size remains
-                    self.gen.prepareNextEpoch()
-                    print('DataCollection.generator: new epoch (for monitoring right now...)')
+                if gen.lastBatch(): # returns true if less than the previous batch size remains
+                    gen.prepareNextEpoch()
                 
                 if len(wout)>0:
                     yield (xout,yout,wout)

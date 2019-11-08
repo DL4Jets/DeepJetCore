@@ -113,7 +113,7 @@ if testdatafor:
     logging.info('converting test data, no weights applied')
     dc.createTestDataForDataCollection(
         testdatafor, infile, outPath, 
-        outname=(args.batch if args.batch else 'dataCollection.dc'),
+        outname=(args.batch if args.batch else 'dataCollection.djcdc'),
         traind=(traind(class_args) if traind else None),
         relpath=relpath
     )    
@@ -123,15 +123,15 @@ elif args.means:
     dc.convertListOfRootFiles(
         infile, traind(class_args) if class_args else traind(), outPath,
         means_only=True,
-        output_name='batch_template.dc',
+        output_name='batch_template.djcdc',
         relpath=relpath
     )
 else:
     logging.info('Start conversion')
     dc.convertListOfRootFiles(
         infile, traind(class_args) if class_args else traind(), outPath, 
-        takemeansfrom=usemeansfrom,
-        output_name=(args.batch if args.batch else 'dataCollection.dc'),
+        takeweightersfrom=usemeansfrom,
+        output_name=(args.batch if args.batch else 'dataCollection.djcdc'),
         relpath=relpath
     )
 

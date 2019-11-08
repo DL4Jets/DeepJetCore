@@ -3,7 +3,61 @@ from DeepJetCore.TrainData import fileTimeOut
 import numpy
 
 
-class base_traindata_batchex(TrainData):
+class baseTDTesting(TrainData):
+    def __init__(self):
+        import numpy
+        TrainData.__init__(self)
+    
+    def readTreeFromRootToTuple(self, filenames, limit=None, branches=None):
+        '''
+        To be used to get the initial tupel for further processing in inherting classes
+        Makes sure the number of entries is properly set
+        
+        can also read a list of files (e.g. to produce weights/removes from larger statistics
+        (not fully tested, yet)
+        '''
+        
+        if branches is None or len(branches) == 0:
+            return numpy.array([],dtype='float32')
+            
+        #print(branches)
+        #remove duplicates
+        usebranches=list(set(branches))
+        tmpbb=[]
+        for b in usebranches:
+            if len(b):
+                tmpbb.append(b)
+        usebranches=tmpbb
+            
+        import ROOT
+        from root_numpy import tree2array, root2array
+        if isinstance(filenames, list):
+            for f in filenames:
+                fileTimeOut(f,120)
+            print('add files')
+            nparray = root2array(
+                filenames, 
+                treename = self.treename, 
+                stop = limit,
+                branches = usebranches
+                )
+            print('done add files')
+            return nparray
+            print('add files')
+        else:    
+            fileTimeOut(filenames,120) #give eos a minute to recover
+            rfile = ROOT.TFile(filenames)
+            tree = rfile.Get(self.treename)
+            if not self.nsamples:
+                self.nsamples=tree.GetEntries()
+            nparray = tree2array(tree, stop=limit, branches=usebranches)
+            return nparray
+    
+    def addBranches(self, br, cut):
+        self.branches.append(br)
+        self.branchcutoffs.append(cut)
+
+class base_traindata_batchex(baseTDTesting):
     
     def __init__(self):
         import numpy
@@ -17,30 +71,18 @@ class base_traindata_batchex(TrainData):
         self.referenceclass='class1'
         
         
-        self.registerBranches(self.truthclasses)
-        self.registerBranches(['x'])
-        
-        self.weightbranchX='x'
-        self.weightbranchY='x'
-        
-        self.weight_binX = numpy.array([-1,0.9,2.0],dtype=float)
-        
-        self.weight_binY = numpy.array(
-            [-1,0.9,2.0],
-            dtype=float
-            )
 
         
              
-        def reduceTruth(self, tuple_in):
+    def reduceTruth(self, tuple_in):
+    
+        self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDS','isG']
+        if tuple_in is not None:
+            class1 = tuple_in['class1'].view(numpy.ndarray)
         
-            self.reducedtruthclasses=['isB','isBB','isLeptB','isC','isUDS','isG']
-            if tuple_in is not None:
-                class1 = tuple_in['class1'].view(numpy.ndarray)
+            class2 = tuple_in['class2'].view(numpy.ndarray)
             
-                class2 = tuple_in['class2'].view(numpy.ndarray)
-                
-                return numpy.vstack((class1,class2)).transpose()    
+            return numpy.ascontiguousarray(numpy.array(numpy.vstack((class1,class2)).transpose(),dtype='float32'))
   
         
  
@@ -50,10 +92,8 @@ class TrainData_testBatch(base_traindata_batchex):
 
     def __init__(self):
         base_traindata_batchex.__init__(self)
-        self.addBranches(['x'])
 
-    def readFromRootFile(self,filename,TupleMeanStd,weighter):
-
+    def convertFromSourceFile(self, filename, weighterobjects):
 
         from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
         import numpy
@@ -75,22 +115,26 @@ class TrainData_testBatch(base_traindata_batchex):
         # split for convolutional network
         
         x_global = MeanNormZeroPad(filename,None,
-                                   [self.branches[0]],
-                                   [self.branchcutoffs[0]],self.nsamples)
+                                   ['x'],
+                                   [1],self.nsamples)
         
         print('took ', sw.getAndReset(), ' seconds for mean norm and zero padding (C module)')
         
-        Tuple = self.readTreeFromRootToTuple(filename)
+        Tuple = self.readTreeFromRootToTuple(filename, branches = ['class1','class2','x'])
         
        
         truthtuple =  Tuple[self.truthclasses]
+        
         alltruth=self.reduceTruth(truthtuple)
         
+        print(x_global.shape,x_global[0:10])
+        print(alltruth.shape,alltruth[0:10])
+        print(alltruth.flags)
+        
         newnsamp=x_global.shape[0]
-        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
-        print(x_global.shape,self.nsamples)
+        print(x_global.shape, alltruth.shape, self.nsamples)
 
         self.w=[]
         self.x=[x_global]
@@ -101,7 +145,7 @@ class TrainData_testBatch(base_traindata_batchex):
         
         
 
-class TrainDataDeepJet_base(TrainData):
+class TrainDataDeepJet_base(baseTDTesting):
     '''
     Base class for DeepJet.
     TO create own b-tagging trainings, please inherit from this class
@@ -119,28 +163,18 @@ class TrainDataDeepJet_base(TrainData):
                            'isGCC','isUD','isS','isG','isUndefined']
         
         
-        #standard branches
-        self.registerBranches(self.undefTruth)
-        self.registerBranches(self.truthclasses)
-        self.registerBranches(['jet_pt','jet_eta'])
+
         
-        self.weightbranchX='jet_pt'
-        self.weightbranchY='jet_eta'
-        
-        self.weight_binX = numpy.array([
-                10,25,30,35,40,45,50,60,75,100,
-                125,150,175,200,250,300,400,500,
-                600,2000],dtype=float)
-        
-        self.weight_binY = numpy.array(
-            [-2.5,-2.,-1.5,-1.,-0.5,0.5,1,1.5,2.,2.5],
-            dtype=float
-            )
-        
-        
-             
+        self.branches=[]
         self.reduceTruth(None)
-        
+    
+    def reduceTruth(self, tuple_in):
+        pass
+    
+
+    
+
+
 
 class TrainData_fullTruth_base(TrainDataDeepJet_base):
     def __init__(self):
@@ -171,8 +205,7 @@ class TrainData_fullTruth_base(TrainDataDeepJet_base):
             
             g = tuple_in['isG'].view(numpy.ndarray)
             
-            
-            return numpy.vstack((b,bb+gbb,lepb,c+cc+gcc,uds,g)).transpose() 
+            return numpy.ascontiguousarray(numpy.array(numpy.vstack((b,bb+gbb,lepb,c+cc+gcc,uds,g)).transpose() ,dtype='float32'))
 
 
 class TrainData_testQueue(TrainData_fullTruth_base):
@@ -250,8 +283,7 @@ class TrainData_testQueue(TrainData_fullTruth_base):
 
         
         
-       
-    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+    def convertFromSourceFile(self, filename, weighterobjects):
         from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
         import numpy
         from DeepJetCore.stopwatch import stopwatch
@@ -271,19 +303,19 @@ class TrainData_testQueue(TrainData_fullTruth_base):
         
         # split for convolutional network
         
-        x_global = MeanNormZeroPad(filename,TupleMeanStd,
+        x_global = MeanNormZeroPad(filename,None,
                                    [self.branches[0]],
                                    [self.branchcutoffs[0]],self.nsamples)
         
-        x_cpf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_cpf = MeanNormZeroPadParticles(filename,None,
                                    self.branches[1],
                                    self.branchcutoffs[1],self.nsamples)
         
-        x_npf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_npf = MeanNormZeroPadParticles(filename,None,
                                    self.branches[2],
                                    self.branchcutoffs[2],self.nsamples)
         
-        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_sv = MeanNormZeroPadParticles(filename,None,
                                    self.branches[3],
                                    self.branchcutoffs[3],self.nsamples)
         
@@ -293,42 +325,16 @@ class TrainData_testQueue(TrainData_fullTruth_base):
         
         Tuple = self.readTreeFromRootToTuple(filename)
         
-        if self.remove:
-            notremoves=weighter.createNotRemoveIndices(Tuple)
-            undef=Tuple['isUndefined']
-            notremoves-=undef
-            print('took ', sw.getAndReset(), ' to create remove indices')
-        
-        if self.weight:
-            weights=weighter.getJetWeights(Tuple)
-        elif self.remove:
-            weights=notremoves
-        else:
-            print('neither remove nor weight')
-            weights=numpy.empty(self.nsamples)
-            weights.fill(1.)
         
         
         truthtuple =  Tuple[self.truthclasses]
         #print(self.truthclasses)
         alltruth=self.reduceTruth(truthtuple)
         
-        #print(alltruth.shape)
-        if self.remove:
-            print('remove')
-            weights=weights[notremoves > 0]
-            x_global=x_global[notremoves > 0]
-            x_cpf=x_cpf[notremoves > 0]
-            x_npf=x_npf[notremoves > 0]
-            x_sv=x_sv[notremoves > 0]
-            alltruth=alltruth[notremoves > 0]
        
-        newnsamp=x_global.shape[0]
-        print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
-        self.nsamples = newnsamp
-        
         print(x_global.shape,self.nsamples)
 
-        self.w=[weights]
         self.x=[x_global,x_cpf,x_npf,x_sv]
         self.y=[alltruth]
+        self.w=[]
+        

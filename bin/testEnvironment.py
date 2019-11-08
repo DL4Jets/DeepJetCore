@@ -43,7 +43,8 @@ script='''
 #!/bin/bash
 cd {djc_base}/testing
 rm -rf batchDC 
-convertFromRoot.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
+export PYTHONPATH=`pwd`:$PYTHONPATH
+convertFromRoot.py --noramcopy -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
 '''.format(djc_base=djc_base)
 os.system(script)
 
@@ -53,7 +54,8 @@ script='''
 #!/bin/bash
 cd {djc_base}/testing
 rm -rf batchExplode
-python batch_explosion.py batchDC/dataCollection.dc batchExplode
+export PYTHONPATH=`pwd`:$PYTHONPATH
+python batch_explosion.py batchDC/dataCollection.djcdc batchExplode
 '''.format(djc_base=djc_base)
 os.system(script)
 

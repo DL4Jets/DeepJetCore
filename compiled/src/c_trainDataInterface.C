@@ -34,6 +34,16 @@ namespace np = boost::python::numpy;
 float * extractNumpyListElement(p::list x, int i, std::vector<int>& shape){
     shape.clear();
     np::ndarray ndarr = p::extract<np::ndarray>(x[i]);
+    auto dt = ndarr.get_dtype();
+    if(dt != np::dtype::get_builtin<float>()){
+        throw std::runtime_error("c_trainDataInterface.extractNumpyListElement: at least one array does not have type float32");
+    }
+    auto flags = ndarr.get_flags();
+    std::cout << flags << std::endl;
+    if(!(flags & np::ndarray::CARRAY) || !(flags & np::ndarray::C_CONTIGUOUS)){
+        throw std::runtime_error("c_trainDataInterface.extractNumpyListElement: at least one array is not C contiguous, please pass as numpy.ascontiguousarray(a, dtype='float32')");
+    }
+
     float * data = (float*)(void*) ndarr.get_data();
     int ndim = ndarr.get_nd();
     for(int s=0;s<ndim;s++)
@@ -96,17 +106,15 @@ p::list readFromFile(std::string filename){
     for(size_t i=0;i<td.nFeatureArrays();i++)
         x.append(simpleArrayToNumpy(td.featureArray(i)));
 
-    for(size_t i=0;i<td.nFeatureArrays();i++)
+    for(size_t i=0;i<td.nTruthArrays();i++)
         y.append(simpleArrayToNumpy(td.truthArray(i)));
 
-    for(size_t i=0;i<td.nFeatureArrays();i++)
+    for(size_t i=0;i<td.nWeightArrays();i++)
         w.append(simpleArrayToNumpy(td.weightArray(i)));
 
     out.append(x);
     out.append(y);
     out.append(w);
-
-    std::cout << "done" <<std::endl;
 
     return out;
 }

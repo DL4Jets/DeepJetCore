@@ -170,6 +170,8 @@ void trainData<T>::append(const trainData<T>& td) {
 /*
  * split along first axis
  * Returns the first part, leaves the second.
+ *
+ * Can use some performance improvements
  */
 template<class T>
 trainData<T> trainData<T>::split(size_t splitindex) {

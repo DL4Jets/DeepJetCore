@@ -8,7 +8,7 @@ newtraining= not train.modelSet()
 
 
 if newtraining:
-    train.setModel(model_deepFlavourReference_test)
+    train.setModel(model_deepFlavourReference_test,nclasses = 6)
     
     #train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=False)
     

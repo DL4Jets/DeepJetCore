@@ -76,6 +76,7 @@ BOOST_PYTHON_MODULE(c_dataGenerator) {
             .def("lastBatch", &numpyGenerator::lastBatch)
             .def("prepareNextEpoch", &numpyGenerator::prepareNextEpoch)
             .def("getBatch", &numpyGenerator::getBatch)
+            .def_readwrite("debug", &numpyGenerator::debug);
         ;
 }
 

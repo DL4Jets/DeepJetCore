@@ -131,11 +131,10 @@ class TrainData(object):
         ###
         if shapesOnly:
             return
-        l = ctd.readFromFile(fileprefix)
+        l = ctd.readFromFile(infile)
         self.x = l[0]
         self.y = l[1]
         self.w = l[2]
-        self.nsamples=len(x[0])
         
     def readIn(self,fileprefix,shapesOnly=False):
         print('TrainData:readIn deprecated, use readFromFile')

@@ -102,7 +102,7 @@ def block_deepFlavourConvolutions(charged,neutrals,vertices,dropoutRate,active=T
 
     return cpf,npf,vtx
 
-def model_deepFlavourReference_test(Inputs,nclasses,nregclasses,dropoutRate=0.1,momentum=0.6):
+def model_deepFlavourReference_test(Inputs,nclasses,dropoutRate=0.1,momentum=0.6):
     """
     reference 1x1 convolutional model for 'deepFlavour'
     with recurrent layers and batch normalisation

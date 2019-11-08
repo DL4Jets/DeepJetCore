@@ -58,18 +58,27 @@ public:
 
     void prepareNextEpoch();
 
+    void end();
+
+    void enableThreading(bool en){
+        threading_=en;
+    }
+
     /**
      * gets Batch. If batchsize is specified, it is up to the user
      * to make sure that the sum of all batches is smaller or equal the
-     * total sample size
+     * total sample size.
+     * The batch size is always the size of the NEXT batch!
+     *
      */
-    trainData<T> getBatch(size_t batchsize=0);
+    trainData<T> getBatch(size_t batchsize=0); //if no threading batch index can be given? just for future?
 
     bool debug;
 private:
     void shuffleFilelist();
     void readBuffer();
     void readNTotal();
+    void prepareBatch(size_t batchsize=0);
     std::vector<std::string> orig_infiles_;
     std::vector<std::string> shuffled_infiles_;
     int randomcount_;
@@ -84,13 +93,19 @@ private:
     size_t nsamplesprocessed_;
     size_t lastbatchsize_;
     size_t filetimeout_;
+
+    std::thread * preparethread_;
+    trainData<T> prepared_tdbatch_;
+
+    bool threading_; //in case the keras generator is indeed faster, just placeholder for now
 };
 
 
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debug(false),
         randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
-                0), ntotal_(0), nsamplesprocessed_(0),filetimeout_(10) {
+                0), ntotal_(0), nsamplesprocessed_(0),filetimeout_(10),preparethread_(0),
+                threading_(true){
 }
 
 template<class T>
@@ -102,6 +117,10 @@ trainDataGenerator<T>::~trainDataGenerator(){
         //buffer_read.clear();
         readthread_->join();
         delete readthread_;
+    }
+    if(preparethread_){
+        preparethread_->join();
+        delete preparethread_;
     }
 }
 
@@ -150,9 +169,9 @@ template<class T>
 void trainDataGenerator<T>::prepareNextEpoch(){
 
     //prepare for next epoch, pre-read first file
-    if(readthread_){
-        readthread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
-        delete readthread_;
+    if(preparethread_){
+        preparethread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
+        delete preparethread_;
 
         //try{ //brute force but might be ok
         //    delete readthread_;
@@ -161,16 +180,36 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     }
     buffer_store.clear();
     buffer_read.clear();
+    prepared_tdbatch_.clear();
     filecount_=0;
     nsamplesprocessed_=0;
 
     shuffleFilelist();
     nextread_ = shuffled_infiles_.at(filecount_);
-    readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
+    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this,batchsize_);
+}
+template<class T>
+void trainDataGenerator<T>::end(){
+    if(preparethread_){
+        preparethread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
+        delete preparethread_;
+        preparethread_=0;
+    }
 }
 
 template<class T>
 trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
+    if(! preparethread_)
+        throw std::runtime_error("trainDataGenerator<T>::getBatch: prepare thread not launched. Call prepareNextEpoch first");
+    preparethread_->join();
+    auto out = prepared_tdbatch_; //std::move? data not needed anymore?
+    prepared_tdbatch_.clear();
+    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this,batchsize);
+    return out;
+}
+
+template<class T>
+void trainDataGenerator<T>::prepareBatch(size_t batchsize){
 
     size_t bufferelements=buffer_store.nElements();
 
@@ -202,8 +241,11 @@ trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
             readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
         }
     }
+    if(debug)
+        std::cout << "provided batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+batchsize <<
+        " elements in buffer: " << bufferelements << std::endl;
     nsamplesprocessed_+=batchsize;
-    return buffer_store.split(batchsize);
+    prepared_tdbatch_ = buffer_store.split(batchsize);
 }
 
 
