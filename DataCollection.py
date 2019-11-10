@@ -35,6 +35,7 @@ class DataCollection(object):
             
         self.weighterobjects={}
         self.batch_mode = False
+        self.nprocs=-1
         
     def clear(self):
         self.samples=[]
@@ -307,7 +308,7 @@ class DataCollection(object):
         newname = sbasename[:sbasename.rfind('.')]+'.djctd'
         newpath=os.path.abspath(outputDir+newname)
         
-        td.writeFromSourceFile(sample, self.weighterobjects,newpath)
+        td.writeFromSourceFile(sample, self.weighterobjects, istraining=True, outname=newpath)
         
         print('converted and written '+newname+' in ',sw.getAndReset(),' sec')
         self.samples.append(newname)
@@ -370,7 +371,7 @@ class DataCollection(object):
             
             try:
                 logger.info('convertFromSourceFile')
-                td.writeFromSourceFile(tmpinput, self.weighterobjects,newpath) 
+                td.writeFromSourceFile(tmpinput, self.weighterobjects, istraining = True, outname=newpath) 
                 print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname

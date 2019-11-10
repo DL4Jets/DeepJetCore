@@ -156,12 +156,12 @@ class TrainData(object):
     ### either of the following need to be defined
     
     ## if direct writeout is useful
-    def writeFromSourceFile(self, filename, weighterobjects, outname):
-        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects)
-        self.writeToFile(newpath)
+    def writeFromSourceFile(self, filename, weighterobjects, istraining, outname):
+        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects, istraining)
+        self.writeToFile(outname)
     
     ## otherwise only define the conversion rule
-    def convertFromSourceFile(self, filename, weighterobjects):
+    def convertFromSourceFile(self, filename, weighterobjects, istraining):
         return [],[],[]
     
     ## defines how to write out the prediction

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import imp
+from DeepJetCore.DataCollection import DataCollection
 try:
     imp.find_module('setGPU')
     import setGPU
@@ -8,11 +9,11 @@ except ImportError:
     found = False
     
 from keras.models import load_model
-from DeepJetCore.evaluation import testDescriptor
 from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from argparse import ArgumentParser
 from keras import backend as K
+import os
 import imp
 try:
     imp.find_module('Losses')
@@ -38,15 +39,11 @@ except ImportError:
 import os
 
 
-parser = ArgumentParser('Apply a model to a (test) sample and create friend trees to inject it inthe original ntuple')
+parser = ArgumentParser('Apply a model to a (test) source sample and create friend trees to inject it inthe original ntuple')
 parser.add_argument('inputModel')
-parser.add_argument('inputDataCollection')
+parser.add_argument('trainingDataCollection')
+parser.add_argument('inputSourceFileList')
 parser.add_argument('outputDir')
-parser.add_argument('--use', help='coma-separated list of prediction indexes to be used')
-parser.add_argument('--labels', action='store_true', help='store true labels in the trees')
-parser.add_argument('--monkey_class', default='', help='allows to read the data with a different TrainData, it is actually quite dangerous if you do not know what you are doing')
-parser.add_argument('--numpy', help='switches on numpy rec-array output in addition to root files. Will produce ONE large file (can become big)', action='store_true' , default=False )
-parser.add_argument('--flat', help='Flatten the output to force it to maximum 1D', action='store_false' , default=False )
 
 args = parser.parse_args()
 
@@ -60,29 +57,33 @@ custom_objs.update(djc_global_layers_list)
 custom_objs.update(global_loss_list)
 custom_objs.update(global_layers_list)
 custom_objs.update(global_metrics_list)
+
+
 model=load_model(args.inputModel, custom_objects=custom_objs)
+dc = DataCollection(args.trainingDataCollection)
+td = dc.dataclass
+outputs = []
+inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
+os.system('mkdir -p '+args.outputDir)
 
-
-td=testDescriptor(addnumpyoutput = args.numpy)
-if args.use:
-    td.use_only = [int(i) for i in args.use.split(',')]
-
-from DeepJetCore.DataCollection import DataCollection
-
-testd=DataCollection()
-testd.readFromFile(args.inputDataCollection)
-
-
-os.mkdir(args.outputDir)
-
-td.makePrediction(
-    model, testd, args.outputDir,
-    store_labels = args.labels,
-    monkey_class = args.monkey_class,
-    flatten_everything =  args.flat
-)
-
-td.writeToTextFile(args.outputDir+'/tree_association.txt')
-
-#    make the file reading entirely C++
-#    then it can be used for other studies
+with open(args.inputSourceFileList, "r") as f:
+    for inputfile in f:
+        inputfile = inputfile.replace('\n', '')
+        x, y, w = td.convertFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
+        outfilename = "pred_"+inputfile
+        predicted = model.predict(x)
+        if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
+            predicted = [predicted]   
+        td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, inputfile)
+        outputs.append(outfilename)
+        print('written '+outfilename)
+    
+    
+with open(args.outputDir + "/outfiles.txt","w") as f:
+    for l in outputs:
+        f.write(l+'\n')
+    
+    
+    
+    
+    

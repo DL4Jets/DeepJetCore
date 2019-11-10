@@ -549,7 +549,7 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
     from DeepJetCore.compiled import c_arrayReads
     
     array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,1) , dtype='float32')
-    ncut=0
+    ncut=numpy.array([0],dtype='float32')
     c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny,zeropad, False, ncut)
     
     return array
