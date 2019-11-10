@@ -303,6 +303,15 @@ class DataCollection(object):
 
         shutil.move(fd.name, filename)
         
+    ## for conversion essential!!!
+    def readRawFromFile(self,filename):
+        #no assumption on data class
+        fd=open(filename,'rb')
+        self.samples=pickle.load(fd)
+        self.sampleentries=pickle.load(fd)
+        self.originRoots=pickle.load(fd)
+        fd.close()
+        
     def readFromFile(self,filename):
         fd=open(filename,'rb')
         self.samples=pickle.load(fd)

@@ -7,12 +7,24 @@
 '''
 
 from argparse import ArgumentParser
+from DeepJetCore.conversion.conversion import class_options
 
 parser = ArgumentParser('simple program to convert old (pre 2.0) traindata format to the new one')
 parser.add_argument("infile", help="input \"meta\" file")
+parser.add_argument("-c",  choices = class_options.keys(), help="set new output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
 # process options
 args=parser.parse_args()
 infile=args.infile
+class_name = args.c
+
+if class_name in class_options:
+    traind = class_options[class_name]
+elif not recover and not testdatafor:
+    print('available classes:')
+    for key, val in class_options.iteritems():
+        print(key)
+    raise Exception('wrong class selection')
+
 
 if not ".meta" in infile:
     print('wrong input file '+infile)
@@ -29,7 +41,7 @@ print(outfile)
 
 from DeepJetCore.TrainData import TrainData
 
-tdnew = TrainData()
+tdnew = traind()
 
 tdnew.x = x
 tdnew.y = y

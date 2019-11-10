@@ -153,9 +153,18 @@ class TrainData(object):
         '''
         return {}
     
-    def convertFromSourceFile(self, filename, weighterobjects):
-        pass
+    ### either of the following need to be defined
     
-    def writeOutPrediction(self, predicted, features, truth, weights, outfilename):
+    ## if direct writeout is useful
+    def writeFromSourceFile(self, filename, weighterobjects, outname):
+        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects)
+        self.writeToFile(newpath)
+    
+    ## otherwise only define the conversion rule
+    def convertFromSourceFile(self, filename, weighterobjects):
+        return [],[],[]
+    
+    ## defines how to write out the prediction
+    def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):
         pass
 

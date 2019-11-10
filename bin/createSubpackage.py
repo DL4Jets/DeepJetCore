@@ -23,7 +23,6 @@ subpackage_dir=args.subpackage_parent_dir+'/'+args.subpackage_name
 environment_file='''
 #! /bin/bash
 
-
 export {subpackage}=$( cd "$( dirname "${BASH_SOURCE}" )" && pwd -P)
 export DEEPJETCORE_SUBPACKAGE=${subpackage}
 
@@ -31,6 +30,7 @@ cd ${subpackage}
 export PYTHONPATH=${subpackage}/modules:$PYTHONPATH
 export PYTHONPATH=${subpackage}/modules/datastructures:$PYTHONPATH
 export PATH=${subpackage}/scripts:$PATH
+
 '''.format(deepjetcore=deepjetcore, 
            subpackage=args.subpackage_name.upper(),
            subpackage_dir=os.path.abspath(subpackage_dir),
@@ -61,37 +61,38 @@ import numpy
 class TrainData_example(TrainData):
     def __init__(self):
         TrainData.__init__(self)
+        # no class member is mandatory
+        self.description = "This is a TrainData example file. Having a description string is not a bad idea (but not mandatory), e.g. for describing the array structure."
+        #define any other (configuration) members that seem useful
+        self.someusefulemember = "something you might need later"
 
-        self.treename="tree" #input root tree name
         
-        self.truthclasses=['isA','isB','isC'] #truth classes for classification
-        
-        self.weightbranchX='isA' #needs to be specified if weighter is used
-        self.weightbranchY='isB' #needs to be specified if weighter is used
-        
-        #there is no need to resample/reweight
-        self.weight=False
-        self.remove=False
-        #does not do anything in this configuration
-        self.referenceclass='flatten'
-        self.weight_binX = numpy.array([0,40000],dtype=float) 
-        self.weight_binY = numpy.array([0,40000],dtype=float) 
-        
-        
-        self.registerBranches(['']) #list of branches to be used 
-        
-        #means norms are only produced for branches that are registered (for performance reasons)
-        self.registerBranches(self.truthclasses)
-        
-        
-        #call this at the end
-        self.reduceTruth(None)
-        
+    #def createWeighterObjects(self, allsourcefiles):
+        # 
+        # This function can be used to derive weights (or whatever quantity)
+        # based on the entire data sample. It should return a dictionary that will then
+        # be passed to either of the following functions. The weighter objects
+        # should be pickleable.
+        # In its default implementation, the dict is empty
+        # return {}
     
-    def readFromRootFile(self,filename,TupleMeanStd, weighter):
+    #def writeFromSourceFile(self, filename, weighterobjects, outname):
+        # if direct writeout is useful, the following function CAN be defined INSTEAD OF convertFromSourceFile
+        # It is, however not needed if  convertFromSourceFile is defined (see below)
     
-        # this function defines how to convert the root ntuple to the training format
-        # options are not yet described here
+    def convertFromSourceFile(self, filename, weighterobjects):
+        # This is the only really mandatory function (unless writeFromSourceFile is defined).
+        # It defines the conversion rule from an input source file to the lists of training 
+        # arrays self.x, self.y, self.w
+        #  self.x is a list of input feature arrays
+        #  self.y is a list of truth arrays
+        #  self.w is optional and can contain a weight array 
+        #         (needs to have same number of entries as truth array)
+        #         If no weights are needed, this can be left completely empty
+        #
+        # The conversion should convert finally to numpy arrays. In the future, 
+        # also tensorflow tensors will be supported.
+        # 
         
         import ROOT
         fileTimeOut(filename,120) #give eos a minute to recover
@@ -106,7 +107,7 @@ class TrainData_example(TrainData):
         feature_array = read2DArray(filename,"tree","image2d",self.nsamples,32,32)
         
         print('feature_array',feature_array.shape)
-        truth = self.read_truthclasses(filename)
+        truth = 
         
         #notremoves=weighter.createNotRemoveIndices(Tuple)
         
@@ -117,161 +118,16 @@ class TrainData_example(TrainData):
         
         self.nsamples=len(feature_array)
         
-        self.x=[feature_array] # list of feature numpy arrays
-        self.y=[truth] # list of target numpy arrays (truth)
-        self.w=[] # list of weight arrays. One for each truth target, not used
-
-
-    def formatPrediction(self, predicted_list):
+        #returns a list of feature arrays, a list of truth arrays and a list of weight arrays
+        return [feature_array], [truth], []
+    
+    ## defines how to write out the prediction
+    def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):
         
         format_names = ['prob_isA','prob_isB','prob_isC']
         out_pred = [predicted_list[0][:,0],predicted_list[0][:,1],predicted_list[0][:,2]]
         
-        return out_pred,  format_names
 
-class TrainData_example_reg(TrainData):
-    def __init__(self):
-        TrainData.__init__(self)
-
-        self.treename="tree" #input root tree name
-        
-        self.truthclasses=[]#['isA','isB','isC'] #truth classes for classification
-        self.regressiontargetclasses=['sigsum']
-        
-        self.weightbranchX='isA' #needs to be specified if weighter is used
-        self.weightbranchY='isB' #needs to be specified if weighter is used
-        
-        #there is no need to resample/reweight
-        self.weight=False
-        self.remove=False
-        #does not do anything in this configuration
-        self.referenceclass='flatten'
-        self.weight_binX = numpy.array([0,40000],dtype=float) 
-        self.weight_binY = numpy.array([0,40000],dtype=float) 
-        
-        
-        self.registerBranches(self.regressiontargetclasses) #list of branches to be used 
-        
-        self.registerBranches(self.truthclasses)
-        
-        
-        #call this at the end
-        self.reduceTruth(None)
-        
-    
-    def readFromRootFile(self,filename,TupleMeanStd, weighter):
-    
-        # this function defines how to convert the root ntuple to the training format
-        # options are not yet described here
-        
-        import ROOT
-        fileTimeOut(filename,120) #give eos a minute to recover
-        rfile = ROOT.TFile(filename)
-        tree = rfile.Get("tree")
-        self.nsamples=tree.GetEntries()
-        
-        
-        # user code, example works with the example 2D images in root format generated by make_example_data
-        from DeepJetCore.preprocessing import read2DArray
-        print(filename)
-        feature_array = read2DArray(filename,"tree","image2d",self.nsamples,32,32)
-        
-        npy_array = self.readTreeFromRootToTuple(filename)
-        reg_truth = npy_array['sigsum']
-        
-        #notremoves=weighter.createNotRemoveIndices(Tuple)
-        
-        # this removes parts of the dataset for weighting the events
-        #feature_array = feature_array[notremoves > 0]
-                
-        # call this in the end
-        
-        self.nsamples=len(feature_array)
-        
-        self.x=[feature_array] # list of feature numpy arrays
-        self.y=[reg_truth] # list of target numpy arrays (truth)
-        self.w=[] # list of weight arrays. One for each truth target, not used
-
-    def formatPrediction(self, predicted_list):
-        
-        format_names = ['sigsum']
-        out_pred = predicted_list
-        
-        return out_pred,  format_names
-    
-
-class TrainData_example_frac(TrainData):
-    def __init__(self):
-        TrainData.__init__(self)
-
-        self.treename="tree" #input root tree name
-        
-        self.truthclasses=[]#['isA','isB','isC'] #truth classes for classification
-        self.regressiontargetclasses=['sigfrac_bgfrac_featforweights']
-        
-        self.weightbranchX='isA' #needs to be specified if weighter is used
-        self.weightbranchY='isB' #needs to be specified if weighter is used
-        
-        #there is no need to resample/reweight
-        self.weight=False
-        self.remove=False
-        #does not do anything in this configuration
-        self.referenceclass='flatten'
-        self.weight_binX = numpy.array([0,40000],dtype=float) 
-        self.weight_binY = numpy.array([0,40000],dtype=float) 
-        
-        
-        #self.registerBranches() #list of branches to be used 
-        
-        self.registerBranches(self.truthclasses)
-        
-        
-        #call this at the end
-        self.reduceTruth(None)
-        
-    
-    def readFromRootFile(self,filename,TupleMeanStd, weighter):
-    
-        # this function defines how to convert the root ntuple to the training format
-        # options are not yet described here
-        import numpy as np
-        import ROOT
-        fileTimeOut(filename,120) #give eos a minute to recover
-        rfile = ROOT.TFile(filename)
-        tree = rfile.Get("tree")
-        self.nsamples=tree.GetEntries()
-        
-        
-        # user code, example works with the example 2D images in root format generated by make_example_data
-        from DeepJetCore.preprocessing import read2DArray
-        print(filename)
-        feature_array = read2DArray(filename,"tree","image2d",self.nsamples,32,32)
-        
-        reg_truth = read2DArray(filename,"tree","sigfrac2d",self.nsamples,32,32)
-        bgfrac = 1 - reg_truth
-        
-        truth = np.concatenate([reg_truth, bgfrac, feature_array], axis=-1)
-        
-        #notremoves=weighter.createNotRemoveIndices(Tuple)
-        
-        # this removes parts of the dataset for weighting the events
-        #feature_array = feature_array[notremoves > 0]
-                
-        # call this in the end
-        
-        self.nsamples=len(feature_array)
-        
-        self.x=[feature_array] # list of feature numpy arrays
-        self.y=[truth] # list of target numpy arrays (truth)
-        self.w=[] # list of weight arrays. One for each truth target, not used
-
-
-    def formatPrediction(self, predicted_list):
-        
-        format_names = ['sigfrac','bgfrac']
-        out_pred = [predicted_list[0][:,:,1],predicted_list[0][:,:,2]]
-        
-        return out_pred,  format_names
 
 '''
 
@@ -387,9 +243,20 @@ global_metrics_list = {}
 '''
 
 makefile_template='''
+
+#
+# This file might need some adjustments but should serve as a good basis
+#
+
+PYTHON_INCLUDE = `python-config --includes`
+PYTHON_LIB=`python-config --libs`
+
+ROOTSTUFF=`root-config --libs --glibs --ldflags`
+ROOTCFLAGS=`root-config  --cflags`
+
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
-LD_FLAGS := `root-config --cflags --glibs`  -lMathMore -L${DEEPJETCORE}/compiled -ldeepjetcorehelpers
+LD_FLAGS := `root-config --cflags --glibs`  -lMathMore -L${DEEPJETCORE}/compiled -ldeepjetcorehelpers -lquicklz
 CC_FLAGS := -fPIC -g -Wall `root-config --cflags`
 CC_FLAGS += -I./interface -I${DEEPJETCORE}/compiled/interface
 #CC_FLAGS += -MMD
@@ -398,10 +265,10 @@ CC_FLAGS += -I./interface -I${DEEPJETCORE}/compiled/interface
 all: $(patsubst bin/%.cpp, %, $(wildcard bin/*.cpp))
 
 #compile the module helpers if necessary
-../modules/libdeepjethelpers.so:
-        cd ../modules; make; cd -
+#../modules/libsubpackagehelpers.so:
+#        cd ../modules; make; cd -
 
-%: bin/%.cpp  $(OBJ_FILES) ${DEEPJETCORE}/compiled/libdeepjetcorehelpers.so
+%: bin/%.cpp  $(OBJ_FILES) 
         g++ $(CC_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $< -o $@ 
 
 

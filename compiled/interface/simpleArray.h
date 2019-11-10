@@ -70,11 +70,11 @@ public:
     // Only one ragged dimension is supported, first dimension MUST NOT be ragged
     // Still to be implemented. All read/write functions already include this data
     //
-    // const std::vector<int>& rowsplits() const {
+    // const std::vector<size_t>& rowsplits() const {
     //     return rowsplits_;
     // }
     //
-    // void setRowsplits(const std::vector<int>& rowsplits) {
+    // void setRowsplits(const std::vector<size_t>& rowsplits) {
     //     rowsplits_ = rowsplits;
     // }
 
@@ -157,7 +157,7 @@ private:
 
     T * data_;
     std::vector<int> shape_;
-    std::vector<int> rowsplits_;
+    std::vector<size_t> rowsplits_;
     size_t size_;
     bool assigned_;
 };
@@ -350,18 +350,25 @@ void simpleArray<T>::append(const simpleArray<T>& a) {
 template<class T>
 void simpleArray<T>::addToFile(FILE *& ofile) const {
 
+
+
     float version = DJCDATAVERSION;
     io::writeToFile(&version, ofile);
     io::writeToFile(&size_, ofile);
     size_t ssize = shape_.size();
     io::writeToFile(&ssize, ofile);
     io::writeToFile(&shape_[0], ofile, shape_.size());
+
     size_t rssize = rowsplits_.size();
     io::writeToFile(&rssize,  ofile);
-    io::writeToFile(&rowsplits_[0], ofile, rowsplits_.size());
 
+    if(rssize){
+        quicklz<size_t> iqlz;
+        iqlz.writeCompressed(&rowsplits_[0],rssize , ofile);
+    }
     quicklz<T> qlz;
     qlz.writeCompressed(data_, size_, ofile);
+
 }
 
 template<class T>
@@ -383,11 +390,13 @@ void simpleArray<T>::readFromFile(FILE *& ifile) {
     size_t rssize = 0;
     io::readFromFile(&rssize, ifile);
     rowsplits_ = std::vector<int>(rssize, 0);
-    io::readFromFile(&rowsplits_[0], ifile, rssize);
 
-
-    data_ = new T[size_];
+    if(rssize){
+        quicklz<size_t> iqlz;
+        iqlz.readAll(ifile, &rowsplits_[0]);
+    }
     quicklz<T> qlz;
+    data_ = new T[size_];
     size_t nread = qlz.readAll(ifile, data_);
     if (nread != size_)
         throw std::runtime_error(

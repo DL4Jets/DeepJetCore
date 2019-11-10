@@ -23,7 +23,7 @@ using namespace djc;
 
 int main(){
     //create some data
-
+/*
     bool write=false;
     if(write){
         trainData<float> bigtd;
@@ -92,7 +92,7 @@ int main(){
 
 
     return 0;
-
+*/
 
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
@@ -100,6 +100,7 @@ int main(){
      std::cout << i << std::endl;
     }
     std::cout << std::endl;
+
 
     //write part
     FILE *ofile = fopen("testfile.djcd", "wb");
@@ -122,10 +123,12 @@ int main(){
         std::cout << ifarr.shape()[i] << std::endl;
     std::cout << std::endl;
 
-    auto arrs = ifarr.split(3);
 
     for(size_t i=0;i<ifarr.shape().size();i++)
         std::cout << ifarr.shape()[i] << std::endl;
+
+    auto arrs = ifarr.split(3);
+    std::cout << "splitting stuff " <<std::endl;
 
     std::cout << std::endl;
     for(size_t i=0;i<arrs.shape().size();i++)
@@ -168,6 +171,8 @@ int main(){
     std::cout << std::endl;
     for(size_t i=0;i<var2.size();i++)
         std::cout << var2.data()[i] << std::endl;
+
+    return 1;
 
     std::cout << "trainData Stuff "<< std::endl;
 
@@ -219,7 +224,7 @@ int main(){
 
     trainData<float> bigtd;
 
-    auto fidx = bigtd.addFeatureArray({1000, 4000, 10});
+    size_t fidx = bigtd.addFeatureArray({1000, 4000, 10});
     for(size_t i=0;i<bigtd.featureArray(fidx).size();i++)
         bigtd.featureArray(fidx).data()[i]=i;
 

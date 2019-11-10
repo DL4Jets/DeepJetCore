@@ -303,13 +303,12 @@ class DataCollection(object):
         
         fileTimeOut(sample,120) #once available copy to ram
 
-        td.convertFromSourceFile(sample, self.weighterobjects)
-        
         sbasename = os.path.basename(sample)
         newname = sbasename[:sbasename.rfind('.')]+'.djctd'
-        
         newpath=os.path.abspath(outputDir+newname)
-        td.writeToFile(newpath)
+        
+        td.writeFromSourceFile(sample, self.weighterobjects,newpath)
+        
         print('converted and written '+newname+' in ',sw.getAndReset(),' sec')
         self.samples.append(newname)
         self.nsamples+=td.nsamples
@@ -371,11 +370,7 @@ class DataCollection(object):
             
             try:
                 logger.info('convertFromSourceFile')
-                td.convertFromSourceFile(tmpinput, self.weighterobjects)
-                logger.info('writeOut')
-                #wrlck.acquire()
-                td.writeToFile(newpath)
-                #wrlck.release()
+                td.writeFromSourceFile(tmpinput, self.weighterobjects,newpath) 
                 print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname

@@ -47,7 +47,7 @@ public:
 
     //writes header and compressed data
     //give size in terms of T
-    void writeCompressed(T * arr, size_t size, FILE *& ofile);
+    void writeCompressed(const T * arr, size_t size, FILE *& ofile);
 
 
 private:
@@ -144,10 +144,10 @@ size_t quicklz<T>::readAll(FILE *& ifile, T * arr) {
 }
 
 template<class T>
-void quicklz<T>::writeCompressed(T * arr, size_t size, FILE *& ofile) {
+void quicklz<T>::writeCompressed(const T * arr, size_t size, FILE *& ofile) {
 
     size_t length = size * sizeof(T);
-    char *src = (char*) (void*) arr;
+    const char *src = (const char*) (const void*) arr;
 
     //destination buffer
     char *dst = new char[length + 400];
