@@ -539,7 +539,7 @@ class DataCollection(object):
         
         while(1):
             try:
-                data = gen.getBatch(0)#in principle batch sizes can differ from batch to batch
+                data = gen.getBatch()
                 xout = data[0]
                 yout = data[1]
                 wout = data[2]

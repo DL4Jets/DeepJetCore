@@ -28,7 +28,7 @@ class_name = args.c
 
 if class_name in class_options:
     traind = class_options[class_name]
-elif not recover and not testdatafor:
+else:
     print('available classes:')
     for key, val in class_options.iteritems():
         print(key)

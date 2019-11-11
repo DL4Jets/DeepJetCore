@@ -23,6 +23,21 @@ namespace djc{
  * Base class, no numpy interface or anything yet.
  * Inherit from/use this class and define the actual batch feed function.
  * This could as well be filling a (ragged) tensorflow tensor
+ *
+ *
+ * Notes for future improvements:
+ *
+ *  - pre-split trainData in buffer (just make it a vector/fifo-like queue)
+ *    propagates to trainData, simpleArray, then make multiple memcpy (even threaded?)
+ *    (but not read - it is still a split!)
+ *    This makes the second thread obsolete, and still everything way faster!
+ *
+ *  - for ragged: instead of batch size, set upper limit on data size (number of floats)
+ *    can be used to pre-split in a similar way
+ *
+ *
+ *
+ *
  */
 template <class T>
 class trainDataGenerator{
@@ -71,14 +86,14 @@ public:
      * The batch size is always the size of the NEXT batch!
      *
      */
-    trainData<T> getBatch(size_t batchsize=0); //if no threading batch index can be given? just for future?
+    trainData<T> getBatch(); //if no threading batch index can be given? just for future?
 
     bool debug;
 private:
     void shuffleFilelist();
     void readBuffer();
     void readNTotal();
-    void prepareBatch(size_t batchsize=0);
+    void prepareBatch();
     std::vector<std::string> orig_infiles_;
     std::vector<std::string> shuffled_infiles_;
     int randomcount_;
@@ -198,25 +213,22 @@ void trainDataGenerator<T>::end(){
 }
 
 template<class T>
-trainData<T> trainDataGenerator<T>::getBatch(size_t batchsize){
+trainData<T> trainDataGenerator<T>::getBatch(){
     if(! preparethread_)
         throw std::runtime_error("trainDataGenerator<T>::getBatch: prepare thread not launched. Call prepareNextEpoch first");
     preparethread_->join();
     auto out = prepared_tdbatch_; //std::move? data not needed anymore?
     prepared_tdbatch_.clear();
-    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this,batchsize);
+    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this);
     return out;
 }
 
 template<class T>
-void trainDataGenerator<T>::prepareBatch(size_t batchsize){
+void trainDataGenerator<T>::prepareBatch(){
 
     size_t bufferelements=buffer_store.nElements();
 
-    if(!batchsize)
-        batchsize=batchsize_;
-    lastbatchsize_=batchsize;
-    while(bufferelements<batchsize){
+    while(bufferelements<batchsize_){
         //if thread, read join
         if(readthread_){
             readthread_->join();
@@ -242,10 +254,10 @@ void trainDataGenerator<T>::prepareBatch(size_t batchsize){
         }
     }
     if(debug)
-        std::cout << "provided batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+batchsize <<
+        std::cout << "provided batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+batchsize_ <<
         " elements in buffer: " << bufferelements << std::endl;
-    nsamplesprocessed_+=batchsize;
-    prepared_tdbatch_ = buffer_store.split(batchsize);
+    nsamplesprocessed_+=batchsize_;
+    prepared_tdbatch_ = buffer_store.split(batchsize_);
 }
 
 
