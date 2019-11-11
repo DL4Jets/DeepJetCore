@@ -201,7 +201,7 @@ void trainDataGenerator<T>::prepareNextEpoch(){
 
     shuffleFilelist();
     nextread_ = shuffled_infiles_.at(filecount_);
-    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this,batchsize_);
+    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this);
 }
 template<class T>
 void trainDataGenerator<T>::end(){
