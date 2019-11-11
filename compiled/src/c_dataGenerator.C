@@ -39,11 +39,11 @@ public:
 };
 
 
-p::list numpyGenerator::getBatch(size_t batchsize){
+p::list numpyGenerator::getBatch(){
 
     p::list out;
 
-    auto td = djc::trainDataGenerator<float>::getBatch(batchsize);
+    auto td = djc::trainDataGenerator<float>::getBatch();
 
     p::list x, y, w;
 
