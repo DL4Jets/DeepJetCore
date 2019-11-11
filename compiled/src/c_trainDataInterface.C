@@ -39,7 +39,6 @@ float * extractNumpyListElement(p::list x, int i, std::vector<int>& shape){
         throw std::runtime_error("c_trainDataInterface.extractNumpyListElement: at least one array does not have type float32");
     }
     auto flags = ndarr.get_flags();
-    std::cout << flags << std::endl;
     if(!(flags & np::ndarray::CARRAY) || !(flags & np::ndarray::C_CONTIGUOUS)){
         throw std::runtime_error("c_trainDataInterface.extractNumpyListElement: at least one array is not C contiguous, please pass as numpy.ascontiguousarray(a, dtype='float32')");
     }

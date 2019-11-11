@@ -48,8 +48,8 @@ parser.add_argument('outputDir')
 args = parser.parse_args()
 
  
-if os.path.isdir(args.outputDir):
-    raise Exception('output directory must not exists yet')
+#if os.path.isdir(args.outputDir):
+#    raise Exception('output directory must not exists yet')
 
 custom_objs = {}
 custom_objs.update(djc_global_loss_list)
@@ -69,14 +69,16 @@ os.system('mkdir -p '+args.outputDir)
 with open(args.inputSourceFileList, "r") as f:
     for inputfile in f:
         inputfile = inputfile.replace('\n', '')
+        print('converting '+inputfile)
         x, y, w = td.convertFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         outfilename = "pred_"+inputfile
+        print('predicting '+inputfile)
         predicted = model.predict(x)
         if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
             predicted = [predicted]   
         td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, inputfile)
         outputs.append(outfilename)
-        print('written '+outfilename)
+        
     
     
 with open(args.outputDir + "/outfiles.txt","w") as f:

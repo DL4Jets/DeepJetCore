@@ -363,8 +363,8 @@ class training_base(object):
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
-        self.train_data.writeToFile(self.outputDir+'trainsamples.dc')
-        self.val_data.writeToFile(self.outputDir+'valsamples.dc')
+        self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc')
+        self.val_data.writeToFile(self.outputDir+'valsamples.djcdc')
         
         #make sure tokens don't expire
         from .tokenTools import checkTokens, renew_token_process

@@ -17,7 +17,7 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.conversion.conversion import class_options 
 
 parser = ArgumentParser('simple program to convert old datacollection format to the new one')
-parser.add_argument("infile", help="input \"meta\" file")
+parser.add_argument("infile", help="input \"dc\" file")
 parser.add_argument("-c",  choices = class_options.keys(), help="set new output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
 
 # process options

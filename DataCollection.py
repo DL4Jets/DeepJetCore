@@ -191,7 +191,6 @@ class DataCollection(object):
         
     def readSourceListFromFile(self, file, relpath=''):
         self.samples=[]
-        self.sampleentries=[]
         self.sourceList=[]
         self.__nsamples=0
         self.dataDir=""
@@ -284,9 +283,7 @@ class DataCollection(object):
         elif not os.path.isdir(outputDir):
             os.mkdir(outputDir)
         self.dataDir=outputDir
-        self.nsamples=0
         self.samples=[]
-        self.sampleentries=[]
         self.dataclass=copy.deepcopy(dataclass)
         td=self.dataclass
 
@@ -312,8 +309,6 @@ class DataCollection(object):
         
         print('converted and written '+newname+' in ',sw.getAndReset(),' sec')
         self.samples.append(newname)
-        self.nsamples+=td.nsamples
-        self.sampleentries.append(td.nsamples)
         td.clear()
         
         if not self.batch_mode:
@@ -375,7 +370,7 @@ class DataCollection(object):
                 print('converted and written '+newname+' in ',sw.getAndReset(),' sec -', index)
                 
                 out_samplename=newname
-                out_sampleentries=td.nsamples
+                out_sampleentries=1
                 success=True
                 td.clear()
                 removefile()
@@ -392,8 +387,6 @@ class DataCollection(object):
                 raise Exception("write not successful, stopping")
 
             self.samples.append(samplename)
-            self.nsamples+=sampleentries
-            self.sampleentries.append(sampleentries)
             if not self.batch_mode:
                 self.writeToFile(outputDir+'/snapshot_tmp.djcdc')#avoid to overwrite directly
                 os.system('mv '+outputDir+'/snapshot_tmp.djcdc '+outputDir+'/snapshot.djcdc')
