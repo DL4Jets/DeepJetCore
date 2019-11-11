@@ -389,7 +389,7 @@ void simpleArray<T>::readFromFile(FILE *& ifile) {
 
     size_t rssize = 0;
     io::readFromFile(&rssize, ifile);
-    rowsplits_ = std::vector<int>(rssize, 0);
+    rowsplits_ = std::vector<size_t>(rssize, 0);
 
     if(rssize){
         quicklz<size_t> iqlz;

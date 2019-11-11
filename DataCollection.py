@@ -502,6 +502,9 @@ class DataCollection(object):
         return self.dataDir+'/'+samplefile
     
     def __stackData(self, dataclass, selector):
+        #
+        # FIXME: use underlying trainData.append here (improvement)
+        #
         td=dataclass
         out=[]
         firstcall=True
