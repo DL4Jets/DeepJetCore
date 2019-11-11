@@ -34,7 +34,7 @@ public:
         djc::trainDataGenerator<float>::setFileList(toSTLVector<std::string>(files));
     }
 
-    p::list getBatch(size_t batchsize=0);
+    p::list getBatch();
 
 };
 
