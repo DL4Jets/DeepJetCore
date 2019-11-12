@@ -52,6 +52,9 @@ The general pipeline for training is depicted in the following sketch:
 ![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/cpptraindata/training_pipeline.png "Data pipeline for training")
 
 
+The general pipeline for inference/prediction is depicted in the following sketch:
+![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/cpptraindata/predict_pipeline.png "Data pipeline for prediction")
+
 TrainData definition and notes on upgrading from 1.X to 2.X
 =========================
 
