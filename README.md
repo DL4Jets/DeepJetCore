@@ -49,7 +49,7 @@ In general, the following steps are needed for a training and evaluation:
 
 
 The general pipeline for training is depicted in the following sketch:
-![pipeline](https://github.com/DL4Jets/DeepJetCore/training_pipeline.png "Data pipeline for training")
+![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/cpptraindata/training_pipeline.png "Data pipeline for training")
 
 
 TrainData definition and notes on upgrading from 1.X to 2.X
