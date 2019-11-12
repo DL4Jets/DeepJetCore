@@ -44,7 +44,7 @@ script='''
 cd {djc_base}/testing
 rm -rf batchDC 
 export PYTHONPATH=`pwd`:$PYTHONPATH
-convertFromRoot.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
+convertFromSource.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
 '''.format(djc_base=djc_base)
 os.system(script)
 

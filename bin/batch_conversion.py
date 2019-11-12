@@ -110,7 +110,7 @@ trap "echo JOBSUB::FAIL job killed" SIGTERM
 BASEDIR=`pwd`
 cd {subpackage}
 source env.sh
-convertFromRoot.py "$@"
+convertFromSource.py "$@"
 exitstatus=$?
 if [ $exitstatus != 0 ]
 then

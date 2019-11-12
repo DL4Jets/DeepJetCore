@@ -321,7 +321,7 @@ os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
 print('example data can be found in '+subpackage_dir+'/example_data.')
 print('Before using the subpackage, please log out, log in again and then source the "env.sh" file in the subpackage directory (not in DeepJetCore).')
 print('to convert to example TrainData format use:')
-print('convertFromRoot.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
+print('convertFromSource.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
 
 print('\nAn example to run the training can be found in '+subpackage_dir+'/Train/training_example.py')
 print('It can be run with: \npython '+subpackage_dir+'/Train/training_example.py <train output dir>/dataCollection.djcdc <train output dir>')

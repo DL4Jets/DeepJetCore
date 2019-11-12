@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-convertFromRoot -- converts the root files produced with the deepJet ntupler to the data format used by keras for the DNN training
-
-convertFromRoot is a small program that converts the root files produced with the deepJet ntupler to the data format used by keras for the DNN training
-
 
 @author:     jkiesele
 
@@ -23,7 +19,7 @@ logging.getLogger().setLevel(logging.INFO)
 from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.conversion.conversion import class_options
 
-parser = ArgumentParser('program to convert root tuples to traindata format')
+parser = ArgumentParser('program to convert source files to traindata format')
 parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
 parser.add_argument("--inRange", nargs=2, type=int, help="Input line numbers")
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
