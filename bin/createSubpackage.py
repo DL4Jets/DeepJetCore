@@ -8,17 +8,21 @@ from argparse import ArgumentParser
 
 parser = ArgumentParser('script to create a DeepJetCore subpackage')
 
-parser.add_argument("subpackage_name", help="name of the subpackage")
-parser.add_argument("subpackage_parent_dir", help="parent directory of the subpackage (must be same as DeepJetCore)")
+parser.add_argument("subpackage_directory", help="Directory to place the subpackage in (will be created). Last part will be the name of the subpackage")
 parser.add_argument("--data", help="create example data", default=False, action="store_true")
 
 args=parser.parse_args()
 
 deepjetcore = os.getenv('DEEPJETCORE')
 
-subpackage_dir=args.subpackage_parent_dir+'/'+args.subpackage_name
+subpackage_dir=args.subpackage_directory
+subpackage_name = os.path.basename(os.path.normpath(subpackage_dir))
+
+if len(subpackage_dir)<1:
+    raise Exception("The subpackage name is too short")
 
 ### templates ####
+
 
 environment_file='''
 #! /bin/bash
@@ -35,7 +39,7 @@ export LD_LIBRARY_PATH=${subpackage}/modules/compiled:$LD_LIBRARY_PATH
 export PYTHONPATH=${subpackage}/modules/compiled:$PYTHONPATH
 
 '''.format(deepjetcore=deepjetcore, 
-           subpackage=args.subpackage_name.upper(),
+           subpackage=subpackage_name.upper(),
            subpackage_dir=os.path.abspath(subpackage_dir),
            BASH_SOURCE="{BASH_SOURCE[0]}")
 
@@ -50,8 +54,8 @@ mkdir -p {subpackage_dir}/example_data
 mkdir -p {subpackage_dir}/cpp_analysis/src
 mkdir -p {subpackage_dir}/cpp_analysis/interface
 mkdir -p {subpackage_dir}/cpp_analysis/bin
-mkdir -p {subpackage_dir}/compiled/src
-mkdir -p {subpackage_dir}/compiled/interface
+mkdir -p {subpackage_dir}/modules/compiled/src
+mkdir -p {subpackage_dir}/modules/compiled/interface
 '''.format(subpackage_dir=subpackage_dir)
 
 datastructure_template='''
@@ -301,6 +305,10 @@ compiled_module_template='''
 namespace p = boost::python;
 namespace np = boost::python::numpy;
 
+/*
+ * Example of a python module that will be compiled.
+ * It can be used, e.g. to convert from fully custom input data
+ */
 
 np::ndarray readFirstFeatures(std::string infile){
 
@@ -407,15 +415,15 @@ with  open(subpackage_dir+'/modules/compiled/Makefile','w') as lfile:
     
 with  open(subpackage_dir+'/modules/compiled/src/c_convert.C','w') as lfile:
     lfile.write(compiled_module_template)
+
+
+print('subpackage '+ subpackage_name + " created in "+subpackage_dir)    
+if args.data:
+    print('creating example data... (10 training files, 1 test file, 1000 events each)')
+    os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
+    print('example data can be found in '+subpackage_dir+'/example_data.')
     
-if not args.data:
-    exit()
-print('creating example data... (10 training files, 1 test file, 1000 events each)')
-os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
-
-
-print('example data can be found in '+subpackage_dir+'/example_data.')
-print('Before using the subpackage, please log out, log in again and then source the "env.sh" file in the subpackage directory (not in DeepJetCore).')
+print('Before using the subpackage, source the "env.sh" file in the subpackage directory (not in DeepJetCore).')
 print('to convert to example TrainData format use:')
 print('convertFromSource.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
 
