@@ -321,7 +321,7 @@ def plotLoss(infilename,outfilename,range):
     elif automax>0:
         plt.ylim([automin*0.9,automax*1.1])
     plt.show()
-    #plt.savefig(outfilename, format='pdf') #why does this crash?
+    plt.savefig(outfilename, format='pdf') #why does this crash?
     plt.close()
 
 

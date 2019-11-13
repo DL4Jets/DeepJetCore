@@ -35,6 +35,8 @@ RUN cd /temproot/build && \
 ENV PYTHONPATH="/usr/local/lib:${PYTHONPATH}"
 
 
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y python-tk
 RUN apt-get install -y locales
 
 RUN pip install --upgrade pip

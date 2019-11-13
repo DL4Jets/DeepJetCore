@@ -11,8 +11,8 @@
  *  Only implemented for float32 arrays
  */
 
+#include "../interface/helper.h"
 #include "../interface/simpleArray.h"
-#define BOOST_PYTHON_MAX_ARITY 20
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
 #include <exception>
@@ -30,21 +30,7 @@ np::ndarray readFromFile(std::string filename, bool shapesOnly){
     djc::simpleArray<float> ifarr(ifile);
     fclose(ifile);
 
-    auto size = ifarr.size();
-    auto shape =  ifarr.shape();
-
-    p::list pshape;
-    for(const auto& s:shape)
-        pshape.append(s);
-
-    p::tuple tshape(pshape);//not working
-
-    np::ndarray nparr = np::from_data((void*)ifarr.disownData(),
-            np::dtype::get_builtin<float>(),
-            p::make_tuple(size), p::make_tuple(sizeof(float)), p::object() );
-
-    nparr = nparr.reshape(tshape);
-    return nparr;
+    return simpleArrayToNumpy(ifarr);
 
 }
 

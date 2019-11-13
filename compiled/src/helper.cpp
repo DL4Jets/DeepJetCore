@@ -9,9 +9,18 @@
 #include "../interface/helper.h"
 #include <stdexcept>
 
+#include <iostream>
+
 namespace p = boost::python;
 namespace np = boost::python::numpy;
 
+
+
+
+inline void destroyManagerCObject(PyObject* self) {
+    auto * b = reinterpret_cast<float*>( PyCapsule_GetPointer(self, NULL) );
+    delete [] b;
+}
 
 np::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr){
 
@@ -26,11 +35,18 @@ np::ndarray simpleArrayToNumpy( djc::simpleArray<float>& ifarr){
     for(const auto& s:shape)
         pshape.append(s);
 
-    p::tuple tshape(pshape);//not working
+    p::tuple tshape(pshape);
 
-    np::ndarray nparr = np::from_data((void*)ifarr.disownData(),
+    float * data_ptr = ifarr.disownData();
+    //ifarr invalid from here on!
+
+    PyObject *capsule = ::PyCapsule_New((void *)data_ptr, NULL, (PyCapsule_Destructor)&destroyManagerCObject);
+    boost::python::handle<> h_capsule{capsule};
+    boost::python::object owner_capsule{h_capsule};
+
+    np::ndarray nparr = np::from_data((void*)data_ptr,
             np::dtype::get_builtin<float>(),
-            p::make_tuple(size), p::make_tuple(sizeof(float)), p::object() );
+            p::make_tuple(size), p::make_tuple(sizeof(float)), owner_capsule );
 
     nparr = nparr.reshape(tshape);
     return nparr;

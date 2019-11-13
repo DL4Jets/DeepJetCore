@@ -31,6 +31,9 @@ export PYTHONPATH=${subpackage}/modules:$PYTHONPATH
 export PYTHONPATH=${subpackage}/modules/datastructures:$PYTHONPATH
 export PATH=${subpackage}/scripts:$PATH
 
+export LD_LIBRARY_PATH=${subpackage}/modules/compiled:$LD_LIBRARY_PATH
+export PYTHONPATH=${subpackage}/modules/compiled:$PYTHONPATH
+
 '''.format(deepjetcore=deepjetcore, 
            subpackage=args.subpackage_name.upper(),
            subpackage_dir=os.path.abspath(subpackage_dir),
@@ -47,6 +50,8 @@ mkdir -p {subpackage_dir}/example_data
 mkdir -p {subpackage_dir}/cpp_analysis/src
 mkdir -p {subpackage_dir}/cpp_analysis/interface
 mkdir -p {subpackage_dir}/cpp_analysis/bin
+mkdir -p {subpackage_dir}/compiled/src
+mkdir -p {subpackage_dir}/compiled/interface
 '''.format(subpackage_dir=subpackage_dir)
 
 datastructure_template='''
@@ -160,7 +165,7 @@ def my_model(Inputs,otheroption):
     return Model(inputs=Inputs, outputs=predictions)
 
 
-train=training_base(testrun=False,resumeSilently=False,renewtokens=True)
+train=training_base(testrun=False,resumeSilently=False,renewtokens=False)
 
 if not train.modelSet(): # allows to resume a stopped/killed training. Only sets the model if it cannot be loaded from previous snapshot
 
@@ -240,21 +245,18 @@ CC_FLAGS += -I./interface -I${DEEPJETCORE}/compiled/interface
 
 all: $(patsubst bin/%.cpp, %, $(wildcard bin/*.cpp))
 
-#compile the module helpers if necessary
-#../modules/libsubpackagehelpers.so:
-#        cd ../modules; make; cd -
 
 %: bin/%.cpp  $(OBJ_FILES) 
-        g++ $(CC_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $< -o $@ 
+	g++ $(CC_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $< -o $@ 
 
 
 obj/%.o: src/%.cpp
-        g++ $(CC_FLAGS) -c -o $@ $<
+	g++ $(CC_FLAGS) -c -o $@ $<
 
 
 clean: 
-        rm -f obj/*.o obj/*.d
-        rm -f %
+	rm -f obj/*.o obj/*.d
+	rm -f %
 '''
 
 bin_template='''
@@ -281,6 +283,94 @@ int main(int argc, char* argv[]){
     * For more information please refer to how to analse a TTree of the root documentation
     */
 }
+'''
+
+compiled_module_template='''
+
+#include <boost/python.hpp>
+#include "boost/python/numpy.hpp"
+#include "boost/python/list.hpp"
+#include "boost/python/str.hpp"
+#include <boost/python/exception_translator.hpp>
+#include <exception>
+
+//includes from deepjetcore
+#include "helper.h"
+#include "simpleArray.h"
+
+namespace p = boost::python;
+namespace np = boost::python::numpy;
+
+
+np::ndarray readFirstFeatures(std::string infile){
+
+    auto arr = djc::simpleArray<float>({10,3,4});
+    arr.at(0,2,1) = 5. ;//filling some data
+
+    return simpleArrayToNumpy(arr);
+}
+
+BOOST_PYTHON_MODULE(c_convert) {
+    Py_Initialize();
+    np::initialize();
+    def("readFirstFeatures", &readFirstFeatures);
+}
+
+'''
+
+module_makefile='''
+
+
+#
+# This file might need some adjustments but should serve as a good basis
+#
+
+PYTHON_INCLUDE = `python-config --includes`
+PYTHON_LIB=`python-config --libs`
+
+ROOTSTUFF=`root-config --libs --glibs --ldflags`
+ROOTCFLAGS=`root-config  --cflags`
+
+CPP_FILES := $(wildcard src/*.cpp)
+OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+LD_FLAGS := `root-config --cflags --glibs`  -lMathMore -L${DEEPJETCORE}/compiled -ldeepjetcorehelpers -lquicklz
+CC_FLAGS := -fPIC -g -Wall `root-config --cflags`
+CC_FLAGS += -I./interface -I${DEEPJETCORE}/compiled/interface
+DJC_LIB = -L${DEEPJETCORE}/compiled -ldeepjetcorehelpers 
+
+
+MODULES := $(wildcard src/*.C)
+MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
+MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
+
+
+all: $(MODULES_SHARED_LIBS) $(patsubst bin/%.cpp, %, $(wildcard bin/*.cpp))
+
+#compile the module helpers if necessary
+#../modules/libsubpackagehelpers.so:
+#        cd ../modules; make; cd -
+
+%: bin/%.cpp  $(OBJ_FILES) 
+	g++ $(CC_FLAGS) $(LD_FLAGS) $(OBJ_FILES) $< -o $@ 
+
+
+obj/%.o: src/%.cpp
+	g++ $(CC_FLAGS) -c -o $@ $<
+
+
+#python modules
+
+%.so: %.o 
+	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF)  $(PYTHON_LIB) -lboost_python -lboost_numpy $(DJC_LIB)
+
+%.o: src/%.C 
+	g++   $(ROOTCFLAGS) -O2 $(CC_FLAGS) -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<
+
+
+clean: 
+	rm -f obj/*.o obj/*.d *.so
+	rm -f %
+
 '''
 
 ######## create the structure ########
@@ -311,6 +401,12 @@ with  open(subpackage_dir+'/cpp_analysis/Makefile','w') as lfile:
     
 with  open(subpackage_dir+'/cpp_analysis/bin/example.cpp','w') as lfile:
     lfile.write(bin_template)
+    
+with  open(subpackage_dir+'/modules/compiled/Makefile','w') as lfile:
+    lfile.write(module_makefile)
+    
+with  open(subpackage_dir+'/modules/compiled/src/c_convert.C','w') as lfile:
+    lfile.write(compiled_module_template)
     
 if not args.data:
     exit()
