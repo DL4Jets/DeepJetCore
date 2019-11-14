@@ -14,11 +14,13 @@ Setup
 ==========
 
 The package comes with a docker file in the subdirectory docker, which will set up a container with the needed environment.
-
+(every non-CERN user can skip to the next section now)
 
 **Users with access to Cernbox** can just run the container through the prepared script at:
 ``/eos/home-j/jkiesele/singularity/run_deepjetcore.sh``
-Please run this script from your home directory. The cache dir can get rather large and is normally located at ~/.singularity/cache. To avoid filling up the home afs, the cache can be set to /tmp or the work afs. Once the container is fully closed, the cache can be safely deleted. Singularity reacts to environment variables, e.g.
+Every user who has subscribed to the e-group ml-deepjetcore will have read access to the containers.
+
+The cache dir can get rather large and is normally located at ~/.singularity/cache. To avoid filling up the home afs, the cache can be set to /tmp or the work afs. Once the container is fully closed, the cache can be safely deleted. Singularity reacts to environment variables, e.g.
 
 ```
 export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
@@ -26,6 +28,8 @@ export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
 
 Sometimes you need to try two or three times - singularity is a bit weird. But once the contaienr is launched, everything works smoothly.
 The message about a missing user group can be safely ignored.
+
+**It is important** that your bashrc does not reset the LD_LIBRARY or PYTHOPATH environment variables.
 
 
 Usage
