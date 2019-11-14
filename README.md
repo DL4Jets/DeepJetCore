@@ -17,7 +17,7 @@ The package comes with a docker file in the subdirectory docker, which will set 
 (every non-CERN user can skip to the next section now)
 
 **Users with access to Cernbox** can just run the container through the prepared script at:
-``/eos/home-j/jkiesele/singularity/run_deepjetcore.sh``
+``/eos/home-j/jkiesele/singularity/run_deepjetcore2.sh``
 Every user who has subscribed to the e-group ml-deepjetcore will have read access to the containers.
 
 The cache dir can get rather large and is normally located at ~/.singularity/cache. To avoid filling up the home afs, the cache can be set to /tmp or the work afs. Once the container is fully closed, the cache can be safely deleted. Singularity reacts to environment variables, e.g.
