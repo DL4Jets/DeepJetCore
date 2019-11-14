@@ -29,9 +29,9 @@ public:
 
     //just give access to the vectors, don't wrap like crazy
 
-    const size_t addFeatureArray(std::vector<int> shape);
-    const size_t addTruthArray(std::vector<int> shape);
-    const size_t addWeightArray(std::vector<int> shape);
+    const size_t addFeatureArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
+    const size_t addTruthArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
+    const size_t addWeightArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
 
     const simpleArray<T> & featureArray(size_t idx) const {
         return feature_arrays_.at(idx);
@@ -114,24 +114,24 @@ private:
 
 
 template<class T>
-const size_t trainData<T>::addFeatureArray(std::vector<int> shape){
+const size_t trainData<T>::addFeatureArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
     size_t idx = feature_arrays_.size();
-    feature_arrays_.push_back(simpleArray<T>(shape));
+    feature_arrays_.push_back(simpleArray<T>(shape,rowsplits));
     return idx;
 }
 
 
 template<class T>
-const size_t trainData<T>::addTruthArray(std::vector<int> shape){
+const size_t trainData<T>::addTruthArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
     size_t idx = truth_arrays_.size();
-    truth_arrays_.push_back(simpleArray<T>(shape));
+    truth_arrays_.push_back(simpleArray<T>(shape,rowsplits));
     return idx;
 }
 
 template<class T>
-const size_t trainData<T>::addWeightArray(std::vector<int> shape){
+const size_t trainData<T>::addWeightArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
     size_t idx = weight_arrays_.size();
-    weight_arrays_.push_back(simpleArray<T>(shape));
+    weight_arrays_.push_back(simpleArray<T>(shape,rowsplits));
     return idx;
 }
 
@@ -153,6 +153,10 @@ void trainData<T>::append(const trainData<T>& td) {
             && !weight_arrays_.size()) {
         *this = td;
         return;
+    }
+    if(!td.feature_arrays_.size() && !td.truth_arrays_.size()
+            && !td.weight_arrays_.size()){
+        return ; //nothing to do
     }
     if (feature_arrays_.size() != td.feature_arrays_.size()
             || truth_arrays_.size() != td.truth_arrays_.size()

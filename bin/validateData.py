@@ -13,7 +13,7 @@ from DeepJetCore.DataCollection import DataCollection
 
 dc=DataCollection(args.inputDataCollection)
 dc.writeToFile(args.inputDataCollection+".backup")
-print('total size before: '+str(dc.nsamples))
+
 if not len(args.remove):
     dc.validate(remove=True, skip_first=int(args.skip_first))
 else:
