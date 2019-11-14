@@ -159,7 +159,9 @@ void trainDataGenerator<T>::readBuffer(){
             return;
         }
         sleep(1);
+        ntries++;
     }
+    buffer_read.clear();
     throw std::runtime_error("trainDataGenerator<T>::readBuffer: file "+nextread_+ " could not be read.");
 }
 
