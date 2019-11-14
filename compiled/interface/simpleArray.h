@@ -18,7 +18,7 @@
 
 #include <iostream>
 
-#define USEMOVE
+#define DJCSA_USEMOVE
 
 namespace djc{
 
@@ -45,7 +45,7 @@ public:
     simpleArray(const simpleArray<T>&);
     simpleArray<T>& operator=(const simpleArray<T>&);
 
-#ifdef USEMOVE
+#ifdef DJCSA_USEMOVE
     simpleArray(simpleArray<T> &&);
     simpleArray<T>& operator=(simpleArray<T> &&);
 #endif
@@ -233,7 +233,7 @@ simpleArray<T>& simpleArray<T>::operator=(const simpleArray<T>& a) {
     return *this;
 }
 
-#ifdef USEMOVE
+#ifdef DJCSA_USEMOVE
 template<class T>
 simpleArray<T>::simpleArray(simpleArray<T> && a) :
         simpleArray<T>() {

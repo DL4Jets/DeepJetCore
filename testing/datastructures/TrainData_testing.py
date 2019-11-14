@@ -93,7 +93,7 @@ class TrainData_testBatch(base_traindata_batchex):
     def __init__(self):
         base_traindata_batchex.__init__(self)
 
-    def convertFromSourceFile(self, filename, weighterobjects):
+    def convertFromSourceFile(self, filename, weighterobjects, istraining):
 
         from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
         import numpy
@@ -136,9 +136,8 @@ class TrainData_testBatch(base_traindata_batchex):
         
         print(x_global.shape, alltruth.shape, self.nsamples)
 
-        self.w=[]
-        self.x=[x_global]
-        self.y=[alltruth]
+        return [x_global], [alltruth], []
+        
         
         
         
@@ -283,7 +282,7 @@ class TrainData_testQueue(TrainData_fullTruth_base):
 
         
         
-    def convertFromSourceFile(self, filename, weighterobjects):
+    def convertFromSourceFile(self, filename, weighterobjects, istraining):
         from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles
         import numpy
         from DeepJetCore.stopwatch import stopwatch
@@ -334,7 +333,6 @@ class TrainData_testQueue(TrainData_fullTruth_base):
        
         print(x_global.shape,self.nsamples)
 
-        self.x=[x_global,x_cpf,x_npf,x_sv]
-        self.y=[alltruth]
-        self.w=[]
+        return [x_global,x_cpf,x_npf,x_sv], [alltruth], []
+        
         

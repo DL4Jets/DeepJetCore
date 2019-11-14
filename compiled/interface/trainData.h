@@ -161,6 +161,9 @@ void trainData<T>::append(const trainData<T>& td) {
     if (feature_arrays_.size() != td.feature_arrays_.size()
             || truth_arrays_.size() != td.truth_arrays_.size()
             || weight_arrays_.size() != td.weight_arrays_.size()) {
+        std::cout << "nfeat " << feature_arrays_.size() << "-" << td.feature_arrays_.size() <<'\n'
+                << "ntruth " << truth_arrays_.size() << "-" << td.truth_arrays_.size()<<'\n'
+                << "nweights " << weight_arrays_.size() << "-" <<  td.weight_arrays_.size() <<std::endl;
         throw std::out_of_range("trainData<T>::append: format not compatible.");
     }
     for(size_t i=0;i<feature_arrays_.size();i++)
@@ -230,6 +233,7 @@ void trainData<T>::readFromFile(std::string filename){
     feature_arrays_ = readArrayVector(ifile);
     truth_arrays_ = readArrayVector(ifile);
     weight_arrays_ = readArrayVector(ifile);
+
     fclose(ifile);
 
 }

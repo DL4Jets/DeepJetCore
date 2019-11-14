@@ -93,7 +93,7 @@ private:
     void shuffleFilelist();
     void readBuffer();
     void readNTotal();
-    void prepareBatch();
+    trainData<T>  prepareBatch();
     std::vector<std::string> orig_infiles_;
     std::vector<std::string> shuffled_infiles_;
     int randomcount_;
@@ -109,9 +109,6 @@ private:
     size_t lastbatchsize_;
     size_t filetimeout_;
 
-    std::thread * preparethread_;
-    trainData<T> prepared_tdbatch_;
-
     bool threading_; //in case the keras generator is indeed faster, just placeholder for now
 };
 
@@ -119,24 +116,17 @@ private:
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debug(false),
         randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
-                0), ntotal_(0), nsamplesprocessed_(0),filetimeout_(10),preparethread_(0),
+                0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 threading_(true){
 }
 
 template<class T>
 trainDataGenerator<T>::~trainDataGenerator(){
     if(readthread_){
-        //try{
-        //    delete readthread_;
-        //}catch(...){}
-        //buffer_read.clear();
         readthread_->join();
         delete readthread_;
     }
-    if(preparethread_){
-        preparethread_->join();
-        delete preparethread_;
-    }
+
 }
 
 template<class T>
@@ -153,10 +143,19 @@ void trainDataGenerator<T>::shuffleFilelist(){
 template<class T>
 void trainDataGenerator<T>::readBuffer(){
     size_t ntries = 0;
+    std::exception caught;
     while(ntries < filetimeout_){
         if(io::fileExists(nextread_)){
-            buffer_read.readFromFile(nextread_);
-            return;
+            try{
+                buffer_read.readFromFile(nextread_);
+                return;
+            }
+            catch(std::exception & e){ //if there are data glitches we don't want the whole training fail immediately
+                caught=e;
+                std::cout << "File not "<< nextread_ <<" successfully read: " << e.what() << std::endl;
+                std::cout << "trying " << filetimeout_-ntries << " more time(s)" << std::endl;
+                ntries+=1;
+            }
         }
         sleep(1);
         ntries++;
@@ -175,7 +174,7 @@ void trainDataGenerator<T>::readNTotal(){
         td.readShapesFromFile(f,fs, ts, ws);
         //first dimension is always Nelements. At least features are filled
         if(fs.size()<1 || fs.at(0).size()<1)
-            throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object");
+            throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);
         ntotal_ += fs.at(0).at(0);
     }
     nbatches_ = ntotal_/batchsize_;
@@ -186,47 +185,36 @@ template<class T>
 void trainDataGenerator<T>::prepareNextEpoch(){
 
     //prepare for next epoch, pre-read first file
-    if(preparethread_){
-        preparethread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
-        delete preparethread_;
+    if(readthread_){
+        readthread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
+        delete readthread_;
 
-        //try{ //brute force but might be ok
-        //    delete readthread_;
-        //}catch(...){}
-        //buffer_read.clear();
     }
     buffer_store.clear();
     buffer_read.clear();
-    prepared_tdbatch_.clear();
     filecount_=0;
     nsamplesprocessed_=0;
 
     shuffleFilelist();
     nextread_ = shuffled_infiles_.at(filecount_);
-    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this);
+    readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
 }
 template<class T>
 void trainDataGenerator<T>::end(){
-    if(preparethread_){
-        preparethread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
-        delete preparethread_;
-        preparethread_=0;
+    if(readthread_){
+        readthread_->join(); //this is slow! FIXME: better way to exit gracefully in a simple way
+        delete readthread_;
+        readthread_=0;
     }
 }
 
 template<class T>
 trainData<T> trainDataGenerator<T>::getBatch(){
-    if(! preparethread_)
-        throw std::runtime_error("trainDataGenerator<T>::getBatch: prepare thread not launched. Call prepareNextEpoch first");
-    preparethread_->join();
-    auto out = prepared_tdbatch_; //std::move? data not needed anymore?
-    prepared_tdbatch_.clear();
-    preparethread_ = new std::thread(&trainDataGenerator<T>::prepareBatch,this);
-    return out;
+    return prepareBatch();
 }
 
 template<class T>
-void trainDataGenerator<T>::prepareBatch(){
+trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
     size_t bufferelements=buffer_store.nElements();
 
@@ -259,7 +247,8 @@ void trainDataGenerator<T>::prepareBatch(){
         std::cout << "provided batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+batchsize_ <<
         " elements in buffer: " << bufferelements << std::endl;
     nsamplesprocessed_+=batchsize_;
-    prepared_tdbatch_ = buffer_store.split(batchsize_);
+    lastbatchsize_ = batchsize_;
+    return buffer_store.split(batchsize_);
 }
 
 
