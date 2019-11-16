@@ -42,11 +42,14 @@ int main(){
 
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
-        std::cout << i << std::endl;
     }
     std::cout << std::endl;
+    coutarray(farr);
+
+    farr.writeToFile("testfile.djcd");
 
 
+return 1;
     simpleArray<float> farr2 = farr;
 
 

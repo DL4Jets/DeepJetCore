@@ -37,20 +37,11 @@ int main(){
 
 
     //write part
-    FILE *ofile = fopen("testfile.djcd", "wb");
+    farr.writeToFile("testfile_plain.djcd");
 
-    farr.addToFile(ofile);
+    simpleArray<float>  ifarr;
+    ifarr.readFromFile("testfile_plain.djcd");
 
-    fclose(ofile);
-    //read part
-    FILE *ifile = fopen("testfile.djcd", "rb");
-
-    simpleArray<float> ifarr;
-
-    ifarr.readFromFile(ifile);
-
-
-    fclose(ifile);
 
 
     for(size_t i=0;i<ifarr.shape().size();i++)

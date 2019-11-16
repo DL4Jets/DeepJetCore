@@ -273,7 +273,7 @@ void trainData<T>::writeArrayVector(const std::vector<simpleArray<T> >& v, FILE 
     size_t size = v.size();
     io::writeToFile(&size, ofile);
     for(const auto& a: v)
-        a.addToFile(ofile);
+        a.addToFileP(ofile);
 
 }
 template<class T>

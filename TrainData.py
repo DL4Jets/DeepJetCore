@@ -35,6 +35,12 @@ def fileTimeOut(fileName, timeOut):
         time.sleep(1)
 
 
+class RaggedWrapper(object):
+    def __init__(self, data_array, rowsplits):
+        self.data_array = data_array
+        self.rowsplits = rowsplits
+
+
 
 class TrainData(object):
     '''
@@ -112,12 +118,24 @@ class TrainData(object):
         return [a[1:] for a in self.yshapes]
     
     def writeToFile(self,filename):
-        ctd.writeToFile(self.x,self.y,self.w,filename)
+        
+        x, xisr = _prepareRagged(self.x)
+        y, yisr = _prepareRagged(self.y)
+        w, wisr = _prepareRagged(self.w)
+        
+        ctd.writeToFile(x,y,w,
+                        xisr, yisr, wisr,
+                        filename)
+        
+        
+        
        
     def readFromFile(self,infile,shapesOnly=False):
         '''
         For debugging or getting shapes.
         Don't use this function for a generator, use the C++ Generator instead!
+        
+        RAGGED: TBI
         '''
         self.clear()
         self.sourcefile=infile
@@ -131,7 +149,8 @@ class TrainData(object):
         ###
         if shapesOnly:
             return
-        l = ctd.readFromFile(infile)
+        l, isr = ctd.readFromFile(infile) #make this a tuple
+        # fill differently depending on whether it's ragged or not
         self.x = l[0]
         self.y = l[1]
         self.w = l[2]
@@ -141,6 +160,19 @@ class TrainData(object):
         self.readFromFile(fileprefix,shapesOnly)
         
         
+        
+    def _prepareRagged(self, l_in):
+        israg = []
+        for l in l_in:
+            if type(l) == "RaggedWrapper":
+                israg.append[1]
+            else:
+                israg.append[0] 
+        return l_in, israg
+        
+        
+    def readFromSourceFile(self,filename, weighterobjects={}, istraining=False):
+        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects, istraining)
         
     ################# functions to be defined by the user    
         
@@ -157,10 +189,11 @@ class TrainData(object):
     
     ## if direct writeout is useful
     def writeFromSourceFile(self, filename, weighterobjects, istraining, outname):
-        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects, istraining)
+        self.readFromSourceFile(filename, weighterobjects, istraining)
         self.writeToFile(outname)
     
     ## otherwise only define the conversion rule
+    # returns a list of numpy arrays OR RaggedWrapper for ragged tensors
     def convertFromSourceFile(self, filename, weighterobjects, istraining):
         return [],[],[]
     

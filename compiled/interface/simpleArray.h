@@ -29,9 +29,8 @@ public:
 
     simpleArray();
     // row splits are indicated by a merged dimension with negative sign
-    // always merge to previous dimension
     // e.g. A x B x C x D, where B is ragged would get shape
-    // A x -A*B x C x D
+    // A x -nElementsTotal x C x D
     // ROW SPLITS START WITH 0 and end with the total number of elements along that dimension
     // therefore, the rosplits vector size is one more than the first dimension
     //
@@ -93,8 +92,6 @@ public:
 
     /*
      * Move data memory location to another object
-     * This will reset the array. Read shapes, row splits etc. before
-     * performing this operation!
      */
     T * disownData();
 
@@ -136,10 +133,14 @@ public:
      * size, shape.size(), [shape], rowsplits.size(), [rowsplits], compr: [data]
      *
      */
-    void addToFile(FILE *& ofile) const;
+    void addToFileP(FILE *& ofile) const;
 
-    void readFromFile(FILE *& ifile);
+    void readFromFileP(FILE *& ifile);
 
+    void writeToFile(const std::string& f)const;
+    void readFromFile(const std::string& f);
+
+    void cout()const;
 
     size_t sizeAt(size_t i)const;
     // higher dim row splits size_t sizeAt(size_t i,size_t j)const;
@@ -165,7 +166,7 @@ public:
     T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n);
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
-private:
+protected:
     size_t flatindex(size_t i, size_t j)const;
     size_t flatindex(size_t i, size_t j, size_t k)const;
     size_t flatindex(size_t i, size_t j, size_t k, size_t l)const;
@@ -212,7 +213,7 @@ simpleArray<T>::simpleArray(std::vector<int> shape,const std::vector<size_t>& ro
 
 template<class T>
 simpleArray<T>::simpleArray(FILE *& ifile):simpleArray<T>(){
-    readFromFile(ifile);
+    readFromFileP(ifile);
     assigned_=false;
 }
 
@@ -306,7 +307,6 @@ template<class T>
 T * simpleArray<T>::disownData() {
     T * dp = data_;
     data_ = 0;
-    clear();
     return dp;
 }
 
@@ -447,7 +447,7 @@ void simpleArray<T>::append(const simpleArray<T>& a) {
 }
 
 template<class T>
-void simpleArray<T>::addToFile(FILE *& ofile) const {
+void simpleArray<T>::addToFileP(FILE *& ofile) const {
 
 
 
@@ -471,7 +471,7 @@ void simpleArray<T>::addToFile(FILE *& ofile) const {
 }
 
 template<class T>
-void simpleArray<T>::readFromFile(FILE *& ifile) {
+void simpleArray<T>::readFromFileP(FILE *& ifile) {
     clear();
 
     float version = 0;
@@ -502,6 +502,51 @@ void simpleArray<T>::readFromFile(FILE *& ifile) {
                 "simpleArray<T>::readFromFile: expected and observed length don't match");
 
 }
+
+
+
+template<class T>
+void simpleArray<T>::writeToFile(const std::string& f)const{
+    FILE *ofile = fopen(f.data(), "wb");
+    float version = DJCDATAVERSION;
+    io::writeToFile(&version, ofile);
+    addToFileP(ofile);
+    fclose(ofile);
+
+}
+template<class T>
+void simpleArray<T>::readFromFile(const std::string& f){
+    clear();
+    FILE *ifile = fopen(f.data(), "rb");
+    if(!ifile)
+        throw std::runtime_error("trainData<T>::readFromFile: file "+f+" could not be opened.");
+    float version = 0;
+    io::readFromFile(&version, ifile);
+    if(version != DJCDATAVERSION)
+        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
+    readFromFileP(ifile);
+    fclose(ifile);
+}
+
+template<class T>
+void simpleArray<T>::cout()const{
+    std::cout << "data size "<< size() <<std::endl;
+    for(int i=0;i<size();i++){
+        std::cout << data()[i] << ", ";
+    }
+    std::cout << std::endl;
+    for(const auto s: shape())
+        std::cout << s << ", ";
+    if(isRagged()){
+        std::cout << "\nrow splits " << std::endl;
+        if(rowsplits().size()){
+            for(const auto s: rowsplits())
+                std::cout << s << ", ";
+        }
+    }
+    std::cout << std::endl;
+}
+
 template<class T>
 void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
 
@@ -526,7 +571,7 @@ int simpleArray<T>::sizeFromShape(std::vector<int> shape) const {
     for (const auto s : shape){
         size *= std::abs(s);
         if(s<0)
-            size/=previous*previous;
+            size/=previous;
         previous=s;
     }
     return size;
@@ -539,7 +584,7 @@ std::vector<int> simpleArray<T>::shapeFromRowsplits()const{
     int nbatch = shape_.at(0);
     auto outshape = shape_;
     //rowsplits.size = nbatch+1
-    outshape.at(1) = -nbatch * rowsplits_.at(rowsplits_.size()-1);
+    outshape.at(1) = - rowsplits_.at(rowsplits_.size()-1);
     return outshape;
 }
 

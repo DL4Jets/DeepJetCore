@@ -68,6 +68,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 #for me ;)    
 RUN apt-get install -y zsh 
 
+RUN apt-get install -y ffmpeg
+
 ##gpu specific stuff
 RUN pip install gpustat 
 RUN pip install setGPU
