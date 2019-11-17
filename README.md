@@ -53,11 +53,11 @@ In general, the following steps are needed for a training and evaluation:
 
 
 The general pipeline for training is depicted in the following sketch:
-![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/cpptraindata/training_pipeline.png "Data pipeline for training")
+![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/master/training_pipeline.png "Data pipeline for training")
 
 
 The general pipeline for inference/prediction is depicted in the following sketch:
-![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/cpptraindata/predict_pipeline.png "Data pipeline for prediction")
+![pipeline](https://github.com/DL4Jets/DeepJetCore/blob/master/predict_pipeline.png "Data pipeline for prediction")
 
 More information on the three function of TrainData that need to be defined by the user (in addition to the training script) is given in the next Section.
 For the training script, please refer to the example provided with ``createSubpackage.py``. 
