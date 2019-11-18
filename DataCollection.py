@@ -6,7 +6,7 @@ Created on 21 Feb 2017
 
 
 from DeepJetCore.TrainData import TrainData
-from DeepJetCore.compiled.c_dataGenerator import numpyGenerator
+from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
 import tempfile
 import pickle
 import shutil
@@ -36,6 +36,8 @@ class DataCollection(object):
         self.weighterobjects={}
         self.batch_mode = False
         self.nprocs=-1
+        
+        self.gen = None
         
     def clear(self):
         self.samples=[]
@@ -524,31 +526,32 @@ class DataCollection(object):
                 
         return out
     
-    
-    def generator(self):
+    def invokeGenerator(self):
+        self.gen = trainDataGenerator()
+        self.gen.setBatchSize(self.__batchsize)
+        self.gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
         
-        gen = numpyGenerator()
-        gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
-        gen.setBatchSize(self.__batchsize)
-        gen.debug = False
-        gen.prepareNextEpoch()
+    def getGenerator(self):
+        return self.gen
+    
+    def generatorFunction(self):
+        
+        self.gen.prepareNextEpoch()
         
         while(1):
-            try:
-                data = gen.getBatch()
-                xout = data[0]
-                yout = data[1]
-                wout = data[2]
-                
-                if gen.lastBatch(): # returns true if less than the previous batch size remains
-                    gen.prepareNextEpoch()
-                
-                if len(wout)>0:
-                    yield (xout,yout,wout)
-                else:
-                    yield (xout,yout)
-            except BaseException as e:
-                del gen
-                raise e 
+            ##needs to be adapted
+            data = self.gen.getBatch()
+            xout = data[0]
+            yout = data[1]
+            wout = data[2]
+            
+            if gen.lastBatch(): # returns true if less than the previous batch size remains
+                self.gen.prepareNextEpoch()
+            
+            if len(wout)>0:
+                yield (xout,yout,wout)
+            else:
+                yield (xout,yout)
+            
         
     

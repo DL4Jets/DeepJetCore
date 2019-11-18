@@ -433,17 +433,20 @@ class training_base(object):
         
         #prepare generator 
         
+        self.train_data.invokeGenerator()
+        self.val_data.invokeGenerator()
         
         while(self.trainedepoches < nepochs):
+            self.train_data.gen.shuffleFilelist()
             #calculate steps for this epoch
             #feed info below
-            self.keras_model.fit_generator(self.train_data.generator() ,
-                                           steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
+            self.keras_model.fit_generator(self.train_data.generatorFunction() ,
+                                           steps_per_epoch=self.train_data.gen.getNBatches(), 
                                            epochs=nepochs,
                                            initial_epoch=self.trainedepoches,
                                            callbacks=self.callbacks.callbacks,
-                                           validation_data=self.val_data.generator(),
-                                           validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
+                                           validation_data=self.val_data.generatorFunction(),
+                                           validation_steps=self.val_data.gen.getNBatches(), #)#,
                                            max_queue_size=1, #handled by DJC
                                            validation_freq=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC
@@ -452,13 +455,8 @@ class training_base(object):
             #
         
         self.saveModel("KERAS_model.h5")
-        
-        import copy
-        #reset all file reads etc
-        tmpdc=copy.deepcopy(self.train_data)
-        del self.train_data
-        self.train_data=tmpdc
-        
+        del self.train_data.gen
+        del self.val_data.gen
         return self.keras_model, self.callbacks.history
     
     
