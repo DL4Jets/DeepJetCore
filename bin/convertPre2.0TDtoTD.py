@@ -42,8 +42,5 @@ print(outfile)
 from DeepJetCore.TrainData import TrainData
 
 tdnew = traind()
-
-tdnew.x = x
-tdnew.y = y
-tdnew.w = w
+tdnew._store(x,y,w)
 tdnew.writeToFile(outfile+".djctd")

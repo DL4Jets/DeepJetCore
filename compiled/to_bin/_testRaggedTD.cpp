@@ -33,12 +33,12 @@ void coutarray(const simpleArray<float> & farr){
 
 int main(){
 
-
+#ifdef IFONREFORNOW
     std::vector<size_t> rowsplits = {0,2,5,6,8};
 
     trainData<float> td;
 
-    size_t idx = td.addFeatureArray({4,-1,2},rowsplits);
+    size_t idx = td.storeFeatureArray(simpleArray<float>({4,-1,2},rowsplits));
 
     simpleArray<float> & farr = td.featureArray(idx);
 
@@ -58,7 +58,7 @@ int main(){
 
     //first try without row splits
     trainData<float> td_nrs;
-    td_nrs.addFeatureArray({100,20,20});
+    td_nrs.storeFeatureArray(simpleArray<float>({100,20,20}));
     td_nrs = td_nrs.split(20);
     coutarray(td.featureArray(idx));
     td_nrs = td_nrs.split(10);
@@ -78,5 +78,6 @@ int main(){
     std::cout << "split  self, size after " << td.nElements() << std::endl;
     coutarray(td.featureArray(idx));
 
+#endif
 
 }

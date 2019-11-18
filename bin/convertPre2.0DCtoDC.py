@@ -65,9 +65,7 @@ def worker(i):
     y = td.y
     w = td.w
     
-    tdnew.x = x
-    tdnew.y = y
-    tdnew.w = w
+    tdnew.tdnew._store(x,y,w)
     tdnew.writeToFile(dcnew.samples[i])
     
     td.clear()

@@ -428,29 +428,29 @@ class training_base(object):
         
         print('starting training')
         if load_in_mem:
-            print('make features')
-            X_train = self.train_data.getAllFeatures()
-            X_test = self.val_data.getAllFeatures()
-            print('make truth')
-            Y_train = self.train_data.getAllLabels()
-            Y_test = self.val_data.getAllLabels()
-            self.keras_model.fit(X_train, Y_train, batch_size=batchsize, epochs=nepochs,
-                                 callbacks=self.callbacks.callbacks,
-                                 validation_data=(X_test, Y_test),
-                                 **trainargs)
-        else:
+            raise Exception('to be re-implemented later!')
+        #else:
+        
+        #prepare generator 
+        
+        
+        while(self.trainedepoches < nepochs):
+            #calculate steps for this epoch
+            #feed info below
             self.keras_model.fit_generator(self.train_data.generator() ,
                                            steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
-                                           epochs=nepochs-self.trainedepoches,
+                                           epochs=nepochs,
+                                           initial_epoch=self.trainedepoches,
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generator(),
                                            validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                                           max_queue_size=1,
-                                           #max_q_size=1,
+                                           max_queue_size=1, #handled by DJC
+                                           validation_freq=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC
                                            **trainargs)
+            self.trainedepoches += 1
+            #
         
-        self.trainedepoches=nepochs
         self.saveModel("KERAS_model.h5")
         
         import copy

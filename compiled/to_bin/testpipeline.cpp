@@ -23,7 +23,7 @@ using namespace djc;
 
 int main(){
 
-
+#ifdef igonorefownow
     bool write=true;
     if(write){
         trainData<float> bigtd;
@@ -90,7 +90,7 @@ int main(){
         gen.prepareNextEpoch();
     }
 
-
+#endif
     return 0;
 
 

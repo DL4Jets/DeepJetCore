@@ -45,6 +45,9 @@ public:
     //returns in terms of T how many compressed elements have been read (without header)
     size_t readAll(FILE *& ifile, T * arr);
 
+    //skips over the next compressed block without reading it
+    size_t skipBlock(FILE *& ifile);
+
     //writes header and compressed data
     //give size in terms of T
     void writeCompressed(const T * arr, size_t size, FILE *& ofile);
@@ -141,6 +144,15 @@ template<class T>
 size_t quicklz<T>::readAll(FILE *& ifile, T * arr) {
     readHeader(ifile);
     return readCompressedBlock(ifile, arr);
+}
+
+template<class T>
+size_t quicklz<T>::skipBlock(FILE *& ifile){
+    readHeader(ifile);
+    size_t totalbytescompressed = 0;
+    for(const auto& c:chunksizes_)
+        totalbytescompressed+=c;
+    fseek(ifile,totalbytescompressed,SEEK_CUR);
 }
 
 template<class T>

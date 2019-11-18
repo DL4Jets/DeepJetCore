@@ -54,7 +54,7 @@ void writeToFile(T * p, FILE * ofile, size_t N=1, size_t Nbytes=0){
     if(ret != Nbytes){
         std::string fname = followFileName(ofile);
         fclose(ofile);
-        throw std::runtime_error("writing to file "+fname+" not successful");
+        throw std::runtime_error("djc::io::writeToFile: writing to file "+fname+" not successful");
     }
 }
 
@@ -66,7 +66,7 @@ void readFromFile(T * p, FILE* ifile, size_t N=1, size_t Nbytes=0){
     if(ret != Nbytes){
         std::string fname = followFileName(ifile);
         fclose(ifile);
-        throw std::runtime_error("reading from file "+fname+" not successful");
+        throw std::runtime_error("djc::io::readFromFile:reading from file "+fname+" not successful");
     }
 }
 }

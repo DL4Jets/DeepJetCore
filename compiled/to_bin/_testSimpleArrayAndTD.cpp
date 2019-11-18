@@ -28,6 +28,8 @@ void coutarray(const simpleArray<float> & farr){
 
 int main(){
 
+#ifdef igonrefownow
+
     simpleArray<float> farr({5,2,1});
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
@@ -162,4 +164,5 @@ int main(){
     rbig.readFromFile("bigfile.djctd");
     std::cout << "done reading file "<< std::endl;
 
+#endif
 }

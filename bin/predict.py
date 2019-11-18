@@ -70,6 +70,13 @@ with open(args.inputSourceFileList, "r") as f:
     for inputfile in f:
         inputfile = inputfile.replace('\n', '')
         print('converting '+inputfile)
+        #
+        #  NEEDS TO BE ADAPTED TO USE SIMPLEARRAYS (for ragged)
+        #  DO LATER
+        #  FIXME
+        #
+        #
+        #
         x, y, w = td.convertFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         outfilename = "pred_"+inputfile
         print('predicting '+inputfile)

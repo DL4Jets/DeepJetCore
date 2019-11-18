@@ -8,6 +8,17 @@
 #ifndef DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 #define DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 
+//#undef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+//#define DJC_DATASTRUCTURE_PYTHON_BINDINGS //DEBUG
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+#include <boost/python.hpp>
+#include "boost/python/numpy.hpp"
+#include "boost/python/list.hpp"
+#include <boost/python/exception_translator.hpp>
+#include "helper.h"
+#endif
+
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -15,10 +26,7 @@
 #include <cstring> //memcpy
 #include "IO.h"
 #include "version.h"
-
 #include <iostream>
-
-#define DJCSA_USEMOVE
 
 namespace djc{
 
@@ -44,10 +52,9 @@ public:
     simpleArray(const simpleArray<T>&);
     simpleArray<T>& operator=(const simpleArray<T>&);
 
-#ifdef DJCSA_USEMOVE
     simpleArray(simpleArray<T> &&);
     simpleArray<T>& operator=(simpleArray<T> &&);
-#endif
+
     void clear();
 
     //reshapes if possible, creates new else
@@ -60,7 +67,6 @@ public:
     T * data() {
         return data_;
     }
-
 
     const std::vector<int>& shape() const {
         return shape_;
@@ -81,12 +87,9 @@ public:
      */
     size_t getFirstDimension()const;
 
-
     const std::vector<size_t>& rowsplits() const {
         return rowsplits_;
     }
-
-
 
     /////////// potentially dangerous operations for conversions, use with care ///////
 
@@ -134,13 +137,14 @@ public:
      *
      */
     void addToFileP(FILE *& ofile) const;
-
     void readFromFileP(FILE *& ifile);
 
     void writeToFile(const std::string& f)const;
     void readFromFile(const std::string& f);
 
     void cout()const;
+
+
 
     size_t sizeAt(size_t i)const;
     // higher dim row splits size_t sizeAt(size_t i,size_t j)const;
@@ -166,7 +170,38 @@ public:
     T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n);
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
-protected:
+
+    //static
+    /**
+     * assumes that the row splits are along the 1st dimension
+     */
+    static int findElementSplitPoint(const std::vector<size_t> & rowsplits, size_t nelements, size_t startat);
+    static std::vector<size_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
+
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+    int isize() const {
+        return (int)size_;
+    }
+    //does not transfer data ownership! only for quick writing etc.
+    void assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
+            const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
+                    boost::python::make_tuple(0), boost::python::numpy::dtype::get_builtin<size_t>()));
+
+    //copy data
+    void createFromNumpy(const boost::python::numpy::ndarray& ndarr,
+            const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
+                    boost::python::make_tuple(0), boost::python::numpy::dtype::get_builtin<size_t>()));
+
+    //transfers data ownership and cleans simpleArray instance
+    boost::python::tuple transferToNumpy();
+
+    //copy data
+    boost::python::tuple copyToNumpy()const;
+#endif
+
+
+private:
     size_t flatindex(size_t i, size_t j)const;
     size_t flatindex(size_t i, size_t j, size_t k)const;
     size_t flatindex(size_t i, size_t j, size_t k, size_t l)const;
@@ -182,6 +217,17 @@ protected:
     void checkSize(size_t idx)const;
     void checkRaggedIndex(size_t i, size_t j)const;
 
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+    std::vector<int> makeNumpyShape()const;
+    void checkArray(const boost::python::numpy::ndarray& ndarr,
+            boost::python::numpy::dtype dt=boost::python::numpy::dtype::get_builtin<T>())const;
+    void fromNumpy(const boost::python::numpy::ndarray& ndarr,
+                const boost::python::numpy::ndarray& rowsplits,
+                bool copy);
+
+#endif
+
     T * data_;
     std::vector<int> shape_;
     std::vector<size_t> rowsplits_;
@@ -192,7 +238,6 @@ protected:
 template<class T>
 simpleArray<T>::simpleArray() :
         data_(0), size_(0),assigned_(false) {
-
 }
 
 template<class T>
@@ -234,7 +279,6 @@ simpleArray<T>& simpleArray<T>::operator=(const simpleArray<T>& a) {
     return *this;
 }
 
-#ifdef DJCSA_USEMOVE
 template<class T>
 simpleArray<T>::simpleArray(simpleArray<T> && a) :
         simpleArray<T>() {
@@ -272,7 +316,7 @@ simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
     a.rowsplits_= std::vector<size_t>();
     return *this;
 }
-#endif
+
 
 template<class T>
 void simpleArray<T>::clear() {
@@ -519,11 +563,11 @@ void simpleArray<T>::readFromFile(const std::string& f){
     clear();
     FILE *ifile = fopen(f.data(), "rb");
     if(!ifile)
-        throw std::runtime_error("trainData<T>::readFromFile: file "+f+" could not be opened.");
+        throw std::runtime_error("simpleArray<T>::readFromFile: file "+f+" could not be opened.");
     float version = 0;
     io::readFromFile(&version, ifile);
     if(version != DJCDATAVERSION)
-        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
+        throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version");
     readFromFileP(ifile);
     fclose(ifile);
 }
@@ -545,6 +589,47 @@ void simpleArray<T>::cout()const{
         }
     }
     std::cout << std::endl;
+}
+
+template<class T>
+int simpleArray<T>::findElementSplitPoint(const std::vector<size_t> & rs, size_t nelements, size_t startat){
+
+//TBI
+    return 0;
+
+}
+
+template<class T>
+std::vector<size_t> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool seeknext){
+
+    float version = 0;
+    size_t size;
+    std::vector<int> shape;
+    std::vector<size_t> rowsplits;
+    io::readFromFile(&version, ifile);
+    if(version != DJCDATAVERSION)
+        throw std::runtime_error("simpleArray<T>::readRowSplitsFromFileP: wrong format version");
+
+    io::readFromFile(&size, ifile);
+
+    size_t shapesize = 0;
+    io::readFromFile(&shapesize, ifile);
+    shape = std::vector<int>(shapesize, 0);
+    io::readFromFile(&shape[0], ifile, shapesize);
+
+    size_t rssize = 0;
+    io::readFromFile(&rssize, ifile);
+    rowsplits = std::vector<size_t>(rssize, 0);
+
+    if(rssize){
+        quicklz<size_t> iqlz;
+        iqlz.readAll(ifile, &rowsplits[0]);
+    }
+    if(seeknext){
+        quicklz<T> qlz;
+        qlz.skipBlock(ifile);//sets file point to next item
+    }
+    return rowsplits;
 }
 
 template<class T>
@@ -772,6 +857,130 @@ const T & simpleArray<T>::at(size_t i, size_t j, size_t k, size_t l, size_t m, s
     checkSize(flat);
     return data_[flat];
 }
+
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+/*
+ * PYTHON / NUMPY Interface below
+ *
+ */
+template<class T>
+std::vector<int> simpleArray<T>::makeNumpyShape()const{
+    if(!isRagged())
+        return shape_;
+    std::vector<int> out;
+    for(size_t i=1;i<shape_.size();i++)
+        out.push_back(std::abs(shape_.at(i)));
+    return out;
+}
+
+template<class T>
+void simpleArray<T>::checkArray(const boost::python::numpy::ndarray& ndarr,
+        boost::python::numpy::dtype dt)const{
+    namespace p = boost::python;
+    namespace np = boost::python::numpy;
+
+    if(ndarr.get_dtype() != dt){
+        throw std::runtime_error("simpleArray<T>::checkArray: at least one array does not have right type. (e.g. row split must be np.uint)");
+    }
+    auto flags = ndarr.get_flags();
+    if(!(flags & np::ndarray::CARRAY) || !(flags & np::ndarray::C_CONTIGUOUS)){
+        throw std::runtime_error("simpleArray<T>::checkArray: at least one array is not C contiguous, please pass as numpy.ascontiguousarray(a, dtype='float32')");
+    }
+}
+
+template<class T>
+void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
+        const boost::python::numpy::ndarray& rowsplits, bool copy){
+    namespace p = boost::python;
+    namespace np = boost::python::numpy;
+
+    clear();
+    checkArray(ndarr, np::dtype::get_builtin<T>());
+
+    T * npdata = (T*)(void*) ndarr.get_data();
+    data_ = npdata;
+
+    int ndim = ndarr.get_nd();
+    std::vector<int> shape;
+    for(int s=0;s<ndim;s++)
+        shape.push_back(ndarr.shape(s));
+
+    //check row splits, anyway copied
+    if(len(rowsplits)){
+        checkArray(rowsplits, np::dtype::get_builtin<size_t>());
+        rowsplits_.resize(len(rowsplits));
+        memcpy(&(rowsplits_.at(0)),(size_t*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(size_t));
+        shape.insert(shape.begin(),len(rowsplits));
+        shape_ = shape;
+        shape_ = shapeFromRowsplits();
+    }
+    else{
+        shape_ = shape;
+    }
+    size_ = sizeFromShape(shape_);
+
+    if(copy){
+        assigned_=false;
+        data_ = new T[size_];
+        memcpy(data_, npdata, size_* sizeof(T));
+    }
+    else{
+        assigned_=true;
+    }
+}
+
+template<class T>
+void simpleArray<T>::assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
+        const boost::python::numpy::ndarray& rowsplits){
+    fromNumpy(ndarr,rowsplits, false);
+}
+template<class T>
+void simpleArray<T>::createFromNumpy(const boost::python::numpy::ndarray& ndarr,
+        const boost::python::numpy::ndarray& rowsplits){
+    fromNumpy(ndarr,rowsplits, true);
+}
+
+
+inline void destroyManagerCObject(PyObject* self) {
+    auto * b = reinterpret_cast<float*>( PyCapsule_GetPointer(self, NULL) );
+    delete [] b;
+}
+//transfers data ownership and cleans simpleArray instance
+template<class T>
+boost::python::tuple simpleArray<T>::transferToNumpy(){
+    namespace p = boost::python;
+    namespace np = boost::python::numpy;
+
+    auto shape = makeNumpyShape();
+    T * data_ptr = disownData();
+
+    np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), false);
+    np::ndarray rowsplits = STLToNumpy<size_t>(&rowsplits_.at(0), {(int)rowsplits_.size()}, rowsplits_.size(), true);
+
+    clear();//reset all
+    return p::make_tuple(dataarr,rowsplits);
+}
+
+//cpoies data
+template<class T>
+boost::python::tuple simpleArray<T>::copyToNumpy()const{
+
+    namespace p = boost::python;
+    namespace np = boost::python::numpy;
+
+    auto shape = makeNumpyShape();
+    T * data_ptr = data();
+
+    np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), true);
+    np::ndarray rowsplits = STLToNumpy<size_t>(&rowsplits_.at(0), {(int)rowsplits_.size()}, rowsplits_.size(), true);
+
+    return p::make_tuple(dataarr,rowsplits);
+
+}
+
+
+#endif
 
 }
 

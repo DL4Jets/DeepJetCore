@@ -8,6 +8,16 @@
 #ifndef DEEPJETCORE_COMPILED_INTERFACE_TRAINDATAINTERFACE_H_
 #define DEEPJETCORE_COMPILED_INTERFACE_TRAINDATAINTERFACE_H_
 
+//#define DJC_DATASTRUCTURE_PYTHON_BINDINGS//DEBUG
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+#include <boost/python.hpp>
+#include "boost/python/numpy.hpp"
+#include "boost/python/list.hpp"
+#include <boost/python/exception_translator.hpp>
+#include "helper.h"
+#endif
+
 #include "simpleArray.h"
 #include <stdio.h>
 #include "IO.h"
@@ -27,11 +37,11 @@ template<class T>
 class trainData{
 public:
 
-    //just give access to the vectors, don't wrap like crazy
 
-    const size_t addFeatureArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
-    const size_t addTruthArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
-    const size_t addWeightArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
+    //takes ownership
+    int storeFeatureArray( simpleArray<T>&);
+    int storeTruthArray( simpleArray<T>&);
+    int storeWeightArray( simpleArray<T>&);
 
     const simpleArray<T> & featureArray(size_t idx) const {
         return feature_arrays_.at(idx);
@@ -57,9 +67,9 @@ public:
         return weight_arrays_.at(idx);
     }
 
-    size_t nFeatureArrays()const{return feature_arrays_.size();}
-    size_t nTruthArrays()const{return truth_arrays_.size();}
-    size_t nWeightArrays()const{return weight_arrays_.size();}
+    int nFeatureArrays()const{return feature_arrays_.size();}
+    int nTruthArrays()const{return truth_arrays_.size();}
+    int nWeightArrays()const{return weight_arrays_.size();}
 
     /*
      * truncate all along first axis
@@ -84,22 +94,42 @@ public:
             return 0;
     }
 
+    const std::vector<std::vector<int> > & featureShapes()const{return  feature_shapes_;}
+    const std::vector<std::vector<int> > & truthShapes()const{return  truth_shapes_;}
+    const std::vector<std::vector<int> > & weightShapes()const{return  weight_shapes_;}
+
     void writeToFile(std::string filename)const;
 
     void readFromFile(std::string filename);
 
     //could use a readshape or something!
-    void readShapesFromFile(std::string filename,
-            std::vector<std::vector<int> >& feature_shapes,
-            std::vector<std::vector<int> >& truth_shapes,
-            std::vector<std::vector<int> >& weight_shapes);
+    void readShapesFromFile(const std::string& filename);
 
+    std::vector<size_t> readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency=true);
 
     void clear();
 
+
+    //from python
+    void skim(size_t batchelement);
+
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+
+    boost::python::list getKerasFeatureShapes()const;
+    boost::python::list getKerasTruthShapes()const;
+    boost::python::list getKerasWeightShapes()const;
+
+    //data generator interface
+
+#endif
+
 private:
+    void checkFile(FILE *& f, const std::string& filename="")const;
+
     void writeArrayVector(const std::vector<simpleArray<T> >&, FILE *&) const;
     std::vector<simpleArray<T> > readArrayVector(FILE *&) const;
+    void readRowSplitArray(FILE *&, std::vector<size_t> &rs, bool check)const;
     std::vector<std::vector<int> > getShapes(const std::vector<simpleArray<T> >& a)const;
     template <class U>
     void writeNested(const std::vector<std::vector<U> >& v, FILE *&)const;
@@ -110,28 +140,36 @@ private:
     std::vector<simpleArray<T> > truth_arrays_;
     std::vector<simpleArray<T> > weight_arrays_;
 
+    std::vector<std::vector<int> > feature_shapes_;
+    std::vector<std::vector<int> > truth_shapes_;
+    std::vector<std::vector<int> > weight_shapes_;
+
 };
 
 
 template<class T>
-const size_t trainData<T>::addFeatureArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
+int trainData<T>::storeFeatureArray(simpleArray<T> & a){
     size_t idx = feature_arrays_.size();
-    feature_arrays_.push_back(simpleArray<T>(shape,rowsplits));
+    a.cout();
+    feature_arrays_.push_back(std::move(a));
+    a.clear();
     return idx;
 }
 
 
 template<class T>
-const size_t trainData<T>::addTruthArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
+int trainData<T>::storeTruthArray(simpleArray<T>& a){
     size_t idx = truth_arrays_.size();
-    truth_arrays_.push_back(simpleArray<T>(shape,rowsplits));
+    truth_arrays_.push_back(std::move(a));
+    a.clear();
     return idx;
 }
 
 template<class T>
-const size_t trainData<T>::addWeightArray(std::vector<int> shape,const std::vector<size_t>& rowsplits){
+int trainData<T>::storeWeightArray(simpleArray<T> & a){
     size_t idx = weight_arrays_.size();
-    weight_arrays_.push_back(simpleArray<T>(shape,rowsplits));
+    weight_arrays_.push_back(std::move(a));
+    a.clear();
     return idx;
 }
 
@@ -217,18 +255,10 @@ template<class T>
 void trainData<T>::readFromFile(std::string filename){
     clear();
     FILE *ifile = fopen(filename.data(), "rb");
-    if(!ifile)
-        throw std::runtime_error("trainData<T>::readFromFile: file "+filename+" could not be opened.");
-    float version = 0;
-    io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
-        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
-
-    std::vector<std::vector<int> > dummy;
-    readNested(dummy, ifile);
-    readNested(dummy, ifile);
-    readNested(dummy, ifile);
-    dummy.clear();
+    checkFile(ifile);
+    readNested(feature_shapes_, ifile);
+    readNested(truth_shapes_, ifile);
+    readNested(weight_shapes_, ifile);
 
     feature_arrays_ = readArrayVector(ifile);
     truth_arrays_ = readArrayVector(ifile);
@@ -239,24 +269,49 @@ void trainData<T>::readFromFile(std::string filename){
 }
 
 template<class T>
-void trainData<T>::readShapesFromFile(std::string filename,
-        std::vector<std::vector<int> >& feature_shapes,
-        std::vector<std::vector<int> >& truth_shapes,
-        std::vector<std::vector<int> >& weight_shapes){
+void trainData<T>::readShapesFromFile(const std::string& filename){
 
     FILE *ifile = fopen(filename.data(), "rb");
-    if(!ifile)
-        throw std::runtime_error("trainData<T>::readShapesFromFile: file "+filename+" could not be opened.");
-    float version = 0;
-    io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
-        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
+    checkFile(ifile,filename);
 
-    readNested(feature_shapes, ifile);
-    readNested(truth_shapes, ifile);
-    readNested(weight_shapes, ifile);
+    readNested(feature_shapes_, ifile);
+    readNested(truth_shapes_, ifile);
+    readNested(weight_shapes_, ifile);
 
     fclose(ifile);
+
+}
+
+template<class T>
+std::vector<size_t> trainData<T>::readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency){
+    std::vector<size_t> rowsplits;
+
+    FILE *ifile = fopen(filename.data(), "rb");
+    checkFile(ifile,filename);
+
+    //shapes
+    std::vector<std::vector<int> > dummy;
+    readNested(feature_shapes_, ifile);
+    readNested(truth_shapes_, ifile);
+    readNested(weight_shapes_, ifile);
+
+    //features
+    readRowSplitArray(ifile,rowsplits,checkConsistency);
+    if(!checkConsistency && rowsplits.size()){
+        fclose(ifile);
+        return rowsplits;
+    }
+    //truth
+    readRowSplitArray(ifile,rowsplits,checkConsistency);
+    if(!checkConsistency && rowsplits.size()){
+        fclose(ifile);
+        return rowsplits;
+    }
+    //weights
+    readRowSplitArray(ifile,rowsplits,checkConsistency);
+
+    fclose(ifile);
+    return rowsplits;
 
 }
 
@@ -265,6 +320,17 @@ void trainData<T>::clear() {
     feature_arrays_.clear();
     truth_arrays_.clear();
     weight_arrays_.clear();
+}
+
+template<class T>
+void trainData<T>::checkFile(FILE *& ifile, const std::string& filename)const{
+    if(!ifile)
+        throw std::runtime_error("trainData<T>::readFromFile: file "+filename+" could not be opened.");
+    float version = 0;
+    io::readFromFile(&version, ifile);
+    if(version != DJCDATAVERSION)
+        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
+
 }
 
 template<class T>
@@ -284,6 +350,24 @@ std::vector<simpleArray<T> > trainData<T>::readArrayVector(FILE *& ifile) const{
     for(size_t i=0;i<size;i++)
         out.push_back(simpleArray<T> (ifile));
     return out;
+}
+
+template<class T>
+void trainData<T>::readRowSplitArray(FILE *& ifile, std::vector<size_t> &rowsplits, bool check)const{
+    size_t size = 0;
+    io::readFromFile(&size, ifile);
+    for(size_t i=0;i<size;i++){
+        auto frs = simpleArray<T>::readRowSplitsFromFileP(ifile, true);
+        if(frs.size()){
+            if(check){
+                if(rowsplits.size() && rowsplits != frs)
+                    throw std::runtime_error("trainData<T>::readShapesAndRowSplitsFromFile: row splits inconsistent");
+            }
+            else{
+                rowsplits=frs;
+            }
+        }
+    }
 }
 
 template<class T>
@@ -327,6 +411,70 @@ void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)con
     }
 
 }
+
+
+
+template<class T>
+void trainData<T>::skim(size_t batchelement){
+    if(batchelement > nElements())
+        throw std::out_of_range("trainData<T>::skim: batch element out of range");
+    for(auto & a : feature_arrays_){
+        a.split(batchelement);
+        a.split(1);
+    }
+    for(auto & a : truth_arrays_){
+        a.split(batchelement);
+        a.split(1);
+    }
+    for(auto & a : weight_arrays_){
+        a.split(batchelement);
+        a.split(1);
+    }
+}
+
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+
+template<class T>
+boost::python::list trainData<T>::getKerasFeatureShapes()const{
+    boost::python::list out;
+    for(const auto& a: feature_arrays_){
+        size_t start=1;
+        if(a.isRagged())
+            start=2;
+        for(size_t i=start;i<a.shape().size();i++)
+            out.append(std::abs(a.shape().at(i)));
+    }
+    return out;
+}
+template<class T>
+boost::python::list trainData<T>::getKerasTruthShapes()const{
+    boost::python::list out;
+    for(const auto& a: truth_arrays_){
+        size_t start=1;
+        if(a.isRagged())
+            start=2;
+        for(size_t i=start;i<a.shape().size();i++)
+            out.append(std::abs(a.shape().at(i)));
+    }
+    return out;
+}
+template<class T>
+boost::python::list trainData<T>::getKerasWeightShapes()const{
+    boost::python::list out;
+    for(const auto& a: weight_arrays_){
+        size_t start=1;
+        if(a.isRagged())
+            start=2;
+        for(size_t i=start;i<a.shape().size();i++)
+            out.append(std::abs(a.shape().at(i)));
+    }
+    return out;
+}
+
+
+#endif
+
 
 /*
  * Array storage:

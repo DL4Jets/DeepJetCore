@@ -3,7 +3,7 @@ Created on 20 Feb 2017
 
 @author: jkiesele
 
-New (post equals 2.0) version
+New (post equals 2.1) version
 '''
 
 from __future__ import print_function
@@ -12,7 +12,8 @@ import os
 import numpy as np
 import logging
 
-from DeepJetCore.compiled import c_trainDataInterface as ctd
+from DeepJetCore.compiled.c_trainData import trainData
+from DeepJetCore.compiled.c_simpleArray import simpleArray
 
 def fileTimeOut(fileName, timeOut):
     '''
@@ -34,146 +35,53 @@ def fileTimeOut(fileName, timeOut):
         counter+=1
         time.sleep(1)
 
+#inherit from cpp class, just slim wrapper
 
-class RaggedWrapper(object):
-    def __init__(self, data_array, rowsplits):
-        self.data_array = data_array
-        self.rowsplits = rowsplits
-
-
-
-class TrainData(object):
+class TrainData(trainData):
     '''
     Base class for batch-wise training of the DNN
     '''
-    
     def __init__(self):
-        '''
-        Constructor
+        trainData.__init__(self)
         
-        '''
-        self.clear()
-        
-        
-    def __del__(self):
-        self.clear()
-        
-
-    def clear(self):
-        
-        if hasattr(self, 'x'):
-            del self.x
-            del self.y
-            del self.w
-        if hasattr(self, 'w_list'):
-            del self.w_list
-            del self.x_list
-            del self.y_list
-            
-        self.x=[]
-        self.y=[]
-        self.w=[]
-        
-        self.xshapes=[]
-        self.yshapes=[]
-        self.wshapes=[]
-        
-        self.sourcefile=""
-        
-    def skim(self, event=0):
-        xs=[]
-        ys=[]
-        ws=[]
-        
-        for x in self.x:
-            xs.append(x[event:event+1,...])
-        for y in self.y:
-            ys.append(y[event:event+1,...])
-        for w in self.w:
-            ws.append(w[event:event+1,...])
-        self.clear()
-        self.x=xs
-        self.y=ys
-        self.w=ws 
-        for s in self.xshapes:
-            s[0]=1
-        for s in self.yshapes:
-            s[0]=1
-        for s in self.wshapes:
-            s[0]=1
-        
-    def getNTotal(self):
-        if len(self.xshapes) == 0 or len(self.xshapes[0]) == 0:
-            return 0
-        return self.xshapes[0][0]
-    
-    def getKerasFeatureShapes(self):
-        return [a[1:] for a in self.xshapes]
     
     def getInputShapes(self):
         print('TrainData:getInputShapes: Deprecated, use getKerasFeatureShapes instead')
-        return getKerasFeatureShapes()
+        return self.getKerasFeatureShapes()
         
-    def getKerasTruthShapes(self):
-        return [a[1:] for a in self.yshapes]
     
-    def writeToFile(self,filename):
-        
-        x, xisr = _prepareRagged(self.x)
-        y, yisr = _prepareRagged(self.y)
-        w, wisr = _prepareRagged(self.w)
-        
-        ctd.writeToFile(x,y,w,
-                        xisr, yisr, wisr,
-                        filename)
-        
-        
-        
-       
-    def readFromFile(self,infile,shapesOnly=False):
-        '''
-        For debugging or getting shapes.
-        Don't use this function for a generator, use the C++ Generator instead!
-        
-        RAGGED: TBI
-        '''
-        self.clear()
-        self.sourcefile=infile
-
-        print('infile',infile)
-        shapes = ctd.readShapesFromFile(infile)
-        self.xshapes = shapes[0]
-        self.yshapes = shapes[1]
-        self.wshapes = shapes[2]
-            
-        ###
-        if shapesOnly:
-            return
-        l, isr = ctd.readFromFile(infile) #make this a tuple
-        # fill differently depending on whether it's ragged or not
-        self.x = l[0]
-        self.y = l[1]
-        self.w = l[2]
-        
     def readIn(self,fileprefix,shapesOnly=False):
         print('TrainData:readIn deprecated, use readFromFile')
         self.readFromFile(fileprefix,shapesOnly)
-        
-        
-        
-    def _prepareRagged(self, l_in):
-        israg = []
-        for l in l_in:
-            if type(l) == "RaggedWrapper":
-                israg.append[1]
-            else:
-                israg.append[0] 
-        return l_in, israg
-        
+    
+    
+    def _maybeConvertToSimpleArray(self,a):
+        if str(type(a)) == "<class 'DeepJetCore.compiled.c_simpleArray.simpleArray'>":
+            return a
+        elif str(type(a)) == "<type 'numpy.ndarray'>":
+            rs = np.array([])
+            arr = simpleArray()
+            arr.createFromNumpy(a, rs)
+            return arr
+        else:
+            raise ValueError("TrainData: convertFromSourceFile MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays!")
+            
+    def _store(self, x, y, w):
+        for xa in x:
+            self.storeFeatureArray(_maybeConvertToSimpleArray(xa))
+        x = [] #collect garbage
+        for ya in y:
+            self.storeTruthArray(_maybeConvertToSimpleArray(ya))
+        y = []
+        for wa in w:
+            self.storeWeightArray(_maybeConvertToSimpleArray(wa))
+        w = []    
         
     def readFromSourceFile(self,filename, weighterobjects={}, istraining=False):
-        self.x, self.y, self.w = self.convertFromSourceFile(filename, weighterobjects, istraining)
+        x,y,w = self.convertFromSourceFile(filename, weighterobjects, istraining)
+        self._store(x,y,z)
         
+
     ################# functions to be defined by the user    
         
     def createWeighterObjects(self, allsourcefiles):
@@ -193,7 +101,7 @@ class TrainData(object):
         self.writeToFile(outname)
     
     ## otherwise only define the conversion rule
-    # returns a list of numpy arrays OR RaggedWrapper for ragged tensors
+    # returns a list of numpy arrays OR simpleArray (mandatory for ragged tensors)
     def convertFromSourceFile(self, filename, weighterobjects, istraining):
         return [],[],[]
     
