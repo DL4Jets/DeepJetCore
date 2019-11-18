@@ -120,7 +120,8 @@ public:
     boost::python::list getKerasTruthShapes()const;
     boost::python::list getKerasWeightShapes()const;
 
-    //data generator interface
+    //data generator interface get back numpy arrays / tf.tensors here for keras feeding!
+
 
 #endif
 
