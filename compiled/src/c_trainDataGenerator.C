@@ -43,6 +43,7 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
             .def("prepareNextEpoch", &trainDataGenerator<float>::prepareNextEpoch)
             .def("getBatch", &trainDataGenerator<float>::getBatch)
 
+            .def("getNTotal", &trainDataGenerator<float>::getNTotal)
 
             .def_readwrite("debug", &trainDataGenerator<float>::debug);
         ;

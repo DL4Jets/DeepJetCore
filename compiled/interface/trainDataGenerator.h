@@ -68,7 +68,6 @@ public:
         batchsize_= nelements;
         if(orig_rowsplits_.size())
             prepareSplitting();
-        nbatches_ = getNBatches();
     }
     int getNTotal()const{return ntotal_;}
 
@@ -76,7 +75,7 @@ public:
         filetimeout_=seconds;
     }
 
-    int getNBatches()const;
+    int getNBatches()const{return nbatches_;}
 
     bool lastBatch()const;
 
@@ -115,6 +114,7 @@ private:
     std::vector<size_t> shuffle_indices_;
     std::vector<std::vector<size_t> > orig_rowsplits_;
     std::vector<size_t> splits_;
+    std::vector<bool> usebatch_;
     int randomcount_;
     size_t batchsize_;
 
@@ -196,13 +196,11 @@ void trainDataGenerator<T>::readInfo(){
     for(const auto& f: orig_infiles_){
         trainData<T> td;
 
-        if(! hasRagged || firstfile){
-            std::vector<std::vector<int> > fs, ts, ws;
-            td.readShapesFromFile(f);
-            //first dimension is always Nelements. At least features are filled
-            if(td.featureShapes().size()<1 || td.featureShapes().at(0).size()<1)
-                throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);
-        }
+        td.readShapesFromFile(f);
+        //first dimension is always Nelements. At least features are filled
+        if(td.featureShapes().size()<1 || td.featureShapes().at(0).size()<1)
+            throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);
+
         if(firstfile){
             for(const auto& sv: td.featureShapes())
                 for(const auto& s:sv)
@@ -220,22 +218,27 @@ void trainDataGenerator<T>::readInfo(){
         }
         if(hasRagged){
             std::vector<size_t> rowsplits = td.readShapesAndRowSplitsFromFile(f, firstfile);//check consistency only for first
+            if(debug)
+                std::cout << "rowsplits.size() " <<rowsplits.size() << ": "<<f <<  std::endl; //DEBUG
             orig_rowsplits_.push_back(rowsplits);
         }
         firstfile=false;
         ntotal_ += td.nElements();
     }
+    if(debug)
+        std::cout << "total elements "<< ntotal_ <<std::endl;
     batchcount_=0;
     prepareSplitting();
-    nbatches_ = getNBatches();
 }
 
 
 template<class T>
 void trainDataGenerator<T>::prepareSplitting(){
     splits_.clear();
-    if(orig_rowsplits_.size()<1)
+    if(orig_rowsplits_.size()<1){
+        nbatches_ = ntotal_/batchsize_;
         return;
+    }
     std::vector<size_t> allrs;
     for(size_t i=0;i<orig_rowsplits_.size();i++){
         const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i));
@@ -250,29 +253,47 @@ void trainDataGenerator<T>::prepareSplitting(){
         }
     }
 
-    //DEBUG
-    std::cout << "all row splits " <<  allrs.size() << std::endl;
-    for(const auto& s: allrs)
-        std::cout << s << ", " ;
-    std::cout << std::endl;
-    return;
+    if(debug){
+        std::cout << "all row splits " <<  allrs.size() << std::endl;
+        for(const auto& s: allrs)
+            std::cout << s << ", " ;
+        std::cout << std::endl;
+    }
 
-    size_t startat=0;
-    for(size_t i=0;i<allrs.size();i++){
-        auto splitp = simpleArray<T>::findElementSplitPoint(allrs, batchsize_, startat);
+    std::vector<size_t> batchlengths;
+    nbatches_ = 0;
+    size_t startnextat=0;
+    while(startnextat < allrs.size()-1){
+        bool exceeds=true;
+        size_t splitpoint = startnextat;
+        auto batchlength = simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds,startnextat);
 
-        int thisbatch = splitp = startat;
+        splitpoint = startnextat - splitpoint;//since it will have been split off before
 
+        splits_.push_back(splitpoint);
+        batchlengths.push_back(batchlength);
+        usebatch_.push_back(!exceeds);
+
+        if(debug)
+            std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< "batchelems "<<splitpoint << std::endl;
+
+        if(!exceeds)
+            nbatches_++;
+    }
+
+    if(debug){
+        for(size_t i=0;i< batchlengths.size();i++){
+            std::cout << batchlengths.at(i) ;
+            if(usebatch_.at(i))
+                std::cout << " ok, " ;
+            else
+                std::cout << " no, ";
+            std::cout << splits_.at(i) << "; ";
+        }
+        std::cout << std::endl;
     }
 }
 
-template<class T>
-int trainDataGenerator<T>::getNBatches()const{
-    if(orig_rowsplits_.size()<1)
-        return ntotal_/batchsize_;
-
-    return splits_.size();
-}
 
 
 template<class T>
@@ -316,8 +337,15 @@ template<class T>
 trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
     size_t bufferelements=buffer_store.nElements();
+    size_t expect_batchelements = batchsize_;
 
-    while(bufferelements<batchsize_){
+    if(splits_.size())
+        expect_batchelements = splits_.at(batchcount_);
+
+    if(debug)
+        std::cout << "expect_batchelements "<<expect_batchelements << " vs " << bufferelements <<" bufferelements" << std::endl;
+
+    while(bufferelements<expect_batchelements){
         //if thread, read join
         if(readthread_){
             readthread_->join();
@@ -330,7 +358,8 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
         if(debug)
             std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
-            << " file read " << nextread_ << " totalfiles " << orig_infiles_.size() << std::endl;
+            << " file read " << nextread_ << " totalfiles " << orig_infiles_.size()
+            << " total events "<< ntotal_<< std::endl;
 
         if(nsamplesprocessed_ + bufferelements < ntotal_){
             if (filecount_ >= orig_infiles_.size())
@@ -338,24 +367,27 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
                         "trainDataGenerator<T>::getBatch: more batches requested than data in the sample");
 
             nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
+
+            if(debug)
+                std::cout << "start new read on file "<< nextread_ <<std::endl;
+
             filecount_++;
             readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
         }
     }
     if(debug)
-        std::cout << "provided batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+batchsize_ <<
-        " elements in buffer: " << bufferelements << std::endl;
-    nsamplesprocessed_+=batchsize_;
-    lastbatchsize_ = batchsize_;
+        std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
+        " elements in buffer: " << bufferelements <<
+        "\nsplitting at " << expect_batchelements << std::endl;
 
-    trainData<T> out;
-    if(splits_.size())
-        out = buffer_store.split(splits_.at(batchcount_));
-    else
-        out = buffer_store.split(batchsize_);
+    nsamplesprocessed_+=expect_batchelements;
+    lastbatchsize_ = expect_batchelements;
 
     batchcount_++;
-    return out;
+    if(usebatch_.size() && !usebatch_.at(batchcount_-1))//until valid batch
+        return prepareBatch();
+    return buffer_store.split(expect_batchelements);
+
 }
 
 

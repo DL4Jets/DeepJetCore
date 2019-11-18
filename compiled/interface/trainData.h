@@ -88,8 +88,8 @@ public:
     trainData<T> split(size_t splitindex);
 
     size_t nElements()const{
-        if(feature_arrays_.size())
-            return feature_arrays_.at(0).getFirstDimension();
+        if(feature_shapes_.size() && feature_shapes_.at(0).size())
+            return feature_shapes_.at(0).at(0);
         else
             return 0;
     }
@@ -135,6 +135,8 @@ private:
     void writeNested(const std::vector<std::vector<U> >& v, FILE *&)const;
     template <class U>
     void readNested( std::vector<std::vector<U> >& v, FILE *&)const;
+
+    void updateShapes();
 
     std::vector<simpleArray<T> > feature_arrays_;
     std::vector<simpleArray<T> > truth_arrays_;
@@ -210,6 +212,7 @@ void trainData<T>::append(const trainData<T>& td) {
         truth_arrays_.at(i).append(td.truth_arrays_.at(i));
     for(size_t i=0;i<weight_arrays_.size();i++)
         weight_arrays_.at(i).append(td.weight_arrays_.at(i));
+    updateShapes();
 }
 
 /*
@@ -228,6 +231,8 @@ trainData<T> trainData<T>::split(size_t splitindex) {
     for (auto& a : weight_arrays_)
         out.weight_arrays_.push_back(a.split(splitindex));
 
+    updateShapes();
+    out.updateShapes();
     return out;
 }
 
@@ -363,9 +368,7 @@ void trainData<T>::readRowSplitArray(FILE *& ifile, std::vector<size_t> &rowspli
                 if(rowsplits.size() && rowsplits != frs)
                     throw std::runtime_error("trainData<T>::readShapesAndRowSplitsFromFile: row splits inconsistent");
             }
-            else{
-                rowsplits=frs;
-            }
+            rowsplits=frs;
         }
     }
 }
@@ -412,7 +415,14 @@ void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)con
 
 }
 
+template<class T>
+void trainData<T>::updateShapes(){
 
+    feature_shapes_ = getShapes(feature_arrays_);
+    truth_shapes_ = getShapes(truth_arrays_);
+    weight_shapes_ = getShapes(weight_arrays_);
+
+}
 
 template<class T>
 void trainData<T>::skim(size_t batchelement){
@@ -430,6 +440,7 @@ void trainData<T>::skim(size_t batchelement){
         a.split(batchelement);
         a.split(1);
     }
+    updateShapes();
 }
 
 

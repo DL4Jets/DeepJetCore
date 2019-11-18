@@ -8,9 +8,6 @@
 #ifndef DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 #define DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 
-//#undef DJC_DATASTRUCTURE_PYTHON_BINDINGS
-//#define DJC_DATASTRUCTURE_PYTHON_BINDINGS //DEBUG
-
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
@@ -175,7 +172,8 @@ public:
     /**
      * assumes that the row splits are along the 1st dimension
      */
-    static int findElementSplitPoint(const std::vector<size_t> & rowsplits, size_t nelements, size_t startat);
+    static size_t findElementSplitLength(const std::vector<size_t> & rowsplits,
+            size_t nelements, size_t startat, bool & exceeds_limit, size_t& stoppedat);
     static std::vector<size_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
 
@@ -367,13 +365,20 @@ T * simpleArray<T>::disownData() {
 template<class T>
 simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     simpleArray<T> out;
-    if (!shape_.size() || (!isRagged() && splitindex > shape_.at(0))) {
+    if (!shape_.size() || ( !isRagged() && splitindex > shape_.at(0))) {
         throw std::runtime_error(
                 "simpleArray<T>::split: splitindex > shape_[0]");
     }
-    if(isRagged() && splitindex >  rowsplits_.size())
+    if(splitindex == shape_.at(0)){//exactly the whole array
+        out = *this;
+        clear();
+        return out;
+    }
+
+    if(isRagged() && splitindex >  rowsplits_.size()){
         throw std::runtime_error(
                 "simpleArray<T>::split: ragged split index out of range");
+    }
 
 
     //get split point for data
@@ -406,6 +411,7 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     out.shape_.at(0) = splitindex;
     shape_.at(0) = shape_.at(0) - splitindex;
     if(isRagged()){
+
         out.rowsplits_ = std::vector<size_t> (rowsplits_.begin(),rowsplits_.begin()+splitindex+1);
         int outnelements = out.rowsplits_.at(out.rowsplits_.size()-1);
         rowsplits_ = std::vector<size_t> (rowsplits_.begin()+splitindex,rowsplits_.end());
@@ -592,11 +598,31 @@ void simpleArray<T>::cout()const{
 }
 
 template<class T>
-int simpleArray<T>::findElementSplitPoint(const std::vector<size_t> & rs, size_t nelements, size_t startat){
+size_t simpleArray<T>::findElementSplitLength(const std::vector<size_t> & rs, size_t nelements,
+        size_t startat, bool & exceeds_limit, size_t& stoppedat){
+    if(startat >= rs.size())
+        throw std::out_of_range("simpleArray<T>::findElementSplitPoint: startat");
 
-//TBI
-    return 0;
+    exceeds_limit=false;
+    size_t elements_accumulated=0;
+    size_t new_elements_accumulated=0;
+    const size_t& start_rowsplit = rs.at(startat);
 
+    for(size_t i=startat; i < rs.size();i++){
+        new_elements_accumulated = rs.at(i) - start_rowsplit;
+        if(new_elements_accumulated > nelements){
+            if(elements_accumulated == 0){
+                exceeds_limit=true;
+                stoppedat++;
+                return new_elements_accumulated;
+            }
+            return elements_accumulated;
+        }
+        stoppedat = i;
+        elements_accumulated = new_elements_accumulated;
+    }
+    stoppedat = rs.size()-1;
+    return elements_accumulated;
 }
 
 template<class T>
@@ -911,7 +937,7 @@ void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
         checkArray(rowsplits, np::dtype::get_builtin<size_t>());
         rowsplits_.resize(len(rowsplits));
         memcpy(&(rowsplits_.at(0)),(size_t*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(size_t));
-        shape.insert(shape.begin(),len(rowsplits));
+        shape.insert(shape.begin(),len(rowsplits)-1);
         shape_ = shape;
         shape_ = shapeFromRowsplits();
     }
