@@ -437,16 +437,16 @@ class training_base(object):
         self.val_data.invokeGenerator()
         
         while(self.trainedepoches < nepochs):
-            self.train_data.gen.shuffleFilelist()
+            self.train_data.generator.shuffleFilelist()
             #calculate steps for this epoch
             #feed info below
             self.keras_model.fit_generator(self.train_data.generatorFunction() ,
-                                           steps_per_epoch=self.train_data.gen.getNBatches(), 
+                                           steps_per_epoch=self.train_data.generator.getNBatches(), 
                                            epochs=nepochs,
                                            initial_epoch=self.trainedepoches,
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generatorFunction(),
-                                           validation_steps=self.val_data.gen.getNBatches(), #)#,
+                                           validation_steps=self.val_data.generator.getNBatches(), #)#,
                                            max_queue_size=1, #handled by DJC
                                            validation_freq=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC

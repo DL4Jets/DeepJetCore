@@ -44,8 +44,12 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("skim", &trainData<float>::skim)
 
        .def("getKerasFeatureShapes", &trainData<float>::getKerasFeatureShapes)
-       .def("getKerasTruthShapes", &trainData<float>::getKerasTruthShapes)
        .def("getKerasWeightShapes", &trainData<float>::getKerasWeightShapes)
+
+       .def("getTruthRaggedFlags", &trainData<float>::getTruthRaggedFlags)
+       .def("transferFeatureListToNumpy", &trainData<float>::transferFeatureListToNumpy)
+       .def("transferTruthListToNumpy", &trainData<float>::transferTruthListToNumpy)
+       .def("transferWeightListToNumpy", &trainData<float>::transferWeightListToNumpy)
 ;
     ;
 }

@@ -7,6 +7,7 @@ Created on 21 Feb 2017
 
 from DeepJetCore.TrainData import TrainData
 from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+import tensorflow as tf
 import tempfile
 import pickle
 import shutil
@@ -527,26 +528,42 @@ class DataCollection(object):
         return out
     
     def invokeGenerator(self):
-        self.gen = trainDataGenerator()
-        self.gen.setBatchSize(self.__batchsize)
-        self.gen.setFileList([self.dataDir+ "/" + s for s in self.samples])
+        self.generator = trainDataGenerator()
+        self.generator.setBatchSize(self.__batchsize)
+        self.generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
         
-    def getGenerator(self):
-        return self.gen
     
     def generatorFunction(self):
         
-        self.gen.prepareNextEpoch()
+        self.generator.prepareNextEpoch()
+        truth_is_ragged = []
         
         while(1):
             ##needs to be adapted
-            data = self.gen.getBatch()
-            xout = data[0]
-            yout = data[1]
-            wout = data[2]
+            #
+            # Use tf.ragged.from_rowsplits (or similar)
+            #
+            data = self.generator.getBatch()
+            if not len(truth_is_ragged):
+                truth_is_ragged = data.getTruthRaggedFlags()
+            
+            xout = data.transferFeatureListToNumpy()
+            wout = data.transferWeightListToNumpy()
+            ytemp = data.transferTruthListToNumpy()
+            yout = []
+            
+            for i in range(len(truth_is_ragged)):
+                if(truth_is_ragged[i]):
+                    yout.append(tf.RaggedTensor.from_row_splits(
+                             values=ytemp[i][0],
+                             row_splits=ytemp[i][1]))
+                else:
+                    yout.append(tf.constant(ytemp[i]).to_tensor())
+                
             
             if gen.lastBatch(): # returns true if less than the previous batch size remains
                 self.gen.prepareNextEpoch()
+                truth_is_ragged=[]
             
             if len(wout)>0:
                 yield (xout,yout,wout)

@@ -117,11 +117,21 @@ public:
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 
     boost::python::list getKerasFeatureShapes()const;
-    boost::python::list getKerasTruthShapes()const;
+   // not needed boost::python::list getKerasTruthShapes()const;
     boost::python::list getKerasWeightShapes()const;
 
     //data generator interface get back numpy arrays / tf.tensors here for keras feeding!
 
+    boost::python::list getTruthRaggedFlags()const;
+
+    //no ragged support
+    boost::python::list transferFeatureListToNumpy();
+
+    //has ragged support
+    boost::python::list transferTruthListToNumpy();
+
+    //no ragged support
+    boost::python::list transferWeightListToNumpy();
 
 #endif
 
@@ -459,18 +469,18 @@ boost::python::list trainData<T>::getKerasFeatureShapes()const{
     }
     return out;
 }
-template<class T>
-boost::python::list trainData<T>::getKerasTruthShapes()const{
-    boost::python::list out;
-    for(const auto& a: truth_arrays_){
-        size_t start=1;
-        if(a.isRagged())
-            start=2;
-        for(size_t i=start;i<a.shape().size();i++)
-            out.append(std::abs(a.shape().at(i)));
-    }
-    return out;
-}
+//template<class T>
+//boost::python::list trainData<T>::getKerasTruthShapes()const{
+//    boost::python::list out;
+//    for(const auto& a: truth_arrays_){
+//        size_t start=1;
+//        if(a.isRagged())
+//            start=2;
+//        for(size_t i=start;i<a.shape().size();i++)
+//            out.append(std::abs(a.shape().at(i)));
+//    }
+//    return out;
+//}
 template<class T>
 boost::python::list trainData<T>::getKerasWeightShapes()const{
     boost::python::list out;
@@ -480,6 +490,55 @@ boost::python::list trainData<T>::getKerasWeightShapes()const{
             start=2;
         for(size_t i=start;i<a.shape().size();i++)
             out.append(std::abs(a.shape().at(i)));
+    }
+    return out;
+}
+
+
+template<class T>
+boost::python::list trainData<T>::getTruthRaggedFlags()const{
+    boost::python::list out;
+    for(const auto& a: truth_arrays_){
+        if(a.isRagged())
+            out.append(true);
+        else
+            out.append(false);
+    }
+    return out;
+}
+
+template<class T>
+boost::python::list trainData<T>::transferFeatureListToNumpy(){
+    boost::python::list out;
+    for( auto& a: feature_arrays_){
+        out.append(a.transferToNumpy()[0]);
+    }
+    return out;
+}
+
+template<class T>
+boost::python::list trainData<T>::transferTruthListToNumpy(){
+
+    boost::python::list out;
+        for( auto& a: truth_arrays_){
+            if(a.isRagged()){
+                auto nptuple = a.transferToNumpy();
+                boost::python::list subl;
+                subl.append(nptuple[0]);
+                subl.append(nptuple[1]);
+                out.append(subl);
+            }
+            else
+                out.append(a.transferToNumpy()[0]);
+        }
+        return out;
+}
+
+template<class T>
+boost::python::list trainData<T>::transferWeightListToNumpy(){
+    boost::python::list out;
+    for( auto& a: weight_arrays_){
+        out.append(a.transferToNumpy()[0]);
     }
     return out;
 }
