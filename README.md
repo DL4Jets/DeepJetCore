@@ -76,5 +76,11 @@ The TrainData class has been slimmed significantly. Now, the ``__init`` function
 Of course any user function, member etc beyond that can be defined, too.
 
 
+For developers
+=====================
+
+For developing the best strategy is to create a container or just run it, and then redirect the paths etc to the development directory. This can be done conveniently by sourcing the file ``docker_env.sh``
+
+
 
 
