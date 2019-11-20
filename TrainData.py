@@ -68,18 +68,18 @@ class TrainData(trainData):
             
     def _store(self, x, y, w):
         for xa in x:
-            self.storeFeatureArray(_maybeConvertToSimpleArray(xa))
+            self.storeFeatureArray(self._maybeConvertToSimpleArray(xa))
         x = [] #collect garbage
         for ya in y:
-            self.storeTruthArray(_maybeConvertToSimpleArray(ya))
+            self.storeTruthArray(self._maybeConvertToSimpleArray(ya))
         y = []
         for wa in w:
-            self.storeWeightArray(_maybeConvertToSimpleArray(wa))
+            self.storeWeightArray(self._maybeConvertToSimpleArray(wa))
         w = []    
         
     def readFromSourceFile(self,filename, weighterobjects={}, istraining=False):
         x,y,w = self.convertFromSourceFile(filename, weighterobjects, istraining)
-        self._store(x,y,z)
+        self._store(x,y,w)
         
 
     ################# functions to be defined by the user    

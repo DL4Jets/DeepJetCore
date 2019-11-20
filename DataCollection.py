@@ -44,7 +44,8 @@ class DataCollection(object):
         self.samples=[]
         self.sourceList=[]
         self.dataDir=""
-        self.dataclass=TrainData()
+        self.dataclass = TrainData
+        self.dataclass_instance = self.dataclass()
         self.__nsamples = 0
 
     def __iadd__(self, other):
@@ -59,11 +60,11 @@ class DataCollection(object):
         _extend_(self, other, 'sourceList')
         if self.dataDir != other.dataDir:
             raise ValueError('The two DataCollections have different data directories, still to be implemented!')
-        if type(self.dataclass) != type(other.dataclass):
-            raise ValueError(
-                'The two DataCollections were made with a'
-                ' different data class type! (%s, and %s)' % (type(self.dataclass), type(other.dataclass))
-                )
+        #if type(self.dataclass) != type(other.dataclass):
+        #    raise ValueError(
+        #        'The two DataCollections were made with a'
+        #        ' different data class type! (%s, and %s)' % (type(self.dataclass), type(other.dataclass))
+        #        )
         return self
 
     def __add__(self, other):
@@ -86,13 +87,13 @@ class DataCollection(object):
     def _readShapesIfNeeded(self):
         if len(self.samples)<1:
             return
-        if not len(self.dataclass.xshapes):
-            self.dataclass.readFromFile(self.getSamplePath(self.samples[0]),shapesOnly=True)
+        if self.dataclass_instance.nElements() < 1:
+            self.dataclass_instance.readShapesFromFile(self.getSamplePath(self.samples[0]))
         
     def _readNTotal(self):
         if not len(self.samples):
             return 0
-        gen = numpyGenerator()
+        gen = trainDataGenerator()
         gen.setFileList([self.dataDir+"/"+s for s in self.samples])
         return gen.getNTotal()
         
@@ -104,38 +105,23 @@ class DataCollection(object):
         
     def getKerasFeatureShapes(self):
         if len(self.samples)<1:
+            raise Exception("DataCollection.getKerasFeatureShapes: no files")
             return []
         self._readShapesIfNeeded()
-        return self.dataclass.getKerasFeatureShapes()
+        return self.dataclass_instance.getKerasFeatureShapes()
     
     def getInputShapes(self):
         print('DataCollection:getInputShapes deprecated, use getKerasFeatureShapes ')
         return self.getKerasFeatureShapes()
     
-    def getKerasTruthShape(self):
-        if len(self.samples)<1:
-            return []
-        self._readShapesIfNeeded()
-        return self.dataclass.getKerasTruthShapes()
-        
+       
     def setBatchSize(self,bsize):
         self.__batchsize=bsize
 
     def getBatchSize(self):
         return self.__batchsize
     
-    def getSamplesPerEpoch(self):
-        return self.getNBatchesPerEpoch()*self.__batchsize 
-    
-    def getNBatchesPerEpoch(self):
-        if self.__batchsize <= 1:
-            return 1
-        count=0
-        if self.__nsamples == 0:
-            self.__nsamples = self._readNTotal()
-        while (count+1)*self.__batchsize <= self.__nsamples:
-            count+=1
-        return count
+
     
     def validate(self, remove=True, skip_first=0):
         '''
@@ -148,7 +134,7 @@ class DataCollection(object):
         for i in range(len(self.samples)):
             if i < skip_first: continue
             if i >= len(self.samples): break
-            td=copy.deepcopy(self.dataclass)
+            td = self.dataclass ()
             fullpath=self.getSamplePath(self.samples[i])
             print('reading '+fullpath, str(i), '/', str(len(self.samples)))
             try:
@@ -172,7 +158,6 @@ class DataCollection(object):
         
     def writeToFile(self,filename):
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as fd:
-            self.dataclass.clear()
             pickle.dump(self.samples, fd,protocol=0 )
             pickle.dump(self.sourceList, fd,protocol=0 )
             pickle.dump(self.dataclass, fd,protocol=0 )
@@ -252,7 +237,6 @@ class DataCollection(object):
     def recoverCreateDataFromRootFromSnapshot(self, snapshotfile):
         snapshotfile=os.path.abspath(snapshotfile)
         self.readFromFile(snapshotfile)
-        td=self.dataclass
 
         if len(self.sourceList) < 1:
             return
@@ -287,8 +271,8 @@ class DataCollection(object):
             os.mkdir(outputDir)
         self.dataDir=outputDir
         self.samples=[]
-        self.dataclass=copy.deepcopy(dataclass)
-        td=self.dataclass
+        self.dataclass=dataclass
+        td=self.dataclass()
 
         self.weighterobjects = td.createWeighterObjects(self.sourceList)
 
@@ -300,7 +284,7 @@ class DataCollection(object):
     
     def __writeData(self, sample, outputDir):
         sw=stopwatch()
-        td=copy.deepcopy(self.dataclass)
+        td=self.dataclass()
         
         fileTimeOut(sample,120) #once available copy to ram
 
@@ -338,7 +322,7 @@ class DataCollection(object):
             logger.info('async started')
             
             sw=stopwatch()
-            td=copy.deepcopy(self.dataclass)
+            td=self.dataclass()
             sample=self.sourceList[index]
 
             if self.batch_mode or self.no_copy_on_convert:
@@ -480,16 +464,7 @@ class DataCollection(object):
                     dir_check= not self.batch_mode
                     )
         self.writeToFile(outputDir+'/'+output_name)
-        
-    def getAllLabels(self):
-        return self.__stackData(self.dataclass,'y')
-    
-    def getAllFeatures(self):
-        return self.__stackData(self.dataclass,'x')
-        
-    def getAllWeights(self):
-        return self.__stackData(self.dataclass,'w')
-    
+
     
     def getSamplePath(self,samplefile):
         #for backward compatibility
@@ -501,31 +476,14 @@ class DataCollection(object):
         #
         # FIXME: use underlying trainData.append here (improvement)
         #
-        td=dataclass
+        td=self.dataclass()
         out=[]
         firstcall=True
         for sample in self.samples:
-            td.readIn(self.getSamplePath(sample))
-            #make this generic
-            thislist=[]
-            if selector == 'x':
-                thislist=td.x
-            if selector == 'y':
-                thislist=td.y
-            if selector == 'w':
-                thislist=td.w
-               
-            if firstcall:
-                out=thislist
-                firstcall=False
-            else:
-                for i in range(0,len(thislist)):
-                    if selector == 'w':
-                        out[i] = np.append(out[i],thislist[i])
-                    else:
-                        out[i] = np.vstack((out[i],thislist[i]))
-                
-        return out
+            td2 = self.dataclass()
+            td2.readIn(self.getSamplePath(sample))
+            td.append(td2)
+        return td
     
     def invokeGenerator(self):
         self.generator = trainDataGenerator()
@@ -535,8 +493,12 @@ class DataCollection(object):
     
     def generatorFunction(self):
         
+        import numpy as np
+        self._readShapesIfNeeded()
+        truth_is_ragged = self.dataclass_instance.getTruthRaggedFlags()
+        #ragged_t = [ tf.RaggedTensor() if i else None for i in truth_is_ragged ]
+            
         self.generator.prepareNextEpoch()
-        truth_is_ragged = []
         
         while(1):
             ##needs to be adapted
@@ -544,26 +506,35 @@ class DataCollection(object):
             # Use tf.ragged.from_rowsplits (or similar)
             #
             data = self.generator.getBatch()
-            if not len(truth_is_ragged):
-                truth_is_ragged = data.getTruthRaggedFlags()
             
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
             ytemp = data.transferTruthListToNumpy()
             yout = []
-            
+
             for i in range(len(truth_is_ragged)):
                 if(truth_is_ragged[i]):
-                    yout.append(tf.RaggedTensor.from_row_splits(
-                             values=ytemp[i][0],
-                             row_splits=ytemp[i][1]))
+                    #ragged_t[i].row_splits = ytemp[i][1]
+                    #ragged_t[i].values = ytemp[i][0]
+                    #print(ytemp[i][1].dtype)
+                    a = np.array(ytemp[i][1], dtype='int64')
+                    print("here")
+                    yout.append(
+                        tf.ragged.RaggedTensorValue(values = ytemp[i][0], 
+                                                    row_splits= a) #.to_tensor()
+                        
+                        #ragged_t[i]
+                        
+                        #tf.RaggedTensor.from_row_splits(
+                        #     values=tf.constant(ytemp[i][0]),
+                        #     row_splits=tf.constant(ytemp[i][1], dtype='int64'), name="test")
+                    )
                 else:
                     yout.append(tf.constant(ytemp[i]).to_tensor())
                 
             
-            if gen.lastBatch(): # returns true if less than the previous batch size remains
-                self.gen.prepareNextEpoch()
-                truth_is_ragged=[]
+            if self.generator.lastBatch(): # returns true if less than the previous batch size remains
+                self.generator.prepareNextEpoch()
             
             if len(wout)>0:
                 yield (xout,yout,wout)

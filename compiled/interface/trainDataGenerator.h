@@ -377,7 +377,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     }
     if(debug)
         std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
-        " elements in buffer: " << bufferelements <<
+        " elements in buffer before: " << bufferelements <<
         "\nsplitting at " << expect_batchelements << std::endl;
 
     nsamplesprocessed_+=expect_batchelements;

@@ -25,10 +25,8 @@ parser.add_argument("--inRange", nargs=2, type=int, help="Input line numbers")
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
 parser.add_argument("-o",  help="set output path", metavar="PATH")
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
-parser.add_argument("--classArgs",  help="Arguments to pass to output class")
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
 parser.add_argument("-n", default='', help="(optional) number of child processes")
-parser.add_argument("--testdatafor", default='')
 parser.add_argument("--usemeansfrom", default='')
 parser.add_argument("--nothreads", action='store_true')
 parser.add_argument("--means", action='store_true', help='compute only means')
@@ -43,9 +41,7 @@ args=parser.parse_args()
 infile=args.i
 outPath=args.o
 class_name=args.c    
-class_args=args.classArgs
 recover=args.r
-testdatafor=args.testdatafor
 usemeansfrom=args.usemeansfrom
 nchilds=args.n
 
@@ -105,19 +101,11 @@ elif not recover and not testdatafor:
         print(key)
     raise Exception('wrong class selection')
 
-if testdatafor:
-    logging.info('converting test data, no weights applied')
-    dc.createTestDataForDataCollection(
-        testdatafor, infile, outPath, 
-        outname=(args.batch if args.batch else 'dataCollection.djcdc'),
-        traind=(traind(class_args) if traind else None),
-        relpath=relpath
-    )    
-elif recover:
+if recover:
     dc.recoverCreateDataFromRootFromSnapshot(recover)        
 elif args.means:
     dc.convertListOfRootFiles(
-        infile, traind(class_args) if class_args else traind(), outPath,
+        infile, traind, outPath,
         means_only=True,
         output_name='batch_template.djcdc',
         relpath=relpath
@@ -125,7 +113,7 @@ elif args.means:
 else:
     logging.info('Start conversion')
     dc.convertListOfRootFiles(
-        infile, traind(class_args) if class_args else traind(), outPath, 
+        infile, traind, outPath, 
         takeweightersfrom=usemeansfrom,
         output_name=(args.batch if args.batch else 'dataCollection.djcdc'),
         relpath=relpath

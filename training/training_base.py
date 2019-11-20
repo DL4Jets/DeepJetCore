@@ -206,6 +206,7 @@ class training_base(object):
 
 
         shapes=self.train_data.getKerasFeatureShapes()
+        print("shapes", shapes)
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
@@ -267,10 +268,7 @@ class training_base(object):
                      learningrate,
                      clipnorm=None,
                      discriminator_loss=['binary_crossentropy'],
-                     generator_loss=None,
                      print_models=False,
-                     discr_loss_weights=None,
-                     gan_loss_weights=None,
                      metrics=None,
                      **compileargs):
         if not self.keras_model and not self.GAN_mode:
@@ -290,36 +288,10 @@ class training_base(object):
                 self.optimizer = Adam(lr=self.startlearningrate)
             
             
-        if self.GAN_mode:
-            if metrics is None:
-                metrics=['accuracy']
-            else:
-                if not ('accuracy' in metrics):
-                    metrics = ['accuracy']+metrics
-                    
-            self.generator= self.create_generator(self.keras_inputs)
-            if generator_loss is None:
-                generator_loss = [null_loss for i in range(len(self.generator.outputs))]
-            self.generator.compile(optimizer=self.optimizer,loss=generator_loss,metrics=metrics,**compileargs)
-            
-            self.discriminator= self.create_discriminator(self.keras_inputs)
-            self.discriminator.compile(optimizer=self.optimizer,loss=discriminator_loss,loss_weights=discr_loss_weights,metrics=metrics,**compileargs)
-            
-            self.discriminator.trainable=False
-            self.gan = self._create_gan(self.discriminator, self.generator, self.keras_inputs)
-            self.gan.compile(optimizer=self.optimizer,loss=discriminator_loss,loss_weights=gan_loss_weights,metrics=metrics,**compileargs)
-            
-            if print_models:
-                print('GENERATOR:')
-                print(self.generator.summary())
-                print('DISCRIMINATOR:')
-                print(self.discriminator.summary())
-                print('GAN:')
-                print(self.gan.summary())
-        else:    
-            self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
-            if print_models:
-                print(self.keras_model.summary())
+         
+        self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
+        if print_models:
+            print(self.keras_model.summary())
         self.compiled=True
 
     def compileModelWithCustomOptimizer(self,

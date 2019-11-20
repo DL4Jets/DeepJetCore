@@ -192,10 +192,10 @@ public:
                     boost::python::make_tuple(0), boost::python::numpy::dtype::get_builtin<size_t>()));
 
     //transfers data ownership and cleans simpleArray instance
-    boost::python::tuple transferToNumpy();
+    boost::python::tuple transferToNumpy(bool pad_rowsplits=false);
 
     //copy data
-    boost::python::tuple copyToNumpy()const;
+    boost::python::tuple copyToNumpy(bool pad_rowsplits=false)const;
 #endif
 
 
@@ -206,10 +206,11 @@ private:
     size_t flatindex(size_t i, size_t j, size_t k, size_t l, size_t m)const;
     size_t flatindex(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
+    std::vector<size_t> padRowsplits()const;
 
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
-    int sizeFromShape(std::vector<int> shape) const;
+    size_t sizeFromShape(std::vector<int> shape) const;
     std::vector<int> shapeFromRowsplits()const; //split dim = 1!
     void checkShape(size_t ndims)const;
     void checkSize(size_t idx)const;
@@ -376,6 +377,7 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     }
 
     if(isRagged() && splitindex >  rowsplits_.size()){
+        std::cout << "split index " << splitindex  << " range: " << rowsplits_.size()<< std::endl;
         throw std::runtime_error(
                 "simpleArray<T>::split: ragged split index out of range");
     }
@@ -676,14 +678,12 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
 }
 
 template<class T>
-int simpleArray<T>::sizeFromShape(std::vector<int> shape) const {
-    int size = 1;
-    size_t previous=1;
+size_t simpleArray<T>::sizeFromShape(std::vector<int> shape) const {
+    size_t size = 1;
     for (const auto s : shape){
         size *= std::abs(s);
         if(s<0)
-            size/=previous;
-        previous=s;
+            size=std::abs(s);//first ragged dimension has the full size of previous dimensions
     }
     return size;
 }
@@ -933,7 +933,7 @@ void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
         shape.push_back(ndarr.shape(s));
 
     //check row splits, anyway copied
-    if(len(rowsplits)){
+    if(len(rowsplits)>0){
         checkArray(rowsplits, np::dtype::get_builtin<size_t>());
         rowsplits_.resize(len(rowsplits));
         memcpy(&(rowsplits_.at(0)),(size_t*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(size_t));
@@ -972,9 +972,22 @@ inline void destroyManagerCObject(PyObject* self) {
     auto * b = reinterpret_cast<float*>( PyCapsule_GetPointer(self, NULL) );
     delete [] b;
 }
+
+template<class T>
+std::vector<size_t> simpleArray<T>::padRowsplits()const{
+    std::vector<size_t>  out = rowsplits_;
+    if(out.size()){
+        size_t presize = rowsplits_.size();
+        size_t nelements = rowsplits_.at(rowsplits_.size()-1);
+        out.resize(nelements,0);
+        out.at(out.size()-1) = presize;
+    }
+    return out;
+}
+
 //transfers data ownership and cleans simpleArray instance
 template<class T>
-boost::python::tuple simpleArray<T>::transferToNumpy(){
+boost::python::tuple simpleArray<T>::transferToNumpy(bool pad_rowsplits){
     namespace p = boost::python;
     namespace np = boost::python::numpy;
 
@@ -982,15 +995,21 @@ boost::python::tuple simpleArray<T>::transferToNumpy(){
     T * data_ptr = disownData();
 
     np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), false);
-    np::ndarray rowsplits = STLToNumpy<size_t>(&rowsplits_.at(0), {(int)rowsplits_.size()}, rowsplits_.size(), true);
-
+    if(pad_rowsplits){
+        auto rsp = padRowsplits();
+        np::ndarray rowsplits = STLToNumpy<size_t>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
+        clear();
+        return p::make_tuple(dataarr,rowsplits);
+    }
+    //don't check. if rowsplits_.size()==0 function will return empty array and igonre invalid pointer
+    np::ndarray rowsplits = STLToNumpy<size_t>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
     clear();//reset all
     return p::make_tuple(dataarr,rowsplits);
 }
 
 //cpoies data
 template<class T>
-boost::python::tuple simpleArray<T>::copyToNumpy()const{
+boost::python::tuple simpleArray<T>::copyToNumpy(bool pad_rowsplits)const{
 
     namespace p = boost::python;
     namespace np = boost::python::numpy;
@@ -999,8 +1018,12 @@ boost::python::tuple simpleArray<T>::copyToNumpy()const{
     T * data_ptr = data();
 
     np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), true);
-    np::ndarray rowsplits = STLToNumpy<size_t>(&rowsplits_.at(0), {(int)rowsplits_.size()}, rowsplits_.size(), true);
-
+    if(pad_rowsplits){
+        auto rsp = padRowsplits();
+        np::ndarray rowsplits = STLToNumpy<size_t>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
+        return p::make_tuple(dataarr,rowsplits);
+    }
+    np::ndarray rowsplits = STLToNumpy<size_t>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
     return p::make_tuple(dataarr,rowsplits);
 
 }
