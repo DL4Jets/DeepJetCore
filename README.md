@@ -14,7 +14,13 @@ Setup
 ==========
 
 The package comes with a docker file in the subdirectory docker, which will set up a container with the needed environment.
-(every non-CERN user can skip to the next section now)
+
+**Building / using the container** 
+For every release, there is a container on dockerhub, the latest release is tagged as ``latest``.
+``cernml4reco/deepjetcore2:latest``
+It can be pulled using docker, or pulled from singularity. For details, please see the corresponding docker or singularity documentation.
+To build the container, the files can be found in the ``docker`` subdirectory. It is a two-stage process. First the container ``Dockerfile_base`` needs to be built, containing the basic system packages. This will take a while, because root is being compiled within. The output container name must be ``cernml4reco/djcbase:latest``. In the next step, the actual DeepJetCore container should be built on top. **Please make sure to use a release, not the developing master branch!**
+
 
 **Users with access to Cernbox** can just run the container through the prepared script at:
 ``/eos/home-j/jkiesele/singularity/run_deepjetcore2.sh``
