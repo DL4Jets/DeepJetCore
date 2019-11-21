@@ -112,7 +112,7 @@ private:
     trainData<T>  prepareBatch();
     std::vector<std::string> orig_infiles_;
     std::vector<size_t> shuffle_indices_;
-    std::vector<std::vector<size_t> > orig_rowsplits_;
+    std::vector<std::vector<int> > orig_rowsplits_;
     std::vector<size_t> splits_;
     std::vector<bool> usebatch_;
     int randomcount_;
@@ -217,7 +217,7 @@ void trainDataGenerator<T>::readInfo(){
 
         }
         if(hasRagged){
-            std::vector<size_t> rowsplits = td.readShapesAndRowSplitsFromFile(f, firstfile);//check consistency only for first
+            std::vector<int> rowsplits = td.readShapesAndRowSplitsFromFile(f, firstfile);//check consistency only for first
             if(debug)
                 std::cout << "rowsplits.size() " <<rowsplits.size() << ": "<<f <<  std::endl; //DEBUG
             orig_rowsplits_.push_back(rowsplits);
@@ -239,7 +239,7 @@ void trainDataGenerator<T>::prepareSplitting(){
         nbatches_ = ntotal_/batchsize_;
         return;
     }
-    std::vector<size_t> allrs;
+    std::vector<int> allrs;
     for(size_t i=0;i<orig_rowsplits_.size();i++){
         const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i));
         if(i==0 || allrs.size()==0){

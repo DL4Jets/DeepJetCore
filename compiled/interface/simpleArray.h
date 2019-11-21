@@ -42,7 +42,7 @@ public:
     // Only ONLY DIMENSION 1 AS RAGGED DIMENSION is supported, first dimension MUST NOT be ragged.
     //
 
-    simpleArray(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
+    simpleArray(std::vector<int> shape,const std::vector<int>& rowsplits = {});
     simpleArray(FILE *& );
     ~simpleArray();
 
@@ -55,7 +55,7 @@ public:
     void clear();
 
     //reshapes if possible, creates new else
-    void setShape(std::vector<int> shape,const std::vector<size_t>& rowsplits = {});
+    void setShape(std::vector<int> shape,const std::vector<int>& rowsplits = {});
 
     T * data() const {
         return data_;
@@ -84,7 +84,7 @@ public:
      */
     size_t getFirstDimension()const;
 
-    const std::vector<size_t>& rowsplits() const {
+    const std::vector<int>& rowsplits() const {
         return rowsplits_;
     }
 
@@ -172,9 +172,9 @@ public:
     /**
      * assumes that the row splits are along the 1st dimension
      */
-    static size_t findElementSplitLength(const std::vector<size_t> & rowsplits,
+    static size_t findElementSplitLength(const std::vector<int> & rowsplits,
             size_t nelements, size_t startat, bool & exceeds_limit, size_t& stoppedat);
-    static std::vector<size_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
+    static std::vector<int> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
 
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
@@ -206,7 +206,7 @@ private:
     size_t flatindex(size_t i, size_t j, size_t k, size_t l, size_t m)const;
     size_t flatindex(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
-    std::vector<size_t> padRowsplits()const;
+    std::vector<int> padRowsplits()const;
 
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
@@ -229,7 +229,8 @@ private:
 
     T * data_;
     std::vector<int> shape_;
-    std::vector<size_t> rowsplits_;
+    //this is int64 for better feeding to TF
+    std::vector<int> rowsplits_;
     size_t size_;
     bool assigned_;
 };
@@ -240,7 +241,7 @@ simpleArray<T>::simpleArray() :
 }
 
 template<class T>
-simpleArray<T>::simpleArray(std::vector<int> shape,const std::vector<size_t>& rowsplits) :
+simpleArray<T>::simpleArray(std::vector<int> shape,const std::vector<int>& rowsplits) :
         data_(0), size_(0),assigned_(false) {
 
     shape_ = shape;
@@ -293,7 +294,7 @@ simpleArray<T>::simpleArray(simpleArray<T> && a) :
     shape_ = std::move(a.shape_);
     a.shape_ = std::vector<int>();
     rowsplits_ = std::move(a.rowsplits_);
-    a.rowsplits_= std::vector<size_t>();
+    a.rowsplits_= std::vector<int>();
     a.clear();
 }
 
@@ -312,7 +313,7 @@ simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
     shape_ = std::move(a.shape_);
     a.shape_ = std::vector<int>();
     rowsplits_ = std::move(a.rowsplits_);
-    a.rowsplits_= std::vector<size_t>();
+    a.rowsplits_= std::vector<int>();
     return *this;
 }
 
@@ -328,7 +329,7 @@ void simpleArray<T>::clear() {
 }
 
 template<class T>
-void simpleArray<T>::setShape(std::vector<int> shape,const std::vector<size_t>& rowsplits) {
+void simpleArray<T>::setShape(std::vector<int> shape,const std::vector<int>& rowsplits) {
     if(rowsplits.size()){
         *this = simpleArray<T>(shape,rowsplits);
     }
@@ -385,7 +386,7 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
 
     //get split point for data
     ///insert rowsplit logic below
-    size_t splitpoint = splitindex;
+    int splitpoint = splitindex;
     if(isRagged()){
         splitpoint = rowsplits_.at(splitindex);
         for (size_t i = 2; i < shape_.size(); i++)
@@ -414,9 +415,9 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     shape_.at(0) = shape_.at(0) - splitindex;
     if(isRagged()){
 
-        out.rowsplits_ = std::vector<size_t> (rowsplits_.begin(),rowsplits_.begin()+splitindex+1);
+        out.rowsplits_ = std::vector<int> (rowsplits_.begin(),rowsplits_.begin()+splitindex+1);
         int outnelements = out.rowsplits_.at(out.rowsplits_.size()-1);
-        rowsplits_ = std::vector<size_t> (rowsplits_.begin()+splitindex,rowsplits_.end());
+        rowsplits_ = std::vector<int> (rowsplits_.begin()+splitindex,rowsplits_.end());
         for(size_t i=0;i<rowsplits_.size();i++){
             rowsplits_.at(i)-=outnelements;
         }
@@ -514,7 +515,7 @@ void simpleArray<T>::addToFileP(FILE *& ofile) const {
     io::writeToFile(&rssize,  ofile);
 
     if(rssize){
-        quicklz<size_t> iqlz;
+        quicklz<int> iqlz;
         iqlz.writeCompressed(&rowsplits_[0],rssize , ofile);
     }
     quicklz<T> qlz;
@@ -540,10 +541,10 @@ void simpleArray<T>::readFromFileP(FILE *& ifile) {
 
     size_t rssize = 0;
     io::readFromFile(&rssize, ifile);
-    rowsplits_ = std::vector<size_t>(rssize, 0);
+    rowsplits_ = std::vector<int>(rssize, 0);
 
     if(rssize){
-        quicklz<size_t> iqlz;
+        quicklz<int> iqlz;
         iqlz.readAll(ifile, &rowsplits_[0]);
     }
     quicklz<T> qlz;
@@ -600,7 +601,7 @@ void simpleArray<T>::cout()const{
 }
 
 template<class T>
-size_t simpleArray<T>::findElementSplitLength(const std::vector<size_t> & rs, size_t nelements,
+size_t simpleArray<T>::findElementSplitLength(const std::vector<int> & rs, size_t nelements,
         size_t startat, bool & exceeds_limit, size_t& stoppedat){
     if(startat >= rs.size())
         throw std::out_of_range("simpleArray<T>::findElementSplitPoint: startat");
@@ -628,12 +629,12 @@ size_t simpleArray<T>::findElementSplitLength(const std::vector<size_t> & rs, si
 }
 
 template<class T>
-std::vector<size_t> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool seeknext){
+std::vector<int> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool seeknext){
 
     float version = 0;
     size_t size;
     std::vector<int> shape;
-    std::vector<size_t> rowsplits;
+    std::vector<int> rowsplits;
     io::readFromFile(&version, ifile);
     if(version != DJCDATAVERSION)
         throw std::runtime_error("simpleArray<T>::readRowSplitsFromFileP: wrong format version");
@@ -647,10 +648,10 @@ std::vector<size_t> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool s
 
     size_t rssize = 0;
     io::readFromFile(&rssize, ifile);
-    rowsplits = std::vector<size_t>(rssize, 0);
+    rowsplits = std::vector<int>(rssize, 0);
 
     if(rssize){
-        quicklz<size_t> iqlz;
+        quicklz<int> iqlz;
         iqlz.readAll(ifile, &rowsplits[0]);
     }
     if(seeknext){
@@ -934,9 +935,9 @@ void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
 
     //check row splits, anyway copied
     if(len(rowsplits)>0){
-        checkArray(rowsplits, np::dtype::get_builtin<size_t>());
+        checkArray(rowsplits, np::dtype::get_builtin<int>());
         rowsplits_.resize(len(rowsplits));
-        memcpy(&(rowsplits_.at(0)),(size_t*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(size_t));
+        memcpy(&(rowsplits_.at(0)),(int*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(int));
         shape.insert(shape.begin(),len(rowsplits)-1);
         shape_ = shape;
         shape_ = shapeFromRowsplits();
@@ -974,8 +975,8 @@ inline void destroyManagerCObject(PyObject* self) {
 }
 
 template<class T>
-std::vector<size_t> simpleArray<T>::padRowsplits()const{
-    std::vector<size_t>  out = rowsplits_;
+std::vector<int> simpleArray<T>::padRowsplits()const{
+    std::vector<int>  out = rowsplits_;
     if(out.size()){
         size_t presize = rowsplits_.size();
         size_t nelements = rowsplits_.at(rowsplits_.size()-1);
@@ -997,12 +998,12 @@ boost::python::tuple simpleArray<T>::transferToNumpy(bool pad_rowsplits){
     np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), false);
     if(pad_rowsplits){
         auto rsp = padRowsplits();
-        np::ndarray rowsplits = STLToNumpy<size_t>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
+        np::ndarray rowsplits = STLToNumpy<int>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
         clear();
         return p::make_tuple(dataarr,rowsplits);
     }
     //don't check. if rowsplits_.size()==0 function will return empty array and igonre invalid pointer
-    np::ndarray rowsplits = STLToNumpy<size_t>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
+    np::ndarray rowsplits = STLToNumpy<int>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
     clear();//reset all
     return p::make_tuple(dataarr,rowsplits);
 }
@@ -1020,10 +1021,10 @@ boost::python::tuple simpleArray<T>::copyToNumpy(bool pad_rowsplits)const{
     np::ndarray dataarr = STLToNumpy<T>(data_ptr, shape, size(), true);
     if(pad_rowsplits){
         auto rsp = padRowsplits();
-        np::ndarray rowsplits = STLToNumpy<size_t>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
+        np::ndarray rowsplits = STLToNumpy<int>(&(rsp[0]), {(int)rsp.size()}, rsp.size(), true);
         return p::make_tuple(dataarr,rowsplits);
     }
-    np::ndarray rowsplits = STLToNumpy<size_t>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
+    np::ndarray rowsplits = STLToNumpy<int>(&(rowsplits_[0]), {(int)rowsplits_.size()}, rowsplits_.size(), true);
     return p::make_tuple(dataarr,rowsplits);
 
 }
