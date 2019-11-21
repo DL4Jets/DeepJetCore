@@ -407,18 +407,31 @@ class training_base(object):
         
         self.train_data.invokeGenerator()
         self.val_data.invokeGenerator()
+        #this is fixed
+        nbatches_val = self.val_data.generator.getNBatches()
+        #self.val_data.generator.debug=True
+        #self.train_data.generator.debug=True
+        #exit()
         
         while(self.trainedepoches < nepochs):
             self.train_data.generator.shuffleFilelist()
+            #this can change from epoch to epoch
+            nbatches_train = self.train_data.generator.getNBatches()
+            print('>>>>Epoch', self.trainedepoches,"/",nepochs)
+            print('training batches: ',nbatches_train)
+            print('validation batches: ',nbatches_val)
             #calculate steps for this epoch
             #feed info below
+            self.train_data.generator.prepareNextEpoch()
+            self.val_data.generator.prepareNextEpoch()
+                
             self.keras_model.fit_generator(self.train_data.generatorFunction() ,
-                                           steps_per_epoch=self.train_data.generator.getNBatches(), 
-                                           epochs=nepochs,
+                                           steps_per_epoch=nbatches_train, 
+                                           epochs=self.trainedepoches + 1,
                                            initial_epoch=self.trainedepoches,
                                            callbacks=self.callbacks.callbacks,
                                            validation_data=self.val_data.generatorFunction(),
-                                           validation_steps=self.val_data.generator.getNBatches(), #)#,
+                                           validation_steps=nbatches_val, #)#,
                                            max_queue_size=1, #handled by DJC
                                            validation_freq=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC
@@ -427,8 +440,8 @@ class training_base(object):
             #
         
         self.saveModel("KERAS_model.h5")
-        del self.train_data.gen
-        del self.val_data.gen
+        del self.train_data.generator
+        del self.val_data.generator
         return self.keras_model, self.callbacks.history
     
     

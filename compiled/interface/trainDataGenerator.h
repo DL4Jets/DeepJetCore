@@ -275,13 +275,15 @@ void trainDataGenerator<T>::prepareSplitting(){
         usebatch_.push_back(!exceeds);
 
         if(debug)
-            std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< "batchelems "<<splitpoint << std::endl;
+            std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< " batchelems "<<splitpoint << std::endl;
 
         if(!exceeds)
             nbatches_++;
     }
+    if(debug)
+        std::cout << "prepared " << nbatches_ << " batches" << std::endl;
 
-    if(debug){
+    if(debug && batchlengths.size() < 100){
         for(size_t i=0;i< batchlengths.size();i++){
             std::cout << batchlengths.at(i) ;
             if(usebatch_.at(i))

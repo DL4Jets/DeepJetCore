@@ -19,23 +19,38 @@ truth_ragged_tensor = tf.ragged.constant(2*ragged_val_list).to_tensor()
 
 def generator():
     while(1):
-        yield (flat_list, truth_ragged_tensor) # just returns the same every time
+        yield (flat_list, [ flat_list,flat_list ]) # just returns the same every time
         #yield (ragged_list, truth_ragged_tensor) 
 
 
 inputs_ragged = tf.keras.layers.Input(shape=(None, None,1), ragged=False)
 outputs_ragged = tf.keras.layers.Dense(1)(inputs_ragged)
-model_ragged = tf.keras.Model(inputs=inputs_ragged, outputs=outputs_ragged)
+outputs_ragged2 = tf.keras.layers.Dense(1)(inputs_ragged)
+model_ragged = tf.keras.Model(inputs=inputs_ragged, outputs=[outputs_ragged,outputs_ragged2])
 
 
-def loss(truth, pred):
-    return tf.reduce_mean(truth) - tf.reduce_mean(pred) #both workon ragged, too
+globaltensor=None
+
+def lossa(truth, pred):
+    global globaltensor
+    if globaltensor is not None:
+        return ( tf.reduce_mean(truth) - tf.reduce_mean(globaltensor) + tf.reduce_mean(pred) )**2
+    globaltensor= truth
+    return 0.*tf.reduce_mean(pred)
+    
+
+def lossb(truth, pred):
+    global globaltensor
+    if globaltensor is not None:
+        return ( tf.reduce_mean(truth) - tf.reduce_mean(globaltensor) + tf.reduce_mean(pred) )**2
+    globaltensor= truth
+    return 0.*tf.reduce_mean(pred)
 
 
-model_ragged.compile(optimizer='Adam', loss = loss)
+model_ragged.compile(optimizer='Adam', loss = [lossa,lossb])#this could be a ragged one, from somewhere..
 
 
-model_ragged.fit_generator(generator = generator(), steps_per_epoch=50, epochs=1, 
+model_ragged.fit_generator(generator = generator(), steps_per_epoch=50, epochs=2, 
                            validation_data=generator(), validation_steps=2,
                            max_queue_size=1,
                            workers=0)

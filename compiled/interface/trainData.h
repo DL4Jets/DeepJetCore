@@ -547,15 +547,21 @@ boost::python::list trainData<T>::transferFeatureListToNumpy(){
 
 template<class T>
 boost::python::list trainData<T>::transferTruthListToNumpy(){
+    namespace p = boost::python;
+    namespace np = boost::python::numpy;
 
     boost::python::list out;
         for( auto& a: truth_arrays_){
             if(a.isRagged()){
-                auto nptuple = a.transferToNumpy(false);
-                boost::python::list subl;
-                subl.append(nptuple[0]);
-                subl.append(nptuple[1]);
-                out.append(subl);
+                //auto arrt = a.transferToNumpy(false);
+                //boost::python::list subl;
+                //subl.append(arrt[0]);
+                //subl.append(arrt[1]);
+                //out.append(subl);
+                auto arrt = a.transferToNumpy(true);//pad row splits
+                out.append(arrt[0]);//data
+                np::ndarray rs = boost::python::extract<np::ndarray>(arrt[1]);
+                out.append(rs.reshape(p::make_tuple(-1,1)));//row splits
             }
             else{
                 out.append(a.transferToNumpy(false)[0]);}

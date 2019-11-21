@@ -229,7 +229,7 @@ class DataCollection(object):
         self.__nsamples = 0
         out.__nsamples = 0
         
-        out.weighterobjects = self.weighterobjects
+        out.weighterobjects = copy.deepcopy(self.weighterobjects)
         
         return out
         
@@ -493,12 +493,6 @@ class DataCollection(object):
     
     def generatorFunction(self):
         
-        import numpy as np
-        self._readShapesIfNeeded()
-        truth_is_ragged = self.dataclass_instance.getTruthRaggedFlags()
-        #ragged_t = [ tf.RaggedTensor() if i else None for i in truth_is_ragged ]
-            
-        self.generator.prepareNextEpoch()
         
         while(1):
             ##needs to be adapted
@@ -509,32 +503,11 @@ class DataCollection(object):
             
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
-            ytemp = data.transferTruthListToNumpy()
-            yout = []
-
-            for i in range(len(truth_is_ragged)):
-                if(truth_is_ragged[i]):
-                    #ragged_t[i].row_splits = ytemp[i][1]
-                    #ragged_t[i].values = ytemp[i][0]
-                    #print(ytemp[i][1].dtype)
-                    a = np.array(ytemp[i][1], dtype='int64')
-                    print("here")
-                    yout.append(
-                        tf.ragged.RaggedTensorValue(values = ytemp[i][0], 
-                                                    row_splits= a) #.to_tensor()
-                        
-                        #ragged_t[i]
-                        
-                        #tf.RaggedTensor.from_row_splits(
-                        #     values=tf.constant(ytemp[i][0]),
-                        #     row_splits=tf.constant(ytemp[i][1], dtype='int64'), name="test")
-                    )
-                else:
-                    yout.append(tf.constant(ytemp[i]).to_tensor())
-                
+            yout = data.transferTruthListToNumpy()
             
-            if self.generator.lastBatch(): # returns true if less than the previous batch size remains
-                self.generator.prepareNextEpoch()
+            #debug
+            #if self.generator.lastBatch(): # returns true if less than the previous batch size remains
+            #    print('\nlastbatch')
             
             if len(wout)>0:
                 yield (xout,yout,wout)
