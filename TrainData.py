@@ -106,6 +106,7 @@ class TrainData(trainData):
         return [],[],[]
     
     ## defines how to write out the prediction
+    # must not use any of the stored arrays, only the inputs
     def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):
         pass
 

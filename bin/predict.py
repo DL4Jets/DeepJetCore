@@ -2,6 +2,9 @@
 
 import imp
 from DeepJetCore.DataCollection import DataCollection
+from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+import tempfile
+import atexit
 try:
     imp.find_module('setGPU')
     import setGPU
@@ -44,9 +47,11 @@ parser.add_argument('inputModel')
 parser.add_argument('trainingDataCollection')
 parser.add_argument('inputSourceFileList')
 parser.add_argument('outputDir')
+parser.add_argument("-b", help="batch size ",default="10")
+
 
 args = parser.parse_args()
-
+batchsize = int(args.b)
  
 #if os.path.isdir(args.outputDir):
 #    raise Exception('output directory must not exists yet')
@@ -61,7 +66,7 @@ custom_objs.update(global_metrics_list)
 
 model=load_model(args.inputModel, custom_objects=custom_objs)
 dc = DataCollection(args.trainingDataCollection)
-td = dc.dataclass
+td = dc.dataclass()
 outputs = []
 inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
 os.system('mkdir -p '+args.outputDir)
@@ -69,21 +74,39 @@ os.system('mkdir -p '+args.outputDir)
 with open(args.inputSourceFileList, "r") as f:
     for inputfile in f:
         inputfile = inputfile.replace('\n', '')
-        print('converting '+inputfile)
-        #
-        #  NEEDS TO BE ADAPTED TO USE SIMPLEARRAYS (for ragged)
-        #  DO LATER
-        #  FIXME
-        #
-        #
-        #
-        x, y, w = td.convertFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         outfilename = "pred_"+inputfile
+        print('converting '+inputfile)
+
+        tmpdir = tempfile.mkdtemp(suffix="djcpred", dir="/dev/shm")
+        def removeTmp():
+            os.system("rm -rf "+tmpdir)
+        atexit.register(removeTmp)
+        
+        #reduce memory footprint here
+        td.writeFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False, "pred_tmp.djctd")
+        
+        x = td.transferFeatureListToNumpy()
+        y = td.transferWeightListToNumpy()
+        w = td.transferTruthListToNumpy()
+        
+        td.clear()
+        
+        dc.samples = [tmpdir+"/pred_tmp.djctd"]
+        dc.setBatchSize(batchsize)
+        dc.invokeGenerator()
+        nbatches = dc.generator.getNBatches()
+                
         print('predicting '+inputfile)
-        predicted = model.predict(x)
+        predicted = model.predict_generator(dc.generatorFunction(),steps=nbatches,
+                                            max_queue_size=1,use_multiprocessing=False,verbose=1)
+        
+        removeTmp()
+        
+        
         if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
             predicted = [predicted]   
         td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, inputfile)
+        
         outputs.append(outfilename)
         
     

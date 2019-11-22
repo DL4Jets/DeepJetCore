@@ -235,8 +235,20 @@ void trainDataGenerator<T>::readInfo(){
 template<class T>
 void trainDataGenerator<T>::prepareSplitting(){
     splits_.clear();
-    if(orig_rowsplits_.size()<1){
-        nbatches_ = ntotal_/batchsize_;
+    if(orig_rowsplits_.size()<1){//no row splits, just equal batch size except for last batch
+        size_t used_events=0;
+        while(used_events<ntotal_){
+            if(used_events + batchsize_ <= ntotal_){
+                splits_.push_back(batchsize_);
+                used_events+=batchsize_;
+                nbatches_++;
+            }
+            else{
+                splits_.push_back(ntotal_-used_events);
+                nbatches_++;
+                break;
+            }
+        }
         return;
     }
     std::vector<int> allrs;
@@ -339,10 +351,7 @@ template<class T>
 trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
     size_t bufferelements=buffer_store.nElements();
-    size_t expect_batchelements = batchsize_;
-
-    if(splits_.size())
-        expect_batchelements = splits_.at(batchcount_);
+    size_t expect_batchelements = splits_.at(batchcount_);
 
     if(debug)
         std::cout << "expect_batchelements "<<expect_batchelements << " vs " << bufferelements <<" bufferelements" << std::endl;
