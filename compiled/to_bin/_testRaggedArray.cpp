@@ -34,7 +34,7 @@ void coutarray(const simpleArray<float> & farr){
 int main(){
 
 
-    std::vector<int> rowsplits = {0,2,5,6,8};
+    std::vector<int64_t> rowsplits = {0,2,5,6,8};
 
     simpleArray<float> farr({4,-1,2},rowsplits);
 

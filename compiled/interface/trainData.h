@@ -105,7 +105,7 @@ public:
     //could use a readshape or something!
     void readShapesFromFile(const std::string& filename);
 
-    std::vector<int> readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency=true);
+    std::vector<int64_t> readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency=true);
 
     void clear();
 
@@ -140,7 +140,7 @@ private:
 
     void writeArrayVector(const std::vector<simpleArray<T> >&, FILE *&) const;
     std::vector<simpleArray<T> > readArrayVector(FILE *&) const;
-    void readRowSplitArray(FILE *&, std::vector<int> &rs, bool check)const;
+    void readRowSplitArray(FILE *&, std::vector<int64_t> &rs, bool check)const;
     std::vector<std::vector<int> > getShapes(const std::vector<simpleArray<T> >& a)const;
     template <class U>
     void writeNested(const std::vector<std::vector<U> >& v, FILE *&)const;
@@ -301,8 +301,8 @@ void trainData<T>::readShapesFromFile(const std::string& filename){
 }
 
 template<class T>
-std::vector<int> trainData<T>::readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency){
-    std::vector<int> rowsplits;
+std::vector<int64_t> trainData<T>::readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency){
+    std::vector<int64_t> rowsplits;
 
     FILE *ifile = fopen(filename.data(), "rb");
     checkFile(ifile,filename);
@@ -371,7 +371,7 @@ std::vector<simpleArray<T> > trainData<T>::readArrayVector(FILE *& ifile) const{
 }
 
 template<class T>
-void trainData<T>::readRowSplitArray(FILE *& ifile, std::vector<int> &rowsplits, bool check)const{
+void trainData<T>::readRowSplitArray(FILE *& ifile, std::vector<int64_t> &rowsplits, bool check)const{
     size_t size = 0;
     io::readFromFile(&size, ifile);
     for(size_t i=0;i<size;i++){
