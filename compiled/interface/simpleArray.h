@@ -211,7 +211,7 @@ private:
 
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
-    size_t sizeFromShape(std::vector<int> shape) const;
+    size_t sizeFromShape(const std::vector<int>& shape) const;
     std::vector<int> shapeFromRowsplits()const; //split dim = 1!
     void checkShape(size_t ndims)const;
     void checkSize(size_t idx)const;
@@ -680,8 +680,8 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
 }
 
 template<class T>
-size_t simpleArray<T>::sizeFromShape(std::vector<int> shape) const {
-    size_t size = 1;
+size_t simpleArray<T>::sizeFromShape(const std::vector<int>& shape) const {
+    int64_t size = 1;
     for (const auto s : shape){
         size *= std::abs(s);
         if(s<0)
@@ -694,10 +694,9 @@ template<class T>
 std::vector<int> simpleArray<T>::shapeFromRowsplits()const{
     if(!isRagged()) return shape_;
     if(shape_.size()<2) return shape_;
-    int nbatch = shape_.at(0);
     auto outshape = shape_;
     //rowsplits.size = nbatch+1
-    outshape.at(1) = - rowsplits_.at(rowsplits_.size()-1);
+    outshape.at(1) = - (int)rowsplits_.at(rowsplits_.size()-1);
     return outshape;
 }
 
@@ -939,9 +938,9 @@ void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
 
     //check row splits, anyway copied
     if(len(rowsplits)>0){
-        checkArray(rowsplits, np::dtype::get_builtin<int>());
+        checkArray(rowsplits, np::dtype::get_builtin<int64_t>());
         rowsplits_.resize(len(rowsplits));
-        memcpy(&(rowsplits_.at(0)),(int*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(int));
+        memcpy(&(rowsplits_.at(0)),(int*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(int64_t));
         shape.insert(shape.begin(),len(rowsplits)-1);
         shape_ = shape;
         shape_ = shapeFromRowsplits();

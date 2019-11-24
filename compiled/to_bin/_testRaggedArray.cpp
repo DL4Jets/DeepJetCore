@@ -43,15 +43,19 @@ int main(){
     for(float i=0;i<farr.size();i++){
         farr.data()[(int)i]=i;
     }
-    std::cout << std::endl;
-    coutarray(farr);
+
+    farr.cout();
 
     farr.writeToFile("testfile.djcd");
 
 
-return 1;
-    simpleArray<float> farr2 = farr;
 
+    simpleArray<float> farr2;
+    farr2.readFromFile("testfile.djcd");
+
+    farr2.cout();
+
+    return 1;
 
     for(float i=0;i<farr2.size();i++){
             farr2.data()[(int)i]=i;
