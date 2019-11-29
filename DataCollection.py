@@ -39,7 +39,11 @@ class DataCollection(object):
         self.nprocs=-1
         
         self.gen = None
-        
+    
+    def setDataClass(self, dataclass):
+        self.dataclass = dataclass
+        self.dataclass_instance = self.dataclass()
+           
     def clear(self):
         self.samples=[]
         self.sourceList=[]
@@ -488,8 +492,9 @@ class DataCollection(object):
     def invokeGenerator(self):
         self.generator = trainDataGenerator()
         self.generator.setBatchSize(self.__batchsize)
+        print("setting up generator...")
         self.generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
-        
+        print("..done")
     
     def generatorFunction(self):
         
@@ -500,7 +505,7 @@ class DataCollection(object):
             # Use tf.ragged.from_rowsplits (or similar)
             #
             data = self.generator.getBatch()
-            
+            print("batch size ", data.nElements())
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
             yout = data.transferTruthListToNumpy()

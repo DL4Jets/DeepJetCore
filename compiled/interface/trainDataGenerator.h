@@ -235,6 +235,7 @@ void trainDataGenerator<T>::readInfo(){
 template<class T>
 void trainDataGenerator<T>::prepareSplitting(){
     splits_.clear();
+    nbatches_=0;
     if(orig_rowsplits_.size()<1){//no row splits, just equal batch size except for last batch
         size_t used_events=0;
         while(used_events<ntotal_){
@@ -251,6 +252,9 @@ void trainDataGenerator<T>::prepareSplitting(){
         }
         return;
     }
+
+    ///////row splits part
+
     std::vector<int64_t> allrs;
     for(size_t i=0;i<orig_rowsplits_.size();i++){
         const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i));
@@ -273,7 +277,6 @@ void trainDataGenerator<T>::prepareSplitting(){
     }
 
     std::vector<size_t> batchlengths;
-    nbatches_ = 0;
     size_t startnextat=0;
     while(startnextat < allrs.size()-1){
         bool exceeds=true;
