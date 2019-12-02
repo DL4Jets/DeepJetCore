@@ -74,6 +74,12 @@ public:
         if(orig_rowsplits_.size())
             prepareSplitting();
     }
+    void setSkipTooLargeBatches(bool skipthem){
+        skiplargebatches_=skipthem;
+        if(orig_rowsplits_.size())
+            prepareSplitting();
+    }
+
     int getNTotal()const{return ntotal_;}
 
     void setFileTimeout(size_t seconds){
@@ -122,7 +128,7 @@ private:
     std::vector<bool> usebatch_;
     int randomcount_;
     size_t batchsize_;
-    bool sqelementslimit_;
+    bool sqelementslimit_,skiplargebatches_;
 
     trainData<T> buffer_store, buffer_read;
     std::thread * readthread_;
@@ -140,7 +146,7 @@ private:
 
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debug(false),
-        randomcount_(1), batchsize_(2),sqelementslimit_(false), readthread_(0), filecount_(0), nbatches_(
+        randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), filecount_(0), nbatches_(
                 0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 batchcount_(0){
 }
@@ -289,17 +295,18 @@ void trainDataGenerator<T>::prepareSplitting(){
     while(startnextat < allrs.size()-1){
         bool exceeds=true;
         size_t splitpoint = startnextat;
-        auto batchlength = simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds, sqelementslimit_);
+        simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds, sqelementslimit_);
+        size_t batchlength = startnextat - splitpoint ;
         splitpoint = startnextat - splitpoint;//since it will have been split off before
 
         splits_.push_back(splitpoint);
         batchlengths.push_back(batchlength);
-        usebatch_.push_back(!exceeds);
+        usebatch_.push_back(!exceeds || !skiplargebatches_);
 
         if(debug)
             std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< " splitpoint "<<splitpoint << std::endl;
 
-        if(!exceeds)
+        if(!exceeds || !skiplargebatches_)
             nbatches_++;
 
         //if(debugcounter>20) break; //DEBUG

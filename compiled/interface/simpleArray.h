@@ -16,6 +16,7 @@
 #include "helper.h"
 #endif
 
+#include <cmath>
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -173,7 +174,7 @@ public:
     /**
      * assumes that the row splits are along the 1st dimension
      */
-    static size_t findElementSplitLength(const std::vector<int64_t> & rowsplits,
+    static void findElementSplitLength(const std::vector<int64_t> & rowsplits,
             size_t nelements, size_t& startat, bool & exceeds_limit, bool sqelementslimit=false);
     static std::vector<int64_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
@@ -602,7 +603,7 @@ void simpleArray<T>::cout()const{
 }
 
 template<class T>
-size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, size_t nelements,
+void simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, size_t nelements,
         size_t& startat, bool & exceeds_limit, bool sqelementslimit){
     if(startat >= rs.size())
         throw std::out_of_range("simpleArray<T>::findElementSplitPoint: startat");
@@ -611,7 +612,7 @@ size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, s
     size_t elements_accumulated=0;
     size_t new_elements_accumulated=0;
     const size_t& start_rowsplit = rs.at(startat);
-
+    size_t totalaccumulated = 0;
     size_t startedat = startat;
     if(startedat<1)startedat=1;
 
@@ -633,14 +634,14 @@ size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, s
             if(elements_accumulated == 0){
                 exceeds_limit=true;
                 startat++;//skip
-                return new_elements_accumulated;
+                return;
             }
-            return elements_accumulated;
+            return;
         }
         elements_accumulated = new_elements_accumulated;
     }
     startat = rs.size()-1;
-    return elements_accumulated;
+    return;
 }
 
 template<class T>

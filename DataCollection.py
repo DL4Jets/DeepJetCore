@@ -37,7 +37,7 @@ class DataCollection(object):
         self.weighterobjects={}
         self.batch_mode = False
         self.nprocs=-1
-        
+        self.batch_uses_sum_of_squares=False
         self.gen = None
     
     def setDataClass(self, dataclass):
@@ -168,6 +168,9 @@ class DataCollection(object):
             pickle.dump(self.sourceList, fd,protocol=0 )
             pickle.dump(self.dataclass, fd,protocol=0 )
             pickle.dump(self.weighterobjects, fd, protocol=0)
+            pickle.dump(self.__batchsize, fd, protocol=0)
+            pickle.dump(self.batch_uses_sum_of_squares, fd, protocol=0)
+            
 
         shutil.move(fd.name, filename)
         
@@ -178,6 +181,8 @@ class DataCollection(object):
         try:
             self.dataclass=pickle.load(fd)
             self.weighterobjects=pickle.load(fd)
+            self.__batchsize = pickle.load(fd)
+            self.batch_uses_sum_of_squares = pickle.load(fd)
         except Exception as e:
             print(e)
             print("WARNING: wrong dataCollection format. Can still be used for training(!), but it is advised to recreate it: this is possible without converting the original data again using the script createDataCollectionFromTD.py (takes a few seconds)")
@@ -499,6 +504,7 @@ class DataCollection(object):
     def invokeGenerator(self):
         self.generator = trainDataGenerator()
         self.generator.setBatchSize(self.__batchsize)
+        self.generator.setSquaredElementsLimit(self.batch_uses_sum_of_squares)
         print("setting up generator...")
         self.generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
         print("..done")

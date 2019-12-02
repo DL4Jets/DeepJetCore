@@ -326,7 +326,8 @@ class training_base(object):
         
     def _initTraining(self,
                       nepochs,
-                     batchsize):
+                     batchsize,
+                     use_sum_of_squares=False):
         
         
         if self.submitbatch:
@@ -336,6 +337,9 @@ class training_base(object):
         
         self.train_data.setBatchSize(batchsize)
         self.val_data.setBatchSize(batchsize)
+        self.train_data.batch_uses_sum_of_squares=use_sum_of_squares
+        self.val_data.batch_uses_sum_of_squares=use_sum_of_squares
+        
         self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc')
         self.val_data.writeToFile(self.outputDir+'valsamples.djcdc')
         
@@ -355,6 +359,7 @@ class training_base(object):
     def trainModel(self,
                    nepochs,
                    batchsize,
+                   batchsize_use_sum_of_squares = False,
                    stop_patience=-1, 
                    lr_factor=0.5,
                    lr_patience=-1, 
@@ -371,7 +376,7 @@ class training_base(object):
         
         
         # write only after the output classes have been added
-        self._initTraining(nepochs,batchsize)
+        self._initTraining(nepochs,batchsize, batchsize_use_sum_of_squares)
         
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')

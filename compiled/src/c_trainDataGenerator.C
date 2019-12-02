@@ -37,6 +37,10 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
 
             .def("setFileTimeout", &trainDataGenerator<float>::setFileTimeout)
             .def("setSquaredElementsLimit", &trainDataGenerator<float>::setSquaredElementsLimit)
+            .def("setSkipTooLargeBatches", &trainDataGenerator<float>::setSkipTooLargeBatches)
+
+
+
 
             .def("getNBatches", &trainDataGenerator<float>::getNBatches)
 
