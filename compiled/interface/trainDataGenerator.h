@@ -69,6 +69,11 @@ public:
         if(orig_rowsplits_.size())
             prepareSplitting();
     }
+    void setSquaredElementsLimit(bool use_sq_limit){
+        sqelementslimit_=use_sq_limit;
+        if(orig_rowsplits_.size())
+            prepareSplitting();
+    }
     int getNTotal()const{return ntotal_;}
 
     void setFileTimeout(size_t seconds){
@@ -117,6 +122,7 @@ private:
     std::vector<bool> usebatch_;
     int randomcount_;
     size_t batchsize_;
+    bool sqelementslimit_;
 
     trainData<T> buffer_store, buffer_read;
     std::thread * readthread_;
@@ -134,7 +140,7 @@ private:
 
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debug(false),
-        randomcount_(1), batchsize_(2), readthread_(0), filecount_(0), nbatches_(
+        randomcount_(1), batchsize_(2),sqelementslimit_(false), readthread_(0), filecount_(0), nbatches_(
                 0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 batchcount_(0){
 }
@@ -276,13 +282,14 @@ void trainDataGenerator<T>::prepareSplitting(){
         std::cout << std::endl;
     }
 
+    int debugcounter = 0;
+
     std::vector<size_t> batchlengths;
-    size_t startnextat=0;
+    size_t startnextat=1;//zeroth element is zero
     while(startnextat < allrs.size()-1){
         bool exceeds=true;
         size_t splitpoint = startnextat;
-        auto batchlength = simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds,startnextat);
-
+        auto batchlength = simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds, sqelementslimit_);
         splitpoint = startnextat - splitpoint;//since it will have been split off before
 
         splits_.push_back(splitpoint);
@@ -290,10 +297,13 @@ void trainDataGenerator<T>::prepareSplitting(){
         usebatch_.push_back(!exceeds);
 
         if(debug)
-            std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< " batchelems "<<splitpoint << std::endl;
+            std::cout << ">>>> batch with size " << batchlength << " use " << !exceeds << " next start "<< startnextat<< " splitpoint "<<splitpoint << std::endl;
 
         if(!exceeds)
             nbatches_++;
+
+        //if(debugcounter>20) break; //DEBUG
+        ////debugcounter++;
     }
     if(debug)
         std::cout << "prepared " << nbatches_ << " batches" << std::endl;
@@ -397,9 +407,14 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     nsamplesprocessed_+=expect_batchelements;
     lastbatchsize_ = expect_batchelements;
 
+    bool usebatch = true;
+    if(usebatch_.size())
+        usebatch = usebatch_.at(batchcount_);
     batchcount_++;
-    if(usebatch_.size() && !usebatch_.at(batchcount_-1))//until valid batch
+    if(! usebatch){//until valid batch
+        buffer_store.split(expect_batchelements);//empty split
         return prepareBatch();
+    }
     return buffer_store.split(expect_batchelements);
 
 }

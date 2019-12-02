@@ -174,7 +174,7 @@ public:
      * assumes that the row splits are along the 1st dimension
      */
     static size_t findElementSplitLength(const std::vector<int64_t> & rowsplits,
-            size_t nelements, size_t startat, bool & exceeds_limit, size_t& stoppedat);
+            size_t nelements, size_t& startat, bool & exceeds_limit, bool sqelementslimit=false);
     static std::vector<int64_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
 
@@ -603,7 +603,7 @@ void simpleArray<T>::cout()const{
 
 template<class T>
 size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, size_t nelements,
-        size_t startat, bool & exceeds_limit, size_t& stoppedat){
+        size_t& startat, bool & exceeds_limit, bool sqelementslimit){
     if(startat >= rs.size())
         throw std::out_of_range("simpleArray<T>::findElementSplitPoint: startat");
 
@@ -612,20 +612,34 @@ size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, s
     size_t new_elements_accumulated=0;
     const size_t& start_rowsplit = rs.at(startat);
 
-    for(size_t i=startat; i < rs.size();i++){
-        new_elements_accumulated = rs.at(i) - start_rowsplit;
+    size_t startedat = startat;
+    if(startedat<1)startedat=1;
+
+    for(size_t i=startedat; i < rs.size();i++){
+        size_t to_add = rs.at(i) - rs.at(i-1);
+        if(sqelementslimit)
+            to_add *= to_add;
+
+        //std::cout << "i "<< i << std::endl;
+        //std::cout << "to_add "<< to_add << std::endl;
+        //std::cout << "new_elements_accumulated "<< new_elements_accumulated << std::endl;
+        //std::cout << "elements_accumulated "<< elements_accumulated << std::endl;
+        //std::cout << "startat "<< startat << std::endl;
+
+        startat = i; //start at next for next iteration
+
+        new_elements_accumulated += to_add;
         if(new_elements_accumulated > nelements){
             if(elements_accumulated == 0){
                 exceeds_limit=true;
-                stoppedat++;
+                startat++;//skip
                 return new_elements_accumulated;
             }
             return elements_accumulated;
         }
-        stoppedat = i;
         elements_accumulated = new_elements_accumulated;
     }
-    stoppedat = rs.size()-1;
+    startat = rs.size()-1;
     return elements_accumulated;
 }
 

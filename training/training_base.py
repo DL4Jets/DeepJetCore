@@ -15,7 +15,8 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from pdb import set_trace
-import keras
+import tensorflow as tf
+import tensorflow.keras as keras
 from keras.utils import multi_gpu_model
 
 import imp

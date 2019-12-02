@@ -143,6 +143,8 @@ class DataCollection(object):
             print('reading '+fullpath, str(i), '/', str(len(self.samples)))
             try:
                 td.readFromFile(fullpath)
+                if td.nElements() < 1:
+                    print("warning, no data in file "+fullpath)
                 del td
                 continue
             except Exception as e:
@@ -173,9 +175,14 @@ class DataCollection(object):
         fd=open(filename,'rb')
         self.samples=pickle.load(fd)
         self.sourceList=pickle.load(fd)
-        self.dataclass=pickle.load(fd)
-        self.weighterobjects=pickle.load(fd)
-        fd.close()
+        try:
+            self.dataclass=pickle.load(fd)
+            self.weighterobjects=pickle.load(fd)
+        except Exception as e:
+            print(e)
+            print("WARNING: wrong dataCollection format. Can still be used for training(!), but it is advised to recreate it: this is possible without converting the original data again using the script createDataCollectionFromTD.py (takes a few seconds)")
+        finally:
+            fd.close()
 
         self.dataDir=os.path.dirname(os.path.abspath(filename))
         self.dataDir+='/'
@@ -505,7 +512,7 @@ class DataCollection(object):
             # Use tf.ragged.from_rowsplits (or similar)
             #
             data = self.generator.getBatch()
-            print("batch size ", data.nElements())
+            #print("batch size ", data.nElements())
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
             yout = data.transferTruthListToNumpy()

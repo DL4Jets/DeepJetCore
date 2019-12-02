@@ -36,6 +36,7 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
             .def("shuffleFilelist", &trainDataGenerator<float>::shuffleFilelist)
 
             .def("setFileTimeout", &trainDataGenerator<float>::setFileTimeout)
+            .def("setSquaredElementsLimit", &trainDataGenerator<float>::setSquaredElementsLimit)
 
             .def("getNBatches", &trainDataGenerator<float>::getNBatches)
 
