@@ -47,7 +47,7 @@ parser.add_argument('inputModel')
 parser.add_argument('trainingDataCollection')
 parser.add_argument('inputSourceFileList')
 parser.add_argument('outputDir')
-parser.add_argument("-b", help="batch size ",default="10")
+parser.add_argument("-b", help="batch size ",default="-1")
 
 
 args = parser.parse_args()
@@ -82,8 +82,11 @@ with open(args.inputSourceFileList, "r") as f:
             os.system("rm -rf "+tmpdir)
         atexit.register(removeTmp)
         
-        #reduce memory footprint here
-        td.writeFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False, "pred_tmp.djctd")
+        if inputfile[-5:] == 'djctd':
+            td.readFromFile(inputdir+"/"+inputfile)
+            td.writeToFile(tmpdir+"/pred_tmp.djctd")
+        else:
+            td.writeFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False, tmpdir+"/pred_tmp.djctd")
         
         x = td.transferFeatureListToNumpy()
         y = td.transferWeightListToNumpy()
@@ -92,8 +95,10 @@ with open(args.inputSourceFileList, "r") as f:
         td.clear()
         
         dc.samples = [tmpdir+"/pred_tmp.djctd"]
-        dc.setBatchSize(batchsize)
+        if batchsize>0 :
+            dc.setBatchSize(batchsize)
         dc.invokeGenerator()
+        dc.generator.setSkipTooLargeBatches(False)
         nbatches = dc.generator.getNBatches()
                 
         print('predicting '+inputfile)

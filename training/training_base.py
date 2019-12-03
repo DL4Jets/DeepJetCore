@@ -411,6 +411,7 @@ class training_base(object):
         
         #prepare generator 
         
+        print("setting up generator... can take a while")
         self.train_data.invokeGenerator()
         self.val_data.invokeGenerator()
         #this is fixed

@@ -267,10 +267,19 @@ class PredictCallback(Callback):
             print('PredictCallback: can only be used on epoch end OR after n batches, falling back to epoch end')
             self.after_n_batches=0
         
-        self.td=TrainData()
-        self.td.readIn(samplefile)
+        td=TrainData()
+        td.readFromFile(samplefile)
         if use_event>=0:
-            self.td.skim(event=use_event)
+            td.skim(use_event)
+        else:
+            raise ValueError("PredictCallback: use_event>=0")
+            
+        self.batchsize = td.nElements()    
+        self.x = td.transferFeatureListToNumpy()
+        self.y = td.transferWeightListToNumpy()
+        self.w = td.transferTruthListToNumpy()
+        
+        
         
     
     
@@ -279,11 +288,11 @@ class PredictCallback(Callback):
     
     def predict_and_call(self,counter):
         
-        predicted = self.model.predict(self.td.x)
+        predicted = self.model.predict(self.x, batch_size=self.batchsize)
         if not isinstance(predicted, list):
             predicted=[predicted]
         
-        self.function_to_apply(self.call_counter,self.td.x,predicted,self.td.y)
+        self.function_to_apply(self.call_counter,self.x,predicted,self.y)
         self.call_counter+=1
     
     def on_epoch_end(self, epoch, logs=None):

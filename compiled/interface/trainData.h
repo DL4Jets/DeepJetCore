@@ -94,6 +94,21 @@ public:
             return 0;
     }
 
+    int nTotalElements()const{
+        if(feature_shapes_.size() && feature_shapes_.at(0).size()){
+            int ntotalelems=0;
+            for(size_t i=0;i< feature_shapes_.at(0).size(); i++){
+                ntotalelems = feature_shapes_.at(0).at(i);
+                if(i>0 && ntotalelems<0)
+                    return std::abs(ntotalelems);
+                else
+                    return feature_shapes_.at(0).at(0);
+            }
+        }
+        else
+            return 0;
+    }
+
     const std::vector<std::vector<int> > & featureShapes()const{return  feature_shapes_;}
     const std::vector<std::vector<int> > & truthShapes()const{return  truth_shapes_;}
     const std::vector<std::vector<int> > & weightShapes()const{return  weight_shapes_;}
