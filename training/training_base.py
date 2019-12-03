@@ -416,14 +416,14 @@ class training_base(object):
         self.val_data.invokeGenerator()
         #this is fixed
         nbatches_val = self.val_data.generator.getNBatches()
+        nbatches_train = self.train_data.generator.getNBatches()
         #self.val_data.generator.debug=True
         #self.train_data.generator.debug=True
         #exit()
         
         while(self.trainedepoches < nepochs):
-            self.train_data.generator.shuffleFilelist()
+           
             #this can change from epoch to epoch
-            nbatches_train = self.train_data.generator.getNBatches()
             print('>>>>Epoch', self.trainedepoches,"/",nepochs)
             print('training batches: ',nbatches_train)
             print('validation batches: ',nbatches_val)
@@ -444,6 +444,8 @@ class training_base(object):
                                            use_multiprocessing=False, #the threading one doe not loke DJC
                                            **trainargs)
             self.trainedepoches += 1
+            self.train_data.generator.shuffleFilelist()
+            nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
             #
         
         self.saveModel("KERAS_model.h5")

@@ -87,6 +87,9 @@ public:
      */
     trainData<T> split(size_t splitindex);
 
+    /*
+     *
+     */
     size_t nElements()const{
         if(feature_shapes_.size() && feature_shapes_.at(0).size())
             return feature_shapes_.at(0).at(0);
@@ -101,12 +104,13 @@ public:
                 ntotalelems = feature_shapes_.at(0).at(i);
                 if(i>0 && ntotalelems<0)
                     return std::abs(ntotalelems);
-                else
+                else if(i>0)
                     return feature_shapes_.at(0).at(0);
             }
         }
         else
             return 0;
+        return 0;
     }
 
     const std::vector<std::vector<int> > & featureShapes()const{return  feature_shapes_;}
