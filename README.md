@@ -35,7 +35,7 @@ export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
 Sometimes you need to try two or three times - singularity is a bit weird. But once the contaienr is launched, everything works smoothly.
 The message about a missing user group can be safely ignored.
 
-**It is important** that your bashrc does not reset the LD_LIBRARY or PYTHOPATH environment variables.
+**It is important** that your bashrc does not reset the ``LD_LIBRARY`` or ``PYTHONPATH`` environment variables. Also **remove any anaconda paths from your bashrc**, because they will reset ``LD_LIBRARY`` and ``PYTHONPATH``. THe system needs to be in a clean environment state within the container (as it should be).
 
 
 Usage

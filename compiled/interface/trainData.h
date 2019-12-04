@@ -124,6 +124,7 @@ public:
     //could use a readshape or something!
     void readShapesFromFile(const std::string& filename);
 
+    std::vector<int64_t> getFirstRowsplits()const;
     std::vector<int64_t> readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency=true);
 
     void clear();
@@ -143,7 +144,7 @@ public:
 
     boost::python::list getTruthRaggedFlags()const;
 
-    //no ragged support
+    //has ragged support
     boost::python::list transferFeatureListToNumpy();
 
     //has ragged support
@@ -151,6 +152,30 @@ public:
 
     //no ragged support
     boost::python::list transferWeightListToNumpy();
+
+
+    /*
+     * the following ones can be improved w.r.t. performance
+     */
+
+
+    //has ragged support
+    boost::python::list copyFeatureListToNumpy(){
+        auto td = *this;
+        return td.transferFeatureListToNumpy(); //fast hack
+    }
+
+    //has ragged support
+    boost::python::list copyTruthListToNumpy(){
+        auto td = *this;
+        return td.transferTruthListToNumpy(); //fast hack
+    }
+
+    //no ragged support
+    boost::python::list copyWeightListToNumpy(){
+        auto td = *this;
+        return td.transferWeightListToNumpy(); //fast hack
+    }
 
 #endif
 
@@ -317,6 +342,17 @@ void trainData<T>::readShapesFromFile(const std::string& filename){
 
     fclose(ifile);
 
+}
+
+template<class T>
+std::vector<int64_t> trainData<T>::getFirstRowsplits()const{
+    for (auto& a : feature_arrays_)
+        if(a.rowsplits().size())
+            return a.rowsplits();
+    for (auto& a : truth_arrays_)
+        if(a.rowsplits().size())
+            return a.rowsplits();
+    return std::vector<int64_t>();
 }
 
 template<class T>

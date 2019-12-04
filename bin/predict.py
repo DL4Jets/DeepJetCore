@@ -78,14 +78,20 @@ os.system('mkdir -p '+args.outputDir)
 with open(args.inputSourceFileList, "r") as f:
     for inputfile in f:
         inputfile = inputfile.replace('\n', '')
-        outfilename = "pred_"+inputfile
-        print('converting '+inputfile)
+        use_inputdir = inputdir
+        if inputfile[0] == "/":
+            use_inputdir=""
+        outfilename = "pred_"+os.path.basename( inputfile )
+        
 
         if inputfile[-5:] == 'djctd':
-            td.readFromFile(inputdir+"/"+inputfile)
+            td.readFromFile(use_inputdir+"/"+inputfile)
         else:
-            td.readFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
+            print('converting '+inputfile)
+            td.readFromSourceFile(use_inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         
+        print('predicting ',inputfile)
+        print('batch size',dc.getBatchSize())
         gen = trainDataGenerator()
         gen.setBatchSize(dc.getBatchSize())
         gen.setSquaredElementsLimit(dc.batch_uses_sum_of_squares)
@@ -95,11 +101,12 @@ with open(args.inputSourceFileList, "r") as f:
         def genfunc():
             while(1):
                 d = gen.getBatch()
-                return d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
+                yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
                 
-        print('predicting '+inputfile)
-        predicted = model.predict_generator(genfunc(),steps=gen.getNBatches(),
-                                            max_queue_size=1,use_multiprocessing=False,verbose=1)
+        predicted = model.predict_generator(genfunc(),
+                                            steps=gen.getNBatches(),
+                                            max_queue_size=1,
+                                            use_multiprocessing=False,verbose=1)
         
         
         x = td.transferFeatureListToNumpy()

@@ -31,17 +31,19 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
     np::initialize();
     p::class_<trainDataGenerator<float> >("trainDataGenerator")
 
-            .def("setFileList", &trainDataGenerator<float>::setFileListP)
             .def("setBatchSize", &trainDataGenerator<float>::setBatchSize)
+
+            .def("setFileList", &trainDataGenerator<float>::setFileListP)
             .def("shuffleFilelist", &trainDataGenerator<float>::shuffleFilelist)
+
+            .def("setBuffer", &trainDataGenerator<float>::setBuffer)
+
 
             .def("setFileTimeout", &trainDataGenerator<float>::setFileTimeout)
             .def("setSquaredElementsLimit", &trainDataGenerator<float>::setSquaredElementsLimit)
             .def("setSkipTooLargeBatches", &trainDataGenerator<float>::setSkipTooLargeBatches)
 
-
-
-
+            .def("clear", &trainDataGenerator<float>::clear)
             .def("getNBatches", &trainDataGenerator<float>::getNBatches)
 
             .def("lastBatch", &trainDataGenerator<float>::lastBatch)

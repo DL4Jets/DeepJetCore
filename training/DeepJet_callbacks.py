@@ -242,6 +242,7 @@ class DeepJet_callbacks(object):
         
         
 from DeepJetCore.TrainData import TrainData
+from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
 
 class PredictCallback(Callback):
     
@@ -249,6 +250,7 @@ class PredictCallback(Callback):
                  samplefile,
                  function_to_apply=None, #needs to be function(counter,[model_input], [predict_output], [truth])
                  after_n_batches=50,
+                 batchsize=10,
                  on_epoch_end=False,
                  use_event=0,
                  decay_function=None
@@ -271,28 +273,38 @@ class PredictCallback(Callback):
         td.readFromFile(samplefile)
         if use_event>=0:
             td.skim(use_event)
-        else:
-            raise ValueError("PredictCallback: use_event>=0")
             
-        self.batchsize = td.nElements()    
-        self.x = td.transferFeatureListToNumpy()
-        self.y = td.transferWeightListToNumpy()
-        self.w = td.transferTruthListToNumpy()
+        self.batchsize = 1    
+        self.td = td
         
-        
-        
-    
+        self.gen = trainDataGenerator()
+        self.gen.setBatchSize(batchsize)
+        self.gen.setSkipTooLargeBatches(False)
+
     
     def reset(self):
         self.call_counter=0
     
     def predict_and_call(self,counter):
         
-        predicted = self.model.predict(self.x, batch_size=self.batchsize)
+        self.gen.setBuffer(self.td)
+        
+        def genfunc():
+            while(1):
+                d = self.gen.getBatch()
+                yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
+                
+        predicted = self.model.predict_generator(genfunc(),
+                                            steps=self.gen.getNBatches(),
+                                            max_queue_size=1,
+                                            use_multiprocessing=False,
+                                            verbose=2)
+        
         if not isinstance(predicted, list):
             predicted=[predicted]
         
-        self.function_to_apply(self.call_counter,self.x,predicted,self.y)
+        self.function_to_apply(self.call_counter,self.td.copyFeatureListToNumpy(),
+                               predicted,self.td.copyTruthListToNumpy())
         self.call_counter+=1
     
     def on_epoch_end(self, epoch, logs=None):

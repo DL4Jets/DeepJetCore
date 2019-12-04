@@ -58,12 +58,15 @@ public:
      * Also opens all files (verify) and gets the total sample size
      */
     void setFileList(const std::vector<std::string>& files){
+        clear();
         orig_infiles_=files;
         shuffle_indices_.resize(orig_infiles_.size());
         for(size_t i=0;i<shuffle_indices_.size();i++)
             shuffle_indices_[i]=i;
         readInfo();
     }
+    void setBuffer(const trainData<T>&);
+
     void setBatchSize(size_t nelements){
         batchsize_= nelements;
         if(orig_rowsplits_.size())
@@ -95,7 +98,10 @@ public:
     void shuffleFilelist();
 
     void end();
-
+    /**
+     * clears all dataset related info but keeps batch size, file timout etc
+     */
+    void clear();
 
     /**
      * gets Batch. If batchsize is specified, it is up to the user
@@ -119,6 +125,7 @@ private:
     void readBuffer();
     void readInfo();
     void prepareSplitting();
+    bool tdHasRaggedDimension(const trainData<T>& )const;
 
     trainData<T>  prepareBatch();
     std::vector<std::string> orig_infiles_;
@@ -173,7 +180,23 @@ void trainDataGenerator<T>::shuffleFilelist(){
     batchcount_=0;
 }
 
+template<class T>
+void trainDataGenerator<T>::setBuffer(const trainData<T>& td){
 
+    clear();
+    if(td.featureShapes().size()<1 || td.featureShapes().at(0).size()<1)
+        throw std::runtime_error("trainDataGenerator<T>::setBuffer: no features filled in trainData object");
+    auto hasRagged = tdHasRaggedDimension(td);
+
+    auto rs = td.getFirstRowsplits();
+    if(rs.size())
+        orig_rowsplits_.push_back(rs);
+    shuffle_indices_.push_back(0);
+    ntotal_ = td.nElements();
+    buffer_store=td;
+    prepareSplitting();
+
+}
 
 template<class T>
 void trainDataGenerator<T>::readBuffer(){
@@ -214,19 +237,7 @@ void trainDataGenerator<T>::readInfo(){
             throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);
 
         if(firstfile){
-            for(const auto& sv: td.featureShapes())
-                for(const auto& s:sv)
-                    if(s<0)
-                        hasRagged=true;
-            for(const auto& sv: td.truthShapes())
-                for(const auto& s:sv)
-                    if(s<0)
-                        hasRagged=true;
-            for(const auto& sv: td.weightShapes())
-                for(const auto& s:sv)
-                    if(s<0)
-                        hasRagged=true;
-
+            hasRagged = tdHasRaggedDimension(td);
         }
         if(hasRagged){
             std::vector<int64_t> rowsplits = td.readShapesAndRowSplitsFromFile(f, firstfile);//check consistency only for first
@@ -261,6 +272,12 @@ void trainDataGenerator<T>::prepareSplitting(){
                 nbatches_++;
                 break;
             }
+        }
+        if(debug){
+            std::cout << "trainDataGenerator<T>::prepareSplitting: splits" <<std::endl;
+            for(const auto& s: splits_)
+                std::cout << s << ", ";
+            std::cout << std::endl;
         }
         return;
     }
@@ -337,6 +354,22 @@ void trainDataGenerator<T>::prepareSplitting(){
 
 }
 
+template<class T>
+bool trainDataGenerator<T>::tdHasRaggedDimension(const trainData<T>& td)const{
+    for(const auto& sv: td.featureShapes())
+        for(const auto& s:sv)
+            if(s<0)
+                return true;
+    for(const auto& sv: td.truthShapes())
+        for(const auto& s:sv)
+            if(s<0)
+                return true;
+    for(const auto& sv: td.weightShapes())
+        for(const auto& s:sv)
+            if(s<0)
+                return true;
+    return false;
+}
 
 
 template<class T>
@@ -369,6 +402,32 @@ void trainDataGenerator<T>::end(){
         delete readthread_;
         readthread_=0;
     }
+}
+
+
+template<class T>
+void trainDataGenerator<T>::clear(){
+    end();
+    orig_infiles_.clear();
+    shuffle_indices_.clear();
+    orig_rowsplits_.clear();
+    splits_.clear();
+    usebatch_.clear();
+    randomcount_=0;
+
+    //batchsize_ keep batch size
+    //sqelementslimit_ keep
+    //skiplargebatches_ keep
+    buffer_store.clear();
+    buffer_read.clear();
+
+    filecount_=0;
+    nbatches_=0;
+    ntotal_=0;
+    nsamplesprocessed_=0;
+    lastbatchsize_=0;
+    // filetimeout_ keep
+    batchcount_=0;
 }
 
 template<class T>

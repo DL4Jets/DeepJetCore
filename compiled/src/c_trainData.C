@@ -49,6 +49,12 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("transferFeatureListToNumpy", &trainData<float>::transferFeatureListToNumpy)
        .def("transferTruthListToNumpy", &trainData<float>::transferTruthListToNumpy)
        .def("transferWeightListToNumpy", &trainData<float>::transferWeightListToNumpy)
+
+
+       .def("copyFeatureListToNumpy", &trainData<float>::copyFeatureListToNumpy)
+       .def("copyTruthListToNumpy", &trainData<float>::copyTruthListToNumpy)
+       .def("copyWeightListToNumpy", &trainData<float>::copyWeightListToNumpy)
+
 ;
     ;
 }
