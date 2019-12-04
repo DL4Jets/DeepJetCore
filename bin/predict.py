@@ -1,5 +1,19 @@
 #!/usr/bin/env python
 
+from argparse import ArgumentParser
+
+
+parser = ArgumentParser('Apply a model to a (test) source sample and create friend trees to inject it inthe original ntuple')
+parser.add_argument('inputModel')
+parser.add_argument('trainingDataCollection')
+parser.add_argument('inputSourceFileList')
+parser.add_argument('outputDir')
+parser.add_argument("-b", help="batch size ",default="-1")
+
+
+args = parser.parse_args()
+
+
 import imp
 from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
@@ -14,7 +28,6 @@ except ImportError:
 from keras.models import load_model
 from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
-from argparse import ArgumentParser
 from keras import backend as K
 import os
 import imp
@@ -42,15 +55,6 @@ except ImportError:
 import os
 
 
-parser = ArgumentParser('Apply a model to a (test) source sample and create friend trees to inject it inthe original ntuple')
-parser.add_argument('inputModel')
-parser.add_argument('trainingDataCollection')
-parser.add_argument('inputSourceFileList')
-parser.add_argument('outputDir')
-parser.add_argument("-b", help="batch size ",default="-1")
-
-
-args = parser.parse_args()
 batchsize = int(args.b)
  
 #if os.path.isdir(args.outputDir):
@@ -77,36 +81,33 @@ with open(args.inputSourceFileList, "r") as f:
         outfilename = "pred_"+inputfile
         print('converting '+inputfile)
 
-        tmpdir = tempfile.mkdtemp(suffix="djcpred", dir="/dev/shm")
-        def removeTmp():
-            os.system("rm -rf "+tmpdir)
-        atexit.register(removeTmp)
-        
         if inputfile[-5:] == 'djctd':
             td.readFromFile(inputdir+"/"+inputfile)
-            td.writeToFile(tmpdir+"/pred_tmp.djctd")
         else:
-            td.writeFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False, tmpdir+"/pred_tmp.djctd")
+            td.readFromSourceFile(inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         
-        x = td.transferFeatureListToNumpy()
-        y = td.transferWeightListToNumpy()
-        w = td.transferTruthListToNumpy()
+        gen = trainDataGenerator()
+        gen.setBatchSize(dc.getBatchSize())
+        gen.setSquaredElementsLimit(dc.batch_uses_sum_of_squares)
+        gen.setSkipTooLargeBatches(False)
+        gen.setBuffer(td)
         
-        td.clear()
-        
-        dc.samples = [tmpdir+"/pred_tmp.djctd"]
-        if batchsize>0 :
-            dc.setBatchSize(batchsize)
-        dc.invokeGenerator()
-        dc.generator.setSkipTooLargeBatches(False)
-        nbatches = dc.generator.getNBatches()
+        def genfunc():
+            while(1):
+                d = gen.getBatch()
+                return d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
                 
         print('predicting '+inputfile)
-        predicted = model.predict_generator(dc.generatorFunction(),steps=nbatches,
+        predicted = model.predict_generator(genfunc(),steps=gen.getNBatches(),
                                             max_queue_size=1,use_multiprocessing=False,verbose=1)
         
-        removeTmp()
         
+        x = td.transferFeatureListToNumpy()
+        w = td.transferWeightListToNumpy()
+        y = td.transferTruthListToNumpy()
+        
+        td.clear()
+        gen.clear()
         
         if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
             predicted = [predicted]   

@@ -2,12 +2,14 @@
 # encoding: utf-8
 
 from argparse import ArgumentParser
-from DeepJetCore.DataCollection import DataCollection
 
 parser = ArgumentParser('convert a data collection to a single set of numpy arrays. Warning, this can produce a large output')
 parser.add_argument('inputDataCollection')
 parser.add_argument('outputFilePrefix')
 args = parser.parse_args()
+
+
+from DeepJetCore.DataCollection import DataCollection
 
 print('reading data collection')
 

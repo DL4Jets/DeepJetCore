@@ -6,15 +6,7 @@
 
 '''
 
-import os
-from multiprocessing import Pool
 from argparse import ArgumentParser
-from DeepJetCore.TrainData_compat import TrainData as TDOld
-from DeepJetCore.TrainData import TrainData
-
-from DeepJetCore.DataCollection_compat import DataCollection as DCOld
-from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.conversion.conversion import class_options 
 
 parser = ArgumentParser('simple program to convert old datacollection format to the new one')
 parser.add_argument("infile", help="input \"dc\" file")
@@ -22,6 +14,17 @@ parser.add_argument("-c",  choices = class_options.keys(), help="set new output 
 
 # process options
 args=parser.parse_args()
+
+
+import os
+from multiprocessing import Pool
+from DeepJetCore.TrainData_compat import TrainData as TDOld
+from DeepJetCore.TrainData import TrainData
+
+from DeepJetCore.DataCollection_compat import DataCollection as DCOld
+from DeepJetCore.DataCollection import DataCollection
+from DeepJetCore.conversion.conversion import class_options 
+
 infile=args.infile
 
 class_name = args.c

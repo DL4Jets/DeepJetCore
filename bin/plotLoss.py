@@ -1,6 +1,5 @@
 #!/usr/bin/env python
     
-from DeepJetCore.evaluation import plotLoss
 
 
 from argparse import ArgumentParser
@@ -10,6 +9,9 @@ parser.add_argument("--file",  help="specify loss file", metavar="FILE", default
 parser.add_argument("--range",  help="specify y axis range",  nargs='+', type=float, metavar="OPT", default=[])
     
 args = parser.parse_args()
+
+from DeepJetCore.evaluation import plotLoss
+
 
 infilename=args.inputDir+'/'+args.file
 
