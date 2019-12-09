@@ -139,9 +139,10 @@ class DataCollection(object):
         (this might be changed in future implementations)
         '''
         validsourcelist = len(self.samples) == len(self.sourceList)
+        newsamples=[]
+        newsources=[]
         for i in range(len(self.samples)):
             if i < skip_first: continue
-            if i >= len(self.samples): break
             td = self.dataclass ()
             fullpath=self.getSamplePath(self.samples[i])
             print('reading '+fullpath, str(i), '/', str(len(self.samples)))
@@ -150,12 +151,15 @@ class DataCollection(object):
                 if td.nElements() < 1:
                     print("warning, no data in file "+fullpath)
                 del td
+                newsamples.append(self.samples[i])
+                if validsourcelist:
+                    newsources.append(self.sourceList[i])
                 continue
             except Exception as e:
                 print('problem with file, removing ', fullpath)
-                del self.samples[i]
-                if validsourcelist:
-                    del self.sourceList[i]
+                
+        self.samples = newsamples
+        self.newsources = newsources
                 
     def removeEntry(self,relative_path_to_entry):
         for i in range(len(self.samples)):
