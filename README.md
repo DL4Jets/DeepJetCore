@@ -85,6 +85,17 @@ The TrainData class has been slimmed significantly. Now, the ``__init`` function
 Of course any user function, member etc beyond that can be defined, too.
 
 
+
+Ragged Tensors
+=====================
+
+Ragged data structures supported to some extent with workarounds for places where either keras or tensorflow are still missing support.
+Only tensors ragged in the first dimension are supported so far, meaning, e.g. a different number of inputs per event, but each input having the same feature length (or more dimensions with fixed sizes). This should cover most usecases already.
+To create a ragged data structure, the function ``convertFromSourceFile(self, filename, weighterobjects, istraining, **kwargs)`` must not return a list of numpy arrays, but a list of ``simpleArray``, which is a DeepJetCore class supporting ragged structures. This array can be constructed from two numpy arrays: one describing the row splits (as int, in the same format as tensorflow ragged array row splits) and one containing the data, where the 0th and 1st dimensions are flattened. Then the array can be filled by invoking ``createFromNumpy(data, row_splits``.
+For training, the model will receive a list of tensors, where the first one will be the data and the second the row splits. The same applies to the truth. This circumvents incomplete keras support for the moment.
+
+
+
 For developers
 =====================
 
