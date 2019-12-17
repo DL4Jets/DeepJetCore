@@ -11,6 +11,8 @@ This package provides the basic functions for out-of-memory training, resampling
 For simple use cases, only two files need to be adapted: the actual training data structures, describing how to fill numpy arrays from root trees, and the DNN model itself. Both must be defined in an additional user package. 
 Please refer to the Section 'Usage' for more information.
 
+**If you use DeepJetCore or the containers, please mention it in (internal) documentation and talks :)**
+
 
 Setup
 ==========
