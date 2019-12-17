@@ -69,6 +69,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 RUN apt-get install -y zsh 
 
 RUN apt-get install -y ffmpeg
+RUN apt-get install -y nvtop
 
 ##gpu specific stuff
 RUN pip install gpustat 

@@ -77,8 +77,8 @@ class TrainData(trainData):
             self.storeWeightArray(self._maybeConvertToSimpleArray(wa))
         w = []    
         
-    def readFromSourceFile(self,filename, weighterobjects={}, istraining=False):
-        x,y,w = self.convertFromSourceFile(filename, weighterobjects, istraining)
+    def readFromSourceFile(self,filename, weighterobjects={}, istraining=False, **kwargs):
+        x,y,w = self.convertFromSourceFile(filename, weighterobjects, istraining,  **kwargs)
         self._store(x,y,w)
         
 
