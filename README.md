@@ -3,6 +3,8 @@
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
 
+Please mention in presentations/notes when you are using DeepJetCore or a container provided with it and refer to this repository.
+
 (For upgrading from DeepJetCore 1.X to 2.0, please scroll to the bottom)
 
 This package provides the basic functions for out-of-memory training, resampling, and basic evaluation. 
