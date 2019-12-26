@@ -1,6 +1,6 @@
 
 
-FROM cernml4reco/djcbase:latest
+FROM cernml4reco/djcbase:py3tf2
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 RUN ldconfig
