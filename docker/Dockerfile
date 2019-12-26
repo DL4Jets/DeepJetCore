@@ -20,3 +20,7 @@ ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 #/usr/local/lib is for root
 ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
 ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
+
+#run test scripts, and see if everything is fine
+
+RUN testEnvironment.py
