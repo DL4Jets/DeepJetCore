@@ -44,6 +44,7 @@ script='''
 cd {djc_base}/testing
 rm -rf batchDC 
 export PYTHONPATH=`pwd`:$PYTHONPATH
+echo $PYTHONPATH
 convertFromSource.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
 '''.format(djc_base=djc_base)
 os.system(script)
@@ -55,7 +56,7 @@ script='''
 cd {djc_base}/testing
 rm -rf batchExplode
 export PYTHONPATH=`pwd`:$PYTHONPATH
-python batch_explosion.py batchDC/dataCollection.djcdc batchExplode
+python3 batch_explosion.py batchDC/dataCollection.djcdc batchExplode
 '''.format(djc_base=djc_base)
 os.system(script)
 

@@ -58,13 +58,13 @@ class TrainData(trainData):
     def _maybeConvertToSimpleArray(self,a):
         if str(type(a)) == "<class 'DeepJetCore.compiled.c_simpleArray.simpleArray'>":
             return a
-        elif str(type(a)) == "<type 'numpy.ndarray'>":
+        elif str(type(a)) == "<type 'numpy.ndarray'>" or str(type(a)) == "<class 'numpy.ndarray'>":
             rs = np.array([])
             arr = simpleArray()
             arr.createFromNumpy(a, rs)
             return arr
         else:
-            raise ValueError("TrainData: convertFromSourceFile MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays!")
+            raise ValueError("TrainData: convertFromSourceFile MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays! got "+str(type(a)))
             
     def _store(self, x, y, w):
         for xa in x:

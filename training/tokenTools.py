@@ -41,7 +41,7 @@ def checkTokens(cutofftime_hours=48):
         
     klist=str(klist).split()
     
-    firstrenewapp=klist.index('renew')
+    firstrenewapp=klist.index('krbtgt/CERN.CH@CERN.CH\\n\\trenew')
     
     
     kdate=klist[firstrenewapp+2]
@@ -55,7 +55,7 @@ def checkTokens(cutofftime_hours=48):
     try:
         tokentime=datetime.datetime(2000+int(year),int(month),int(day),int(hour))
     except:
-        print 'Failed to set token time with mm/dd/yy, attempting dd/mm/yy permutation'
+        print ('Failed to set token time with mm/dd/yy, attempting dd/mm/yy permutation')
         tokentime=datetime.datetime(2000+int(year),int(day),int(month),int(hour))
 
     diff=tokentime-thistime

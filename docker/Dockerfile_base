@@ -1,20 +1,42 @@
 
-
-FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04 
+#update to cuda 10.1
+FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04 
 
 
 SHELL ["/bin/bash", "-c"]
 
+#base
 RUN apt-get update
-RUN apt-get install -y python2.7-dev python-pip nano emacs
-RUN apt-get install -y wget
+RUN apt-get install -y python3.7-dev python3-pip
+RUN pip3 install --upgrade pip
+RUN ldconfig
+
+#basic tools
+RUN apt-get install -y wget nano emacs
 RUN apt-get install -y libboost-all-dev
 RUN apt-get install -y git
 
 
-## root part
-RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev
-RUN apt-get install -y cmake
+#nvtop deps - doesn't really work
+#RUN apt-get install -y cmake libncurses5-dev libncursesw5-dev 
+#
+#
+#RUN mkdir /tempnvtop && cd /tempnvtop && \
+#    git clone https://github.com/Syllo/nvtop.git && \
+#    mkdir -p nvtop/build && cd nvtop/build && \
+#    cmake .. && \
+#    make && \
+#    make install && \
+#    cd && \
+#    rm -rf /tempnvtop
+    
+
+## root dependencies
+RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev cmake
+
+#for graphics stuff, pretty big, but ok...
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y gtk+3.0
 
 RUN mkdir /temproot && \
     cd /temproot && \
@@ -24,7 +46,7 @@ RUN mkdir /temproot && \
 RUN cd /temproot && \
     mkdir build && \
     cd build && \
-    cmake ../root 
+    cmake -Dpython=ON -Dpython3=ON -DPYTHON_EXECUTABLE=/usr/bin/python3  ../root 
 RUN cd /temproot/build && \
     make -j5 && \
     make install && \
@@ -35,29 +57,29 @@ RUN cd /temproot/build && \
 ENV PYTHONPATH="/usr/local/lib:${PYTHONPATH}"
 
 
+
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y python-tk
+    apt-get install -y python3-tk
 RUN apt-get install -y locales
 
-RUN pip install --upgrade pip
 
-RUN pip install numpy
-RUN pip install root_numpy
-RUN pip install scikit-learn
-RUN pip install scikit-image
-RUN pip install h5py
-RUN pip install uproot Pillow scipy seaborn
-RUN pip install scikit-learn
-RUN pip install scikit-image
-RUN pip install matplotlib
+RUN pip3 install numpy
+RUN pip3 install root_numpy
+RUN pip3 install scikit-learn
+RUN pip3 install scikit-image
+RUN pip3 install h5py
+RUN pip3 install uproot Pillow scipy seaborn
+RUN pip3 install scikit-learn
+RUN pip3 install scikit-image
+RUN pip3 install matplotlib
 
 #may be useful
-RUN pip install opencv-python
-RUN pip install easydict tqdm
-RUN pip install Cython
-RUN pip install numba
+RUN pip3 install opencv-python
+RUN pip3 install easydict tqdm
+RUN pip3 install Cython
+RUN pip3 install numba
 
-RUN pip --no-cache-dir install tensorflow==1.15
+RUN pip3 --no-cache-dir install tensorflow==2.0.0
 
 RUN apt-get update --fix-missing 
     
@@ -72,12 +94,7 @@ RUN apt-get install -y ffmpeg
 #RUN apt-get install -y nvtop
 
 ##gpu specific stuff
-RUN pip install gpustat 
-RUN pip install setGPU
+RUN pip3 install gpustat 
+RUN pip3 install setGPU
 
 
-
-
-
-    
-#ENV DJCenvname DJCpath

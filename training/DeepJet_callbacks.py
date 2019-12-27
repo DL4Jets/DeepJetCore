@@ -141,7 +141,7 @@ class Losstimer(Callback):
         self.counter = 0
         elapsed = time() - self.start
         cop = {}
-        for i, j in logs.iteritems():
+        for i, j in logs.items():
             cop[i] = float(j)
         cop['elapsed'] = elapsed
         self.points.append(cop)
@@ -153,7 +153,7 @@ class checkTokens_callback(Callback):
         self.cutofftime_hours=cutofftime_hours
         
     def on_epoch_begin(self, epoch, logs=None):
-        from tokenTools import checkTokens
+        from .tokenTools import checkTokens
         checkTokens(self.cutofftime_hours)
         
 class saveCheckPointDeepJet(Callback):

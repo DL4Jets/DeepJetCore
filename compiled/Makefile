@@ -1,7 +1,7 @@
 
 # location of the Boost Python include files and library
-PYTHON_INCLUDE = `python-config --includes`
-PYTHON_LIB=`python-config --libs`
+PYTHON_INCLUDE = `python3-config --includes`
+PYTHON_LIB=`python3-config --libs`
 
 
 LINUXADD= #-Wl --export-dynamic
@@ -28,7 +28,7 @@ classdict.so: classdict.cxx
 
 
 %: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx
-	g++ $(CFLAGS) -I./interface $(LINUXADD) $(PYTHON_INCLUDE) $< -L. -ldeepjetcorehelpers -lquicklz  $(PYTHON_LIB) -lboost_python -lboost_numpy $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
+	g++ $(CFLAGS) -I./interface $(LINUXADD) $(PYTHON_INCLUDE) $< -L. -ldeepjetcorehelpers -lquicklz  $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
 	mv $@ ../bin/
 
 #helpers
@@ -40,10 +40,10 @@ obj/%.o: src/%.cpp
 
 #pack helpers in lib
 libdeepjetcorehelpers.so: $(OBJ_FILES) 
-	g++ -o $@ -shared -fPIC  $(LINUXADD) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python -lboost_numpy 
+	g++ -o $@ -shared -fPIC  $(LINUXADD) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
-	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python -lboost_numpy -L./ -ldeepjetcorehelpers 
+	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 -L./ -ldeepjetcorehelpers 
 
 %.o: src/%.C 
 	g++   $(ROOTCFLAGS) -O2 -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 #script that takes model in .h5 format as input as spits out the graph format used in CMSSW

@@ -18,6 +18,7 @@ from pdb import set_trace
 import tensorflow as tf
 import tensorflow.keras as keras
 from keras.utils import multi_gpu_model
+from _thread import start_new_thread
 
 import imp
 try:
@@ -308,21 +309,7 @@ class training_base(object):
             self.gan.save(self.outputDir+'GAN_'+outfile)
             self.generator.save(self.outputDir+'GEN_'+outfile)
             self.discriminator.save(self.outputDir+'DIS_'+outfile)
-        import tensorflow as tf
-        import keras.backend as K
-        tfsession=K.get_session()
-        saver = tf.train.Saver()
-        tfoutpath=self.outputDir+outfile+'_tfsession/tf'
-        import os
-        os.system('rm -rf '+tfoutpath)
-        os.system('mkdir -p '+tfoutpath)
-        saver.save(tfsession, tfoutpath)
-
-
-        #import h5py
-        #f = h5py.File(self.outputDir+outfile, 'r+')
-        #del f['optimizer_weights']
-        #f.close()
+        
         
     def _initTraining(self,
                       nepochs,
@@ -345,7 +332,6 @@ class training_base(object):
         
         #make sure tokens don't expire
         from .tokenTools import checkTokens, renew_token_process
-        from thread import start_new_thread
         
         if self.renewtokens:
             print('starting afs backgrounder')

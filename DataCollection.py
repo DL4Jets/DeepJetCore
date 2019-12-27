@@ -16,7 +16,7 @@ import keras
 import copy
 import time
 import logging
-from stopwatch import stopwatch
+from .stopwatch import stopwatch
 logger = logging.getLogger(__name__)
 
 
