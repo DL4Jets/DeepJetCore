@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+def catchret(ret):
+    if not ret == 0:
+        print("problem in previous step... please check")
+        exit(-1)
+
 print('importing tensorflow...')
 
 import tensorflow
@@ -47,7 +52,7 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 echo $PYTHONPATH
 convertFromSource.py -i files/filelist.txt -o batchDC -c TrainData_testBatch -n 1
 '''.format(djc_base=djc_base)
-os.system(script)
+catchret(os.system(script))
 
 print('testing batch explosion. Please check batch loss plot afterwards for smoothness. Warnings about the callback time can be ignored.')
 
@@ -58,10 +63,10 @@ rm -rf batchExplode
 export PYTHONPATH=`pwd`:$PYTHONPATH
 python3 batch_explosion.py batchDC/dataCollection.djcdc batchExplode
 '''.format(djc_base=djc_base)
-os.system(script)
+catchret(os.system(script))
 
 
-print('tesing subpackage, training and prediction')
+print('testing subpackage, training and prediction')
 
 script='''
 #!/bin/bash
@@ -86,9 +91,12 @@ convertFromSource.py -i train_files.txt -o conv -c TrainData_example
 cd ../Train/
 python3 training_example.py ../example_data/conv/dataCollection.djcdc  TEST
 cd TEST
+echo
+echo
+echo predicting...
 predict.py KERAS_model.h5 trainsamples.djcdc ../../example_data/test_files.txt PRED
 '''.format(djc_base=djc_base)
-os.system(script)
+catchret(os.system(script))
 
 
 
