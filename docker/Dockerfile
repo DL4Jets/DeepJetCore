@@ -9,7 +9,7 @@ RUN cd /usr/share && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
     cd DeepJetCore && \
-    git checkout 2.1rc01 && \
+    git checkout tf2py3 && \
     source docker_env.sh && \
     cd compiled && \
     make -j4
@@ -23,4 +23,4 @@ ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 
 #run test scripts, and see if everything is fine
 
-RUN testEnvironment.py
+#RUN testEnvironment.py
