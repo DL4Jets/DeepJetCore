@@ -318,7 +318,7 @@ np::ndarray readFirstFeatures(std::string infile){
     return simpleArrayToNumpy(arr);
 }
 
-BOOST_PYTHON_MODULE(c_convert) {
+boost_python3_MODULE(c_convert) {
     Py_Initialize();
     np::initialize();
     def("readFirstFeatures", &readFirstFeatures);
@@ -333,8 +333,8 @@ module_makefile='''
 # This file might need some adjustments but should serve as a good basis
 #
 
-PYTHON_INCLUDE = `python-config --includes`
-PYTHON_LIB=`python-config --libs`
+PYTHON_INCLUDE = `python3-config --includes`
+PYTHON_LIB=`python3-config --libs`
 
 ROOTSTUFF=`root-config --libs --glibs --ldflags`
 ROOTCFLAGS=`root-config  --cflags`
@@ -369,7 +369,7 @@ obj/%.o: src/%.cpp
 #python modules
 
 %.so: %.o 
-	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF)  $(PYTHON_LIB) -lboost_python -lboost_numpy $(DJC_LIB)
+	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF)  $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 $(DJC_LIB)
 
 %.o: src/%.C 
 	g++   $(ROOTCFLAGS) -O2 $(CC_FLAGS) -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<
