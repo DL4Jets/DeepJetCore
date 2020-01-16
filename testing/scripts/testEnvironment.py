@@ -70,7 +70,7 @@ rm -rf Subpackage
 createSubpackage.py --data Subpackage
 cd Subpackage
 
-export SUBPACKAGE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)
+export SUBPACKAGE=$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" && pwd -P)
 export DEEPJETCORE_SUBPACKAGE=$SUBPACKAGE
 
 cd $SUBPACKAGE
