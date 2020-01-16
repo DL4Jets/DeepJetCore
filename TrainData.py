@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import logging
+import time
 
 from DeepJetCore.compiled.c_trainData import trainData
 from DeepJetCore.compiled.c_simpleArray import simpleArray

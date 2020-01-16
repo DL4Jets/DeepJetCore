@@ -61,6 +61,36 @@ python3 batch_explosion.py batchDC/dataCollection.djcdc batchExplode
 os.system(script)
 
 
+print('tesing subpackage, training and prediction')
+
+script='''
+#!/bin/bash
+cd {djc_base}/testing
+rm -rf Subpackage
+createSubpackage.py --data Subpackage
+cd Subpackage
+
+export SUBPACKAGE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)
+export DEEPJETCORE_SUBPACKAGE=$SUBPACKAGE
+
+cd $SUBPACKAGE
+export PYTHONPATH=$SUBPACKAGE/modules:$PYTHONPATH
+export PYTHONPATH=$SUBPACKAGE/modules/datastructures:$PYTHONPATH
+export PATH=$SUBPACKAGE/scripts:$PATH
+
+export LD_LIBRARY_PATH=$SUBPACKAGE/modules/compiled:$LD_LIBRARY_PATH
+export PYTHONPATH=$SUBPACKAGE/modules/compiled:$PYTHONPATH
+
+cd example_data
+convertFromSource.py -i train_files.txt -o conv -c TrainData_example
+cd ../Train/
+python3 training_example.py ../example_data/conv/dataCollection.djcdc  TEST
+cd TEST
+predict.py KERAS_model.h5 trainsamples.djcdc ../../example_data/test_files.txt PRED
+'''.format(djc_base=djc_base)
+os.system(script)
+
+
 
 
 

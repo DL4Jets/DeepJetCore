@@ -548,7 +548,7 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
     
     from DeepJetCore.compiled import c_arrayReads
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,1) , dtype='float32')
+    array = numpy.zeros((nevents,int(xsize/rebinx), int(ysize/rebiny),1) , dtype='float32')
     ncut=numpy.array([0],dtype='float32')
     c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny,zeropad, False, ncut)
     
@@ -582,7 +582,7 @@ def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
     
     from DeepJetCore.compiled import c_arrayReads
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,zsize/rebinz,1) , dtype='float32')
+    array = numpy.zeros((nevents,int(xsize/rebinx), int(ysize/rebiny),int(zsize/rebinz),1) , dtype='float32')
     
     c_arrayReads.read3DArray(array,filename, treename, branchname,rebinx,rebiny,rebinz,zeropad)
     
@@ -598,7 +598,7 @@ def read4DArray(filename, treename, branchname, nevents, xsize, ysize, zsize, fs
     from DeepJetCore.compiled import c_arrayReads
     
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,zsize/rebinz,fsize/rebinf,1) , dtype='float32')
+    array = numpy.zeros((nevents,int(xsize/rebinx), int(ysize/rebiny), int(zsize/rebinz),int(fsize/rebinf),1) , dtype='float32')
     
     print(array.shape)
     

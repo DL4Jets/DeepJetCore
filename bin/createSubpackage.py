@@ -419,8 +419,8 @@ with  open(subpackage_dir+'/modules/compiled/src/c_convert.C','w') as lfile:
 
 print('subpackage '+ subpackage_name + " created in "+subpackage_dir)    
 if args.data:
-    print('creating example data... (10 training files, 1 test file, 1000 events each)')
-    os.system('cd '+subpackage_dir+'/example_data;  make_example_data  1000 10 1')
+    print('creating example data... (10 training files, 1 test file, 100 events each)')
+    os.system('cd '+subpackage_dir+'/example_data;  make_example_data  100 10 1')
     print('example data can be found in '+subpackage_dir+'/example_data.')
     
 print('Before using the subpackage, source the "env.sh" file in the subpackage directory (not in DeepJetCore).')

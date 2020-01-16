@@ -14,59 +14,18 @@ parser.add_argument("-b", help="batch size ",default="-1")
 args = parser.parse_args()
 
 
-import imp
 from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+from DeepJetCore.customObjects import get_custom_objects
+from keras.models import load_model
 import tempfile
 import atexit
-try:
-    imp.find_module('setGPU')
-    import setGPU
-except ImportError:
-    found = False
-    
-from keras.models import load_model
-from DeepJetCore.DJCLosses import *
-from DeepJetCore.DJCLayers import *
-from keras import backend as K
-import os
-import imp
-try:
-    imp.find_module('Losses')
-    from Losses import *
-except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
-    global_loss_list = {}
-
-try:
-    imp.find_module('Layers')
-    from Layers import *
-except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
-    global_layers_list = {}
-
-try:
-    imp.find_module('Metrics')
-    from Metrics import *
-except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
-    global_metrics_list = {}
-
 import os
 
 
 batchsize = int(args.b)
  
-#if os.path.isdir(args.outputDir):
-#    raise Exception('output directory must not exists yet')
-
-custom_objs = {}
-custom_objs.update(djc_global_loss_list)
-custom_objs.update(djc_global_layers_list)
-custom_objs.update(global_loss_list)
-custom_objs.update(global_layers_list)
-custom_objs.update(global_metrics_list)
-
+custom_objs = get_custom_objects()
 
 model=load_model(args.inputModel, custom_objects=custom_objs)
 dc = DataCollection(args.trainingDataCollection)
