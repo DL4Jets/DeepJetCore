@@ -23,4 +23,4 @@ ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 
 #run test scripts, and see if everything is fine
 
-#RUN testEnvironment.py
+#RUN /usr/share/DJC/DeepJetCore/testing/scripts/testEnvironment.py

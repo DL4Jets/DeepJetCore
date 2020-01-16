@@ -76,7 +76,7 @@ class training_base(object):
 				useweights=False, testrun=False,
                 testrun_fraction=0.1,
 				resumeSilently=False, 
-				renewtokens=True,
+				renewtokens=False,
 				collection_class=DataCollection,
 				parser=None,
                 recreate_silently=False
