@@ -253,13 +253,14 @@ class PredictCallback(Callback):
                  batchsize=10,
                  on_epoch_end=False,
                  use_event=0,
-                 decay_function=None
+                 decay_function=None,
+                 offset=0
                  ):
         super(PredictCallback, self).__init__()
         self.samplefile=samplefile
         self.function_to_apply=function_to_apply
         self.counter=0
-        self.call_counter=0
+        self.call_counter=offset
         self.decay_function=decay_function
         
         self.after_n_batches=after_n_batches
@@ -276,7 +277,6 @@ class PredictCallback(Callback):
             
         self.batchsize = 1    
         self.td = td
-        
         self.gen = trainDataGenerator()
         self.gen.setBatchSize(batchsize)
         self.gen.setSkipTooLargeBatches(False)
@@ -309,8 +309,6 @@ class PredictCallback(Callback):
     
     def on_epoch_end(self, epoch, logs=None):
         self.counter=0
-        if self.decay_function is not None:
-            self.after_n_batches=self.decay_function(self.after_n_batches)
         if not self.run_on_epoch_end: return
         self.predict_and_call(epoch)
         
@@ -320,6 +318,8 @@ class PredictCallback(Callback):
         if self.counter>self.after_n_batches: 
             self.counter=0
             self.predict_and_call(batch)
+            if self.decay_function is not None:
+                self.after_n_batches=self.decay_function(self.call_counter)
         
         
            

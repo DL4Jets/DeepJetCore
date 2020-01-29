@@ -317,7 +317,7 @@ template<class T>
 void trainData<T>::readFromFile(std::string filename){
     clear();
     FILE *ifile = fopen(filename.data(), "rb");
-    checkFile(ifile);
+    checkFile(ifile, filename);
     readNested(feature_shapes_, ifile);
     readNested(truth_shapes_, ifile);
     readNested(weight_shapes_, ifile);

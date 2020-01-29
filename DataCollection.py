@@ -92,9 +92,14 @@ class DataCollection(object):
         else:
             raise ValueError("I don't know how to add DataCollection and %s" % type(other))
         
+    def __len__(self):
+        return len(self.samples)
+    
     def _readShapesIfNeeded(self):
         if len(self.samples)<1:
             return
+        if self.dataclass_instance is None:
+            self.dataclass_instance = self.dataclass()
         if self.dataclass_instance.nElements() < 1:
             self.dataclass_instance.readShapesFromFile(self.getSamplePath(self.samples[0]))
         

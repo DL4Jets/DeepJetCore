@@ -14,6 +14,7 @@ import logging
 
 from DeepJetCore.compiled.c_trainData import trainData
 from DeepJetCore.compiled.c_simpleArray import simpleArray
+import time
 
 def fileTimeOut(fileName, timeOut):
     '''

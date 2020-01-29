@@ -18,6 +18,7 @@ from pdb import set_trace
 import tensorflow as tf
 import tensorflow.keras as keras
 from keras.utils import multi_gpu_model
+import copy
 
 import imp
 try:
@@ -199,8 +200,12 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(testrun_fraction)
-            self.val_data=self.train_data
+            if len(self.train_data)>1:
+                self.train_data.split(testrun_fraction)
+
+            self.train_data.dataclass_instance=None #can't be pickled
+            self.val_data=copy.deepcopy(self.train_data)
+            
         else:    
             self.val_data=self.train_data.split(splittrainandtest)
         
@@ -238,11 +243,12 @@ class training_base(object):
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
-        try:
-            self.keras_model=model(self.keras_inputs,**modelargs)
-        except BaseException as e:
-            print('problem in setting model. Reminder: since DJC 2.0, NClassificationTargets and RegressionTargets must not be specified anymore')
-            raise e
+        self.keras_model=model(self.keras_inputs,**modelargs)
+        #try:
+        #    self.keras_model=model(self.keras_inputs,**modelargs)
+        #except BaseException as e:
+        #    print('problem in setting model. Reminder: since DJC 2.0, NClassificationTargets and RegressionTargets must not be specified anymore')
+        #    raise e
         if not self.keras_model:
             raise Exception('Setting model not successful') 
         
@@ -403,6 +409,7 @@ class training_base(object):
             if not isinstance(additional_callbacks, list):
                 additional_callbacks=[additional_callbacks]
             self.callbacks.callbacks.extend(additional_callbacks)
+            
         
         print('starting training')
         if load_in_mem:

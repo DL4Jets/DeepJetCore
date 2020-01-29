@@ -76,6 +76,7 @@ RUN pip install gpustat
 RUN pip install setGPU
 
 
+RUN apt install -y unzip
 
 
 
