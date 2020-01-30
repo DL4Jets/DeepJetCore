@@ -84,7 +84,7 @@ The TrainData class has been slimmed significantly. Now, the ``__init`` function
 
 Of course any user function, member etc beyond that can be defined, too.
 
-
+For everybody who used the built-in weighting functionality, this function now need to be reimplemented in the user code (in ``createWeighterObjects``). The old implementation can be found here: https://github.com/DL4Jets/DeepJetCore/blob/1.X/TrainData.py#L657-L672 and can be used in the same way in the user code.
 
 Ragged Tensors
 =====================
