@@ -441,6 +441,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     size_t bufferelements=buffer_store.nElements();
     size_t expect_batchelements = splits_.at(batchcount_);
     bool usebatch = true;
+    
     if(usebatch_.size())
         usebatch = usebatch_.at(batchcount_);
 
@@ -479,6 +480,10 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     }
 
     auto thisbatch = buffer_store.split(expect_batchelements);
+    if(thisbatch.nTotalElements() < 1){
+      //not sure why this can happen, there might be some bigger problem here. This at least prevents crashes.
+      return prepareBatch();
+    }
 
     if(debug)
         std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
