@@ -57,7 +57,7 @@ RUN pip install easydict tqdm
 RUN pip install Cython
 RUN pip install numba
 
-RUN pip --no-cache-dir install tensorflow==1.15
+RUN pip --no-cache-dir install tensorflow==2.0
 
 RUN apt-get update --fix-missing 
     
@@ -66,17 +66,21 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
     
 #for me ;)    
+
+RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
+
+RUN apt-get update --fix-missing 
 RUN apt-get install -y zsh 
 
 RUN apt-get install -y ffmpeg
-RUN apt-get install -y nvtop
+#not yet RUN apt-get install -y nvtop
 
 ##gpu specific stuff
 RUN pip install gpustat 
 RUN pip install setGPU
 
 
-RUN apt install -y unzip
+RUN apt-get install -y unzip
 
 
 
