@@ -314,15 +314,7 @@ class training_base(object):
             self.gan.save(self.outputDir+'GAN_'+outfile)
             self.generator.save(self.outputDir+'GEN_'+outfile)
             self.discriminator.save(self.outputDir+'DIS_'+outfile)
-        import tensorflow as tf
-        import keras.backend as K
-        tfsession=K.get_session()
-        saver = tf.train.Saver()
-        tfoutpath=self.outputDir+outfile+'_tfsession/tf'
-        import os
-        os.system('rm -rf '+tfoutpath)
-        os.system('mkdir -p '+tfoutpath)
-        saver.save(tfsession, tfoutpath)
+        
 
 
         #import h5py
