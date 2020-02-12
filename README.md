@@ -71,12 +71,21 @@ The general pipeline for inference/prediction is depicted in the following sketc
 More information on the three function of TrainData that need to be defined by the user (in addition to the training script) is given in the next Section.
 For the training script, please refer to the example provided with ``createSubpackage.py``. 
 
-TrainData definition and notes on upgrading from 1.X to 2.X
+TrainData definition and notes on upgrading (from 1.X to 2.X)
 =========================
 
 There has been substantial format changes from 1.X to 2.X, including low-level support preparations for ragged tensors. Therefore, all data from 1.X needs to be converted or newly created. Also, the interface changed slightly.
 
-The TrainData class has been slimmed significantly. Now, the ``__init`` function does not need any additional arguments anymore, and there are no mandatory definitions. Only the following functions should be defined for the interface (all others are deprecated):
+The master branch has also been switched to tensorflow 2.0 recently. This might require adapting subpackages. A workaround for the moment for old subpackages would be to include the following code in the subpackage ``__init__.py``:
+
+```
+import sys
+import tensorflow 
+tensorflow.compat.v1.disable_eager_execution()
+sys.modules["tensorflow"]=tensorflow.compat.v1
+```
+
+The TrainData class has been slimmed significantly. Now, the ``__init__`` function does not need any additional arguments anymore, and there are no mandatory definitions. Only the following functions should be defined for the interface (all others are deprecated):
 
   * ``createWeighterObjects(self, allsourcefiles)``: is not mandatory. It can be used, however to create a dictionary (pickable) objects that depend on the whole dataset (e.g. for numbers for normalisation etc). **Returns**: a dictionary of weighter objects
   * ``convertFromSourceFile(self, filename, weighterobjects, istraining, **kwargs)``: is mandatory. This function defines a rule to convert one source file to one output file. The final output should be a list of numpy feature arrays, a list of numpy truth arrays, and a list of numpy weight arrays. The latter can also be empty. The conversion can be done from root e.g. with uproot or similar, but can also use any other input format. **Returns** three items: a list of feature arrays, list of truth arrays, list of weight arrays
