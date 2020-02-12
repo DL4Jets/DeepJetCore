@@ -1,6 +1,6 @@
 
 
-FROM cernml4reco/djcbase:tf2
+FROM cernml4reco/djcbase:latest
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 RUN ldconfig
