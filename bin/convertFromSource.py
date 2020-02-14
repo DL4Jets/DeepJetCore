@@ -29,6 +29,7 @@ parser.add_argument("-r",  help="set path to snapshot that got interrupted", met
 parser.add_argument("-n", default='', help="(optional) number of child processes")
 parser.add_argument("--usemeansfrom", default='')
 parser.add_argument("--nothreads", action='store_true')
+parser.add_argument("--checkFiles", action='store_true')
 parser.add_argument("--means", action='store_true', help='compute only means')
 parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weight and mean calculation')
 parser.add_argument("--batch", help='Provide a batch ID to be used')
@@ -44,6 +45,9 @@ class_name=args.c
 recover=args.r
 usemeansfrom=args.usemeansfrom
 nchilds=args.n
+dofilecheck=args.checkFiles
+
+#fileIsValid
 
 if args.batch and not (args.usemeansfrom or args.testdatafor):
     raise ValueError(
@@ -108,7 +112,8 @@ elif args.means:
         infile, traind, outPath,
         means_only=True,
         output_name='batch_template.djcdc',
-        relpath=relpath
+        relpath=relpath,
+        checkfiles=dofilecheck
     )
 else:
     logging.info('Start conversion')
@@ -116,7 +121,8 @@ else:
         infile, traind, outPath, 
         takeweightersfrom=usemeansfrom,
         output_name=(args.batch if args.batch else 'dataCollection.djcdc'),
-        relpath=relpath
+        relpath=relpath,
+        checkfiles=dofilecheck
     )
 
 if args.inRange is not None:

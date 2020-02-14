@@ -207,25 +207,41 @@ class DataCollection(object):
         self.dataDir+='/'
         
         
-    def readSourceListFromFile(self, file, relpath=''):
+    def readSourceListFromFile(self, file, relpath='', checkfiles=False):
         self.samples=[]
         self.sourceList=[]
         self.__nsamples=0
         self.dataDir=""
         
+        td=self.dataclass()
+        
         fdir=os.path.dirname(file)
         fdir=os.path.abspath(fdir)
         fdir=os.path.realpath(fdir)
-        lines = [line.rstrip('\n') for line in open(file)]
+        lines = [(line.rstrip('\n')).rstrip(' ') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
             if relpath:
                 self.sourceList.append(os.path.join(relpath, line))
             else:
                 self.sourceList.append(line)
-
         if len(self.sourceList)<1:
             raise Exception('source samples list empty')
+        
+        if checkfiles:
+            print('DataCollection: checking files')
+            self.sourceList=self.checkSourceFiles()
+        
+    def checkSourceFiles(self):
+        td=self.dataclass()
+        newsamples=[]
+        for s in self.sourceList:
+            if td.fileIsValid(self.getSamplePath(s)):
+                newsamples.append(s)
+            else:
+                print('source file '+s+' seems to be broken, will skip processing it')
+        
+        return newsamples
         
         
     def split(self,ratio):
@@ -481,13 +497,14 @@ class DataCollection(object):
     def convertListOfRootFiles(self, inputfile, dataclass, outputDir, 
             takeweightersfrom='', means_only=False,
             output_name='dataCollection.djcdc',
-            relpath=''):
+            relpath='', checkfiles=False):
         
         newmeans=True
         if takeweightersfrom:
             self.readFromFile(takeweightersfrom)
             newmeans=False
-        self.readSourceListFromFile(inputfile, relpath=relpath)
+        self.dataclass = dataclass
+        self.readSourceListFromFile(inputfile, relpath=relpath,checkfiles=checkfiles)
         self.createDataFromRoot(
                     dataclass, outputDir, 
                     newmeans, means_only = means_only, 

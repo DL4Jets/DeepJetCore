@@ -94,6 +94,11 @@ class TrainData(trainData):
         '''
         return {}
     
+    ### perform a simple and quick check if the file is not corrupt. Can be called in advance to conversion
+    # return False if file is corrupt
+    def fileIsValid(self, filename):
+        return True
+    
     ### either of the following need to be defined
     
     ## if direct writeout is useful

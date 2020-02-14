@@ -45,4 +45,20 @@ RUN apt install -y openjdk-11-jre-headless
 RUN apt install -y openjdk-8-jre-headless 
 RUN apt install -y default-jdk
 #RUN apt install -y openjdk-9-jre-headless 
+
+
+
+## torch/jupyter stuff
+RUN pip install torch
+
+RUN pip install gensim && \
+    pip install jupyter && \
+    pip install prompt-toolkit && \
+    pip install seaborn 
+    
+EXPOSE 8888
+
+
+
+
     
