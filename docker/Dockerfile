@@ -48,8 +48,8 @@ RUN apt install -y default-jdk
 
 
 
-## torch/jupyter stuff
-RUN pip install torch
+## torch/jupyter stuff 
+RUN pip install torch future
 
 RUN pip install gensim && \
     pip install jupyter && \
