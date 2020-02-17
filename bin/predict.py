@@ -56,7 +56,7 @@ import os
 
 
 batchsize = int(args.b)
- 
+
 #if os.path.isdir(args.outputDir):
 #    raise Exception('output directory must not exists yet')
 
@@ -90,10 +90,13 @@ with open(args.inputSourceFileList, "r") as f:
             print('converting '+inputfile)
             td.readFromSourceFile(use_inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
         
+
         print('predicting ',inputfile)
-        print('batch size',dc.getBatchSize())
         gen = trainDataGenerator()
-        gen.setBatchSize(dc.getBatchSize())
+        if batchsize < 1:
+            batchsize = dc.getBatchSize()
+        print('batch size',batchsize)
+        gen.setBatchSize(batchsize)
         gen.setSquaredElementsLimit(dc.batch_uses_sum_of_squares)
         gen.setSkipTooLargeBatches(False)
         gen.setBuffer(td)
