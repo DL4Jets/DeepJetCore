@@ -121,7 +121,7 @@ with open(args.inputSourceFileList, "r") as f:
         
         if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
             predicted = [predicted]   
-        td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, inputfile)
+        td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, use_inputdir+"/"+inputfile)
         
         outputs.append(outfilename)
         

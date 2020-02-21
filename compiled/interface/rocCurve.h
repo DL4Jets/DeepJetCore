@@ -58,6 +58,7 @@ public:
 	}
 
 	void scaleYAxis(const float& scale){yscale_=scale;}
+	const float& getYAxisScaling()const{return yscale_;}
 
 	const TString& name()const{return name_;}
      TString compatName()const{

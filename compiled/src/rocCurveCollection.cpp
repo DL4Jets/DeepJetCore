@@ -58,6 +58,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         createFile=true;
     }
     size_t count=0;
+    float maxyscale=0.;
     std::vector<TH1D*> probhistos,vetohistos,invalidhistos,invalidvetohistos;
     for(size_t i=0;i<roccurves_.size();i++){
         rocCurve& rc=roccurves_.at(i);
@@ -83,6 +84,8 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
         tempname+=count;
         TH1D* hd=(TH1D*)rc.getInvalidatedHisto()->Clone(tempname);
         invalidvetohistos.push_back(hd);
+        if(rc.getYAxisScaling()>maxyscale)
+            maxyscale=rc.getYAxisScaling();
     }
 
 
@@ -101,9 +104,9 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
     cv->Draw();
     cv->cd();
 
-    TH1D haxis=TH1D("AXIS","AXIS",10,0,1);
+    TH1D haxis=TH1D("AXIS","AXIS",10,0,1.);
     //haxis.Draw("AXIS");
-    haxis.GetYaxis()->SetRangeUser(8e-4,1);
+    haxis.GetYaxis()->SetRangeUser(8e-4,maxyscale);
     //haxis.GetYaxis()->SetNdivisions(510);
 
     haxis.GetYaxis()->SetTitleSize(0.05);

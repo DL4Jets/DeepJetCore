@@ -14,6 +14,7 @@
 #include "../interface/pythonToSTL.h"
 #include "friendTreeInjector.h"
 #include "rocCurveCollection.h"
+#include <fstream>
 
 using namespace boost::python; //for some reason....
 
@@ -41,7 +42,8 @@ void makeROCs(
 		std::string treename,
 		double xmin,
 		std::string experimentlabel,std::string lumilabel,std::string prelimlabel,
-		const boost::python::list yscales
+		const boost::python::list yscales,
+		bool no_friend_tree
 ) {
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -92,7 +94,21 @@ void makeROCs(
     friendTreeInjector injector((TString)treename);
     std::vector<friendTreeInjector> injectors(u_infiles.size(), friendTreeInjector((TString)treename));
     std::vector<TChain*> chains(u_infiles.size());
-    if(individual){
+    if(no_friend_tree){
+        for(size_t i=0;i<u_infiles.size();i++){
+            TString filename = u_infiles.at(i);
+            std::ifstream file(filename.Data(), std::ifstream::in);
+            if(!file){
+                std::cerr << "makeROC: could not open file "<< filename <<std::endl;
+            }
+            chains.at(i) = new TChain();
+            TString b;
+            while (file >> b) {
+                chains.at(i)->Add(b+"/"+treename);
+            }
+        }
+    }
+    else if(individual){
         if(u_infiles.size() != s_names.size())
             throw std::runtime_error("makeROCs: file list must have same size as legends etc. in individual mode");
         for(size_t i=0;i<u_infiles.size();i++){
@@ -135,7 +151,7 @@ void makeROCs(
     for(const auto& s:s_extralegend)
         rocs.addExtraLegendEntry(s);
 
-    if(individual){
+    if(individual || no_friend_tree){
         rocs.printRocs(0,(TString)outfile,"",0,0,&chains,xmin,
         		experimentlabel,lumilabel,prelimlabel);
     }

@@ -103,7 +103,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                     xmin=-1,
                     experimentlabel="",lumilabel="",prelimlabel="",
                     npoints=500,
-                    yscales=1.):
+                    yscales=1.,
+                    no_friend_tree=False):
     
     import copy
     
@@ -155,7 +156,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         firstcomment,secondcomment,
                         invalidlist,extralegcopy,logY,
                         individual,xaxis,yaxis,nbins,treename,xmin,
-                        experimentlabel,lumilabel,prelimlabel,yscaleslist)
+                        experimentlabel,lumilabel,prelimlabel,yscaleslist,no_friend_tree)
         
         except Exception as e:
             print('error for these inputs:')
