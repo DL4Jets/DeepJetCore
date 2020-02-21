@@ -93,15 +93,17 @@ def createColours(colors_list,name_list,nnames=None,extralegend=[]):
 def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos_list,
                     colors_list, outpdffile, cuts='',cmsstyle=False, firstcomment='',secondcomment='',
                     invalidlist='',
-                    extralegend=None,
+                    extralegend=None, #['solid?udsg','hatched?c'])
                     logY=True,
                     individual=False,
                     xaxis="",
+                    yaxis="",
                     nbins=200,
                     treename='deepntuplizer/tree',
                     xmin=-1,
                     experimentlabel="",lumilabel="",prelimlabel="",
-                    npoints=500):#['solid?udsg','hatched?c']): 
+                    npoints=500,
+                    yscales=1.):
     
     import copy
     
@@ -136,6 +138,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
     vetos_list=makeASequence(vetos_list,len(namelistcopy))
     invalidlist=makeASequence(invalidlist,len(namelistcopy))
     
+    yscaleslist = makeASequence(yscales,len(namelistcopy))
     
     
     from DeepJetCore.compiled import c_makeROCs
@@ -151,8 +154,8 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
                         outpdffile,allcuts,cmsstyle, 
                         firstcomment,secondcomment,
                         invalidlist,extralegcopy,logY,
-                        individual,xaxis,nbins,treename,xmin,
-                        experimentlabel,lumilabel,prelimlabel)
+                        individual,xaxis,yaxis,nbins,treename,xmin,
+                        experimentlabel,lumilabel,prelimlabel,yscaleslist)
         
         except Exception as e:
             print('error for these inputs:')
@@ -162,6 +165,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
             print(truths_list)
             print(vetos_list)
             print(invalidlist)
+            print(yscaleslist)
             raise e
     
     

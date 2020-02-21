@@ -44,10 +44,10 @@ static std::vector<double> loglist(double first, double last, double size){
 }
 
 
-rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
+rocCurve::rocCurve():nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true),yscale_(1.){
     nrocsCounter++;
 }
-rocCurve::rocCurve(const TString& name):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true){
+rocCurve::rocCurve(const TString& name):nbins_(100),linecol_(kBlack),linewidth_(1),linestyle_(1),fullanalysis_(true),yscale_(1.){
     name_=name;
 }
 rocCurve::rocCurve(const TString& name, const TString& probability, const TString& truth,
@@ -162,7 +162,7 @@ void rocCurve::process(TChain *c,std::ostream& out){
 
     for(size_t i=0;i<nbins_;i++) {
         p[i] = probh_.Integral(i,nbins_)/(probintegral);
-        v[i] = vetoh_.Integral(i,nbins_)/vetointegral;
+        v[i] = yscale_*vetoh_.Integral(i,nbins_)/vetointegral;
     }
     TString compatname=name_;
     compatname.ReplaceAll(" ","_");
@@ -177,7 +177,7 @@ void rocCurve::process(TChain *c,std::ostream& out){
 
 
     out << "eff @ misid @ discr value\n\n";
-    std::vector<double> misidset=loglist(0.001,1,100);
+    std::vector<double> misidset=loglist(yscale_*0.001,yscale_*1,yscale_*100);
     int count=0;
     double integral=0;
     for(float eff=0;eff<1;eff+=0.00001){

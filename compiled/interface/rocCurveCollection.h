@@ -53,7 +53,7 @@ public:
 //		const TString& vetotruth, int linecolstyle, const TString& cuts="",int linestyle=1);
 
 	void addROC(const TString& name, const TString& probability, const TString& truth,
-		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="");
+		const TString& vetotruth, const TString& linecolstyle, const TString& cuts="",const TString& invalidateif="", float yscale=1.);
 
 	void addText(TLatex *l){additionaltext_.push_back(l);}
 

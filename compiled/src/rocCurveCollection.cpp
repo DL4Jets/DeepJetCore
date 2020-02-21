@@ -30,7 +30,7 @@ void rocCurveCollection::addExtraLegendEntry(const TString& entr){
 }
 
 void rocCurveCollection::addROC(const TString& name, const TString& probability, const TString& truth,
-        const TString& vetotruth, const TString& linecol, const TString& cuts,const TString& invalidateif){
+        const TString& vetotruth, const TString& linecol, const TString& cuts,const TString& invalidateif, float yscale){
 
     rocCurve rc=rocCurve(name,probability,truth,vetotruth,colorToTColor(linecol),lineToTLineStyle(linecol),cuts,invalidateif);
     rc.setLineWidth(linewidth_);
@@ -38,6 +38,7 @@ void rocCurveCollection::addROC(const TString& name, const TString& probability,
     lc.ToLower() ;
     if(lc.Contains("dummy"))
         rc.setLineWidth(0);
+    rc.scaleYAxis(yscale);
     roccurves_.push_back(rc);
     legentries_.push_back(name);
 }

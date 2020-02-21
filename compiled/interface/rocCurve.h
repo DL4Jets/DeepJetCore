@@ -57,6 +57,8 @@ public:
 		linewidth_=width;
 	}
 
+	void scaleYAxis(const float& scale){yscale_=scale;}
+
 	const TString& name()const{return name_;}
      TString compatName()const{
         TString namecp=name_;
@@ -101,6 +103,7 @@ private:
 	int linecol_,linewidth_,linestyle_;
 
 	bool fullanalysis_;
+	float yscale_;
 
 };
 

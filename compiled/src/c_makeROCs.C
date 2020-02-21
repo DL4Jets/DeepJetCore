@@ -36,10 +36,12 @@ void makeROCs(
         bool logy,
         bool individual,
         std::string xaxis,
+        std::string yaxis,
         int nbins,
 		std::string treename,
 		double xmin,
-		std::string experimentlabel,std::string lumilabel,std::string prelimlabel
+		std::string experimentlabel,std::string lumilabel,std::string prelimlabel,
+		const boost::python::list yscales
 ) {
 
     std::vector<TString>  s_intextfiles=toSTLVector<TString>(intextfiles);
@@ -51,6 +53,7 @@ void makeROCs(
     std::vector<TString>  s_cuts = toSTLVector<TString>(cuts);
     std::vector<TString>  s_invalidate =toSTLVector<TString>(invalidate);
     std::vector<TString>  s_extralegend=toSTLVector<TString>(extralegend);
+    std::vector<float>    s_yscales =toSTLVector<float>(yscales);
     /*
      * Size checks!!!
      */
@@ -60,7 +63,8 @@ void makeROCs(
             s_names.size() != s_vetos.size()||
             s_names.size() != s_colors.size()||
             s_names.size() != s_cuts.size() ||
-            s_invalidate.size() != s_names.size())
+            s_invalidate.size() != s_names.size() ||
+            s_names.size() != s_yscales.size())
         throw std::runtime_error("makeROCs: input lists must have same size");
 
     //make unique list of infiles
@@ -109,10 +113,12 @@ void makeROCs(
     }
 
     TString xaxisstr=xaxis;
+    TString yaxisstr=yaxis;
 
     rocCurveCollection rocs;
     rocs.setNBins(nbins);
     rocs.setXaxis(xaxisstr);
+    rocs.setYaxis(yaxisstr);
 
     rocs.setCommentLine0(firstcomment.data());
     rocs.setCommentLine1(secondcomment.data());
@@ -120,12 +126,11 @@ void makeROCs(
     rocs.setCMSStyle(usecmsstyle);
 
     for(size_t i=0;i<s_names.size();i++){
-        if(s_cuts.size())
-            rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
-                    s_vetos.at(i),s_colors.at(i),s_cuts.at(i),s_invalidate.at(i));
-        else
-            rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
-                    s_vetos.at(i),s_colors.at(i),"",s_invalidate.at(i));
+        TString cutstr="";
+        if(s_cuts.size()) cutstr=s_cuts.at(i);
+        rocs.addROC(s_names.at(i),s_probabilities.at(i),s_truths.at(i),
+                s_vetos.at(i),s_colors.at(i),cutstr,s_invalidate.at(i),
+                s_yscales.at(i));
     }
     for(const auto& s:s_extralegend)
         rocs.addExtraLegendEntry(s);
