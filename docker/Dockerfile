@@ -6,27 +6,7 @@ FROM cernml4reco/djcbase:latest
 
 #eclipse rse stuff - make extern
 
-RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
-RUN apt update
-# do not upgrade all, because of cudnn versions etc!!!
-#for eclipse stuff
-RUN apt install -y default-jre 
-RUN apt install -y openjdk-11-jre-headless 
-RUN apt install -y openjdk-8-jre-headless 
-RUN apt install -y default-jdk
-#RUN apt install -y openjdk-9-jre-headless 
 
-
-
-## torch/jupyter stuff 
-RUN pip install torch future
-
-RUN pip install gensim && \
-    pip install jupyter && \
-    pip install prompt-toolkit && \
-    pip install seaborn 
-    
-EXPOSE 8888
 
 
 
