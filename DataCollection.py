@@ -377,7 +377,7 @@ class DataCollection(object):
                 def removefile():
                     pass
             else:
-                tmpinput = tempstoragepath+'/'+str(os.getpid())+os.path.basename(sample)
+                tmpinput = tempstoragepath+'/'+str(os.getpid())+'_tmp_'+os.path.basename(sample)
                 
                 def removefile():
                     os.system('rm -f '+tmpinput)
