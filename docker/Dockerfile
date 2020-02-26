@@ -4,15 +4,6 @@ FROM cernml4reco/djcbase:latest
 
 
 
-#eclipse rse stuff - make extern
-
-
-
-
-
-
-    
-
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 RUN ldconfig
 RUN cd /usr/share && \

@@ -57,7 +57,7 @@ RUN pip install easydict tqdm
 RUN pip install Cython
 RUN pip install numba
 
-RUN pip --no-cache-dir install tensorflow-gpu==2.0
+RUN pip --no-cache-dir install tensorflow-gpu==2.1
 
 RUN apt-get update --fix-missing 
     

@@ -19,11 +19,11 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
 import tempfile
 import atexit
-try:
-    imp.find_module('setGPU')
-    import setGPU
-except ImportError:
-    found = False
+#try:
+#    imp.find_module('setGPU')
+#    import setGPU
+#except ImportError:
+#    found = False
     
 from keras.models import load_model
 from DeepJetCore.DJCLosses import *

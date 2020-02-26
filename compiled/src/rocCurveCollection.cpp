@@ -106,7 +106,7 @@ void rocCurveCollection::printRocs(TChain* c, const TString& outpdf,
 
     TH1D haxis=TH1D("AXIS","AXIS",10,0,1.);
     //haxis.Draw("AXIS");
-    haxis.GetYaxis()->SetRangeUser(8e-4,maxyscale);
+    haxis.GetYaxis()->SetRangeUser(maxyscale*8e-4,maxyscale);
     //haxis.GetYaxis()->SetNdivisions(510);
 
     haxis.GetYaxis()->SetTitleSize(0.05);

@@ -36,6 +36,7 @@ parser.add_argument("--batch", help='Provide a batch ID to be used')
 parser.add_argument("--noramcopy", action='store_true', help='Do not copy input file to /dev/shm before conversion')
 parser.add_argument("-v", action='store_true', help='verbose')
 parser.add_argument("-q", action='store_true', help='quiet')
+parser.add_argument("--testdata", action='store_true', help='convert as test data')
 
 # process options
 args=parser.parse_args()
@@ -46,6 +47,7 @@ recover=args.r
 usemeansfrom=args.usemeansfrom
 nchilds=args.n
 dofilecheck=args.checkFiles
+testdata = args.testdata
 
 #fileIsValid
 
@@ -91,6 +93,7 @@ if args.inRange is not None:
 dc = DataCollection(nprocs = (1 if args.nothreads else -1))
 dc.meansnormslimit = int(args.nforweighter)
 dc.no_copy_on_convert = args.noramcopy
+dc.istestdata=testdata
 if len(nchilds):
     dc.nprocs=int(nchilds)
 if args.batch is not None:

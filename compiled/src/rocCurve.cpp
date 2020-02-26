@@ -124,10 +124,10 @@ void rocCurve::process(TChain *c,std::ostream& out){
     nrcc+=nrocsCounter;
 
     TCanvas cv;//just a dummy
-    probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1);
-    vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1);
-    invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1);
-    invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1);
+    probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1.+0.00001);
+    vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1.+0.00001);
+    invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1.+0.00001);
+    invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1.+0.00001);
 
 
     c->Draw(probstr+">>prob"+nrcc,allcuts);//probcuts);
