@@ -498,15 +498,15 @@ void trainData<T>::skim(size_t batchelement){
         throw std::out_of_range("trainData<T>::skim: batch element out of range");
     for(auto & a : feature_arrays_){
         a.split(batchelement);
-        a.split(1);
+        a=a.split(1);
     }
     for(auto & a : truth_arrays_){
         a.split(batchelement);
-        a.split(1);
+        a=a.split(1);
     }
     for(auto & a : weight_arrays_){
         a.split(batchelement);
-        a.split(1);
+        a=a.split(1);
     }
     updateShapes();
 }
