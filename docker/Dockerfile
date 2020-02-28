@@ -138,7 +138,7 @@ RUN cd /usr/local/lib/python2.7/dist-packages/tensorflow_core/include/third_part
 # the actual DeepJetCore. Make sure this gets built every time
 
 ARG BUILD_DATE
-LABEL org.label.build-date=$BUILD_DATE
+LABEL org.label-schema.build-date=$BUILD_DATE
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 RUN ldconfig
