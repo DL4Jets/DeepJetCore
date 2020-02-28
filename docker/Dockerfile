@@ -79,7 +79,7 @@ RUN pip install numba
 #    libnvinfer-plugin6=6.0.1-1+cuda10.1
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip --no-cache-dir install tensorflow-gpu==1.15
+    pip --no-cache-dir install tensorflow-gpu==2.1
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update --fix-missing 
