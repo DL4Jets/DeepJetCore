@@ -79,7 +79,7 @@ RUN pip install numba
 #    libnvinfer-plugin6=6.0.1-1+cuda10.1
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip --no-cache-dir install tensorflow-gpu==1.15
+    pip --no-cache-dir install tensorflow-gpu==2.1
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update --fix-missing 
@@ -147,7 +147,7 @@ RUN cd /usr/share && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
     cd DeepJetCore && \
-    git checkout 2.2_tf1.15 &&\
+#    git checkout 2.2_tf1.15 &&\
     source docker_env.sh && \
     cd compiled && \
     make -j4
