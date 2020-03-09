@@ -26,6 +26,7 @@
 #include "version.h"
 #include <iostream>
 #include <cstdint>
+#include <sstream>
 
 namespace djc{
 
@@ -176,6 +177,24 @@ public:
      */
     static size_t findElementSplitLength(const std::vector<int64_t> & rowsplits,
             size_t nelements, size_t& startat, bool & exceeds_limit, bool sqelementslimit=false);
+
+    /**
+     * Split indices can directly be used with the split() function.
+     * Returns e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
+     */
+    static std::vector<size_t>  getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+
+    /**
+     * Split indices can directly be used with the split() function.
+     * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
+     */
+    static std::vector<size_t>  getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+
+    static std::vector<size_t>  dataSplitToSplitIndices(const std::vector<size_t>& data_splits);
+    static std::vector<size_t>  splitToDataSplitIndices(const std::vector<size_t>& data_splits);
+
     static std::vector<int64_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
 
@@ -217,6 +236,10 @@ private:
     void checkShape(size_t ndims)const;
     void checkSize(size_t idx)const;
     void checkRaggedIndex(size_t i, size_t j)const;
+
+    static std::vector<size_t>  priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+
 
 
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
@@ -370,8 +393,15 @@ template<class T>
 simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     simpleArray<T> out;
     if (!shape_.size() || ( !isRagged() && splitindex > shape_.at(0))) {
+        std::stringstream errMsg;
+        errMsg << "simpleArray<T>::split: splitindex > shape_[0] : ";
+        if(shape_.size())
+            errMsg << splitindex << ", " << shape_.at(0);
+        else
+            errMsg <<"shape size: " << shape_.size() <<" empty array cannot be split.";
+        cout();
         throw std::runtime_error(
-                "simpleArray<T>::split: splitindex > shape_[0]");
+                errMsg.str().c_str());
     }
     if(splitindex == shape_.at(0)){//exactly the whole array
         out = *this;
@@ -602,50 +632,104 @@ void simpleArray<T>::cout()const{
     std::cout << std::endl;
 }
 
+
+
 template<class T>
-size_t simpleArray<T>::findElementSplitLength(const std::vector<int64_t> & rs, size_t nelements,
-        size_t& startat, bool & exceeds_limit, bool sqelementslimit){
-    if(startat >= rs.size())
-        throw std::out_of_range("simpleArray<T>::findElementSplitPoint: startat");
+ std::vector<size_t>  simpleArray<T>::priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+        bool sqelementslimit, std::vector<bool>& size_ok){
 
-    exceeds_limit=false;
-    size_t elements_accumulated=0;
-    size_t new_elements_accumulated=0;
-    const size_t& start_rowsplit = rs.at(startat);
-    size_t totalaccumulated = 0;
-    size_t startedat = startat;
+    std::vector<size_t> outIdxs;
+    size_ok.clear();
+    if(rowsplits.size()<1)
+        return outIdxs;
 
-    for(size_t i=startedat; i < rs.size()-1;i++){
-        size_t to_add = rs.at(i+1) - rs.at(i);
-        if(sqelementslimit)
-            to_add *= to_add;
+    size_t i_old=0;
+    size_t s_old = 0;
+    size_t i_s = 0;
+    while (true) {
 
-        //std::cout << "i "<< i << std::endl;
-        //std::cout << "to_add "<< to_add << std::endl;
-        //std::cout << "sqrt(to_add) "<< std::sqrt(to_add) << std::endl;
-        //std::cout << "new_elements_accumulated "<< new_elements_accumulated << std::endl;
-        //std::cout << "elements_accumulated "<< elements_accumulated << std::endl;
-        //std::cout << "startat "<< startat << std::endl;
+        size_t s = rowsplits.at(i_s);
+        size_t delta = s - s_old;
+        size_t i_splitat = rowsplits.size()+1;
 
+        if (sqelementslimit)
+            delta *= delta;
 
-         //start at next for next iteration
-
-
-        new_elements_accumulated += to_add;
-        if(new_elements_accumulated > nelements){
-            if(elements_accumulated == 0){
-                exceeds_limit=true;
-                startat = i+1;
-                return new_elements_accumulated;
-            }
-            startat = i;
-            return elements_accumulated;
+        if (delta > nelements_limit && i_s != i_old+1) {
+            i_splitat = i_s - 1;
+            i_s--;
         }
-        elements_accumulated = new_elements_accumulated;
+        else if (delta == nelements_limit ||
+                i_s == rowsplits.size() - 1 ||
+                (delta > nelements_limit && i_s == i_old+1)) {
+            i_splitat = i_s;
+        }
+
+
+        if (i_splitat < rowsplits.size()+1) {        //split
+            bool is_good = (rowsplits.at(i_splitat) - rowsplits.at(i_old)
+                    <= nelements_limit);
+            size_ok.push_back(is_good);
+
+
+            if(datasplit)
+                outIdxs.push_back(i_splitat);
+            else
+                outIdxs.push_back(i_splitat - i_old);
+
+
+            std::cout << "i_old " << i_old << "\n";
+            std::cout << "i_s " << i_s << "\n";
+            std::cout << "s_old " << s_old << "\n";
+            std::cout << "s " << s << "\n";
+            std::cout << "i_splitat " << i_splitat << "\n";
+            std::cout << "is_good " << is_good << "\n";
+            std::cout << "i_splitat - i_old " << i_splitat - i_old << "\n";
+            std::cout << std::endl;
+
+            i_old = i_splitat;
+            s_old = rowsplits.at(i_old);
+            //i_s = i_splitat;
+
+        }
+        i_s++;
+        if(i_s == rowsplits.size())
+            break;
     }
-    startat = rs.size()-1;
-    return elements_accumulated;
+
+    return outIdxs;
 }
+/**
+    * Split indices can directly be used with the split() function.
+    * Returns e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
+    */
+template<class T>
+std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+        bool sqelementslimit, std::vector<bool>& size_ok){
+    return priv_getSplitIndices(false, rowsplits, nelements_limit, sqelementslimit,  size_ok);
+}
+
+/**
+ * Split indices can directly be used with the split() function.
+ * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
+ */
+
+template<class T>
+std::vector<size_t>  simpleArray<T>::getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
+        bool sqelementslimit, std::vector<bool>& size_ok){
+    return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok);
+}
+
+template<class T>
+std::vector<size_t>  simpleArray<T>::dataSplitToSplitIndices(const std::vector<size_t>& data_splits){
+    return std::vector<size_t>();
+}
+
+template<class T>
+std::vector<size_t>  simpleArray<T>::splitToDataSplitIndices(const std::vector<size_t>& data_splits){
+    return std::vector<size_t>();
+}
+
 
 template<class T>
 std::vector<int64_t> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool seeknext){

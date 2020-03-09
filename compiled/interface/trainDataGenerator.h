@@ -142,6 +142,7 @@ private:
     std::string nextread_;
     size_t filecount_;
     size_t nbatches_;
+    size_t npossiblebatches_;
     size_t ntotal_;
     size_t nsamplesprocessed_;
     size_t lastbatchsize_;
@@ -154,7 +155,7 @@ private:
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debug(false),
         randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), filecount_(0), nbatches_(
-                0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
+                0), npossiblebatches_(0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 batchcount_(0){
 }
 
@@ -309,40 +310,22 @@ void trainDataGenerator<T>::prepareSplitting(){
         std::cout << std::endl;
     }
 
-    int debugcounter = 0;
+    splits_ = simpleArray<T>::getSplitIndices(allrs, batchsize_,sqelementslimit_ , usebatch_);
 
-    std::vector<size_t> batchlengths;
-    size_t startnextat=0;
-    while(startnextat < allrs.size()-1){
-        bool exceeds=true;
-
-        size_t initialpoint = startnextat;
-        size_t batchlength = simpleArray<T>::findElementSplitLength(allrs, batchsize_, startnextat,exceeds, sqelementslimit_);
-        size_t splitpoint = startnextat - initialpoint ;//since it will have been split off before
-
-        if(!skiplargebatches_)
-            exceeds=false;
-
-        splits_.push_back(splitpoint);
-        batchlengths.push_back(batchlength);
-        usebatch_.push_back(!exceeds);
-
-        if(debug && debugcounter<100)
-            std::cout << ">>>> batch with size " << std::sqrt((float)batchlength) << " use " << !exceeds << " next start "<< startnextat<< " splitpoint "<<splitpoint <<" nelements " << allrs.at(startnextat)-allrs.at(initialpoint) << std::endl;
-
-        if(!exceeds)
+    nbatches_=0;
+    npossiblebatches_=0;
+    for(size_t i=0;i<usebatch_.size();i++){
+        npossiblebatches_++;
+        if(usebatch_.at(i))
             nbatches_++;
-
-        debugcounter++;
     }
-    if(debug)
-        std::cout << "prepared " << nbatches_ << " batches" << std::endl;
+
 
     if(debug){
-        size_t nprint = batchlengths.size();
+        size_t nprint = splits_.size();
         if(nprint>200)nprint=200;
         for(size_t i=0;i< nprint;i++){
-            std::cout << batchlengths.at(i) ;
+            std::cout << i ;
             if(usebatch_.at(i))
                 std::cout << " ok, split " ;
             else
@@ -374,7 +357,7 @@ bool trainDataGenerator<T>::tdHasRaggedDimension(const trainData<T>& td)const{
 
 template<class T>
 bool trainDataGenerator<T>::lastBatch()const{
-    return batchcount_ >= getNBatches() -1 ;
+    return batchcount_ >= npossiblebatches_ -1 ;
 }
 
 
@@ -480,16 +463,17 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     }
 
     auto thisbatch = buffer_store.split(expect_batchelements);
+
     if(thisbatch.nTotalElements() < 1){
       //not sure why this can happen, there might be some bigger problem here. This at least prevents crashes.
-      return prepareBatch();
+   //   return prepareBatch();
     }
 
     if(debug)
         std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
         " elements in buffer before: " << bufferelements <<
         "\nsplitting at " << expect_batchelements << " use this batch "<<  usebatch
-        << " total elements " << thisbatch.nTotalElements() << std::endl;
+        << " total elements " << thisbatch.nTotalElements() << " elements left in buffer " << buffer_store.nElements()<< std::endl;
 
     if(debug){
         int dbpcount=0;
