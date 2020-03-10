@@ -542,21 +542,15 @@ class DataCollection(object):
     
     def generatorFunction(self):
         
-        
-        while(1):
-            ##needs to be adapted
-            #
-            # Use tf.ragged.from_rowsplits (or similar)
-            #
+        while(not self.generator.isEmpty()):
+
             data = self.generator.getBatch()
+            
             #print("batch size ", data.nElements())
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
             yout = data.transferTruthListToNumpy()
             
-            #debug
-            #if self.generator.lastBatch(): # returns true if less than the previous batch size remains
-            #    print('\nlastbatch')
             
             if len(wout)>0:
                 yield (xout,yout,wout)

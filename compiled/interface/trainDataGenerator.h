@@ -93,6 +93,8 @@ public:
 
     bool lastBatch()const;
 
+    bool isEmpty()const;
+
     void prepareNextEpoch();
 
     void shuffleFilelist();
@@ -360,6 +362,11 @@ bool trainDataGenerator<T>::lastBatch()const{
     return batchcount_ >= npossiblebatches_ -1 ;
 }
 
+template<class T>
+bool trainDataGenerator<T>::isEmpty()const{
+    return batchcount_ >= splits_.size();
+}
+
 
 template<class T>
 void trainDataGenerator<T>::prepareNextEpoch(){
@@ -420,6 +427,9 @@ trainData<T> trainDataGenerator<T>::getBatch(){
 
 template<class T>
 trainData<T>  trainDataGenerator<T>::prepareBatch(){
+    if(batchcount_ >= splits_.size()){
+        throw std::runtime_error("trainDataGenerator::prepareBatch: asking for more batches than in dataset");
+    }
 
     size_t bufferelements=buffer_store.nElements();
     size_t expect_batchelements = splits_.at(batchcount_);

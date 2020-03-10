@@ -47,6 +47,8 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
             .def("getNBatches", &trainDataGenerator<float>::getNBatches)
 
             .def("lastBatch", &trainDataGenerator<float>::lastBatch)
+            .def("isEmpty", &trainDataGenerator<float>::isEmpty)
+
             .def("prepareNextEpoch", &trainDataGenerator<float>::prepareNextEpoch)
             .def("getBatch", &trainDataGenerator<float>::getBatch)
 

@@ -107,9 +107,59 @@ for b in range(len(batchsizes)):
         i_e += 1
 
 
-            
+print('testing direct buffering')
+
+
         
+for b in range(len(batchsizes)):
+    batchsize=batchsizes[b]
+    expected_here = expected_elmts[b]
     
+    gen = trainDataGenerator()
+    gen.debug=True
+    #gen.setSquaredElementsLimit(True)
+    gen.setBatchSize(batchsize)
+    print('batchsize',batchsize)
+    print('setting buffer')
+    gen.setBuffer(td)
+    print('done setting buffer')
+    
+
+    #print("expect: 5, 4, 4, 5, 4, 4 = 6 ")
+    nbatches = gen.getNBatches()
+    #print(nbatches)
+    print("gen.getNTotal()", gen.getNTotal()) # <- bullshit
+    print("gen.getNBatches()", gen.getNBatches())
+    
+    
+    #gen.debug=True
+    i_e = 0
+    for i in range(nbatches):
+        print("batch", i, "is last ", gen.lastBatch())
+        d = gen.getBatch()
+        nelems=d.nElements()
+        if expected_here[i_e] is None:
+            i_e += 1
+        assert expected_here[i_e] == nelems
+        i_e += 1
+
+
+
+
+print('checking 1 example generator')
+
+td.skim(0)
+gen = trainDataGenerator()
+gen.setBuffer(td)
+d = gen.getBatch()
+nelems=d.nElements()
+
+assert nelems == 1
+
+
+
+
+
 
 
 

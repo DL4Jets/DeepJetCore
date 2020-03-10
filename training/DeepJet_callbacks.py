@@ -290,10 +290,10 @@ class PredictCallback(Callback):
         self.gen.setBuffer(self.td)
         
         def genfunc():
-            while(1):
+            while(not self.gen.isEmpty()):
                 d = self.gen.getBatch()
                 yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
-                
+        
         predicted = self.model.predict_generator(genfunc(),
                                             steps=self.gen.getNBatches(),
                                             max_queue_size=1,
