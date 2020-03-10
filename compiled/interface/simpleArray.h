@@ -678,14 +678,14 @@ template<class T>
                 outIdxs.push_back(i_splitat - i_old);
 
 
-            std::cout << "i_old " << i_old << "\n";
-            std::cout << "i_s " << i_s << "\n";
-            std::cout << "s_old " << s_old << "\n";
-            std::cout << "s " << s << "\n";
-            std::cout << "i_splitat " << i_splitat << "\n";
-            std::cout << "is_good " << is_good << "\n";
-            std::cout << "i_splitat - i_old " << i_splitat - i_old << "\n";
-            std::cout << std::endl;
+            //std::cout << "i_old " << i_old << "\n";
+            //std::cout << "i_s " << i_s << "\n";
+            //std::cout << "s_old " << s_old << "\n";
+            //std::cout << "s " << s << "\n";
+            //std::cout << "i_splitat " << i_splitat << "\n";
+            //std::cout << "is_good " << is_good << "\n";
+            //std::cout << "i_splitat - i_old " << i_splitat - i_old << "\n";
+            //std::cout << std::endl;
 
             i_old = i_splitat;
             s_old = rowsplits.at(i_old);
