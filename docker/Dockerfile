@@ -2,20 +2,14 @@
 FROM cernml4reco/djcbase:py2
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip --no-cache-dir install tensorflow-gpu==2.1
-    
-RUN cd /usr/local/lib/python2.7/dist-packages/tensorflow_core/include/third_party && \
+    pip --no-cache-dir install tensorflow-gpu==2.1 && \
+    cd /usr/local/lib/python2.7/dist-packages/tensorflow_core/include/third_party && \
     mkdir gpus && \
     cd gpus && \
     ln -s /usr/local/cuda cuda
     
 ## torch/jupyter stuff 
-RUN pip install torch future
-
-RUN pip install gensim && \
-    pip install jupyter && \
-    pip install prompt-toolkit && \
-    pip install seaborn 
+RUN pip install torch future gensim jupyter prompt-toolkit seaborn
     
 EXPOSE 8888
 
@@ -28,8 +22,9 @@ ARG BUILD_DATE
 LABEL org.label-schema.build-date=$BUILD_DATE
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
-RUN ldconfig
-RUN cd /usr/share && \
+
+RUN ldconfig && \
+    cd /usr/share && \
     mkdir DJC && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
