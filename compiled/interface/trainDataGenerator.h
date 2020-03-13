@@ -293,11 +293,7 @@ void trainDataGenerator<T>::prepareSplitting(){
         if(i==0 || allrs.size()==0){
             allrs=thisrs;}
         else{
-            size_t lastelemidx = allrs.size()-1;
-            size_t lastnelements = allrs.at(lastelemidx);
-            allrs.resize(lastelemidx+thisrs.size());
-            for(size_t j=0;j<thisrs.size();j++)
-                allrs.at(lastelemidx+j) = lastnelements+thisrs.at(j);
+            allrs = simpleArray<T>::mergeRowSplits(allrs,thisrs);
         }
     }
 
@@ -383,7 +379,7 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     nsamplesprocessed_=0;
     batchcount_=0;
     nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
-    readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
+    //reading thread is being called from getBatch directly on demand
 }
 template<class T>
 void trainDataGenerator<T>::end(){
@@ -452,7 +448,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
 
-        if(debug)
+        if(debug || true)
             std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
             << " file read " << nextread_ << " totalfiles " << orig_infiles_.size()
             << " total events "<< ntotal_<< std::endl;

@@ -197,6 +197,9 @@ public:
 
     static std::vector<int64_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
+    static std::vector<int64_t> mergeRowSplits(const std::vector<int64_t> & rowsplitsa, const std::vector<int64_t> & rowsplitsb);
+
+    static std::vector<int64_t> splitRowSplits(std::vector<int64_t> & rowsplits, const size_t& splitpoint);
 
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     int isize() const {
@@ -447,13 +450,7 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     shape_.at(0) = shape_.at(0) - splitindex;
     if(isRagged()){
 
-        out.rowsplits_ = std::vector<int64_t> (rowsplits_.begin(),rowsplits_.begin()+splitindex+1);
-        int outnelements = out.rowsplits_.at(out.rowsplits_.size()-1);
-        rowsplits_ = std::vector<int64_t> (rowsplits_.begin()+splitindex,rowsplits_.end());
-        for(size_t i=0;i<rowsplits_.size();i++){
-            rowsplits_.at(i)-=outnelements;
-        }
-
+        out.rowsplits_ = splitRowSplits(rowsplits_, splitindex);
         out.shape_ = out.shapeFromRowsplits();
         shape_ = shapeFromRowsplits();
     }
@@ -519,13 +516,7 @@ void simpleArray<T>::append(const simpleArray<T>& a) {
         //need copy in case this == &a
         auto ars = a.rowsplits_;
 
-        size_t oldrssize = rowsplits_.size();
-        int nelements = rowsplits_.at(oldrssize-1);
-        size_t newrssize = oldrssize + ars.size()-1;
-        rowsplits_.resize(newrssize);
-        for(size_t i=0;i<ars.size();i++){
-            rowsplits_.at(i+oldrssize-1) = ars.at(i) + nelements;
-        }
+        rowsplits_ = mergeRowSplits(rowsplits_, ars);
 
         shape_ = shapeFromRowsplits();//last
     }
@@ -764,6 +755,38 @@ std::vector<int64_t> simpleArray<T>::readRowSplitsFromFileP(FILE *& ifile, bool 
         qlz.skipBlock(ifile);//sets file point to next item
     }
     return rowsplits;
+}
+
+template<class T>
+std::vector<int64_t> simpleArray<T>::mergeRowSplits(const std::vector<int64_t> & rowsplitsa, const std::vector<int64_t> & rowsplitsb){
+    if(rowsplitsb.size()<1)
+        return rowsplitsa;
+    if(rowsplitsa.size()<1)
+        return rowsplitsb;
+    std::vector<int64_t> out=rowsplitsa;
+    out.resize(out.size() + rowsplitsb.size()-1);
+    int64_t lasta = rowsplitsa.at(rowsplitsa.size()-1);
+
+    for(size_t i=0;i<rowsplitsb.size();i++)
+        out.at(i + rowsplitsa.size() - 1) = lasta + rowsplitsb.at(i);
+
+    return out;
+}
+
+template<class T>
+std::vector<int64_t> simpleArray<T>::splitRowSplits(std::vector<int64_t> & rowsplits, const size_t& splitpoint){
+
+    if(splitpoint >= rowsplits.size())
+        throw std::out_of_range("simpleArray<T>::splitRowSplits: split index out of range");
+
+    int64_t rsatsplitpoint = rowsplits.at(splitpoint);
+    std::vector<int64_t> out = std::vector<int64_t> (rowsplits.begin(),rowsplits.begin()+splitpoint+1);
+    std::vector<int64_t> rhs = std::vector<int64_t>(rowsplits.size()-splitpoint);
+    for(size_t i=0;i<rhs.size();i++)
+        rhs.at(i) = rowsplits.at(splitpoint+i) - rsatsplitpoint;
+
+    rowsplits = rhs;
+    return out;
 }
 
 template<class T>
