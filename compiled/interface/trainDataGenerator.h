@@ -448,7 +448,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
 
-        if(debug || true)
+        if(debug)
             std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
             << " file read " << nextread_ << " totalfiles " << orig_infiles_.size()
             << " total events "<< ntotal_<< std::endl;
