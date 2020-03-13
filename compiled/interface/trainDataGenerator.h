@@ -379,7 +379,9 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     nsamplesprocessed_=0;
     batchcount_=0;
     nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
-    //reading thread is being called from getBatch directly on demand
+    filecount_++;
+    readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
+
 }
 template<class T>
 void trainDataGenerator<T>::end(){
