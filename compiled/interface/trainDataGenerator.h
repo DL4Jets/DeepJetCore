@@ -311,8 +311,8 @@ void trainDataGenerator<T>::prepareSplitting(){
         }
         std::cout << std::endl;
     }
-
-    splits_ = simpleArray<T>::getSplitIndices(allrs, batchsize_,sqelementslimit_ , usebatch_);
+    std::vector<size_t> nelems_per_split;
+    splits_ = simpleArray<T>::getSplitIndices(allrs, batchsize_,sqelementslimit_ , usebatch_, nelems_per_split);
 
     nbatches_=0;
     npossiblebatches_=0;
@@ -332,7 +332,7 @@ void trainDataGenerator<T>::prepareSplitting(){
                 std::cout << " ok, split " ;
             else
                 std::cout << " no, split ";
-            std::cout << splits_.at(i) << "; ";
+            std::cout << splits_.at(i) << "; nelements "<< nelems_per_split.at(i)<< std::endl;
         }
         std::cout << std::endl;
     }

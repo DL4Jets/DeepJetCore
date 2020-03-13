@@ -183,14 +183,14 @@ public:
      * Returns e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
      */
     static std::vector<size_t>  getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
     /**
      * Split indices can directly be used with the split() function.
      * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
      */
     static std::vector<size_t>  getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
     static std::vector<size_t>  dataSplitToSplitIndices(const std::vector<size_t>& data_splits);
     static std::vector<size_t>  splitToDataSplitIndices(const std::vector<size_t>& data_splits);
@@ -238,7 +238,7 @@ private:
     void checkRaggedIndex(size_t i, size_t j)const;
 
     static std::vector<size_t>  priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>());
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
 
 
@@ -636,10 +636,11 @@ void simpleArray<T>::cout()const{
 
 template<class T>
  std::vector<size_t>  simpleArray<T>::priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok){
+        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
 
     std::vector<size_t> outIdxs;
     size_ok.clear();
+    nelemtns_per_split.clear();
     if(rowsplits.size()<1)
         return outIdxs;
 
@@ -667,10 +668,11 @@ template<class T>
 
 
         if (i_splitat < rowsplits.size()+1) {        //split
-            bool is_good = (rowsplits.at(i_splitat) - rowsplits.at(i_old)
-                    <= nelements_limit);
-            size_ok.push_back(is_good);
 
+            size_t nelements = rowsplits.at(i_splitat) - rowsplits.at(i_old);
+            bool is_good = nelements <= nelements_limit;
+            size_ok.push_back(is_good);
+            nelemtns_per_split.push_back(nelements);
 
             if(datasplit)
                 outIdxs.push_back(i_splitat);
@@ -705,8 +707,8 @@ template<class T>
     */
 template<class T>
 std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok){
-    return priv_getSplitIndices(false, rowsplits, nelements_limit, sqelementslimit,  size_ok);
+        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
+    return priv_getSplitIndices(false, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split);
 }
 
 /**
@@ -716,8 +718,8 @@ std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> 
 
 template<class T>
 std::vector<size_t>  simpleArray<T>::getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok){
-    return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok);
+        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
+    return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split);
 }
 
 template<class T>

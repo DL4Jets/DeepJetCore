@@ -432,10 +432,10 @@ class training_base(object):
         #this is fixed
         nbatches_val = self.val_data.generator.getNBatches()
         nbatches_train = self.train_data.generator.getNBatches()
-        #self.val_data.generator.debug=True
+
         #self.train_data.generator.debug=True
-        #exit()
-        
+        #self.train_data.generator.shuffleFilelist()
+        #self.train_data.generator.debug=False
         while(self.trainedepoches < nepochs):
            
             #this can change from epoch to epoch
