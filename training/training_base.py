@@ -240,10 +240,25 @@ class training_base(object):
     def modelSet(self):
         return not self.keras_model==None
         
+    def setDJCKerasModel(self,model,*args,**kwargs): 
+        if len(self.keras_inputs)<1:
+            raise Exception('setup data first')   
+        self.keras_model=model(*args,**kwargs)
+        if hasattr(self.keras_model, "_is_djc_keras_model"):
+            self.keras_model.setInputShape(self.keras_inputs)
+            self.keras_model.build(None)
+        if not self.keras_model:
+            raise Exception('Setting DJCKerasModel not successful') 
+        
+        
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
         self.keras_model=model(self.keras_inputs,**modelargs)
+        if hasattr(self.keras_model, "_is_djc_keras_model"): #compatibility
+            self.keras_model.setInputShape(self.keras_inputs)
+            self.keras_model.build(None)
+            
         #try:
         #    self.keras_model=model(self.keras_inputs,**modelargs)
         #except BaseException as e:
@@ -357,6 +372,7 @@ class training_base(object):
     def trainModel(self,
                    nepochs,
                    batchsize,
+                   run_eagerly=False,
                    batchsize_use_sum_of_squares = False,
                    stop_patience=-1, 
                    lr_factor=0.5,
@@ -372,7 +388,7 @@ class training_base(object):
                    **trainargs):
         
         
-        
+        self.keras_model.run_eagerly=run_eagerly
         # write only after the output classes have been added
         self._initTraining(nepochs,batchsize, batchsize_use_sum_of_squares)
         

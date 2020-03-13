@@ -109,3 +109,41 @@ def apply_weights_where_possible(target_model, weight_model):
     
     
     return target_model
+
+
+
+
+
+################# wrappers for keras models in DJC
+
+import tensorflow as tf
+
+class DJCKerasModel(tf.keras.models.Model):
+    '''
+    Base class to implement automatic shape feeding as in DJC
+    Interfaces smoothly with training_base
+    '''
+    def __init__(self,*args,**kwargs):
+        
+        super(DJCKerasModel, self).__init__(*args,dynamic=False,**kwargs)
+        self.keras_input_shapes=None
+        self._is_djc_keras_model = True
+    
+    def setInputShape(self,keras_inputs):
+        self.keras_input_shapes=[i.shape for i in keras_inputs]
+        
+    def build(self,input_shapes):
+        super(DJCKerasModel,self).build(self.keras_input_shapes)
+    
+
+
+
+
+
+
+
+
+
+
+
+
