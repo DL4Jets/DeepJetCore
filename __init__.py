@@ -12,3 +12,5 @@ sys.modules["keras"] = tf.keras
 
 import matplotlib
 matplotlib.use('Agg')
+
+__version__ = '2.3'
