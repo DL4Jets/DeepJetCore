@@ -102,6 +102,8 @@ RUN pip install setGPU
 
 RUN apt-get install -y unzip
 
+RUN apt-get install -y evince eog
+
 
 RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
 RUN apt update

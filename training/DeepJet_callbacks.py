@@ -60,6 +60,8 @@ class newline_callbacks_begin(Callback):
         self.plotLoss=plotLoss
         
     def on_epoch_end(self,epoch, logs={}):
+        if len(logs)<1:
+            return
         import os
         lossfile=os.path.join( self.outputDir, 'losses.log')
         print('\n***callbacks***\nsaving losses to '+lossfile)

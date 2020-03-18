@@ -1,7 +1,5 @@
 
-FROM cernml4reco/djcbase:py2
-
-RUN apt-get install -y evince eog
+FROM cernml4reco/djcbase:py2_latest
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     pip --no-cache-dir install tensorflow-gpu==2.1 && \
