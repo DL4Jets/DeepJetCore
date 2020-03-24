@@ -114,7 +114,7 @@ public:
      */
     trainData<T> getBatch(); //if no threading batch index can be given? just for future?
 
-    bool debug;
+    int debuglevel;
 
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     void setFileListP(boost::python::list files){
@@ -155,7 +155,7 @@ private:
 
 
 template<class T>
-trainDataGenerator<T>::trainDataGenerator() :debug(false),
+trainDataGenerator<T>::trainDataGenerator() :debuglevel(0),
         randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), filecount_(0), nbatches_(
                 0), npossiblebatches_(0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 batchcount_(0){
@@ -208,7 +208,11 @@ void trainDataGenerator<T>::readBuffer(){
     while(ntries < filetimeout_){
         if(io::fileExists(nextread_)){
             try{
+                if(debuglevel>0)
+                    std::cout << "reading file " << nextread_ << std::endl;
                 buffer_read.readFromFile(nextread_);
+                if(debuglevel>0)
+                    std::cout << "reading file " << nextread_ << " done"<< std::endl;
                 return;
             }
             catch(std::exception & e){ //if there are data glitches we don't want the whole training fail immediately
@@ -244,15 +248,15 @@ void trainDataGenerator<T>::readInfo(){
         }
         if(hasRagged){
             std::vector<int64_t> rowsplits = td.readShapesAndRowSplitsFromFile(f, firstfile);//check consistency only for first
-            if(debug)
-                std::cout << "rowsplits.size() " <<rowsplits.size() << ": "<<f <<  std::endl; //DEBUG
+            if(debuglevel>1)
+                std::cout << "rowsplits.size() " <<rowsplits.size() << ": "<<f <<  std::endl; //debuglevel
             orig_rowsplits_.push_back(rowsplits);
         }
         firstfile=false;
         ntotal_ += td.nElements();
     }
-    if(debug)
-        std::cout << "total elements "<< ntotal_ <<std::endl;
+    if(debuglevel>0)
+        std::cout << "trainDataGenerator<T>::readInfo: total elements "<< ntotal_ <<std::endl;
     batchcount_=0;
     prepareSplitting();
 }
@@ -276,7 +280,7 @@ void trainDataGenerator<T>::prepareSplitting(){
                 break;
             }
         }
-        if(debug){
+        if(debuglevel>1){
             std::cout << "trainDataGenerator<T>::prepareSplitting: splits" <<std::endl;
             for(const auto& s: splits_)
                 std::cout << s << ", ";
@@ -297,7 +301,7 @@ void trainDataGenerator<T>::prepareSplitting(){
         }
     }
 
-    if(debug){
+    if(debuglevel>1){
         std::cout << "all (first 100) row splits " <<  allrs.size() << std::endl;
         int counter =0;
         for(const auto& s: allrs){
@@ -319,7 +323,7 @@ void trainDataGenerator<T>::prepareSplitting(){
     }
 
 
-    if(debug){
+    if(debuglevel>1){
         size_t nprint = splits_.size();
         if(nprint>200)nprint=200;
         for(size_t i=0;i< nprint;i++){
@@ -436,7 +440,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     if(usebatch_.size())
         usebatch = usebatch_.at(batchcount_);
 
-    if(debug)
+    if(debuglevel>2)
         std::cout << "expect_batchelements "<<expect_batchelements << " vs " << bufferelements <<" bufferelements" << std::endl;
 
     while(bufferelements<expect_batchelements){
@@ -450,7 +454,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
 
-        if(debug)
+        if(debuglevel>2)
             std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
             << " file read " << nextread_ << " totalfiles " << orig_infiles_.size()
             << " total events "<< ntotal_<< std::endl;
@@ -462,7 +466,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
             nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
 
-            if(debug)
+            if(debuglevel>0)
                 std::cout << "start new read on file "<< nextread_ <<std::endl;
 
             filecount_++;
@@ -477,13 +481,13 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
    //   return prepareBatch();
     }
 
-    if(debug)
+    if(debuglevel>2)
         std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
         " elements in buffer before: " << bufferelements <<
         "\nsplitting at " << expect_batchelements << " use this batch "<<  usebatch
         << " total elements " << thisbatch.nTotalElements() << " elements left in buffer " << buffer_store.nElements()<< std::endl;
 
-    if(debug){
+    if(debuglevel>3){
         int dbpcount=0;
         for(const auto& s: buffer_store.featureArray(0).rowsplits()){
             std::cout << s << ", ";

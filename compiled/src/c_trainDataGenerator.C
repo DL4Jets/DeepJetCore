@@ -54,7 +54,7 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
 
             .def("getNTotal", &trainDataGenerator<float>::getNTotal)
 
-            .def_readwrite("debug", &trainDataGenerator<float>::debug);
+            .def_readwrite("debuglevel", &trainDataGenerator<float>::debuglevel);
         ;
 }
 

@@ -457,6 +457,8 @@ class training_base(object):
                                            max_queue_size=1, #handled by DJC
                                            validation_freq=1,
                                            use_multiprocessing=False, #the threading one doe not loke DJC
+                                           shuffle=False,
+                                           workers=0,#run gen on main thread
                                            **trainargs)
             self.trainedepoches += 1
             self.train_data.generator.shuffleFilelist()

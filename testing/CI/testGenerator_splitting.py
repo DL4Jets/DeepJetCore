@@ -79,7 +79,7 @@ for b in range(len(batchsizes)):
     expected_here = expected_elmts[b]
     
     gen = trainDataGenerator()
-    gen.debug=True
+    gen.debuglevel=100
     #gen.setSquaredElementsLimit(True)
     gen.setBatchSize(batchsize)
     print('batchsize',batchsize)
