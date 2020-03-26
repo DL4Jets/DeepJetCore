@@ -40,16 +40,16 @@ train.setModel(model_for_test)
 #train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=False)
 
 train.compileModel(learningrate=0.001,
-                   loss=['categorical_crossentropy'],
-                   metrics=['accuracy'])
+                   loss=['categorical_crossentropy'],)
+                   #metrics=['accuracy'])
 
 
 print(train.keras_model.summary())
 model,history = train.trainModel(nepochs=10, 
                                  verbose=2,
                                      batchsize=10000,
-                                     
+                                     run_eagerly=True,
                                      load_in_mem = False,
-                                     plot_batch_loss = True)
+                                     plot_batch_loss = False)
 
 

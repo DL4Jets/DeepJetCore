@@ -10,7 +10,4 @@ import sys
 import tensorflow as tf
 sys.modules["keras"] = tf.keras
 
-import matplotlib
-matplotlib.use('Agg')
-
-__version__ = '2.3'
+__version__ = '3.0'

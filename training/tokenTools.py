@@ -1,10 +1,9 @@
 
-renewtokens=True
+#not used for now
+
 
 def renew_token_process():
-    
-    if not renewtokens:
-        return 
+    return 
      
     import subprocess
     import time 
@@ -18,8 +17,8 @@ def renew_token_process():
         time.sleep(3600)
 
 def checkTokens(cutofftime_hours=48):
-    if not renewtokens:
-        return True
+    return 
+    
     import subprocess
     import os
     
@@ -55,7 +54,7 @@ def checkTokens(cutofftime_hours=48):
     try:
         tokentime=datetime.datetime(2000+int(year),int(month),int(day),int(hour))
     except:
-        print 'Failed to set token time with mm/dd/yy, attempting dd/mm/yy permutation'
+        print('Failed to set token time with mm/dd/yy, attempting dd/mm/yy permutation')
         tokentime=datetime.datetime(2000+int(year),int(day),int(month),int(hour))
 
     diff=tokentime-thistime

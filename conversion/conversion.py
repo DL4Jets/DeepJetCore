@@ -1,4 +1,5 @@
 try:
+    import datastructures
     from datastructures import *
 except ImportError:
     print('datastructure modules not found. Please define a DeepJetCore submodule')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 print('importing tensorflow...')
 
@@ -29,7 +29,7 @@ a = Input(shape=(10,))
 b = keras.layers.Dense(10)(a)
 model = keras.models.Model(inputs=a, outputs=b)
 model.compile(optimizer='adam',loss='mse')
-model.fit(x=features, y=truth, batch_size=100, epochs=20)
+model.fit(x=features, y=truth, batch_size=100, epochs=3)
 
 print('loading DeepJetCore compiled library...')
 
@@ -55,7 +55,7 @@ script='''
 cd {djc_base}/testing
 rm -rf batchExplode
 export PYTHONPATH=`pwd`:$PYTHONPATH
-python batch_explosion.py batchDC/dataCollection.djcdc batchExplode
+python3 batch_explosion.py batchDC/dataCollection.djcdc batchExplode
 '''.format(djc_base=djc_base)
 os.system(script)
 

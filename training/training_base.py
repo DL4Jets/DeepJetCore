@@ -358,7 +358,7 @@ class training_base(object):
         
         #make sure tokens don't expire
         from .tokenTools import checkTokens, renew_token_process
-        from thread import start_new_thread
+        from _thread import start_new_thread
         
         if self.renewtokens:
             print('starting afs backgrounder')

@@ -16,7 +16,7 @@ import keras
 import copy
 import time
 import logging
-from stopwatch import stopwatch
+from DeepJetCore.stopwatch import stopwatch
 logger = logging.getLogger(__name__)
 
 
@@ -550,8 +550,7 @@ class DataCollection(object):
             xout = data.transferFeatureListToNumpy()
             wout = data.transferWeightListToNumpy()
             yout = data.transferTruthListToNumpy()
-            
-            
+        
             if len(wout)>0:
                 yield (xout,yout,wout)
             else:

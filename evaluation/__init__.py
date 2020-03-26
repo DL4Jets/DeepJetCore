@@ -4,7 +4,7 @@ from os.path import basename, dirname
 from pdb import set_trace
 
 #gather all the files here
-modules = [basename(i.replace('.py','')) for i in glob('%s/[A-Za-z]*.py' % dirname(__file__))]
+modules = ["DeepJetCore.evaluation."+basename(i.replace('.py','')) for i in glob('%s/[A-Za-z]*.py' % dirname(__file__))]
 __all__ = []
 structure_list=[]
 for module_name in modules:
