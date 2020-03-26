@@ -11,10 +11,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     
 
     
-#RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/third_party && \
-#    mkdir gpus && \
-#    cd gpus && \
-#    ln -s /usr/local/cuda cuda
+RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
+    mkdir gpus && \
+    cd gpus && \
+    ln -s /usr/local/cuda cuda
     
     
     
