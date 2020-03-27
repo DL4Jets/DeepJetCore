@@ -521,9 +521,6 @@ class DataCollection(object):
         return self.dataDir+'/'+samplefile
     
     def __stackData(self, dataclass, selector):
-        #
-        # FIXME: use underlying trainData.append here (improvement)
-        #
         td=self.dataclass()
         out=[]
         firstcall=True
@@ -551,10 +548,11 @@ class DataCollection(object):
             wout = data.transferWeightListToNumpy()
             yout = data.transferTruthListToNumpy()
         
+            out = (xout,yout)
             if len(wout)>0:
-                yield (xout,yout,wout)
-            else:
-                yield (xout,yout)
+                out = (xout,yout,wout)
+
+            yield out
             
         
     
