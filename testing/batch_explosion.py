@@ -34,7 +34,7 @@ train.setModel(model_for_test)
 
 
 train.compileModel(learningrate=0.001,
-                   loss='categorical_crossentropy',metrics='accuracy')
+                   loss='categorical_crossentropy',metrics=['accuracy'])
                    #metrics=['accuracy'])
 
 

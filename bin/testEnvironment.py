@@ -34,7 +34,7 @@ a = [Input(shape=(10,))]
 b = [keras.layers.Dense(10)(a[0])]
 model = keras.models.Model(inputs=a, outputs=b)
 model.compile(optimizer='adam',loss='mse',metrics=['accuracy'])
-model.fit(x=gen(), steps_per_epoch=100, batch_size=100, epochs=3)
+model.fit(x=gen(), steps_per_epoch=100, epochs=3)
 
 
 print('loading DeepJetCore compiled library...')
