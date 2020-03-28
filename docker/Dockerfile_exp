@@ -7,10 +7,10 @@ FROM cernml4reco/djcbase:py3
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.2.0-rc1    
+    pip3 --no-cache-dir install tensorflow-gpu==2.2.0-rc2   
     
 
-#2.2.0-rc1    
+#2.2.0-rc2   
 RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
