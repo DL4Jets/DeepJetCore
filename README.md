@@ -20,13 +20,13 @@ The package comes with a docker file in the subdirectory docker, which will set 
 
 **Building / using the container** 
 For every release, there is a container on dockerhub, the latest release is tagged. The ``latest`` tag refers to the developing master branch.
-``cernml4reco/deepjetcore2:latest``
+``cernml4reco/deepjetcore3:latest``
 It can be pulled using docker, or pulled from singularity. For details, please see the corresponding docker or singularity documentation.
-To build the container, the files can be found in the ``docker`` subdirectory. It is a two-stage process. First the container ``Dockerfile_base`` needs to be built, containing the basic system packages. This will take a while, because root is being compiled within. The output container name must be ``cernml4reco/djcbase:latest``. In the next step, the actual DeepJetCore container should be built on top. **Please make sure to use a release, not the developing master branch!**
+To build the container, the files can be found in the ``docker`` subdirectory. It is a two-stage process. First the container ``Dockerfile_base`` needs to be built, containing the basic system packages. This will take a while, because root is being compiled within. The output container name must be ``cernml4reco/djcbase:py3``. In the next step, the actual DeepJetCore container should be built on top. **Please make sure to use a release, not the developing master branch!**
 
 
 **Users with access to Cernbox** can just run the container through the prepared script at:
-``/eos/home-j/jkiesele/singularity/run_deepjetcore2.sh``
+``/eos/home-j/jkiesele/singularity/run_deepjetcore3.sh``
 Every user who has subscribed to the e-group ml-deepjetcore will have read access to the containers.
 
 The cache dir can get rather large and is normally located at ~/.singularity/cache. To avoid filling up the home afs, the cache can be set to /tmp or the work afs. Once the container is fully closed, the cache can be safely deleted. Singularity reacts to environment variables, e.g.
