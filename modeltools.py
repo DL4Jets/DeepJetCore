@@ -1,31 +1,6 @@
-import imp
-try:
-    imp.find_module('Losses')
-    from Losses import *
-except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
-    global_loss_list = {}
+from DeepJetCore.customObjects import *
 
-try:
-    imp.find_module('Layers')
-    from Layers import *
-except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
-    global_layers_list = {}
-
-try:
-    imp.find_module('Metrics')
-    from Metrics import *
-except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
-    global_metrics_list = {}
-
-
-
-custom_objs = {}
-custom_objs.update(global_loss_list)
-custom_objs.update(global_layers_list)
-custom_objs.update(global_metrics_list)
+custom_objs = get_custom_objects()
     
     
 def getLayer(model, name):
@@ -33,7 +8,6 @@ def getLayer(model, name):
         if layer.name == name:
             return layer
         
-
 
 
 def printLayerInfosAndWeights(model, noweights=False):
