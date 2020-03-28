@@ -160,16 +160,26 @@ class checkTokens_callback(Callback):
         
 class saveCheckPointDeepJet(Callback):
     '''
-    this seems obvious, however for some reason the keras model checkpoint fails
-    to save the optimizer state, needed for resuming a training. Therefore this explicit
-    implementation.
+    Slight extension of the normal checkpoint to multiple checkpoints per epoch
     '''
     
-    def __init__(self,outputDir,model):
-        self.outputDir=outputDir
+    def __init__(self,outputFile,model,check_n_batches=-1):
+        self.outputFile=outputFile
         self.djmodel=model
+        self.counter=0
+        self.check_n_batches=check_n_batches
+        
+    def on_batch_end(self,batch,logs={}):
+        if self.check_n_batches < 1:
+            return
+        if self.counter < self.check_n_batches:
+            self.counter+=1
+            return
+        self.djmodel.save(self.outputFile)
+        self.counter=0
+        
     def on_epoch_end(self,epoch, logs={}):
-        self.djmodel.save(self.outputDir+"/KERAS_check_model_last.h5")
+        self.djmodel.save(self.outputFile)
         
         
 class DeepJet_callbacks(object):
@@ -184,6 +194,7 @@ class DeepJet_callbacks(object):
                  outputDir='',
                  minTokenLifetime=5,
                  checkperiod=10,
+                 backup_after_batches=-1,
                  checkperiodoffset=0,
                  plotLossEachEpoch=True, 
                  additional_plots=None,
@@ -222,7 +233,7 @@ class DeepJet_callbacks(object):
                                                   verbose=1,period=checkperiod, save_weights_only=False)
             self.callbacks.append(self.modelcheckperiod)
         
-        self.modelcheck=saveCheckPointDeepJet(outputDir,model)
+        self.modelcheck=saveCheckPointDeepJet(outputDir+"/KERAS_check_model_last.h5",model,backup_after_batches)
         self.callbacks.append(self.modelcheck)
         
         if stop_patience>0:

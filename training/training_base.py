@@ -227,10 +227,13 @@ class training_base(object):
 							 self.outputDir+'/KERAS_model.h5'
             if os.path.isfile(kfile):
                 self.loadModel(kfile)
-                self.trainedepoches=sum(1 for line in open(self.outputDir+'losses.log'))
+                self.trainedepoches=0
+                for line in open(self.outputDir+'losses.log'):
+                    valloss = line.split(' ')[1][:-1]
+                    if not valloss == "None":
+                        self.trainedepoches+=1
             else:
                 print('no model found in existing output dir, starting training from scratch')
-        
         
     def __del__(self):
         if hasattr(self, 'train_data'):
@@ -381,6 +384,7 @@ class training_base(object):
                    lr_cooldown=6, 
                    lr_minimum=0.000001,
                    checkperiod=10,
+                   backup_after_batches=-1,
                    additional_plots=None,
                    additional_callbacks=None,
                    load_in_mem = False,
@@ -408,6 +412,7 @@ class training_base(object):
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir,
                                     checkperiod=checkperiod,
+                                    backup_after_batches=backup_after_batches,
                                     checkperiodoffset=self.trainedepoches,
                                     additional_plots=additional_plots,
                                     batch_loss = plot_batch_loss,
