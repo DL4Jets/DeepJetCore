@@ -89,7 +89,7 @@ class training_base(object):
         parser.add_argument('inputDataCollection')
         parser.add_argument('outputDir')
         parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
-        parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default=-1)
+        parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default="")
         parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         parser.add_argument("--submitbatch",  help="submits the job to condor" , default=False, action="store_true")
         parser.add_argument("--walltime",  help="sets the wall time for the batch job, format: 1d5h or 2d or 3h etc" , default='1d')
@@ -112,7 +112,7 @@ class training_base(object):
         import matplotlib
         #if no X11 use below
         matplotlib.use('Agg')
-        if args.gpu<0:
+        if not len(args.gpu):
             import imp
             try:
                 imp.find_module('setGPU')
@@ -140,7 +140,7 @@ class training_base(object):
         import keras
                 
         self.ngpus=1
-        if (not args.gpu<0) and len(args.gpu):
+        if len(args.gpu):
             self.ngpus=len([i for i in args.gpu.split(',')])
             print('running on '+str(self.ngpus)+ ' gpus')
             
