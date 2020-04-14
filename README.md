@@ -104,6 +104,59 @@ To create a ragged data structure, the function ``convertFromSourceFile(self, fi
 For training, the model will receive a list of tensors, where the first one will be the data and the second the row splits. The same applies to the truth. This circumvents incomplete keras support for the moment.
 
 
+Using the data pipeline directly
+=====================
+
+The data pipeline can also be used without the training_base class sourrounding it. The DataCollection can be opened and a generator function can be invoked that returns the data batch-by-batch. An example is given here:
+
+```
+from DeepJetCore.DataCollection import DataCollection
+train_data = DataCollection("path/to/your/dataCollection.dc")
+
+# splits off 10% of the training dataset for validation. Can be used in the same way as train_data
+val_data=train_data.split(0.9) 
+
+# Set the batch size. 
+# If the data is ragged in dimension 1 (see convert options), 
+# then this is the maximum number of elements per batch, which could be distributed differently
+# to individual examples. E.g., if the first example has 50 elements, the second 48, and the third 30,
+# and the batch size is set to 100, it would return the first two examples (in total 99 elements) in 
+# the first batch etc. This is helpful to avoid out-of-memory errors during training
+
+train_data.setBatchSize(100) 
+
+# prepare the generator
+
+train_data.invokeGenerator()
+
+# loop over epochs here ...
+
+train_data.generator.shuffleFilelist()
+train_data.generator.prepareNextEpoch()
+
+# this number can differ from epoch to epoch for ragged data!
+nbatches = train_data.generator.getNBatches()
+
+for b in range(nbatches):
+    
+    #should not happen unless files are broken (will give additional errors)
+    if train_data.generator.isEmpty():
+        raise Exception("ran out of data") 
+    
+    # this returns a TrainData object.
+    data = train_data.generator.getBatch()
+    
+    features_list = data.transferFeatureListToNumpy()
+    truth_list = data.transferTruthListToNumpy()
+    weight_list = data.transferWeightListToNumpy() #optional
+    
+    # do your training
+    
+    
+# end epoch loop
+
+```
+
 
 For developers
 =====================
