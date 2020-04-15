@@ -32,7 +32,7 @@ def fileTimeOut(fileName, timeOut):
     print('file I/O problems... waiting for filesystem to become available for '+fileName)
     while not os.path.isdir(filepath):
         if counter > timeOut:
-            print('...file could not be opened within '+str(timeOut)+ ' seconds')
+            raise Exception('...file could not be opened within '+str(timeOut)+ ' seconds')
         counter+=1
         time.sleep(1)
 

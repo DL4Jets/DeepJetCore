@@ -16,35 +16,10 @@ from DeepJetCore.DJCLosses import *
 from DeepJetCore.DJCLayers import *
 from argparse import ArgumentParser
 from keras import backend as K
-import imp
-try:
-    imp.find_module('Losses')
-    from Losses import *
-except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
-    global_loss_list = {}
 
-try:
-    imp.find_module('Layers')
-    from Layers import *
-except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
-    global_layers_list = {}
+from DeepJetCore.customObjects import get_custom_objects
 
-try:
-    imp.find_module('Metrics')
-    from Metrics import *
-except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
-    global_metrics_list = {}
-
-
-custom_objs = {}
-custom_objs.update(djc_global_loss_list)
-custom_objs.update(djc_global_layers_list)
-custom_objs.update(global_loss_list)
-custom_objs.update(global_layers_list)
-custom_objs.update(global_metrics_list)
+custom_objs = get_custom_objects()
 
 sess = tf.Session()
 from keras.models import load_model

@@ -13,45 +13,15 @@ args = parser.parse_args()
 from keras.models import load_model
 from keras import backend as K
 from tensorflow.python.tools import optimize_for_inference_lib
-from DeepJetCore.DJCLosses import *
-from DeepJetCore.DJCLayers import *
+from DeepJetCore.customObjects import get_custom_objects
+
+custom_objs = get_custom_objects()
 
 import tensorflow as tf
 sess = tf.Session()
 K.set_session(sess)
 
 
-import imp
-try:
-    imp.find_module('Losses')
-    from Losses import *
-except ImportError:
-    print 'No Losses module found, ignoring at your own risk'
-    global_loss_list = {}
-
-try:
-    imp.find_module('Layers')
-    from Layers import *
-except ImportError:
-    print 'No Layers module found, ignoring at your own risk'
-    global_layers_list = {}
-
-try:
-    imp.find_module('Metrics')
-    from Metrics import *
-except ImportError:
-    print 'No metrics module found, ignoring at your own risk'
-    global_metrics_list = {}
-
-def format_name(name):
-   if ':' not in name: return name
-   else:
-      return name.split(':')[0]
-
-custom_objs = {}
-custom_objs.update(global_loss_list)
-custom_objs.update(global_layers_list)
-custom_objs.update(global_metrics_list)
 
 K.set_learning_phase(False) #FUNDAMENTAL! this MUST be before loading the model!
 model=load_model(args.model, custom_objects=custom_objs)

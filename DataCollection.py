@@ -237,6 +237,7 @@ class DataCollection(object):
         td=self.dataclass()
         newsamples=[]
         for s in self.sourceList:
+            logger.info('checking '+self.getSamplePath(s))
             if td.fileIsValid(self.getSamplePath(s)):
                 newsamples.append(s)
             else:
