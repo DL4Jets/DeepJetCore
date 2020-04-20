@@ -61,7 +61,7 @@ with open(args.inputSourceFileList, "r") as f:
         gen.setBuffer(td)
         
         def genfunc():
-            while(1):
+            while(not gen.isEmpty()):
                 d = gen.getBatch()
                 yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
                 

@@ -539,8 +539,8 @@ def MeanNormZeroPad(Filename_in,MeanNormTuple,inbranches_listlist,nMaxslist,neve
     #print(array)
     return array
 
-def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
-                rebinx=1,rebiny=1,
+def read2DArray(filename, treename, branchname, nevents: int, xsize: int, ysize: int,
+                rebinx: int=1,rebiny: int=1,
                 zeropad=False):
     
     if xsize%rebinx or ysize%rebiny:
@@ -548,13 +548,13 @@ def read2DArray(filename, treename, branchname, nevents, xsize, ysize,
     
     from DeepJetCore.compiled import c_arrayReads
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,1) , dtype='float32')
+    array = numpy.zeros((nevents,xsize//rebinx, ysize//rebiny,1) , dtype='float32')
     ncut=numpy.array([0],dtype='float32')
     c_arrayReads.read2DArray(array,filename, treename, branchname,rebinx,rebiny,zeropad, False, ncut)
     
     return array
     
-def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per_element,
+def readListArray(filename, treename, branchname, nevents: int, list_size: int, n_feat_per_element: int,
                 zeropad=False, list_size_cut=False):
     
     
@@ -573,8 +573,8 @@ def readListArray(filename, treename, branchname, nevents, list_size, n_feat_per
     
     return array
     
-def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
-                rebinx=1,rebiny=1,rebinz=1,
+def read3DArray(filename, treename, branchname, nevents: int, xsize: int, ysize: int, zsize: int,
+                rebinx: int=1,rebiny: int=1,rebinz: int=1,
                 zeropad=False):
     
     if xsize%rebinx or ysize%rebiny or zsize%rebinz:
@@ -582,14 +582,14 @@ def read3DArray(filename, treename, branchname, nevents, xsize, ysize, zsize,
     
     from DeepJetCore.compiled import c_arrayReads
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,zsize/rebinz,1) , dtype='float32')
+    array = numpy.zeros((nevents,xsize//rebinx, ysize//rebiny,zsize//rebinz,1) , dtype='float32')
     
     c_arrayReads.read3DArray(array,filename, treename, branchname,rebinx,rebiny,rebinz,zeropad)
     
     return array
 
-def read4DArray(filename, treename, branchname, nevents, xsize, ysize, zsize, fsize,
-                rebinx=1,rebiny=1,rebinz=1,rebinf=1,
+def read4DArray(filename, treename, branchname, nevents: int, xsize: int, ysize: int, zsize: int, fsize: int,
+                rebinx: int=1,rebiny: int=1,rebinz: int=1,rebinf: int=1,
                 zeropad=False):
     
     if xsize%rebinx or ysize%rebiny or zsize%rebinz or fsize%rebinf:
@@ -598,7 +598,7 @@ def read4DArray(filename, treename, branchname, nevents, xsize, ysize, zsize, fs
     from DeepJetCore.compiled import c_arrayReads
     
     
-    array = numpy.zeros((nevents,xsize/rebinx, ysize/rebiny,zsize/rebinz,fsize/rebinf,1) , dtype='float32')
+    array = numpy.zeros((nevents,xsize//rebinx, ysize//rebiny,zsize//rebinz,fsize//rebinf,1) , dtype='float32')
     
     print(array.shape)
     

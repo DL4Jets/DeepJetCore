@@ -94,6 +94,7 @@ class training_base(object):
         parser.add_argument("--submitbatch",  help="submits the job to condor" , default=False, action="store_true")
         parser.add_argument("--walltime",  help="sets the wall time for the batch job, format: 1d5h or 2d or 3h etc" , default='1d')
         parser.add_argument("--isbatchrun",   help="is batch run", default=False, action="store_true")
+        parser.add_argument("--valdata",   help="set validation dataset (optional)", default="")
         
         
         args = parser.parse_args()
@@ -199,15 +200,20 @@ class training_base(object):
         self.train_data.readFromFile(self.inputData)
         self.train_data.useweights=useweights
         
-        if testrun:
-            if len(self.train_data)>1:
-                self.train_data.split(testrun_fraction)
-
-            self.train_data.dataclass_instance=None #can't be pickled
-            self.val_data=copy.deepcopy(self.train_data)
+        if len(args.valdata):
+            print('using validation data from ',args.valdata)
+            self.val_data = DataCollection(args.valdata)
+        
+        else:
+            if testrun:
+                if len(self.train_data)>1:
+                    self.train_data.split(testrun_fraction)
             
-        else:    
-            self.val_data=self.train_data.split(splittrainandtest)
+                self.train_data.dataclass_instance=None #can't be pickled
+                self.val_data=copy.deepcopy(self.train_data)
+                
+            else:    
+                self.val_data=self.train_data.split(splittrainandtest)
         
 
 

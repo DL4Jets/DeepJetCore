@@ -106,6 +106,8 @@ private:
 	bool fullanalysis_;
 	float yscale_;
 
+	double scaledSoftsign(double x, double scaler)const;
+
 };
 
 

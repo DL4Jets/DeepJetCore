@@ -46,14 +46,14 @@ from pdb import set_trace
 
     
 def makeASequence(arg,length):
-    isseq=(not hasattr(arg, "strip") and
-            hasattr(arg, "__getitem__") or
-            hasattr(arg, "__iter__"))
+    isseq=((not hasattr(arg, "strip")) and
+            (hasattr(arg, "__getitem__") or
+            hasattr(arg, "__iter__")))
     out=[]
     if isseq:
         if len(arg)==length:
             return arg
-        for i in range(length/len(arg)):
+        for i in range(int(length/len(arg))):
             out.extend(arg)
     else:
         for i in range(length):
@@ -128,7 +128,7 @@ def makeROCs_async(intextfile, name_list, probabilities_list, truths_list, vetos
         
     
     colors_list=createColours(colors_list,namelistcopy,nnames,extralegcopy)   
-        
+    
     #check if multi-input file   
     files=makeASequence(intextfile,len(namelistcopy))
     

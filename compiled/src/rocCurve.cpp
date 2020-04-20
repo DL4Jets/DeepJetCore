@@ -75,6 +75,7 @@ rocCurve::~rocCurve(){
     //empty for now
 }
 
+
 //now done in a simple tree-Draw way - if optmisation needed: switch to putting rocs in a loop (TBI)
 void rocCurve::process(TChain *c,std::ostream& out){
 
@@ -123,12 +124,31 @@ void rocCurve::process(TChain *c,std::ostream& out){
     TString nrcc="";
     nrcc+=nrocsCounter;
 
-    TCanvas cv;//just a dummy
-    probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1.+0.00001);
-    vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1.+0.00001);
-    invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1.+0.00001);
-    invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1.+0.00001);
+    //the bins should be log scale towards high probabilities if nbins>200
+    //map over modified softsign
 
+
+    TCanvas cv;//just a dummy
+    if(nbins_<201){
+        probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,0,1.+0.00001);
+        vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,0,1.+0.00001);
+        invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,0,1.+0.00001);
+        invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,0,1.+0.00001);
+    }
+    else{
+        std::vector<double> binning;
+        double scaler=20;
+        for(float i=0.;i<(float)nbins_ + 0.1;i++){
+            double x = i / ((float)nbins_-1.)+0.000001;
+            double bc = scaledSoftsign(x,scaler);
+            binning.push_back(bc);
+        }
+        probh_=TH1D("prob"+nrcc,"prob"+nrcc,nbins_,&binning.at(0));
+        vetoh_=TH1D("veto"+nrcc,"veto"+nrcc,nbins_,&binning.at(0));
+        invalidate_=TH1D("invalid"+nrcc,"invalid"+nrcc,nbins_,&binning.at(0));
+        invalidate_veto_=TH1D("invalid_veto"+nrcc,"invalid_veto"+nrcc,nbins_,&binning.at(0));
+
+    }
 
     c->Draw(probstr+">>prob"+nrcc,allcuts);//probcuts);
     c->Draw(probstr+">>veto"+nrcc,vetostr);
@@ -207,6 +227,12 @@ void rocCurve::process(TChain *c,std::ostream& out){
     roc_.SetLineWidth(linewidth_);
 }
 
+
+double rocCurve::scaledSoftsign(double x, double d)const{
+    double norm = 1. /(d / (1+ fabs(d)));
+    double softs = d*x /(1 + fabs(d*x));
+    return norm*softs;
+}
 
 
 
