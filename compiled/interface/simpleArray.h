@@ -429,15 +429,15 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
 
     //get split point for data
     ///insert rowsplit logic below
-    int splitpoint = splitindex;
+    size_t splitpoint = splitindex;
     if(isRagged()){
         splitpoint = rowsplits_.at(splitindex);
         for (size_t i = 2; i < shape_.size(); i++)
-            splitpoint *= std::abs(shape_.at(i));
+            splitpoint *= (size_t)std::abs(shape_.at(i));
     }
     else{
         for (size_t i = 1; i < shape_.size(); i++)
-            splitpoint *= std::abs(shape_.at(i));
+            splitpoint *= (size_t)std::abs(shape_.at(i));
     }
 
 
