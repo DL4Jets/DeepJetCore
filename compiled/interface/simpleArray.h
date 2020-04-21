@@ -125,6 +125,14 @@ public:
      */
     simpleArray<T> split(size_t splitindex);
 
+    simpleArray<T> getSlice(size_t splitindex_begin, size_t splitindex_end) const;
+
+    /*
+     *
+     */
+    size_t validSlices(std::vector<size_t> splits)const;
+    bool validSlice(size_t splitindex_begin, size_t splitindex_end)const;
+
     /*
      * appends along first axis
      * Cann append to an empty array (same as copy)
@@ -458,6 +466,97 @@ simpleArray<T> simpleArray<T>::split(size_t splitindex) {
     out.size_ = sizeFromShape(out.shape_);
     size_ = sizeFromShape(shape_);
     return out;
+}
+
+
+
+template<class T>
+simpleArray<T> simpleArray<T>::getSlice(size_t splitindex_begin, size_t splitindex_end) const{
+    simpleArray<T> out;
+    if (!shape_.size() || ( !isRagged() && (splitindex_end > shape_.at(0) || splitindex_begin > shape_.at(0))) ) {
+        std::stringstream errMsg;
+        errMsg << "simpleArray<T>::slice: splitindex_end > shape_[0] : ";
+        if(shape_.size())
+            errMsg << splitindex_end << ", " << shape_.at(0);
+        else
+            errMsg <<"shape size: " << shape_.size() <<" empty array cannot be split.";
+        cout();
+        throw std::runtime_error(
+                errMsg.str().c_str());
+    }
+    if(splitindex_end == shape_.at(0) && splitindex_begin==0){//exactly the whole array
+        out = *this;
+        return out;
+    }
+
+    if(isRagged() && (splitindex_end >=  rowsplits_.size() || splitindex_begin>= rowsplits_.size())){
+        std::cout << "split index " << splitindex_end  << " - "<< splitindex_begin<< " allowed: " << rowsplits_.size()<< std::endl;
+        throw std::runtime_error(
+                "simpleArray<T>::slice: ragged split index out of range");
+    }
+
+    //for arrays larger than 8/16(?) GB, size_t is crucial
+    size_t splitpoint_start = splitindex_begin;
+    size_t splitpoint_end = splitindex_end;
+    if(isRagged()){
+        splitpoint_start = rowsplits_.at(splitindex_begin);
+        splitpoint_end = rowsplits_.at(splitindex_end);
+        for (size_t i = 2; i < shape_.size(); i++){
+            splitpoint_start *= (size_t)std::abs(shape_.at(i));
+            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
+        }
+    }
+    else{
+        for (size_t i = 1; i < shape_.size(); i++){
+            splitpoint_start *= (size_t)std::abs(shape_.at(i));
+            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
+        }
+    }
+
+    T * odata = new T[splitpoint_end-splitpoint_start];
+    memcpy(odata, data_+splitpoint_start, (splitpoint_end-splitpoint_start) * sizeof(T));
+
+    out.data_ = odata;
+
+    out.shape_ = shape_;
+    out.shape_.at(0) = splitindex_end-splitindex_begin;
+
+    if(isRagged()){
+        auto rscopy = rowsplits_;
+        rscopy = splitRowSplits(rscopy, splitindex_end);
+        splitRowSplits(rscopy, splitindex_begin);
+        out.rowsplits_ = rscopy;
+        out.shape_ = out.shapeFromRowsplits();
+    }
+    ///
+    out.size_ = sizeFromShape(out.shape_);
+    return out;
+
+}
+
+
+template<class T>
+size_t simpleArray<T>::validSlices(std::vector<size_t> splits)const{
+    size_t out=0;
+    if(!isRagged()){
+        while(splits.at(out) <= shape_.at(0) && out< splits.size())
+            out++;
+        return out;
+    }
+    else{
+        while(splits.at(out) < rowsplits_.size() && out < splits.size())
+            out++;
+        return out;
+    }
+}
+
+template<class T>
+bool simpleArray<T>::validSlice(size_t splitindex_begin, size_t splitindex_end)const{
+    if (!shape_.size() || ( !isRagged() && (splitindex_end > shape_.at(0) || splitindex_begin > shape_.at(0))) )
+        return false;
+    if(isRagged() && (splitindex_end >=  rowsplits_.size() || splitindex_begin>= rowsplits_.size()))
+        return false;
+    return true;
 }
 
 /*

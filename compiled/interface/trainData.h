@@ -86,6 +86,9 @@ public:
      * Returns the second part, leaves the first.
      */
     trainData<T> split(size_t splitindex);
+    trainData<T> getSlice(size_t splitindex_begin, size_t splitindex_end)const;
+
+    bool validSlice(size_t splitindex_begin, size_t splitindex_end)const ;
 
     /*
      *
@@ -299,6 +302,34 @@ trainData<T> trainData<T>::split(size_t splitindex) {
     updateShapes();
     out.updateShapes();
     return out;
+}
+template<class T>
+trainData<T> trainData<T>::getSlice(size_t splitindex_begin, size_t splitindex_end)const{
+    trainData<T> out;
+
+    for (const auto& a : feature_arrays_)
+        out.feature_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
+    for (const auto& a : truth_arrays_)
+        out.truth_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
+    for (const auto& a : weight_arrays_)
+        out.weight_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
+
+    out.updateShapes();
+    return out;
+}
+
+template<class T>
+bool trainData<T>::validSlice(size_t splitindex_begin, size_t splitindex_end)const{
+    for (const auto& a : feature_arrays_)
+        if(! a.validSlice(splitindex_begin,splitindex_end))
+            return false;
+    for (const auto& a : truth_arrays_)
+        if(! a.validSlice(splitindex_begin,splitindex_end))
+            return false;
+    for (const auto& a : weight_arrays_)
+        if(! a.validSlice(splitindex_begin,splitindex_end))
+            return false;
+    return true;
 }
 
 template<class T>

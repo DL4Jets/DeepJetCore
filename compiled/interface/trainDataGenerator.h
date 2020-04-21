@@ -150,7 +150,7 @@ private:
     size_t lastbatchsize_;
     size_t filetimeout_;
     size_t batchcount_;
-
+    size_t lastbuffersplit_;
 };
 
 
@@ -158,7 +158,7 @@ template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debuglevel(0),
         randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), filecount_(0), nbatches_(
                 0), npossiblebatches_(0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
-                batchcount_(0){
+                batchcount_(0),lastbuffersplit_(0){
 }
 
 template<class T>
@@ -442,18 +442,21 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
         usebatch = usebatch_.at(batchcount_);
 
     if(debuglevel>2)
-        std::cout << "expect_batchelements "<<expect_batchelements << " vs " << bufferelements <<" bufferelements" << std::endl;
+        std::cout << "expect_batchelements "<<expect_batchelements << " vs " << bufferelements-lastbuffersplit_ <<" bufferelements" << std::endl;
 
-    while(bufferelements<expect_batchelements){
+    while(bufferelements-lastbuffersplit_<expect_batchelements){
         //if thread, read join
         if(readthread_){
             readthread_->join();
             delete readthread_;
             readthread_=0;
         }
+        if(lastbuffersplit_)
+            buffer_store = buffer_store.getSlice(lastbuffersplit_,buffer_store.nElements());//cut the front part
         buffer_store.append(buffer_read);
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
+        lastbuffersplit_=0;
 
         if(debuglevel>2)
             std::cout << "nprocessed " << nsamplesprocessed_ << " file " << filecount_ << " in buffer " << bufferelements
@@ -475,7 +478,15 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
         }
     }
 
-    auto thisbatch = buffer_store.split(expect_batchelements);
+    if( ! buffer_store.validSlice(lastbuffersplit_, lastbuffersplit_+expect_batchelements)){
+        throw std::runtime_error("trainDataGenerator::prepareBatch: split error");
+    }
+
+    //auto thisbatch = buffer_store.split(expect_batchelements);
+    auto thisbatch = buffer_store.getSlice(lastbuffersplit_, lastbuffersplit_+expect_batchelements);
+
+    lastbuffersplit_+=expect_batchelements;
+    // validSlice
 
     if(thisbatch.nTotalElements() < 1){
       //not sure why this can happen, there might be some bigger problem here. This at least prevents crashes.
@@ -484,7 +495,8 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
     if(debuglevel>2)
         std::cout << "providing batch " << nsamplesprocessed_ << "-" << nsamplesprocessed_+expect_batchelements <<
-        " elements in buffer before: " << bufferelements <<
+        ", slice " << lastbuffersplit_-expect_batchelements << "-" << lastbuffersplit_ <<
+        "\nelements in buffer before: " << bufferelements <<
         "\nsplitting at " << expect_batchelements << " use this batch "<<  usebatch
         << " total elements " << thisbatch.nTotalElements() << " elements left in buffer " << buffer_store.nElements()<< std::endl;
 

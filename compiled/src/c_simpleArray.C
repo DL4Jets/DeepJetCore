@@ -35,6 +35,7 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
        .def("copyToNumpy", &simpleArray<float>::copyToNumpy)
        .def("isRagged", &simpleArray<float>::isRagged)
        .def("split", &simpleArray<float>::split)
+       .def("getSlice", &simpleArray<float>::getSlice)
        .def("append", &simpleArray<float>::append)
        .def("cout", &simpleArray<float>::cout)
        .def("size", &simpleArray<float>::isize);
