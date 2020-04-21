@@ -19,6 +19,7 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from keras.utils import multi_gpu_model
 import copy
+from .gpuTools import DJCSetGPUs
 
 import imp
 try:
@@ -113,17 +114,7 @@ class training_base(object):
         import matplotlib
         #if no X11 use below
         matplotlib.use('Agg')
-        if not len(args.gpu):
-            import imp
-            try:
-                imp.find_module('setGPU')
-                import setGPU
-            except :
-                found = False
-        else:
-            os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-            print('running on GPU(s) '+str(args.gpu))
+        DJCSetGPUs(args.gpu)
         
         if args.gpufraction>0 and args.gpufraction<1:
             import sys

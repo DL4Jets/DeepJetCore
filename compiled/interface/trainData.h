@@ -119,7 +119,12 @@ public:
 
     void writeToFile(std::string filename)const;
 
-    void readFromFile(std::string filename);
+    void readFromFile(std::string filename){
+        priv_readFromFile(filename,false);
+    }
+    void readFromFileBuffered(std::string filename){
+        priv_readFromFile(filename,true);
+    }
 
     //could use a readshape or something!
     void readShapesFromFile(const std::string& filename);
@@ -180,6 +185,9 @@ public:
 #endif
 
 private:
+
+    void priv_readFromFile(std::string filename, bool memcp);
+
     void checkFile(FILE *& f, const std::string& filename="")const;
 
     void writeArrayVector(const std::vector<simpleArray<T> >&, FILE *&) const;
@@ -314,9 +322,27 @@ void trainData<T>::writeToFile(std::string filename)const{
 }
 
 template<class T>
-void trainData<T>::readFromFile(std::string filename){
+void trainData<T>::priv_readFromFile(std::string filename, bool memcp){
     clear();
     FILE *ifile = fopen(filename.data(), "rb");
+    char *buf = 0;
+    if(memcp){
+        FILE *diskfile = ifile;
+        fseek(diskfile, 0, SEEK_END);
+        size_t fsize = ftell(diskfile);
+        fseek(diskfile, 0, SEEK_SET);  /* same as rewind(f); */
+
+        buf = new char[fsize];
+        int ret = fread(buf, 1, fsize, diskfile);
+        if(!ret){
+            delete buf;
+            throw std::runtime_error("trainData<T>::readFromFile: could not read file in memcp mode");
+        }
+        fclose(diskfile);
+
+        ifile = fmemopen(buf,fsize,"r");
+    }
+
     checkFile(ifile, filename);
     readNested(feature_shapes_, ifile);
     readNested(truth_shapes_, ifile);
@@ -327,6 +353,10 @@ void trainData<T>::readFromFile(std::string filename){
     weight_arrays_ = readArrayVector(ifile);
 
     fclose(ifile);
+    //std::cout << "read done, free"<<std::endl;
+    if(buf){
+        delete buf;
+    }
 
 }
 

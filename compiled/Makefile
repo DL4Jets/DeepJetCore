@@ -16,7 +16,7 @@ MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
-
+#CFLAGS := -g
 
 all: $(MODULES_SHARED_LIBS) $(patsubst to_bin/%.cpp, %, $(wildcard to_bin/*.cpp)) classdict.so
 
@@ -40,13 +40,13 @@ obj/%.o: src/%.cpp
 
 #pack helpers in lib
 libdeepjetcorehelpers.so: $(OBJ_FILES) 
-	g++ -o $@ -shared -fPIC  $(LINUXADD) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 
+	g++ -o $@ -shared -fPIC  $(LINUXADD) $(CFLAGS) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
-	g++  -o $(@) -shared -fPIC  $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 -L./ -ldeepjetcorehelpers 
+	g++  -o $(@) -shared -g -fPIC $(CFLAGS) $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python3 -lboost_numpy3 -L./ -ldeepjetcorehelpers 
 
 %.o: src/%.C 
-	g++   $(ROOTCFLAGS) -O2 -I./interface $(PYTHON_INCLUDE) -fPIC -c -o $(@) $<
+	g++   $(ROOTCFLAGS) -O2 -g -I./interface $(PYTHON_INCLUDE) -fPIC $(CFLAGS) -c -o $(@) $<
 
 
 

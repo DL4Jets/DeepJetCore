@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include "IO.h"
 #include "version.h"
+#include <iostream>
 
 #define QUICKLZ_MAXCHUNK (0xffffffff - 400)
 
@@ -109,20 +110,21 @@ template <class T>
 size_t quicklz<T>::readCompressedBlock(FILE *& ifile, T * arr){
 
     size_t chunk = 0;
-    size_t readbytes = 0;
-    size_t writepos = 0;
     size_t allread = 0;
     char* src = 0;
+    char * dst = (char*)(void*)arr;
 
     while (chunk < nchunks_ && totalbytes_) {
+        //std::cout << "chunk with size " << chunksizes_.at(chunk) <<" size of " << sizeof(T) <<" total bytes "<< totalbytes_ << std::endl;
         src = new char[chunksizes_.at(chunk)];
         io::readFromFile(src, ifile, 0, chunksizes_.at(chunk));
-        readbytes += qlz_size_decompressed(src);
+        size_t readbytes = qlz_size_decompressed(src);
+        //std::cout << "bytes to be decompressed " << readbytes << std::endl;
 
-        allread += qlz_decompress(src, arr, state_decompress_);
-        writepos = readbytes;
+        allread += qlz_decompress(src, dst, state_decompress_);
+        //std::cout << "decompress success " << readbytes << " allread " << allread << std::endl;
         chunk++;
-        arr += writepos / sizeof(T);
+        dst += readbytes;
         delete src;
     }
     if (allread != totalbytes_) {

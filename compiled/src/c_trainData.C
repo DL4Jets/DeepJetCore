@@ -38,6 +38,7 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("readShapesFromFile", &trainData<float>::readShapesFromFile)
 
        .def("readFromFile", &trainData<float>::readFromFile)
+       .def("readFromFileBuffered", &trainData<float>::readFromFileBuffered)
        .def("writeToFile", &trainData<float>::writeToFile)
 
        .def("clear", &trainData<float>::clear)

@@ -9,6 +9,8 @@ parser.add_argument('trainingDataCollection')
 parser.add_argument('inputSourceFileList')
 parser.add_argument('outputDir')
 parser.add_argument("-b", help="batch size ",default="-1")
+parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default="")
+parser.add_argument("--unbuffered",   help="do not read input in memory buffered mode (for lower memory consumption on fast disks)", default=False, action="store_true")
 
 
 args = parser.parse_args()
@@ -24,12 +26,15 @@ import os
 from keras.models import load_model
 from keras import backend as K
 from DeepJetCore.customObjects import get_custom_objects
+from DeepJetCore.training.gpuTools import DJCSetGPUs
+
+DJCSetGPUs(args.gpu)
 
 custom_objs = get_custom_objects()
 
 model=load_model(args.inputModel, custom_objects=custom_objs)
 dc = DataCollection(args.trainingDataCollection)
-td = dc.dataclass()
+
 outputs = []
 inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
 os.system('mkdir -p '+args.outputDir)
@@ -42,9 +47,13 @@ with open(args.inputSourceFileList, "r") as f:
             use_inputdir=""
         outfilename = "pred_"+os.path.basename( inputfile )
         
+        td = dc.dataclass()
 
         if inputfile[-5:] == 'djctd':
-            td.readFromFile(use_inputdir+"/"+inputfile)
+            if args.unbuffered:
+                td.readFromFile(use_inputdir+"/"+inputfile)
+            else:
+                td.readFromFileBuffered(use_inputdir+"/"+inputfile)
         else:
             print('converting '+inputfile)
             td.readFromSourceFile(use_inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)

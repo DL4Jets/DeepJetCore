@@ -210,7 +210,8 @@ void trainDataGenerator<T>::readBuffer(){
             try{
                 if(debuglevel>0)
                     std::cout << "reading file " << nextread_ << std::endl;
-                buffer_read.readFromFile(nextread_);
+                //use mem buffered read, read whole file in one go and then decompress etc from memory
+                buffer_read.readFromFileBuffered(nextread_);
                 if(debuglevel>0)
                     std::cout << "reading file " << nextread_ << " done"<< std::endl;
                 return;
