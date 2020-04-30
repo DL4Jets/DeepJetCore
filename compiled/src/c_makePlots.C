@@ -13,6 +13,7 @@
 #include <boost/python/exception_translator.hpp>
 #include <exception>
 #include "../interface/pythonToSTL.h"
+#include "../interface/helper.h"
 #include "friendTreeInjector.h"
 #include "TROOT.h"
 #include "colorToTColor.h"
@@ -23,12 +24,22 @@
 #include "TFile.h"
 #include "TStyle.h"
 #include <algorithm>
+#include "TEfficiency.h"
 
 using namespace boost::python; //for some reason....
 
 static void mergeOverflow(TH1F*h){
     h->SetBinContent(h->GetNbinsX(),h->GetBinContent(h->GetNbinsX())+h->GetBinContent(h->GetNbinsX()+1));
     h->SetBinContent(1,h->GetBinContent(1)+h->GetBinContent(0));
+}
+
+void setStyles(TH1* h){
+    h->GetXaxis()->SetTitleSize(0.05);
+    h->GetXaxis()->SetTitleOffset(0.0);
+    h->GetXaxis()->SetLabelSize(0.05);
+    h->GetYaxis()->SetTitleSize(0.05);
+    h->GetYaxis()->SetTitleOffset(1.0);
+    h->GetYaxis()->SetLabelSize(0.05);
 }
 
 
@@ -226,7 +237,7 @@ void makeEffPlots(
         std::string outfile,
         std::string xaxis,
         std::string yaxis,
-        int rebinfactor,
+        int nbins,
         bool setLogY,
 	float Xmin,
 	float Xmax,
@@ -301,7 +312,15 @@ void makeEffPlots(
     injector.createChain();
 
     TChain* c=injector.getChain();
-    std::vector<TH1F*> allhistos;
+
+    TString tfileout=toutfile;
+    tfileout=tfileout(0,tfileout.Length()-4);
+    tfileout+=".root";
+
+    TFile * f = new TFile(tfileout,"RECREATE");
+    TCanvas cv("plots");
+    std::vector<TEfficiency*> allhistos;
+    TH1F * axishisto=new TH1F("AXIS","AXIS",nbins,Xmin,Xmax);
     TLegend * leg=new TLegend(0.2,0.75,0.8,0.88);
     leg->SetBorderSize(0);
 
@@ -312,11 +331,6 @@ void makeEffPlots(
     float max=-1e100;
     float min=1e100;
 
-    TString tfileout=toutfile;
-    tfileout=tfileout(0,tfileout.Length()-4);
-    tfileout+=".root";
-
-    TFile * f = new TFile(tfileout,"RECREATE");
     gStyle->SetOptStat(0);
 
     for(size_t i=0;i<s_names.size();i++){
@@ -325,48 +339,39 @@ void makeEffPlots(
         if(s_cutsden.at(i).Length())
             numcuts+="&&("+s_cutsden.at(i)+")";
         tmpname+=i;
+
+        TH1F *numhisto = new TH1F(tmpname,tmpname,nbins,Xmin,Xmax);
+
         c->Draw(s_vars.at(i)+">>"+tmpname,numcuts,addstr);
-        TH1F *numhisto = (TH1F*) gROOT->FindObject(tmpname);
-        if(rebinfactor>1)
-            numhisto->Rebin(rebinfactor);
+
         TH1F *denhisto=(TH1F *)numhisto->Clone(tmpname+"den");
 
-
         c->Draw(s_vars.at(i)+">>"+tmpname+"den",s_cutsden.at(i),addstr);
-        for(int bin=0;bin<=numhisto->GetNbinsX();bin++){
-            float denbin=denhisto->GetBinContent(bin);
-            if(denbin){
-                numhisto->SetBinContent(bin, numhisto->GetBinContent(bin)/denbin);
-            }
-            else{
-                numhisto->SetBinContent(bin,0);
-            }
-        }
-        TH1F *histo = numhisto; //(TH1F *)()->Clone(tmpname) ;
 
 
-        histo->SetLineColor(colorToTColor(s_colors.at(i)));
-        histo->SetLineStyle(lineToTLineStyle(s_colors.at(i)));
-        histo->SetTitle(s_names.at(i));
-        histo->SetName(s_names.at(i));
+        TEfficiency* eff = new TEfficiency(s_names.at(i),s_names.at(i),nbins,Xmin,Xmax);
+        //eff->SetUseWeightedEvents(true);
+        //eff->SetStatisticOption(TEfficiency::kFNormal);
 
-        histo->SetFillStyle(0);
-        histo->SetLineWidth(2);
+        eff->SetTotalHistogram(*denhisto,"");
+        eff->SetPassedHistogram(*numhisto,"");
 
-        float tmax=histo->GetMaximum();
-        float tmin=histo->GetMinimum();
-        if(tmax>max)max=tmax;
-        if(tmin<min)min=tmin;
-        if(OverrideMin<OverrideMax){
-            //std::cout << "overriding min/max"<< std::endl;
-            max = OverrideMax;
-            min = OverrideMin;
-        }
-        //std::cout << "min" << min << " max" << max << std::endl;
 
-        allhistos.push_back(histo);
+        eff->SetLineColor(colorToTColor(s_colors.at(i)));
+        eff->SetLineStyle(lineToTLineStyle(s_colors.at(i)));
 
-        histo->Write();
+
+        eff->SetFillStyle(0);
+        eff->SetLineWidth(2);
+
+        allhistos.push_back(eff);
+        eff->Draw();//for some reason
+        eff->Write();
+
+       // if(i)
+       //     delete numhisto;
+
+       // delete denhisto;
 
 
     }
@@ -374,19 +379,27 @@ void makeEffPlots(
         leg->AddEntry(allhistos.at(i-1),s_names.at(i-1),"l");
     }
 
-    TCanvas cv("plots");
 
     if(setLogY) cv.SetLogy();
-    allhistos.at(0)->Draw("AXIS");
-    allhistos.at(0)->GetYaxis()->SetRangeUser(min,1.3*max); //space for legend on top
 
-    allhistos.at(0)->GetXaxis()->SetTitle(xaxis.data());
-    if(Xmin<Xmax)  allhistos.at(0)->GetXaxis()->SetRangeUser(Xmin,Xmax);
-    allhistos.at(0)->GetYaxis()->SetTitle(yaxis.data());
+    cv.SetLeftMargin(0.15);
+    cv.SetBottomMargin(0.15);
 
-    allhistos.at(0)->Draw("AXIS");
+    axishisto->Draw("AXIS");
+   // axishisto->SetLineColorAlpha(kBlack,0.8);
+    axishisto->GetYaxis()->SetRangeUser(0,1.3); //space for legend on top
+    if(OverrideMax>OverrideMin)
+        axishisto->GetYaxis()->SetRangeUser(OverrideMin,OverrideMax);
+
+    axishisto->GetXaxis()->SetTitle(xaxis.data());
+    axishisto->GetYaxis()->SetTitle(yaxis.data());
+    setStyles(axishisto);
+    axishisto->Draw("AXIS");
+
     for(size_t i=0;i<s_names.size();i++){
-        allhistos.at(i)->Draw("same,hist");
+        auto ld=getLineDouble(allhistos.at(i));
+        ld->Draw("same,P");
+        allhistos.at(i)->Draw("same,P");
     }
     leg->Draw("same");
 

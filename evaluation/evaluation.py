@@ -21,7 +21,13 @@ Created on 21 Mar 2017
 
 from __future__ import print_function
 
-colormap=['red'
+colormap=[
+    "#5e3c99",
+    "#e66101",
+    "#fdb863",
+    "#b2abd2",
+    
+    'red'
  , 'blue'
  , 'darkgreen'
  , 'purple'
@@ -31,7 +37,12 @@ colormap=['red'
  , 'darkpurple'
  , 'gray']
 
-dashedcolormap=['red','red,dashed'
+dashedcolormap=[
+    "#5e3c99","#5e3c99,dashed",
+    "#e66101","#e66101,dashed",
+    "#fdb863","#fdb863,dashed",
+    "#b2abd2","#b2abd2,dashed",
+    'red','red,dashed'
  , 'blue','blue,dashed'
  , 'darkgreen','darkgreen,dashed'
  , 'purple','purple,dashed'
@@ -215,7 +226,7 @@ def makePlots_async(intextfile, name_list, variables, cuts, colours,
 def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colours,
                      outpdffile, xaxis='',yaxis='',
                      minimum=1e100,maximum=-1e100,
-                     rebinfactor=1, SetLogY = False, Xmin = 100, Xmax = -100. ,
+                     nbins=-1, SetLogY = False, Xmin = 100, Xmax = -100. ,
                      treename="deepntuplizer/tree"): 
     
     
@@ -228,12 +239,12 @@ def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colour
     
     
 
-    import c_makePlots
+    from DeepJetCore.compiled import c_makePlots
     def worker():
         try:
             c_makePlots.makeEffPlots(files_list,name_list,
                                  variables_list,cutsnum_list,cutsden_list,colours_list,
-                                 outpdffile,xaxis,yaxis,rebinfactor,SetLogY, Xmin, Xmax,minimum,maximum,treename)
+                                 outpdffile,xaxis,yaxis,nbins,SetLogY, Xmin, Xmax,minimum,maximum,treename)
         except Exception as e:
             print('error for these inputs:')
             print(files_list)

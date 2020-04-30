@@ -197,7 +197,7 @@ void rocCurve::process(TChain *c,std::ostream& out){
 
 
     out << "eff @ misid @ discr value\n\n";
-    std::vector<double> misidset=loglist(yscale_*0.001,yscale_*1,yscale_*100);
+    std::vector<double> misidset=loglist(yscale_*0.00001,yscale_*1,yscale_*100);
     int count=0;
     double integral=0;
     for(float eff=0;eff<1;eff+=0.00001){

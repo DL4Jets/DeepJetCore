@@ -65,6 +65,13 @@ class newline_callbacks_begin(Callback):
         import os
         lossfile=os.path.join( self.outputDir, 'losses.log')
         print('\n***callbacks***\nsaving losses to '+lossfile)
+        
+        # problem with new keras version calling callbacks even after exceptions
+        if logs.get('loss') is None:
+            return 
+        if logs.get('val_loss') is None:
+            return
+        
         self.loss.append(logs.get('loss'))
         self.val_loss.append(logs.get('val_loss'))
         f = open(lossfile, 'a')
@@ -103,11 +110,18 @@ class batch_callback_begin(Callback):
         self.plotLoss=plotLoss
 
     def on_batch_end(self,batch,logs={}):
+        if len(logs)<1:
+            return
+        if logs.get('loss') is None:
+            return 
+        if logs.get('val_loss') is None:
+            return
         self.loss.append(logs.get('loss'))
         self.val_loss.append(logs.get('val_loss'))
          
         
     def on_epoch_end(self,epoch,logs={}):
+        
         import os
         blossfile=os.path.join( self.outputDir, 'batch_losses.log')
         f = open(blossfile, 'a')
@@ -163,10 +177,12 @@ class saveCheckPointDeepJet(Callback):
     Slight extension of the normal checkpoint to multiple checkpoints per epoch
     '''
     
-    def __init__(self,outputFile,model,check_n_batches=-1):
+    def __init__(self,outputFile,model,check_n_batches=-1,nrotate=3):
         self.outputFile=outputFile
         self.djmodel=model
         self.counter=0
+        self.rotate_idx=0
+        self.rotations=[str(i) for i in range(nrotate)]
         self.check_n_batches=check_n_batches
         
     def on_batch_end(self,batch,logs={}):
@@ -175,10 +191,19 @@ class saveCheckPointDeepJet(Callback):
         if self.counter < self.check_n_batches:
             self.counter+=1
             return
-        self.djmodel.save(self.outputFile)
+        self.djmodel.save(self.outputFile[:-3]+'_rot_'+self.rotations[self.rotate_idx]+'.h5')
         self.counter=0
+        self.rotate_idx += 1
+        if self.rotate_idx >= len(self.rotations):
+            self.rotate_idx=0
         
     def on_epoch_end(self,epoch, logs={}):
+        if len(logs)<1:
+            return
+        if logs.get('loss') is None:
+            return 
+        if logs.get('val_loss') is None:
+            return
         self.djmodel.save(self.outputFile)
         
         
@@ -301,7 +326,6 @@ class PredictCallback(Callback):
     def predict_and_call(self,counter):
         
         self.gen.setBuffer(self.td)
-        
         def genfunc():
             while(not self.gen.isEmpty()):
                 d = self.gen.getBatch()

@@ -45,8 +45,13 @@ int lineToTLineStyle(const TString& str){
 
 int colorToTColor(const TString& str){
     TString copstr=str;
-    copstr.ToLower();
+    TColor col;
 
+    if(copstr.BeginsWith("#")){
+        copstr.Resize(7);
+        return col.GetColor(copstr);
+    }
+    copstr.ToLower();
     if(copstr.Contains("black"))
         return kBlack;
 
@@ -93,7 +98,8 @@ int colorToTColor(const TString& str){
  * green\n\
  * darkgreen\n\
  * purple\n\
- * darkpurple"<<std::endl;
+ * darkpurple\n\
+ * (hex code) "<<std::endl;
     return kBlack;
 
 }

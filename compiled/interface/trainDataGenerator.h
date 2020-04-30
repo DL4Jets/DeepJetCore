@@ -181,6 +181,7 @@ void trainDataGenerator<T>::shuffleFilelist(){
     //redo splits etc
     prepareSplitting();
     batchcount_=0;
+    lastbuffersplit_=0;
 }
 
 template<class T>
@@ -197,6 +198,7 @@ void trainDataGenerator<T>::setBuffer(const trainData<T>& td){
     shuffle_indices_.push_back(0);
     ntotal_ = td.nElements();
     buffer_store=td;
+    lastbuffersplit_=0;
     prepareSplitting();
 
 }
@@ -259,6 +261,7 @@ void trainDataGenerator<T>::readInfo(){
     if(debuglevel>0)
         std::cout << "trainDataGenerator<T>::readInfo: total elements "<< ntotal_ <<std::endl;
     batchcount_=0;
+    lastbuffersplit_=0;
     prepareSplitting();
 }
 
@@ -383,6 +386,7 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     filecount_=0;
     nsamplesprocessed_=0;
     batchcount_=0;
+    lastbuffersplit_=0;
     nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
     filecount_++;
     readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
@@ -419,6 +423,7 @@ void trainDataGenerator<T>::clear(){
     ntotal_=0;
     nsamplesprocessed_=0;
     lastbatchsize_=0;
+    lastbuffersplit_=0;
     // filetimeout_ keep
     batchcount_=0;
 }
@@ -430,7 +435,8 @@ trainData<T> trainDataGenerator<T>::getBatch(){
 
 template<class T>
 trainData<T>  trainDataGenerator<T>::prepareBatch(){
-    if(batchcount_ >= splits_.size()){
+    if(isEmpty()){
+        std::cout << "trainDataGenerator::prepareBatch: batchcount " << batchcount_ << ", available: " << splits_.size() << std::endl;
         throw std::runtime_error("trainDataGenerator::prepareBatch: asking for more batches than in dataset");
     }
 
@@ -464,9 +470,13 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
             << " total events "<< ntotal_<< std::endl;
 
         if(nsamplesprocessed_ + bufferelements < ntotal_){
-            if (filecount_ >= orig_infiles_.size())
+            if (filecount_ >= orig_infiles_.size()){
+                std::cout << "trainDataGenerator<T>::prepareBatch: filecount: "<<  filecount_ <<" infiles "<< orig_infiles_.size()<<
+                        " processed: "<< nsamplesprocessed_ << " buffer:  "<< bufferelements << " total "<< ntotal_ << std::endl;
                 throw std::runtime_error(
-                        "trainDataGenerator<T>::getBatch: more batches requested than data in the sample");
+                        "trainDataGenerator<T>::prepareBatch: more file reads requested than batches in the sample");
+
+            }
 
             nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
 

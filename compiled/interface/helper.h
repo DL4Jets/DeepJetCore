@@ -26,6 +26,8 @@ float deltaPhi(const float& phi1, const float& phi2);
 
 void checkTObject(const TObject * o, TString msg);
 
+template<class T>
+T*  getLineDouble(const T * h);
 
 /**
  * transfers ownership of the data to numpy array if no copy.
@@ -85,6 +87,20 @@ boost::python::numpy::ndarray STLToNumpy(const T * data, const std::vector<int>&
         return np::empty(p::make_tuple(0), np::dtype::get_builtin<T>());;
     }
 }
+
+
+
+template<class T>
+T*  getLineDouble(const T * h){
+    T* h2 = (T*)h->Clone(h->GetName()+(TString)"dline");
+    h2->SetLineWidth(h->GetLineWidth()+1);
+    h2->SetLineColor(kBlack);
+    h2->SetLineColorAlpha(kBlack,0.8);
+    return h2;
+}
+
+
+
 
 
 #endif /* DEEPJET_MODULES_INTERFACE_HELPER_H_ */
