@@ -225,10 +225,13 @@ class training_base(object):
             if os.path.isfile(kfile):
                 self.loadModel(kfile)
                 self.trainedepoches=0
-                for line in open(self.outputDir+'losses.log'):
-                    valloss = line.split(' ')[1][:-1]
-                    if not valloss == "None":
-                        self.trainedepoches+=1
+                if os.path.isfile(self.outputDir+'losses.log'):
+                    for line in open(self.outputDir+'losses.log'):
+                        valloss = line.split(' ')[1][:-1]
+                        if not valloss == "None":
+                            self.trainedepoches+=1
+                else:
+                    print('incomplete epochs, starting from the beginning but with pretrained model')
             else:
                 print('no model found in existing output dir, starting training from scratch')
         

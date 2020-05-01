@@ -192,6 +192,7 @@ class saveCheckPointDeepJet(Callback):
             self.counter+=1
             return
         self.djmodel.save(self.outputFile[:-3]+'_rot_'+self.rotations[self.rotate_idx]+'.h5')
+        self.djmodel.save(self.outputFile)
         self.counter=0
         self.rotate_idx += 1
         if self.rotate_idx >= len(self.rotations):
