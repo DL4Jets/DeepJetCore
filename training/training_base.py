@@ -436,7 +436,6 @@ class training_base(object):
         self.val_data.invokeGenerator()
         #this is fixed
         nbatches_val = self.val_data.generator.getNBatches()
-        nbatches_train = self.train_data.generator.getNBatches()
 
         #self.train_data.generator.debug=True
         #self.train_data.generator.shuffleFilelist()
@@ -444,27 +443,16 @@ class training_base(object):
         while(self.trainedepoches < nepochs):
            
             #this can change from epoch to epoch
-            print('>>>>Epoch', self.trainedepoches,"/",nepochs)
-            print('training batches: ',nbatches_train)
-            print('validation batches: ',nbatches_val)
             #calculate steps for this epoch
             #feed info below
             self.train_data.generator.prepareNextEpoch()
             self.val_data.generator.prepareNextEpoch()
+            nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
+            
+            print('>>>>Epoch', self.trainedepoches,"/",nepochs)
+            print('training batches: ',nbatches_train)
+            print('validation batches: ',nbatches_val)
                 
-            #self.keras_model.fit_generator(self.train_data.generatorFunction() ,
-            #                               steps_per_epoch=nbatches_train, 
-            #                               epochs=self.trainedepoches + 1,
-            #                               initial_epoch=self.trainedepoches,
-            #                               callbacks=self.callbacks.callbacks,
-            #                               validation_data=self.val_data.generatorFunction(),
-            #                               validation_steps=nbatches_val, #)#,
-            #                               max_queue_size=1, #handled by DJC
-            #                               validation_freq=1,
-            #                               use_multiprocessing=False, #the threading one doe not loke DJC
-            #                               shuffle=False,
-            #                               workers=0,#run gen on main thread
-            #                               **trainargs)
             self.keras_model.fit(self.train_data.generatorFunction(), 
                                  steps_per_epoch=nbatches_train,
                                  epochs=self.trainedepoches + 1,
@@ -479,7 +467,6 @@ class training_base(object):
                                  )
             self.trainedepoches += 1
             self.train_data.generator.shuffleFilelist()
-            nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
             #
         
         self.saveModel("KERAS_model.h5")

@@ -386,6 +386,7 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     filecount_=0;
     nsamplesprocessed_=0;
     batchcount_=0;
+    lastbatchsize_=0;
     lastbuffersplit_=0;
     nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
     filecount_++;
