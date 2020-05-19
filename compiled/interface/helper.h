@@ -17,17 +17,9 @@
 #include "TString.h"
 #include "TObject.h"
 #include "TString.h"
-
-TString prependXRootD(const TString& path);
-
-bool isApprox(const float& a , const float& b, float eps=0.001);
-
-float deltaPhi(const float& phi1, const float& phi2);
-
-void checkTObject(const TObject * o, TString msg);
-
-template<class T>
-T*  getLineDouble(const T * h);
+#include <sstream>
+#include <string>
+#include "c_helper.h"
 
 /**
  * transfers ownership of the data to numpy array if no copy.
@@ -89,15 +81,6 @@ boost::python::numpy::ndarray STLToNumpy(const T * data, const std::vector<int>&
 }
 
 
-
-template<class T>
-T*  getLineDouble(const T * h){
-    T* h2 = (T*)h->Clone(h->GetName()+(TString)"dline");
-    h2->SetLineWidth(h->GetLineWidth()+1);
-    h2->SetLineColor(kBlack);
-    h2->SetLineColorAlpha(kBlack,0.8);
-    return h2;
-}
 
 
 

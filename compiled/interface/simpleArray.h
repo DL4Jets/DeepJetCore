@@ -16,6 +16,7 @@
 #include "helper.h"
 #endif
 
+#include "c_helper.h"
 #include <cmath>
 #include <vector>
 #include <string>
@@ -179,26 +180,20 @@ public:
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
 
-    //static
-    /**
-     * assumes that the row splits are along the 1st dimension
-     */
-    static size_t findElementSplitLength(const std::vector<int64_t> & rowsplits,
-            size_t nelements, size_t& startat, bool & exceeds_limit, bool sqelementslimit=false);
 
     /**
      * Split indices can directly be used with the split() function.
      * Returns e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
      */
     static std::vector<size_t>  getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
+            bool sqelementslimit=false, bool strict_limit=true, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
     /**
      * Split indices can directly be used with the split() function.
      * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
      */
     static std::vector<size_t>  getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
+            bool sqelementslimit=false, bool strict_limit=true, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
     static std::vector<size_t>  dataSplitToSplitIndices(const std::vector<size_t>& data_splits);
     static std::vector<size_t>  splitToDataSplitIndices(const std::vector<size_t>& data_splits);
@@ -249,7 +244,7 @@ private:
     void checkRaggedIndex(size_t i, size_t j)const;
 
     static std::vector<size_t>  priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
+            bool sqelementslimit=false, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>(), bool strict_limit=true);
 
 
 
@@ -494,6 +489,11 @@ simpleArray<T> simpleArray<T>::getSlice(size_t splitindex_begin, size_t splitind
         throw std::runtime_error(
                 "simpleArray<T>::slice: ragged split index out of range");
     }
+    if(splitindex_end == splitindex_begin){
+        //throw std::runtime_error("simpleArray<T>::slice: attempt to create empty slice");
+        //actually, allow this here and let the problem be handled further down the line, just throw warning for now
+        std::cout << "simpleArray<T>::slice: WARNING: attempt to create empty slice at "<< splitindex_begin <<std::endl;
+    }
 
     //for arrays larger than 8/16(?) GB, size_t is crucial
     size_t splitpoint_start = splitindex_begin;
@@ -726,7 +726,7 @@ void simpleArray<T>::cout()const{
 
 template<class T>
  std::vector<size_t>  simpleArray<T>::priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
+        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split, bool strict_limit){
 
     std::vector<size_t> outIdxs;
     size_ok.clear();
@@ -757,10 +757,17 @@ template<class T>
         }
 
 
-        if (i_splitat < rowsplits.size()+1) {        //split
+        if (i_splitat < rowsplits.size() ) {        //split
+
+            if(i_splitat==i_old){
+                //sanity check, should not happen
+                std::cout <<"simpleArray<T>::priv_getSplitIndices: attempting empty split at " << i_splitat << std::endl;
+                throw std::runtime_error("simpleArray<T>::priv_getSplitIndices: attempting empty split");
+            }
+
 
             size_t nelements = rowsplits.at(i_splitat) - rowsplits.at(i_old);
-            bool is_good = nelements <= nelements_limit;
+            bool is_good = (!strict_limit || nelements <= nelements_limit) && nelements>0;//safety for zero element splits
             size_ok.push_back(is_good);
             nelemtns_per_split.push_back(nelements);
 
@@ -785,7 +792,7 @@ template<class T>
 
         }
         i_s++;
-        if(i_s == rowsplits.size())
+        if(i_s >= rowsplits.size())
             break;
     }
 
@@ -797,8 +804,8 @@ template<class T>
     */
 template<class T>
 std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
-    return priv_getSplitIndices(false, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split);
+        bool sqelementslimit, bool strict_limit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
+    return priv_getSplitIndices(false, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split,strict_limit);
 }
 
 /**
@@ -808,8 +815,8 @@ std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> 
 
 template<class T>
 std::vector<size_t>  simpleArray<T>::getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
-        bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
-    return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split);
+        bool sqelementslimit, bool strict_limit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split){
+    return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split,strict_limit);
 }
 
 template<class T>
@@ -1209,6 +1216,10 @@ std::vector<int64_t> simpleArray<T>::padRowsplits()const{
     if(out.size()){
         size_t presize = rowsplits_.size();
         size_t nelements = rowsplits_.at(rowsplits_.size()-1);
+        if((nelements<1 && !shape_.size()) || nelements!=-shape_.at(1)){
+            throw std::runtime_error("simpleArray<T>::padRowsplits: rowsplit format seems broken. Total number of entries at last entry: "+
+                    to_str(nelements)+" row splits: "+to_str(rowsplits_)+ " versus actual shape "+to_str(shape_));
+        }
         out.resize(nelements,0);
         out.at(out.size()-1) = presize;
     }

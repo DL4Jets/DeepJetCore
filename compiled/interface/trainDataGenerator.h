@@ -316,7 +316,7 @@ void trainDataGenerator<T>::prepareSplitting(){
         std::cout << std::endl;
     }
     std::vector<size_t> nelems_per_split;
-    splits_ = simpleArray<T>::getSplitIndices(allrs, batchsize_,sqelementslimit_ , usebatch_, nelems_per_split);
+    splits_ = simpleArray<T>::getSplitIndices(allrs, batchsize_,sqelementslimit_ , skiplargebatches_, usebatch_, nelems_per_split);
 
     nbatches_=0;
     npossiblebatches_=0;
@@ -444,6 +444,9 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     size_t bufferelements=buffer_store.nElements();
     size_t expect_batchelements = splits_.at(batchcount_);
     bool usebatch = true;
+
+    if(!expect_batchelements)//sanity check
+        throw std::runtime_error("trainDataGenerator<T>::prepareBatch: expected elements zero!");
     
     if(usebatch_.size())
         usebatch = usebatch_.at(batchcount_);
@@ -459,8 +462,16 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
             readthread_=0;
         }
         if(lastbuffersplit_)
-            buffer_store = buffer_store.getSlice(lastbuffersplit_,buffer_store.nElements());//cut the front part
-        buffer_store.append(buffer_read);
+            if(lastbuffersplit_ != buffer_store.nElements()){
+                buffer_store = buffer_store.getSlice(lastbuffersplit_,buffer_store.nElements());//cut the front part
+                buffer_store.append(buffer_read);
+            }
+            else{ //was used completely
+                buffer_store = std::move(buffer_read);
+            }
+        else //first one
+            buffer_store = std::move(buffer_read);
+
         buffer_read.clear();
         bufferelements = buffer_store.nElements();
         lastbuffersplit_=0;
