@@ -539,6 +539,7 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
     if(! usebatch){//until valid batch
         return prepareBatch();
     }
+
     return thisbatch;
 
 }

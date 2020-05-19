@@ -1211,7 +1211,7 @@ inline void destroyManagerCObject(PyObject* self) {
 }
 
 template<class T>
-std::vector<int64_t> simpleArray<T>::padRowsplits()const{
+std::vector<int64_t> simpleArray<T>::padRowsplits()const{ //rs 0, 1, 1 element
     std::vector<int64_t>  out = rowsplits_;
     if(out.size()){
         size_t presize = rowsplits_.size();
@@ -1220,6 +1220,8 @@ std::vector<int64_t> simpleArray<T>::padRowsplits()const{
             throw std::runtime_error("simpleArray<T>::padRowsplits: rowsplit format seems broken. Total number of entries at last entry: "+
                     to_str(nelements)+" row splits: "+to_str(rowsplits_)+ " versus actual shape "+to_str(shape_));
         }
+        if(nelements<3)//keep format of [rs ], nelements
+            nelements=3;
         out.resize(nelements,0);
         out.at(out.size()-1) = presize;
     }
