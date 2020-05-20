@@ -9,6 +9,11 @@ from .ReduceLROnPlateau import ReduceLROnPlateau
 from ..evaluation import plotLoss
 from ..evaluation import plotBatchLoss
 
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 from time import time
@@ -102,39 +107,105 @@ class newline_callbacks_begin(Callback):
 
 class batch_callback_begin(Callback):
 
-    def __init__(self,outputDir,plotLoss=False):
+    def __init__(self,outputDir,plotLoss=False,plot_frequency=-1,batch_frequency=1):
         self.outputDir=outputDir
         self.loss=[]
         self.val_loss=[]
         self.full_logs=[]
         self.plotLoss=plotLoss
+        self.plot_frequency=plot_frequency
+        self.plotcounter=0
+        self.batch_frequency=batch_frequency
+        self.batchcounter=0
 
+
+    
+        
+    def read(self):
+        
+        import os
+        if not os.path.isfile(self.outputDir+'/batch_losses.log') :
+            return
+        blossfile=os.path.join( self.outputDir, 'batch_losses.log')
+        f = open(blossfile, 'r')
+        self.loss = []
+        for line in f:
+            if len(line)<1: continue
+            tl=float(line.split(' ')[0])
+            self.loss.append(tl)
+        
+        f.close() 
+            
     def on_batch_end(self,batch,logs={}):
         if len(logs)<1:
             return
         if logs.get('loss') is None:
             return 
-        if logs.get('val_loss') is None:
+        self.batchcounter += 1
+        
+        if not self.batch_frequency == self.batchcounter:
             return
+        self.batchcounter=0
+        
         self.loss.append(logs.get('loss'))
-        self.val_loss.append(logs.get('val_loss'))
+        
+        if self.plot_frequency<0:
+            return 
+        self.plotcounter+=1
+        if self.plot_frequency == self.plotcounter:
+            self.plot()
+            self.plotcounter = 0
          
         
-    def on_epoch_end(self,epoch,logs={}):
+    def _plot(self):
+        if len(self.loss) < 2:
+            return 
+        batches = [self.batch_frequency*i for i in range(len(self.loss))]
+        plt.close()
+        plt.plot(batches,self.loss,'r-',label='loss')
+        
+        def smooth(y, box_pts):
+            box = np.ones(box_pts)/box_pts
+            y_smooth = np.convolve(y, box, mode='same')
+            return y_smooth
+        
+        if len(batches) > 50:
+            smoothed = smooth(self.loss,50)
+            #remove where the simple smoothing doesn't give reasonable results
+            plt.plot(batches[25:-25],smoothed[25:-25],'g-',label='smoothed')
+            plt.legend()
+        
+        plt.xlabel("# batches")
+        plt.ylabel("training loss")
+        plt.yscale("log")
+        plt.savefig(self.outputDir+'/batch_losses.pdf')
+        plt.close()
+        
+     
+    def plot(self):
+        self._plot()
+        
+    def save(self):
         
         import os
         blossfile=os.path.join( self.outputDir, 'batch_losses.log')
         f = open(blossfile, 'a')
         for i in range(len(self.loss)):
             f.write(str(self.loss[i]))
-            f.write(" ")
-            f.write(str(self.val_loss[i]))
             f.write("\n")
         self.loss=[]
         self.val_loss=[]
-        f.close()    
+        f.close()      
         
-        plotBatchLoss(self.outputDir+'/batch_losses.log',self.outputDir+'/batch_losses.pdf',[])
+        
+    def on_epoch_end(self,epoch,logs={}):
+        self.plot()
+        self.save()
+        
+    def on_epoch_begin(self, epoch, logs=None):
+        self.read()
+        if len(self.loss):
+            self.plot()
         
 class newline_callbacks_end(Callback):
     def on_epoch_end(self,epoch, logs={}):

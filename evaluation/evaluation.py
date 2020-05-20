@@ -376,7 +376,7 @@ def plotBatchLoss(infilename,outfilename,range):
     plt.xlabel('batch')
     plt.legend()
     plt.ylim([0,6.2])
-    plt.show()
+    #plt.show()
     plt.savefig(outfilename) #why does this crash?
     plt.close()
     
