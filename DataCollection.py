@@ -35,15 +35,15 @@ class DataCollection(object):
         self.gen = None
         self.__batchsize=1
         self.optionsdict={}
+        self.weighterobjects={}
+        self.batch_mode = False
+        self.nprocs=-1
         
         if infile:
             self.readFromFile(infile)
             if not len(self.samples):
                 raise Exception("no valid datacollection found in "+infile)
             
-        self.weighterobjects={}
-        self.batch_mode = False
-        self.nprocs=-1
     
     def setDataClass(self, dataclass):
         self.dataclass = dataclass
