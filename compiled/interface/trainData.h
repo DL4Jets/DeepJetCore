@@ -454,6 +454,7 @@ void trainData<T>::clear() {
     feature_arrays_.clear();
     truth_arrays_.clear();
     weight_arrays_.clear();
+    updateShapes();
 }
 
 template<class T>
