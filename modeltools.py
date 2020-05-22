@@ -20,9 +20,11 @@ def printLayerInfosAndWeights(model, noweights=False):
 
 
 def fixLayersContaining(m, fixOnlyContaining, invert=False):
-    isseq=(not hasattr(fixOnlyContaining, "strip") and
-            hasattr(fixOnlyContaining, "__getitem__") or
-            hasattr(fixOnlyContaining, "__iter__"))
+    import collections.abc
+    if isinstance(fixOnlyContaining, collections.abc.Sequence) and not isinstance(fixOnlyContaining, str):
+        isseq=True
+    else:
+        isseq=False
     if not isseq:
         fixOnlyContaining=[fixOnlyContaining]
     if invert:
@@ -34,7 +36,7 @@ def fixLayersContaining(m, fixOnlyContaining, invert=False):
                     m.get_layer(index=layidx).trainable=True
     else:
         for layidx in range(len(m.layers)):
-            for ident in fixOnlyContaining:
+            for ident in fixOnlyContaining:    
                 if len(ident) and ident in m.get_layer(index=layidx).name:
                     m.get_layer(index=layidx).trainable=False
     return m
