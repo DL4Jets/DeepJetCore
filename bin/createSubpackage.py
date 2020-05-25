@@ -186,7 +186,7 @@ model,history = train.trainModel(nepochs=10,
                                  checkperiod=1, # saves a checkpoint model every N epochs
                                  verbose=1)
                                  
-print('Since the training is done, use the predict.py script to predict the model output on you test sample, e.g.: predict.py <training output>/KERAS_model.h5 <training output>/trainsamples.djcdc <path to data>/test.txt <output dir>')
+print('Since the training is done, use the predict.py script to predict the model output on your test sample, e.g.: predict.py <training output>/KERAS_model.h5 <training output>/trainsamples.djcdc <path to data>/test.txt <output dir>')
 '''
         
 datastructures_init = '''

@@ -20,10 +20,10 @@ from DeepJetCore.DataCollection import DataCollection
 from DeepJetCore.conversion.conversion import class_options
 
 parser = ArgumentParser('program to convert source files to traindata format')
-parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
+parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE", default='')
 parser.add_argument("--inRange", nargs=2, type=int, help="Input line numbers")
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
-parser.add_argument("-o",  help="set output path", metavar="PATH")
+parser.add_argument("-o",  help="set output path", metavar="PATH", default='')
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
 parser.add_argument("-n", default='', help="(optional) number of child processes")
@@ -42,6 +42,9 @@ parser.add_argument("--testdata", action='store_true', help='convert as test dat
 args=parser.parse_args()
 infile=args.i
 outPath=args.o
+if len(infile)<1 or len(outfile)<1:
+    parser.print_help()
+    exit()
 class_name=args.c    
 recover=args.r
 usemeansfrom=args.usemeansfrom
