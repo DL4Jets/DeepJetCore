@@ -189,7 +189,7 @@ class batch_callback_begin(Callback):
         
         import os
         blossfile=os.path.join( self.outputDir, 'batch_losses.log')
-        f = open(blossfile, 'a')
+        f = open(blossfile, 'w')
         for i in range(len(self.loss)):
             f.write(str(self.loss[i]))
             f.write("\n")
