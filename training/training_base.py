@@ -223,6 +223,7 @@ class training_base(object):
 							 if os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5') else \
 							 self.outputDir+'/KERAS_model.h5'
             if os.path.isfile(kfile):
+                print(kfile)
                 self.loadModel(kfile)
                 self.trainedepoches=0
                 if os.path.isfile(self.outputDir+'losses.log'):
@@ -388,6 +389,7 @@ class training_base(object):
                    additional_plots=None,
                    additional_callbacks=None,
                    load_in_mem = False,
+                   max_files = -1,
                    plot_batch_loss = False,
                    **trainargs):
         
@@ -426,52 +428,64 @@ class training_base(object):
         
         print('starting training')
         if load_in_mem:
-            raise Exception('to be re-implemented later!')
-        #else:
-        
-        #prepare generator 
-        
-        print("setting up generator... can take a while")
-        self.train_data.invokeGenerator()
-        self.val_data.invokeGenerator()
-        #this is fixed
-        nbatches_val = self.val_data.generator.getNBatches()
-
-        #self.train_data.generator.debug=True
-        #self.train_data.generator.shuffleFilelist()
-        #self.train_data.generator.debug=False
-        while(self.trainedepoches < nepochs):
-           
-            #this can change from epoch to epoch
-            #calculate steps for this epoch
-            #feed info below
-            self.train_data.generator.prepareNextEpoch()
-            self.val_data.generator.prepareNextEpoch()
-            nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
-            
-            print('>>>>Epoch', self.trainedepoches,"/",nepochs)
-            print('training batches: ',nbatches_train)
-            print('validation batches: ',nbatches_val)
-                
-            self.keras_model.fit(self.train_data.generatorFunction(), 
-                                 steps_per_epoch=nbatches_train,
-                                 epochs=self.trainedepoches + 1,
-                                 initial_epoch=self.trainedepoches,
+            print('make features')
+            X_train = self.train_data.getAllFeatures(nfiles=max_files)
+            X_test = self.val_data.getAllFeatures(nfiles=max_files)
+            print('make truth')
+            Y_train = self.train_data.getAllLabels(nfiles=max_files)
+            Y_test = self.val_data.getAllLabels(nfiles=max_files)
+            self.keras_model.fit(X_train, Y_train, batch_size=batchsize, epochs=nepochs,
                                  callbacks=self.callbacks.callbacks,
-                                 validation_data=self.val_data.generatorFunction(),
-                                 validation_steps=nbatches_val,
+                                 validation_data=(X_test, Y_test),
                                  max_queue_size=1,
                                  use_multiprocessing=False,
-                                 workers=0,
-                                 **trainargs
-                                 )
-            self.trainedepoches += 1
-            self.train_data.generator.shuffleFilelist()
-            #
+                                 workers=0,    
+                                 **trainargs)
+        else:
         
-        self.saveModel("KERAS_model.h5")
-        del self.train_data.generator
-        del self.val_data.generator
+            #prepare generator 
+        
+            print("setting up generator... can take a while")
+            self.train_data.invokeGenerator()
+            self.val_data.invokeGenerator()
+            #this is fixed
+            nbatches_val = self.val_data.generator.getNBatches()
+
+            #self.train_data.generator.debug=True
+            #self.train_data.generator.shuffleFilelist()
+            #self.train_data.generator.debug=False
+            while(self.trainedepoches < nepochs):
+           
+                #this can change from epoch to epoch
+                #calculate steps for this epoch
+                #feed info below
+                self.train_data.generator.prepareNextEpoch()
+                self.val_data.generator.prepareNextEpoch()
+                nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
+            
+                print('>>>>Epoch', self.trainedepoches,"/",nepochs)
+                print('training batches: ',nbatches_train)
+                print('validation batches: ',nbatches_val)
+                
+                self.keras_model.fit(self.train_data.generatorFunction(), 
+                                     steps_per_epoch=nbatches_train,
+                                     epochs=self.trainedepoches + 1,
+                                     initial_epoch=self.trainedepoches,
+                                     callbacks=self.callbacks.callbacks,
+                                     validation_data=self.val_data.generatorFunction(),
+                                     validation_steps=nbatches_val,
+                                     max_queue_size=1,
+                                     use_multiprocessing=False,
+                                     workers=0,
+                                     **trainargs
+                )
+                self.trainedepoches += 1
+                self.train_data.generator.shuffleFilelist()
+                #
+        
+            self.saveModel("KERAS_model.h5")
+            del self.train_data.generator
+            del self.val_data.generator
         return self.keras_model, self.callbacks.history
     
     
