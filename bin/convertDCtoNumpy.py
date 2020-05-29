@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 parser = ArgumentParser('convert a data collection to a single set of numpy arrays. Warning, this can produce a large output')
 parser.add_argument('inputDataCollection')
 parser.add_argument('outputFilePrefix')
+parser.add_argument("--nfiles",  help="select number of files to be converted, default is every file", type=int, default=-1)
 args = parser.parse_args()
 
 
@@ -15,15 +16,15 @@ print('reading data collection')
 
 dc=DataCollection()
 dc.readFromFile(args.inputDataCollection)
-
+nfiles = args.nfiles
 print('producing feature array')
-feat=dc.getAllFeatures()
+feat=dc.getAllFeatures(nfiles=nfiles)
 
 print('producing truth array')
-truth=dc.getAllLabels()
+truth=dc.getAllLabels(nfiles=nfiles)
 
 print('producing weight array')
-weight=dc.getAllWeights()
+weight=dc.getAllWeights(nfiles=nfiles)
 
 
 from numpy import save
