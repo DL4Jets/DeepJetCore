@@ -295,7 +295,15 @@ class DataCollection(object):
         self.__writeData_async_andCollect(finishedsamples,outputDir)
         self.writeToFile(outputDir+'/dataCollection.djcdc')
         
+    def getAllLabels(self,nfiles=-1):
+        return self.extract_features(self.dataclass,'y',nfiles)
     
+    def getAllFeatures(self,nfiles=-1):
+        return self.extract_features(self.dataclass,'x',nfiles)
+    
+    def getAllWeights(self,nfiles=-1):
+        return self.extract_features(self.dataclass,'w',nfiles)
+        
     def createDataFromRoot(
                     self, dataclass, outputDir, 
                     redo_meansandweights=True, means_only=False, dir_check=True
@@ -520,14 +528,44 @@ class DataCollection(object):
         if samplefile[0] == '/':
             return samplefile
         return self.dataDir+'/'+samplefile
-    
+
+    def extract_features(self, dataclass, selector,nfiles):
+        import numpy as np
+        td=self.dataclass()
+        firstcall=True
+        count = 0
+        for sample in self.samples:
+            count+=1;
+            td.readFromFile(self.getSamplePath(sample))
+            #make this generic
+            thislist=[]
+            if selector == 'x':
+                thislist=td.transferFeatureListToNumpy()
+            if selector == 'y':
+                thislist=td.transferTruthListToNumpy()
+            if selector == 'w':
+                thislist=td.transferWeightListToNumpy()
+            if firstcall:
+                out=thislist
+                firstcall=False
+            else:
+                for i in range(0,len(thislist)):
+                    if len(thislist[i].shape) > 1:
+                        out[i] = np.vstack( (out[i], thislist[i] ) )
+                    else:
+                        out[i] = np.append(out[i],thislist[i])
+            if nfiles > 0:
+                if count > nfiles:
+                    break
+        return out
+                    
     def __stackData(self, dataclass, selector):
         td=self.dataclass()
         out=[]
         firstcall=True
         for sample in self.samples:
             td2 = self.dataclass()
-            td2.readIn(self.getSamplePath(sample))
+            td2.readFromFile(self.getSamplePath(sample))
             td.append(td2)
         return td
     
@@ -552,7 +590,6 @@ class DataCollection(object):
             out = (xout,yout)
             if len(wout)>0:
                 out = (xout,yout,wout)
-
             yield out
             
         
