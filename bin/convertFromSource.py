@@ -43,7 +43,7 @@ parser.add_argument("-q", action='store_true', help='quiet')
 args=parser.parse_args()
 infile=args.i
 outPath=args.o
-if len(infile)<1 or len(outfile)<1:
+if len(infile)<1 or len(outPath)<1:
     parser.print_help()
     exit()
 class_name=args.c    
