@@ -26,12 +26,13 @@ parser.add_argument("-c",  choices = class_options.keys(), help="set output clas
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
 parser.add_argument("--testdata", action='store_true', help='convert as test data')
 parser.add_argument("-n", default='', help="(optional) number of child processes")
+parser.add_argument("--nothreads", action='store_true', help='only spawn one process')
 parser.add_argument("--checkFiles", action='store_true', help="enables file checking (requires fileIsValid function of TrainData to be defined)")
 parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
+parser.add_argument("--useweightersfrom", default='', help='(for test data or batching) use weighter objects from a different data collection')
+
 
 parser.add_argument("--inRange", nargs=2, type=int, help="(for batching) input line numbers")
-parser.add_argument("--usemeansfrom", default='', help='(for batching)')
-parser.add_argument("--nothreads", action='store_true')
 parser.add_argument("--means", action='store_true', help='(for batching) compute only means')
 parser.add_argument("--nforweighter", default='500000', help='set number of samples to be used for weighter object creation')
 parser.add_argument("--batch", help='(for batching) provide a batch ID to be used')
@@ -48,18 +49,15 @@ if len(infile)<1 or len(outPath)<1:
     exit()
 class_name=args.c    
 recover=args.r
-usemeansfrom=args.usemeansfrom
+useweightersfrom=args.useweightersfrom
 nchilds=args.n
 dofilecheck=args.checkFiles
 testdata = args.testdata
 
 #fileIsValid
 
-if args.batch and not (args.usemeansfrom or args.testdatafor):
-    raise ValueError(
-        'When running in batch mode you should also '
-        'provide a means source through the --usemeansfrom option'
-        )
+if args.batch:
+    raise ValueError('batching not implemented at the moment.')
 
 if args.v:
     logging.getLogger().setLevel(logging.DEBUG)
@@ -126,7 +124,7 @@ else:
     logging.info('Start conversion')
     dc.convertListOfRootFiles(
         infile, traind, outPath, 
-        takeweightersfrom=usemeansfrom,
+        takeweightersfrom=useweightersfrom,
         output_name=(args.batch if args.batch else 'dataCollection.djcdc'),
         relpath=relpath,
         checkfiles=dofilecheck

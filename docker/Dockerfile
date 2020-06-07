@@ -53,7 +53,8 @@ ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 
 # helpers for ragged and cuda compilation
 
-
+# for kenneth
+RUN apt-get install -y vim
 
 # The fix for TensorFlow
 

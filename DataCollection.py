@@ -592,5 +592,6 @@ class DataCollection(object):
                 out = (xout,yout,wout)
             yield out
             
+        raise Exception("DataCollection.generatorFunction: generator ran out of samples. This should not have happened, please report bug.")
         
     

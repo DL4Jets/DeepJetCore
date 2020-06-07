@@ -467,10 +467,10 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
                 buffer_store.append(buffer_read);
             }
             else{ //was used completely
-                buffer_store = std::move(buffer_read);
+                buffer_store = buffer_read;//std::move(buffer_read); //possible opt. implement move for trainData fully
             }
         else //first one
-            buffer_store = std::move(buffer_read);
+            buffer_store = buffer_read;//std::move(buffer_read);
 
         buffer_read.clear();
         bufferelements = buffer_store.nElements();

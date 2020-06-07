@@ -449,11 +449,8 @@ class training_base(object):
             self.train_data.invokeGenerator()
             self.val_data.invokeGenerator()
             #this is fixed
-            nbatches_val = self.val_data.generator.getNBatches()
+            
 
-            #self.train_data.generator.debug=True
-            #self.train_data.generator.shuffleFilelist()
-            #self.train_data.generator.debug=False
             while(self.trainedepoches < nepochs):
            
                 #this can change from epoch to epoch
@@ -462,8 +459,9 @@ class training_base(object):
                 self.train_data.generator.prepareNextEpoch()
                 self.val_data.generator.prepareNextEpoch()
                 nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
+                nbatches_val = self.val_data.generator.getNBatches()
             
-                print('>>>>Epoch', self.trainedepoches,"/",nepochs)
+                print('>>>> epoch', self.trainedepoches,"/",nepochs)
                 print('training batches: ',nbatches_train)
                 print('validation batches: ',nbatches_val)
                 

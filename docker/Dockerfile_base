@@ -76,6 +76,7 @@ EXPOSE 8888
 
 #for singularity panic
 RUN adduser  --disabled-password --gecos ""  dummyuser
+RUN apt-get install -y vim
 
 
 
