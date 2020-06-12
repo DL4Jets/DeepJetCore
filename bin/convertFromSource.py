@@ -104,9 +104,9 @@ if args.batch is not None:
 traind=None
 if class_name in class_options:
     traind = class_options[class_name]
-elif not recover and not testdatafor:
+elif not recover:
     print('available classes:')
-    for key, val in class_options.iteritems():
+    for key, val in class_options.items():
         print(key)
     raise Exception('wrong class selection')
 

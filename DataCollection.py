@@ -578,6 +578,9 @@ class DataCollection(object):
     
     def generatorFunction(self):
         
+        if self.generator.isEmpty():
+            raise Exception("DataCollection.generatorFunction: generator called with insufficient samples.")
+        
         while(not self.generator.isEmpty()):
 
             data = self.generator.getBatch()
@@ -592,6 +595,6 @@ class DataCollection(object):
                 out = (xout,yout,wout)
             yield out
             
-        raise Exception("DataCollection.generatorFunction: generator ran out of samples. This should not have happened, please report bug.")
+        
         
     
