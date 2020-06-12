@@ -22,7 +22,7 @@ class TrainDataGenerator(trainDataGenerator):
                     out = (xout,yout,wout)
                 yield out
             except Exception as e:
-                print("TrainDataGenerator: an exception was raised in batch",b,":", e)
+                print("TrainDataGenerator: an exception was raised in batch",b," out of ", self.getNBatches(),', expection: ', e)
                 raise e
             
     
