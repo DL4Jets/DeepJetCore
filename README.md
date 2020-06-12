@@ -136,6 +136,7 @@ gen.prepareNextEpoch()
 
 # this number can differ from epoch to epoch for ragged data!
 nbatches = gen.getNBatches()
+generator=gen.feedNumpyData()
 
 for b in range(nbatches):
     
@@ -144,7 +145,7 @@ for b in range(nbatches):
         raise Exception("ran out of data") 
     
     # weights are optional, each of these is a list of numpy arrays
-    features_list, truth_list,  weight_list = gen.feedNumpyData()
+    features_list, truth_list,  weight_list = next(generator)
     
     # do your training
     
