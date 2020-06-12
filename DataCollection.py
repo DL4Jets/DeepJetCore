@@ -6,7 +6,7 @@ Created on 21 Feb 2017
 
 
 from DeepJetCore.TrainData import TrainData
-from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+from DeepJetCore.dataPipeline import TrainDataGenerator
 import tensorflow as tf
 import tempfile
 import pickle
@@ -570,30 +570,12 @@ class DataCollection(object):
         return td
     
     def invokeGenerator(self):
-        self.generator = trainDataGenerator()
-        self.generator.setBatchSize(self.__batchsize)
-        self.generator.setSquaredElementsLimit(self.batch_uses_sum_of_squares)
-        self.generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
-        
+        generator = TrainDataGenerator()
+        generator.setBatchSize(self.__batchsize)
+        generator.setSquaredElementsLimit(self.batch_uses_sum_of_squares)
+        generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
+        return generator
     
-    def generatorFunction(self):
-        
-        if self.generator.isEmpty():
-            raise Exception("DataCollection.generatorFunction: generator called with insufficient samples.")
-        
-        while(not self.generator.isEmpty()):
-
-            data = self.generator.getBatch()
-            
-            #print("batch size ", data.nElements())
-            xout = data.transferFeatureListToNumpy()
-            wout = data.transferWeightListToNumpy()
-            yout = data.transferTruthListToNumpy()
-        
-            out = (xout,yout)
-            if len(wout)>0:
-                out = (xout,yout,wout)
-            yield out
             
         
         

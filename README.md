@@ -127,28 +127,24 @@ train_data.setBatchSize(100)
 
 # prepare the generator
 
-train_data.invokeGenerator()
+gen = train_data.invokeGenerator()
 
 # loop over epochs here ...
 
-train_data.generator.shuffleFilelist()
-train_data.generator.prepareNextEpoch()
+gen.shuffleFilelist()
+gen.prepareNextEpoch()
 
 # this number can differ from epoch to epoch for ragged data!
-nbatches = train_data.generator.getNBatches()
+nbatches = gen.getNBatches()
 
 for b in range(nbatches):
     
     #should not happen unless files are broken (will give additional errors)
-    if train_data.generator.isEmpty():
+    if gen.isEmpty():
         raise Exception("ran out of data") 
     
-    # this returns a TrainData object.
-    data = train_data.generator.getBatch()
-    
-    features_list = data.transferFeatureListToNumpy()
-    truth_list = data.transferTruthListToNumpy()
-    weight_list = data.transferWeightListToNumpy() #optional
+    # weights are optional, each of these is a list of numpy arrays
+    features_list, truth_list,  weight_list = gen.feedNumpyData()
     
     # do your training
     

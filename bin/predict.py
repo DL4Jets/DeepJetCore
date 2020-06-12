@@ -19,7 +19,7 @@ batchsize = int(args.b)
 
 import imp
 from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+from DeepJetCore.dataPipeline import TrainDataGenerator
 import tempfile
 import atexit
 import os
@@ -60,7 +60,7 @@ with open(args.inputSourceFileList, "r") as f:
         
 
         print('predicting ',inputfile)
-        gen = trainDataGenerator()
+        gen = TrainDataGenerator()
         if batchsize < 1:
             batchsize = dc.getBatchSize()
         print('batch size',batchsize)
@@ -69,12 +69,7 @@ with open(args.inputSourceFileList, "r") as f:
         gen.setSkipTooLargeBatches(False)
         gen.setBuffer(td)
         
-        def genfunc():
-            while(not gen.isEmpty()):
-                d = gen.getBatch()
-                yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
-                
-        predicted = model.predict_generator(genfunc(),
+        predicted = model.predict_generator(gen.feedNumpyData(),
                                             steps=gen.getNBatches(),
                                             max_queue_size=1,
                                             use_multiprocessing=False,verbose=1)

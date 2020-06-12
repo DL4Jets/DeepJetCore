@@ -352,7 +352,7 @@ class DeepJet_callbacks(object):
         
         
 from DeepJetCore.TrainData import TrainData
-from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+from DeepJetCore.dataPipeline import TrainDataGenerator
 
 class PredictCallback(Callback):
     
@@ -387,7 +387,7 @@ class PredictCallback(Callback):
             
         self.batchsize = 1    
         self.td = td
-        self.gen = trainDataGenerator()
+        self.gen = TrainDataGenerator()
         self.gen.setBatchSize(batchsize)
         self.gen.setSkipTooLargeBatches(False)
 
@@ -398,12 +398,8 @@ class PredictCallback(Callback):
     def predict_and_call(self,counter):
         
         self.gen.setBuffer(self.td)
-        def genfunc():
-            while(not self.gen.isEmpty()):
-                d = self.gen.getBatch()
-                yield d.transferFeatureListToNumpy() , d.transferTruthListToNumpy()
         
-        predicted = self.model.predict_generator(genfunc(),
+        predicted = self.model.predict_generator(self.gen.feedNumpyData(),
                                             steps=self.gen.getNBatches(),
                                             max_queue_size=1,
                                             use_multiprocessing=False,

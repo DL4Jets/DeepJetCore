@@ -446,8 +446,8 @@ class training_base(object):
             #prepare generator 
         
             print("setting up generator... can take a while")
-            self.train_data.invokeGenerator()
-            self.val_data.invokeGenerator()
+            traingen = self.train_data.invokeGenerator()
+            valgen = self.val_data.invokeGenerator()
             #this is fixed
             
 
@@ -456,21 +456,21 @@ class training_base(object):
                 #this can change from epoch to epoch
                 #calculate steps for this epoch
                 #feed info below
-                self.train_data.generator.prepareNextEpoch()
-                self.val_data.generator.prepareNextEpoch()
-                nbatches_train = self.train_data.generator.getNBatches() #might have changed due to shuffeling
-                nbatches_val = self.val_data.generator.getNBatches()
+                traingen.prepareNextEpoch()
+                valgen.prepareNextEpoch()
+                nbatches_train = traingen.getNBatches() #might have changed due to shuffeling
+                nbatches_val = valgen.getNBatches()
             
                 print('>>>> epoch', self.trainedepoches,"/",nepochs)
                 print('training batches: ',nbatches_train)
                 print('validation batches: ',nbatches_val)
                 
-                self.keras_model.fit(self.train_data.generatorFunction(), 
+                self.keras_model.fit(traingen.feedNumpyData(), 
                                      steps_per_epoch=nbatches_train,
                                      epochs=self.trainedepoches + 1,
                                      initial_epoch=self.trainedepoches,
                                      callbacks=self.callbacks.callbacks,
-                                     validation_data=self.val_data.generatorFunction(),
+                                     validation_data=valgen.feedNumpyData(),
                                      validation_steps=nbatches_val,
                                      max_queue_size=1,
                                      use_multiprocessing=False,
@@ -478,12 +478,11 @@ class training_base(object):
                                      **trainargs
                 )
                 self.trainedepoches += 1
-                self.train_data.generator.shuffleFilelist()
+                traingen.shuffleFilelist()
                 #
         
             self.saveModel("KERAS_model.h5")
-            del self.train_data.generator
-            del self.val_data.generator
+
         return self.keras_model, self.callbacks.history
     
     
