@@ -10,7 +10,32 @@ This package provides the basic functions for out-of-memory training, resampling
 For simple use cases, only two files need to be adapted: the actual training data structures, describing how to fill numpy arrays from root trees, and the DNN model itself. Both must be defined in an additional user package. 
 Please refer to the Section 'Usage' for more information.
 
-**If you use DeepJetCore or the containers, please mention it in (internal) documentation and talks :)**
+**If you use DeepJetCore or the containers, please mention it in (internal) documentation and talks and cite the zenodo entry:**
+
+```
+@software{kieseler_jan_2020_3670882,
+  author       = {Kieseler, Jan and
+                  Stoye, Markus and
+                  Verzetti, Mauro and
+                  Silva, Pedro and
+                  MEHTA, Swapneel Sundeep and
+                  Stakia, Anna and
+                  IIYAMA, Yutaro and
+                  Bols, Emil and
+                  QASIM, Shah Rukh and
+                  KIRSCHENMANN, Henning and
+                  Qu, Huilin and
+                  Rieger, Marcel and
+                  Gouskos, Loukas},
+  title        = {DeepJetCore},
+  month        = feb,
+  year         = 2020,
+  publisher    = {Zenodo},
+  version      = {2.0},
+  doi          = {10.5281/zenodo.3670882},
+  url          = {https://doi.org/10.5281/zenodo.3670882}
+}
+```
 
 
 Setup
