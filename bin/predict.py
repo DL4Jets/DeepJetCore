@@ -28,6 +28,26 @@ from keras import backend as K
 from DeepJetCore.customObjects import get_custom_objects
 from DeepJetCore.training.gpuTools import DJCSetGPUs
 
+inputdatafiles=[]
+inputdir=None
+
+## prepare input lists for different file formats
+
+if args.inputSourceFileList[-6:] == ".djcdc":
+    print('reading from data collection',args.inputSourceFileList)
+    predsamples = DataCollection(args.inputSourceFileList)
+    inputdir = predsamples.dataDir
+    for s in predsamples.samples:
+        inputdatafiles.append(s)
+        
+else:
+    print('reading from text file',args.inputSourceFileList)
+    inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
+    with open(args.inputSourceFileList, "r") as f:
+        for s in f:
+            inputdatafiles.append(s.replace('\n', '').replace(" ",""))
+        
+
 DJCSetGPUs(args.gpu)
 
 custom_objs = get_custom_objects()
@@ -36,58 +56,58 @@ model=load_model(args.inputModel, custom_objects=custom_objs)
 dc = DataCollection(args.trainingDataCollection)
 
 outputs = []
-inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
 os.system('mkdir -p '+args.outputDir)
 
-with open(args.inputSourceFileList, "r") as f:
-    for inputfile in f:
-        inputfile = inputfile.replace('\n', '')
-        use_inputdir = inputdir
-        if inputfile[0] == "/":
-            use_inputdir=""
-        outfilename = "pred_"+os.path.basename( inputfile )
-        
-        td = dc.dataclass()
 
-        if inputfile[-5:] == 'djctd':
-            if args.unbuffered:
-                td.readFromFile(use_inputdir+"/"+inputfile)
-            else:
-                td.readFromFileBuffered(use_inputdir+"/"+inputfile)
+for inputfile in inputdatafiles:
+    
+    print('predicting ',inputdir+"/"+inputfile)
+    
+    use_inputdir = inputdir
+    if inputfile[0] == "/":
+        use_inputdir=""
+    outfilename = "pred_"+os.path.basename( inputfile )
+    
+    td = dc.dataclass()
+
+    if inputfile[-5:] == 'djctd':
+        if args.unbuffered:
+            td.readFromFile(use_inputdir+"/"+inputfile)
         else:
-            print('converting '+inputfile)
-            td.readFromSourceFile(use_inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
-        
+            td.readFromFileBuffered(use_inputdir+"/"+inputfile)
+    else:
+        print('converting '+inputfile)
+        td.readFromSourceFile(use_inputdir+"/"+inputfile, dc.weighterobjects, istraining=False)
+    
 
-        print('predicting ',inputfile)
-        gen = TrainDataGenerator()
-        if batchsize < 1:
-            batchsize = dc.getBatchSize()
-        print('batch size',batchsize)
-        gen.setBatchSize(batchsize)
-        gen.setSquaredElementsLimit(dc.batch_uses_sum_of_squares)
-        gen.setSkipTooLargeBatches(False)
-        gen.setBuffer(td)
-        
-        predicted = model.predict_generator(gen.feedNumpyData(),
-                                            steps=gen.getNBatches(),
-                                            max_queue_size=1,
-                                            use_multiprocessing=False,verbose=1)
-        
-        
-        x = td.transferFeatureListToNumpy()
-        w = td.transferWeightListToNumpy()
-        y = td.transferTruthListToNumpy()
-        
-        td.clear()
-        gen.clear()
-        
-        if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
-            predicted = [predicted]   
-        td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, use_inputdir+"/"+inputfile)
-        
-        outputs.append(outfilename)
-        
+    gen = TrainDataGenerator()
+    if batchsize < 1:
+        batchsize = dc.getBatchSize()
+    print('batch size',batchsize)
+    gen.setBatchSize(batchsize)
+    gen.setSquaredElementsLimit(dc.batch_uses_sum_of_squares)
+    gen.setSkipTooLargeBatches(False)
+    gen.setBuffer(td)
+    
+    predicted = model.predict_generator(gen.feedNumpyData(),
+                                        steps=gen.getNBatches(),
+                                        max_queue_size=1,
+                                        use_multiprocessing=False,verbose=1)
+    
+    
+    x = td.transferFeatureListToNumpy()
+    w = td.transferWeightListToNumpy()
+    y = td.transferTruthListToNumpy()
+    
+    td.clear()
+    gen.clear()
+    
+    if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
+        predicted = [predicted]   
+    td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, use_inputdir+"/"+inputfile)
+    
+    outputs.append(outfilename)
+    
     
     
 with open(args.outputDir + "/outfiles.txt","w") as f:

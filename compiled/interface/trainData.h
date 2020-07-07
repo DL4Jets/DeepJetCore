@@ -359,6 +359,9 @@ void trainData<T>::priv_readFromFile(std::string filename, bool memcp){
     char *buf = 0;
     if(memcp){
         FILE *diskfile = ifile;
+        //check if exists before trying to memcp.
+        checkFile(ifile, filename); //not set at start but won't be used
+
         fseek(diskfile, 0, SEEK_END);
         size_t fsize = ftell(diskfile);
         fseek(diskfile, 0, SEEK_SET);  /* same as rewind(f); */
