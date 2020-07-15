@@ -81,7 +81,7 @@ def apply_weights_where_possible(target_model, weight_model):
                     layer_a.set_weights(layer_b.get_weights()) 
                 except:  
                     print('unable to copy weights for layer ',  layer_a.name)
-                    print(layer_a.weights,'\n',layer_b.weights)
+                    #print(layer_a.weights,'\n',layer_b.weights)
     
     
     return target_model

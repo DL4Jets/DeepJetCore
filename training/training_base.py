@@ -96,6 +96,7 @@ class training_base(object):
         parser.add_argument("--walltime",  help="sets the wall time for the batch job, format: 1d5h or 2d or 3h etc" , default='1d')
         parser.add_argument("--isbatchrun",   help="is batch run", default=False, action="store_true")
         parser.add_argument("--valdata",   help="set validation dataset (optional)", default="")
+        parser.add_argument("--takeweights",   help="Applies weights from the model given as relative or absolute path. Matches by names and skips layers that don't match.", default="")
         
         
         args = parser.parse_args()
@@ -140,6 +141,7 @@ class training_base(object):
         self.keras_inputsshapes=[]
         self.keras_model=None
         self.keras_model_method=args.modelMethod
+        self.keras_weight_model_path=args.takeweights
         self.train_data=None
         self.val_data=None
         self.startlearningrate=None
@@ -263,6 +265,10 @@ class training_base(object):
             self.keras_model.setInputShape(self.keras_inputs)
             self.keras_model.build(None)
             
+        if len(self.keras_weight_model_path):
+            from DeepJetCore.modeltools import apply_weights_where_possible, load_model
+            self.keras_model = apply_weights_where_possible(self.keras_model, 
+                                         load_model(self.keras_weight_model_path))
         #try:
         #    self.keras_model=model(self.keras_inputs,**modelargs)
         #except BaseException as e:
