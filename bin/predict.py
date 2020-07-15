@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 parser = ArgumentParser('Apply a model to a (test) source sample.')
 parser.add_argument('inputModel')
 parser.add_argument('trainingDataCollection', help="the training data collection. Used to infer data format and batch size.")
-parser.add_argument('inputSourceFileList', help="can be text or a DataCollection file in the same directory as the sample files.")
+parser.add_argument('inputSourceFileList', help="can be text file or a DataCollection file in the same directory as the sample files, or just a single traindata file.")
 parser.add_argument('outputDir', help="will be created if it doesn't exist.")
 parser.add_argument("-b", help="batch size, overrides the batch size from the training data collection.",default="-1")
 parser.add_argument("--gpu",  help="select specific GPU", metavar="OPT", default="")
@@ -40,6 +40,10 @@ if args.inputSourceFileList[-6:] == ".djcdc":
     for s in predsamples.samples:
         inputdatafiles.append(s)
         
+elif args.inputSourceFileList[-6:] == ".djctd":
+    inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
+    infile = os.path.basename(args.inputSourceFileList)
+    inputdatafiles.append(infile)
 else:
     print('reading from text file',args.inputSourceFileList)
     inputdir = os.path.abspath(os.path.dirname(args.inputSourceFileList))
