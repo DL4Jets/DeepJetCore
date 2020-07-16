@@ -184,7 +184,13 @@ class training_base(object):
         
         #copy configuration to output dir
         if not args.isbatchrun:
-            shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+            try:
+                shutil.copyfile(scriptname,self.outputDir+os.path.basename(scriptname))
+            except shutil.SameFileError:
+                pass
+            except BaseException as e:
+                raise e
+                
             self.copied_script = self.outputDir+os.path.basename(scriptname)
         else:
             self.copied_script = scriptname
