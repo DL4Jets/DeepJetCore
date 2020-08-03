@@ -6,6 +6,18 @@ import tensorflow as tf
 
 
 
+class StopGradient(Layer):
+    def __init__(self, **kwargs):
+        super(StopGradient, self).__init__(**kwargs)
+    
+    def compute_output_shape(self, input_shape):
+        return input_shape
+    
+    def call(self, inputs):
+        return tf.stop_gradient(inputs)
+
+djc_global_layers_list['StopGradient']=StopGradient   
+
 class SelectFeatures(Layer):
     def __init__(self, index_left, index_right, **kwargs):
         super(SelectFeatures, self).__init__(**kwargs)
