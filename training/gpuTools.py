@@ -6,9 +6,10 @@ def DJCSetGPUs(gpus_string: str =""):
         try:
             imp.find_module('setGPU')
             import setGPU
-        except Exception as e:
-            print('DeepJetCore.DJCSetGPU: no GPU specified and automatic setting impossible')
-            raise e
+        except :
+            print('No GPUs found, running on CPU')
+            #print('DeepJetCore.DJCSetGPU: no GPU specified and automatic setting impossible')
+            #raise e
     else:
         os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
         os.environ['CUDA_VISIBLE_DEVICES'] = gpus_string
