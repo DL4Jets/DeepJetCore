@@ -19,7 +19,6 @@ Created on 21 Mar 2017
 #
 #
 
-from __future__ import print_function
 
 colormap=[
     "#5e3c99",

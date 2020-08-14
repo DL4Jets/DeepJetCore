@@ -3,14 +3,15 @@ Created on 7 Apr 2017
 
 @author: jkiesele
 '''
-from __future__ import print_function
+
+import matplotlib
+matplotlib.use('Agg') 
+
 
 from .ReduceLROnPlateau import ReduceLROnPlateau
 from ..evaluation import plotLoss
 from ..evaluation import plotBatchLoss
 
-import matplotlib
-matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -86,24 +87,30 @@ class newline_callbacks_begin(Callback):
         f.write("\n")
         f.close()    
         learnfile=os.path.join( self.outputDir, 'learn.log')
-        with open(learnfile, 'a') as f:
-            f.write(str(float(K.get_value(self.model.optimizer.lr)))+'\n')
-        
-        lossfile=os.path.join( self.outputDir, 'full_info.log')
-        if os.path.isfile(lossfile):
-            with open(lossfile, 'r') as infile:
-                self.full_logs=json.load(infile)
+        try:
+            with open(learnfile, 'a') as f:
+                f.write(str(float(K.get_value(self.model.optimizer.lr)))+'\n')
             
-        normed = {}
-        for vv in logs:
-            normed[vv] = float(logs[vv])
-        self.full_logs.append(normed)
-        
-        with open(lossfile, 'w') as out:
-            out.write(json.dumps(self.full_logs))
+            lossfile=os.path.join( self.outputDir, 'full_info.log')
+            if os.path.isfile(lossfile):
+                with open(lossfile, 'r') as infile:
+                    self.full_logs=json.load(infile)
+                
+            normed = {}
+            for vv in logs:
+                normed[vv] = float(logs[vv])
+            self.full_logs.append(normed)
             
+            with open(lossfile, 'w') as out:
+                out.write(json.dumps(self.full_logs))
+        except:
+            pass
+                
         if self.plotLoss:
-            plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
+            try:
+                plotLoss(self.outputDir+'/losses.log',self.outputDir+'/losses.pdf',[])
+            except:
+                pass
 
 class batch_callback_begin(Callback):
 
