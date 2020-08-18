@@ -250,7 +250,7 @@ class training_base(object):
             del self.val_data
         
     def modelSet(self):
-        return not self.keras_model==None
+        return (not self.keras_model==None) and not len(self.keras_weight_model_path)
         
     def setDJCKerasModel(self,model,*args,**kwargs): 
         if len(self.keras_inputs)<1:
