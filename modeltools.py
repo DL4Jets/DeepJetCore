@@ -79,6 +79,7 @@ def apply_weights_where_possible(target_model, weight_model):
             if layer_a.name == layer_b.name:
                 try:
                     layer_a.set_weights(layer_b.get_weights()) 
+                    print('using weights from ',  layer_a.name)
                 except:  
                     print('unable to copy weights for layer ',  layer_a.name)
                     #print(layer_a.weights,'\n',layer_b.weights)
