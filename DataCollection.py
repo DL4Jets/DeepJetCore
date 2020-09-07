@@ -38,6 +38,7 @@ class DataCollection(object):
         self.weighterobjects={}
         self.batch_mode = False
         self.nprocs=-1
+        self.no_copy_on_convert=True
         
         if infile:
             self.readFromFile(infile)
