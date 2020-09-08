@@ -1,5 +1,5 @@
 
-FROM cernml4reco/djcbase:py3
+FROM cernml4reco/djcbase:latest
 
 
 
@@ -7,7 +7,7 @@ FROM cernml4reco/djcbase:py3
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.2.0 
+    pip3 --no-cache-dir install tensorflow-gpu==2.3.0
     
 
 #2.2.0-rc2   

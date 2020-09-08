@@ -64,11 +64,10 @@ RUN pip3 install gpustat setGPU
 
 ## torch/jupyter stuff 
 RUN pip3 install future gensim jupyter prompt-toolkit 
-RUN export CUDA="cu101" && \
-    pip3 install torch-scatter==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-1.4.0.html  && \
-    pip3 install torch-sparse==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-1.4.0.html  && \
-    pip3 install torch-cluster==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-1.4.0.html  && \
-    pip3 install torch-spline-conv==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-1.4.0.html  && \
+RUN pip3 install torch-scatter==latest+cu101 -f https://pytorch-geometric.com/whl/torch-1.6.0.html  && \
+    pip3 install torch-sparse==latest+cu101 -f https://pytorch-geometric.com/whl/torch-1.6.0.html  && \
+    pip3 install torch-cluster==latest+cu101 -f https://pytorch-geometric.com/whl/torch-1.6.0.html  && \
+    pip3 install torch-spline-conv==latest+cu101 -f https://pytorch-geometric.com/whl/torch-1.6.0.html  && \
     pip3 install torch-geometric
     
     
@@ -77,6 +76,10 @@ EXPOSE 8888
 #for singularity panic
 RUN adduser  --disabled-password --gecos ""  dummyuser
 RUN apt-get install -y vim
+
+#some tex things
+RUN apt install -y texlive ghostscript dvipng
+    
 
 
 
