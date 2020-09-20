@@ -1,5 +1,5 @@
 
-FROM cernml4reco/djcbase:py3
+FROM cernml4reco/djcbase:latest
 
 
 
@@ -7,21 +7,14 @@ FROM cernml4reco/djcbase:py3
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.1 
+    pip3 --no-cache-dir install tensorflow-gpu==2.3.0
     
 
-#2.1
-RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow_core/include/third_party && \
+
+RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
-    ln -s /usr/local/cuda cuda
-
-#2.2.0-rc1    
-#RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
-#    mkdir gpus && \
-#    cd gpus && \
-#    ln -s /usr/local/cuda cuda
-    
+    ln -s /usr/local/cuda cuda    
     
     
 ################################################################################
