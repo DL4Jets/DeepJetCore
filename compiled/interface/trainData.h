@@ -145,6 +145,7 @@ public:
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 
     boost::python::list getKerasFeatureShapes()const;
+    boost::python::list getKerasFeatureDTypes()const;
     // not needed boost::python::list getKerasTruthShapes()const;
     // not needed boost::python::list getKerasWeightShapes()const;
 
@@ -602,6 +603,25 @@ boost::python::list trainData<T>::getKerasFeatureShapes()const{
     }
     return out;
 }
+
+template<class T>
+boost::python::list trainData<T>::getKerasFeatureDTypes()const{
+    boost::python::list out;
+    for(const auto& a: feature_shapes_){
+        bool isragged=false;
+        for(size_t i=0;i<a.size();i++){
+            if(a.at(i)<0){
+                isragged=true;
+                break;
+            }
+        }
+        out.append("float32");//FIXME for real templated types!
+        if(isragged)
+            out.append("int64");
+    }
+    return out;
+}
+
 //template<class T>
 //boost::python::list trainData<T>::getKerasTruthShapes()const{
 //    boost::python::list out;

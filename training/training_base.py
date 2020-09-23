@@ -216,14 +216,23 @@ class training_base(object):
         
 
 
-        shapes=self.train_data.getKerasFeatureShapes()
+        shapes = self.train_data.getKerasFeatureShapes()
+        inputdtypes = self.train_data.getKerasFeatureDTypes()
+        inputnames=['input_'+str(i+1) for i in range(len(shapes))]
+
+        dataclass_instance = self.train_data.dataclass()
+        if hasattr(dataclass_instance, 'input_names'):
+            inputnames=dataclass_instance.input_names
+
         print("shapes", shapes)
+        print("inputdtypes", inputdtypes)
+        print("inputnames", inputnames)
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
-        
-        for s in shapes:
-            self.keras_inputs.append(keras.layers.Input(shape=s))
+        counter=0
+        for s,dt,n in zip(shapes,inputdtypes,inputnames):
+            self.keras_inputs.append(keras.layers.Input(shape=s, dtype=dt, name=n))
             self.keras_inputsshapes.append(s)
             
         if not isNewTraining:

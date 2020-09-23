@@ -125,6 +125,14 @@ class DataCollection(object):
         self._readShapesIfNeeded()
         return self.dataclass_instance.getKerasFeatureShapes()
     
+    def getKerasFeatureDTypes(self):
+        if len(self.samples)<1:
+            raise Exception("DataCollection.getKerasFeatureDTypes: no files")
+            return []
+        self._readShapesIfNeeded()
+        return self.dataclass_instance.getKerasFeatureDTypes()
+        
+    
     def getInputShapes(self):
         print('DataCollection:getInputShapes deprecated, use getKerasFeatureShapes ')
         return self.getKerasFeatureShapes()
