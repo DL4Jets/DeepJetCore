@@ -419,7 +419,7 @@ class training_base(object):
         # write only after the output classes have been added
         self._initTraining(nepochs,batchsize, batchsize_use_sum_of_squares)
         
-        #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
+        self.keras_model.save(self.outputDir+'KERAS_untrained_model.h5')
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks
         minTokenLifetime = 5

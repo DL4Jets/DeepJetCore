@@ -50,16 +50,16 @@ def set_trainable(m, patterns, value):
             m.get_layer(index=layidx).trainable = value
     return m
 
-def setAllTrainable(m):
+def setAllTrainable(m, val=True):
     for layidx in range(len(m.layers)):
-        m.get_layer(index=layidx).trainable = True
+        m.get_layer(index=layidx).trainable = val
     return m
 
 def loadModelAndFixLayers(filename,fixOnlyContaining):
     #import keras
     from keras.models import load_model
     
-    m=load_model(filename)
+    m=load_model(filename, custom_objects=custom_objs)
     
     fixLayersContaining(m, fixOnlyContaining)
                 
