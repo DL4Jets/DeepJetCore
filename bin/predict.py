@@ -57,7 +57,14 @@ DJCSetGPUs(args.gpu)
 custom_objs = get_custom_objects()
 
 model=load_model(args.inputModel, custom_objects=custom_objs)
-dc = DataCollection(args.trainingDataCollection)
+dc = None
+if args.inputSourceFileList[-6:] == ".djcdc" and not args.trainingDataCollection[-6:] == ".djcdc":
+    dc = DataCollection(args.inputSourceFileList)
+    if batchsize < 1:
+        batchsize = 1
+    print('No training data collection given. Using batch size of',batchsize)
+else:
+    dc = DataCollection(args.trainingDataCollection)
 
 outputs = []
 os.system('mkdir -p '+args.outputDir)
