@@ -60,9 +60,6 @@ public:
     void setFileList(const std::vector<std::string>& files){
         clear();
         orig_infiles_=files;
-        shuffle_indices_.resize(orig_infiles_.size());
-        for(size_t i=0;i<shuffle_indices_.size();i++)
-            shuffle_indices_[i]=i;
         readInfo();
     }
     void setBuffer(const trainData<T>&);
@@ -126,12 +123,15 @@ public:
 private:
     void readBuffer();
     void readInfo();
+    std::vector<int64_t> subShuffleRowSplits(const std::vector<int64_t>& thisrs,
+            const std::vector<size_t>& s_idx)const;
     void prepareSplitting();
     bool tdHasRaggedDimension(const trainData<T>& )const;
 
     trainData<T>  prepareBatch();
     std::vector<std::string> orig_infiles_;
     std::vector<size_t> shuffle_indices_;
+    std::vector<std::vector<size_t> > sub_shuffle_indices_;
     std::vector<std::vector<int64_t> > orig_rowsplits_;
     std::vector<size_t> splits_;
     std::vector<bool> usebatch_;
@@ -142,6 +142,7 @@ private:
     trainData<T> buffer_store, buffer_read;
     std::thread * readthread_;
     std::string nextread_;
+    size_t nextreadIdx_;
     size_t filecount_;
     size_t nbatches_;
     size_t npossiblebatches_;
@@ -156,7 +157,7 @@ private:
 
 template<class T>
 trainDataGenerator<T>::trainDataGenerator() :debuglevel(0),
-        randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), filecount_(0), nbatches_(
+        randomcount_(1), batchsize_(2),sqelementslimit_(false),skiplargebatches_(true), readthread_(0), nextreadIdx_(0), filecount_(0), nbatches_(
                 0), npossiblebatches_(0), ntotal_(0), nsamplesprocessed_(0),lastbatchsize_(0),filetimeout_(10),
                 batchcount_(0),lastbuffersplit_(0){
 }
@@ -178,6 +179,10 @@ void trainDataGenerator<T>::shuffleFilelist(){
     randomcount_++;
     std::shuffle(std::begin(shuffle_indices_),std::end(shuffle_indices_),g);
 
+    for(const auto i:shuffle_indices_)
+        std::shuffle(std::begin(sub_shuffle_indices_.at(i)),
+                std::end(sub_shuffle_indices_.at(i)),g);
+
     //redo splits etc
     prepareSplitting();
     batchcount_=0;
@@ -196,6 +201,10 @@ void trainDataGenerator<T>::setBuffer(const trainData<T>& td){
     if(rs.size())
         orig_rowsplits_.push_back(rs);
     shuffle_indices_.push_back(0);
+    std::vector<size_t> vec;
+    for(size_t i=0;i<td.nElements();i++)
+        vec.push_back(i);
+    sub_shuffle_indices_.push_back(vec);
     ntotal_ = td.nElements();
     buffer_store=td;
     lastbuffersplit_=0;
@@ -216,6 +225,7 @@ void trainDataGenerator<T>::readBuffer(){ //inject by file shuffle here
                 buffer_read.readFromFileBuffered(nextread_);
                 if(debuglevel>0)
                     std::cout << "reading file " << nextread_ << " done"<< std::endl;
+                buffer_read = buffer_read.shuffle(sub_shuffle_indices_.at(nextreadIdx_));
                 return;
             }
             catch(std::exception & e){ //if there are data glitches we don't want the whole training fail immediately
@@ -238,6 +248,11 @@ void trainDataGenerator<T>::readInfo(){
     ntotal_=0;
     bool hasRagged=false;
     bool firstfile=true;
+
+    shuffle_indices_.resize(orig_infiles_.size());
+    for(size_t i=0;i<shuffle_indices_.size();i++)
+        shuffle_indices_[i]=i;
+
     for(const auto& f: orig_infiles_){
         trainData<T> td;
 
@@ -245,6 +260,13 @@ void trainDataGenerator<T>::readInfo(){
         //first dimension is always Nelements. At least features are filled
         if(td.featureShapes().size()<1 || td.featureShapes().at(0).size()<1)
             throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);
+
+        //create sub_shuffle_idxs
+        std::vector<size_t> vec;
+        for(size_t i=0;i<td.nElements();i++){
+            vec.push_back(i);
+        }
+        sub_shuffle_indices_.push_back(vec);
 
         if(firstfile){
             hasRagged = tdHasRaggedDimension(td);
@@ -265,6 +287,19 @@ void trainDataGenerator<T>::readInfo(){
     prepareSplitting();
 }
 
+template<class T>
+std::vector<int64_t> trainDataGenerator<T>::subShuffleRowSplits(const std::vector<int64_t>& thisrs,
+        const std::vector<size_t>& s_idx)const{
+
+    auto nelems = simpleArray<T>::dataSplitToSplitIndices(thisrs);
+    auto snelems=nelems;
+    //shuffle
+    for(size_t si=0;si<s_idx.size();si++){
+        snelems.at(si) = nelems.at(s_idx.at(si));
+    }
+    return simpleArray<T>::splitToDataSplitIndices(snelems);
+
+}
 
 template<class T>
 void trainDataGenerator<T>::prepareSplitting(){
@@ -297,7 +332,10 @@ void trainDataGenerator<T>::prepareSplitting(){
 
     std::vector<int64_t> allrs;
     for(size_t i=0;i<orig_rowsplits_.size();i++){
-        const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i)); //inject by file shuffle here
+        auto shuffled_idx = shuffle_indices_.at(i);
+        auto thisrs = orig_rowsplits_.at(shuffled_idx); //inject by file shuffle here
+        thisrs = subShuffleRowSplits(thisrs, sub_shuffle_indices_.at(shuffled_idx));
+
         if(i==0 || allrs.size()==0){
             allrs=thisrs;}
         else{
@@ -388,7 +426,8 @@ void trainDataGenerator<T>::prepareNextEpoch(){
     batchcount_=0;
     lastbatchsize_=0;
     lastbuffersplit_=0;
-    nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
+    nextreadIdx_ = shuffle_indices_.at(filecount_);
+    nextread_ = orig_infiles_.at(nextreadIdx_);
     filecount_++;
     readthread_ = new std::thread(&trainDataGenerator<T>::readBuffer,this);
 
@@ -408,6 +447,7 @@ void trainDataGenerator<T>::clear(){
     end();
     orig_infiles_.clear();
     shuffle_indices_.clear();
+    sub_shuffle_indices_.clear();
     orig_rowsplits_.clear();
     splits_.clear();
     usebatch_.clear();
@@ -490,7 +530,8 @@ trainData<T>  trainDataGenerator<T>::prepareBatch(){
 
             }
 
-            nextread_ = orig_infiles_.at(shuffle_indices_.at(filecount_));
+            nextreadIdx_ = shuffle_indices_.at(filecount_);
+            nextread_ = orig_infiles_.at(nextreadIdx_);
 
             if(debuglevel>0)
                 std::cout << "start new read on file "<< nextread_ <<std::endl;

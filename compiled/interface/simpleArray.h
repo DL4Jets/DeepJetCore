@@ -602,7 +602,6 @@ simpleArray<T> simpleArray<T>::shuffle(const std::vector<size_t>& shuffle_idxs)c
         size_t source_splitpoint_start, source_splitpoint_end;
         getFlatSplitPoints(idx,idx+1,
                 source_splitpoint_start, source_splitpoint_end );
-std::cout << "source_splitpoint_start, source_splitpoint_end " << source_splitpoint_start <<" " << source_splitpoint_end << std::endl;//DEBUG
         size_t n_elements = source_splitpoint_end-source_splitpoint_start;
         memcpy(out.data_+next,
                 data_+source_splitpoint_start,n_elements  * sizeof(T));

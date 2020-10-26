@@ -5,7 +5,7 @@ import shutil
 
 class RaggedTester(object):
     def __init__(self, auto_create=0):
-        self.max_per_rs=3478
+        self.max_per_rs=534
         self.fill_freq=11
         self.fill_content=11
         self.data=np.zeros((0,1),dtype='float32')
@@ -14,20 +14,14 @@ class RaggedTester(object):
             self.data,self.rs = self.createData(auto_create)
 
     def createEvent(self,length: int):
-        a = np.zeros((length,1),dtype='float32')
-        for i in range(length//self.fill_freq - 1):
-            a[(i+1)*self.fill_freq,0] = self.fill_content
-        a[0]=1000
-        a[-1]=2000
+        a = np.arange(length,dtype='float32')
+        a = np.expand_dims(a,axis=1)
         return a
     
     def checkEvent(self,a):
-        boundary = a[0,0] == 1000 and a[-1,0] == 2000
-        internal=True
-        for i in range(len(a)//self.fill_freq -1):
-            if not a[(i+1)*self.fill_freq,0] == self.fill_content:
-                internal = False
-        return boundary and internal
+        checkarr = self.createEvent(len(a))
+        return np.all(checkarr==a)
+        
     
     
     def createData(self,ntotal):
@@ -41,11 +35,11 @@ class RaggedTester(object):
         return np.concatenate(data), np.array(row_splits,dtype='int64')
 
     def checkData(self,data,rs):
-        inputOk=True
         for i in range(len(rs)-1):
             ea=data[rs[i]:rs[i+1]]
-            inputOk = inputOk and self.checkEvent(ea)
-        return inputOk
+            if not self.checkEvent(ea):
+                return False
+        return True
  
 import tempfile 
 class TempFileList(object):
@@ -103,7 +97,7 @@ class TrainData_test(TrainData):
 
 class RaggedGeneratorTester(object):
     def __init__(self,
-                 n_files=20,
+                 n_files=5,
                  n_per_batch=2078,
                  ):
         
@@ -135,10 +129,15 @@ class RaggedGeneratorTester(object):
                 data,rs = d[0],d[1]
                 rs = np.array(rs[:,0],dtype='int')
                 rs = rs[:rs[-1]]
+                #print(data)
+                #print(rs[-1])
                 if not raggedtester.checkData(data, rs):
                     print('epoch',epoch, 'batch',b,'broken')
                     passed=False
                     break
+                if rs[-1] > self.n_per_batch:
+                    print('maximum batch size exceeded for batch ',b, 'epoch', epoch)
+                
             print('shuffling')
             gen.shuffleFilelist()
             

@@ -88,6 +88,8 @@ public:
     trainData<T> split(size_t splitindex);
     trainData<T> getSlice(size_t splitindex_begin, size_t splitindex_end)const;
 
+    trainData<T> shuffle(const std::vector<size_t>& shuffle_idxs)const;
+
     bool validSlice(size_t splitindex_begin, size_t splitindex_end)const ;
 
     /*
@@ -317,6 +319,22 @@ trainData<T> trainData<T>::getSlice(size_t splitindex_begin, size_t splitindex_e
 
     out.updateShapes();
     return out;
+}
+
+template<class T>
+trainData<T> trainData<T>::shuffle(const std::vector<size_t>& shuffle_idxs)const{
+    trainData<T> out;
+
+    for (const auto& a : feature_arrays_)
+        out.feature_arrays_.push_back(a.shuffle(shuffle_idxs));
+    for (const auto& a : truth_arrays_)
+        out.truth_arrays_.push_back(a.shuffle(shuffle_idxs));
+    for (const auto& a : weight_arrays_)
+        out.weight_arrays_.push_back(a.shuffle(shuffle_idxs));
+
+    out.updateShapes();
+    return out;
+
 }
 
 template<class T>
