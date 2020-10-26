@@ -1,5 +1,5 @@
 
-FROM cernml4reco/djcbase:latest
+FROM cernml4reco/djcbase:exp_cu11.1
 
 
 
@@ -7,10 +7,9 @@ FROM cernml4reco/djcbase:latest
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.3.0
+    pip3 --no-cache-dir install tensorflow-gpu==2.3.0 tensorflow_probability
     
 
-#2.2.0-rc2   
 RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \

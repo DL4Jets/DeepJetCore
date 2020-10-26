@@ -56,6 +56,9 @@ public:
     simpleArray(simpleArray<T> &&);
     simpleArray<T>& operator=(simpleArray<T> &&);
 
+    bool operator==(const simpleArray<T>& rhs)const;
+    bool operator!=(const simpleArray<T>& rhs)const { return !(*this == rhs); }
+
     void clear();
 
     //reshapes if possible, creates new else
@@ -134,11 +137,15 @@ public:
     size_t validSlices(std::vector<size_t> splits)const;
     bool validSlice(size_t splitindex_begin, size_t splitindex_end)const;
 
+
+    simpleArray<T> shuffle(const std::vector<size_t>& shuffle_idxs)const;
     /*
      * appends along first axis
      * Cann append to an empty array (same as copy)
      */
     void append(const simpleArray<T>& a);
+
+
 
     /* file IO here
      * format: non compressed header (already writing rowsplits!):
@@ -183,20 +190,28 @@ public:
 
     /**
      * Split indices can directly be used with the split() function.
-     * Returns e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
+     * Returns elements e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
      */
     static std::vector<size_t>  getSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
             bool sqelementslimit=false, bool strict_limit=true, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
     /**
      * Split indices can directly be used with the split() function.
-     * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
+     * Returns row splits e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
      */
     static std::vector<size_t>  getDataSplitIndices(const std::vector<int64_t> & rowsplits, size_t nelements_limit,
             bool sqelementslimit=false, bool strict_limit=true, std::vector<bool>& size_ok=std::vector<bool>(), std::vector<size_t>& nelemtns_per_split=std::vector<size_t>());
 
-    static std::vector<size_t>  dataSplitToSplitIndices(const std::vector<size_t>& data_splits);
-    static std::vector<size_t>  splitToDataSplitIndices(const std::vector<size_t>& data_splits);
+    /**
+     * Transforms row splits to n_elements per ragged sample
+     */
+    static std::vector<int64_t>  dataSplitToSplitIndices(const std::vector<int64_t>& row_splits);
+
+    /**
+     * Transforms n_elements per ragged sample to row splits
+     */
+    static std::vector<int64_t>  splitToDataSplitIndices(const std::vector<int64_t>& data_splits);
+
 
     static std::vector<int64_t> readRowSplitsFromFileP(FILE *& f, bool seeknext=true);
 
@@ -234,6 +249,9 @@ private:
     size_t flatindex(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
     std::vector<int64_t> padRowsplits()const;
+
+    void getFlatSplitPoints(size_t splitindex_begin, size_t splitindex_end,
+            size_t & splitpoint_start, size_t & splitpoint_end)const;
 
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
@@ -346,6 +364,24 @@ simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
     rowsplits_ = std::move(a.rowsplits_);
     a.rowsplits_= std::vector<int64_t>();
     return *this;
+}
+
+template<class T>
+bool simpleArray<T>::operator==(const simpleArray<T>& rhs)const{
+    if(this == &rhs)
+        return true;
+    if(size_!=rhs.size_)
+        return false;
+    if(shape_!=rhs.shape_)
+        return false;
+    if(rowsplits_!=rhs.rowsplits_)
+        return false;
+    //finally check data
+    for(size_t i=0;i<size_;i++){
+        if(data_[i]!=rhs.data_[i])
+            return false;
+    }
+    return true;
 }
 
 
@@ -496,22 +532,9 @@ simpleArray<T> simpleArray<T>::getSlice(size_t splitindex_begin, size_t splitind
     }
 
     //for arrays larger than 8/16(?) GB, size_t is crucial
-    size_t splitpoint_start = splitindex_begin;
-    size_t splitpoint_end = splitindex_end;
-    if(isRagged()){
-        splitpoint_start = rowsplits_.at(splitindex_begin);
-        splitpoint_end = rowsplits_.at(splitindex_end);
-        for (size_t i = 2; i < shape_.size(); i++){
-            splitpoint_start *= (size_t)std::abs(shape_.at(i));
-            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
-        }
-    }
-    else{
-        for (size_t i = 1; i < shape_.size(); i++){
-            splitpoint_start *= (size_t)std::abs(shape_.at(i));
-            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
-        }
-    }
+    size_t splitpoint_start, splitpoint_end;
+    getFlatSplitPoints(splitindex_begin,splitindex_end,
+            splitpoint_start, splitpoint_end );
 
     T * odata = new T[splitpoint_end-splitpoint_start];
     memcpy(odata, data_+splitpoint_start, (splitpoint_end-splitpoint_start) * sizeof(T));
@@ -558,6 +581,45 @@ bool simpleArray<T>::validSlice(size_t splitindex_begin, size_t splitindex_end)c
         return false;
     return true;
 }
+
+
+
+template<class T>
+simpleArray<T> simpleArray<T>::shuffle(const std::vector<size_t>& shuffle_idxs)const{
+    //check
+    bool isvalid = true;
+    for(const auto& idx: shuffle_idxs){
+        isvalid &= validSlice(idx,idx+1);
+    }
+    if(!isvalid)
+        throw std::runtime_error("simpleArray<T>::shuffle: indices not valid");
+
+    //copy data
+    auto out=*this;
+    size_t next=0;
+    for(const auto idx: shuffle_idxs){
+
+        size_t source_splitpoint_start, source_splitpoint_end;
+        getFlatSplitPoints(idx,idx+1,
+                source_splitpoint_start, source_splitpoint_end );
+std::cout << "source_splitpoint_start, source_splitpoint_end " << source_splitpoint_start <<" " << source_splitpoint_end << std::endl;//DEBUG
+        size_t n_elements = source_splitpoint_end-source_splitpoint_start;
+        memcpy(out.data_+next,
+                data_+source_splitpoint_start,n_elements  * sizeof(T));
+
+        next+=n_elements;
+    }
+    //recreate row splits
+    if(isRagged()){
+        auto nelems = dataSplitToSplitIndices(rowsplits_);
+        auto new_nelems=nelems;
+        for(size_t i=0;i<shuffle_idxs.size();i++)
+            new_nelems.at(i)=nelems.at(shuffle_idxs.at(i));
+        out.rowsplits_ = splitToDataSplitIndices(new_nelems);
+    }
+    return out;
+}
+
 
 /*
  * Merges along first axis
@@ -810,7 +872,7 @@ std::vector<size_t>  simpleArray<T>::getSplitIndices(const std::vector<int64_t> 
 
 /**
  * Split indices can directly be used with the split() function.
- * Returns e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
+ * Returns row splits e.g. {2,7,10,12} which corresponds to Split indices of {2,5,3,2}
  */
 
 template<class T>
@@ -819,14 +881,33 @@ std::vector<size_t>  simpleArray<T>::getDataSplitIndices(const std::vector<int64
     return priv_getSplitIndices(true, rowsplits, nelements_limit, sqelementslimit,  size_ok, nelemtns_per_split,strict_limit);
 }
 
+/**
+ * Transforms row splits to n_elements per ragged sample
+ */
 template<class T>
-std::vector<size_t>  simpleArray<T>::dataSplitToSplitIndices(const std::vector<size_t>& data_splits){
-    return std::vector<size_t>();
+std::vector<int64_t>  simpleArray<T>::dataSplitToSplitIndices(const std::vector<int64_t>& row_splits){
+    if(!row_splits.size())
+        throw std::runtime_error("simpleArray<T>::dataSplitToSplitIndices: row splits empty");
+    auto out = std::vector<int64_t>(row_splits.size()-1);
+    for(size_t i=0;i<out.size();i++){
+        out.at(i) = row_splits.at(i+1)-row_splits.at(i);
+    }
+    return out;
 }
 
+/**
+ * Transforms n_elements per ragged sample to row splits
+ */
 template<class T>
-std::vector<size_t>  simpleArray<T>::splitToDataSplitIndices(const std::vector<size_t>& data_splits){
-    return std::vector<size_t>();
+std::vector<int64_t>  simpleArray<T>::splitToDataSplitIndices(const std::vector<int64_t>& n_elements){
+    auto out = std::vector<int64_t>(n_elements.size()+1);
+    out.at(0)=0;
+    int64_t last=0;
+    for(size_t i=0;i<n_elements.size();i++){
+        out.at(i+1) = last + n_elements.at(i);
+        last = out.at(i+1);
+    }
+    return out;
 }
 
 
@@ -895,6 +976,26 @@ std::vector<int64_t> simpleArray<T>::splitRowSplits(std::vector<int64_t> & rowsp
     return out;
 }
 
+template<class T>
+void simpleArray<T>::getFlatSplitPoints(size_t splitindex_begin, size_t splitindex_end,
+        size_t & splitpoint_start, size_t & splitpoint_end)const{
+    splitpoint_start = splitindex_begin;
+    splitpoint_end = splitindex_end;
+    if(isRagged()){
+        splitpoint_start = rowsplits_.at(splitindex_begin);
+        splitpoint_end = rowsplits_.at(splitindex_end);
+        for (size_t i = 2; i < shape_.size(); i++){
+            splitpoint_start *= (size_t)std::abs(shape_.at(i));
+            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
+        }
+    }
+    else{
+        for (size_t i = 1; i < shape_.size(); i++){
+            splitpoint_start *= (size_t)std::abs(shape_.at(i));
+            splitpoint_end   *= (size_t)std::abs(shape_.at(i));
+        }
+    }
+}
 template<class T>
 void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
 

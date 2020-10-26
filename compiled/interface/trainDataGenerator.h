@@ -204,7 +204,7 @@ void trainDataGenerator<T>::setBuffer(const trainData<T>& td){
 }
 
 template<class T>
-void trainDataGenerator<T>::readBuffer(){
+void trainDataGenerator<T>::readBuffer(){ //inject by file shuffle here
     size_t ntries = 0;
     std::exception caught;
     while(ntries < filetimeout_){
@@ -297,7 +297,7 @@ void trainDataGenerator<T>::prepareSplitting(){
 
     std::vector<int64_t> allrs;
     for(size_t i=0;i<orig_rowsplits_.size();i++){
-        const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i));
+        const auto& thisrs = orig_rowsplits_.at(shuffle_indices_.at(i)); //inject by file shuffle here
         if(i==0 || allrs.size()==0){
             allrs=thisrs;}
         else{

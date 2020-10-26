@@ -27,7 +27,7 @@ void coutarray(const simpleArray<float> & farr){
 
 
 int main(){
-
+//#define igonrefownow
 #ifdef igonrefownow
 
     simpleArray<float> farr({5,2,1});

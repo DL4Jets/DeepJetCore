@@ -7,7 +7,7 @@ FROM cernml4reco/djcbase:latest
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.3.0
+    pip3 --no-cache-dir install tensorflow-gpu==2.3.0 tensorflow_probability
     
 
 

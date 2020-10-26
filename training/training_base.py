@@ -50,23 +50,9 @@ custom_objects_list.update(global_layers_list)
 custom_objects_list.update(global_metrics_list)
 
 ##helper
+import tensorflow as tf
 
-from keras.models import Model
-class ModelMGPU(Model):
-    def __init__(self, ser_model, gpus):
-        pmodel = multi_gpu_model(ser_model, gpus)
-        self.__dict__.update(pmodel.__dict__)
-        self._smodel = ser_model
 
-    def __getattribute__(self, attrname):
-        '''Override load save and predict methods to be used from the serial-model. The
-           serial-model holds references to the weights in the multi-gpu model.
-           '''
-        if 'load' in attrname or 'save' in attrname or 'predict' in attrname:
-            return getattr(self._smodel, attrname)
-        else:
-            #return Model.__getattribute__(self, attrname)
-            return super(ModelMGPU, self).__getattribute__(attrname)
 
 
 
@@ -133,9 +119,13 @@ class training_base(object):
         import keras
                 
         self.ngpus=1
+        self.dist_strat_scope=None
         if len(args.gpu):
             self.ngpus=len([i for i in args.gpu.split(',')])
             print('running on '+str(self.ngpus)+ ' gpus')
+            if self.ngpus > 1:
+                import tensorflow as tf
+                self.dist_strat_scope = tf.distribute.MirroredStrategy()
             
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
@@ -241,7 +231,12 @@ class training_base(object):
 							 self.outputDir+'/KERAS_model.h5'
             if os.path.isfile(kfile):
                 print(kfile)
-                self.loadModel(kfile)
+                
+                if self.dist_strat_scope is not None:
+                    with self.dist_strat_scope.scope():
+                        self.loadModel(kfile)
+                else:
+                    self.loadModel(kfile)
                 self.trainedepoches=0
                 if os.path.isfile(self.outputDir+'losses.log'):
                     for line in open(self.outputDir+'losses.log'):
@@ -275,7 +270,11 @@ class training_base(object):
     def setModel(self,model,**modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
-        self.keras_model=model(self.keras_inputs,**modelargs)
+        if self.dist_strat_scope is not None:
+            with self.dist_strat_scope.scope():
+                self.keras_model=model(self.keras_inputs,**modelargs)
+        else:
+            self.keras_model=model(self.keras_inputs,**modelargs)
         if hasattr(self.keras_model, "_is_djc_keras_model"): #compatibility
             self.keras_model.setInputShape(self.keras_inputs)
             self.keras_model.build(None)
@@ -323,7 +322,6 @@ class training_base(object):
 
         if self.ngpus>1 and not self.submitbatch:
             print('Model being compiled for '+str(self.ngpus)+' gpus')
-            self.keras_model = ModelMGPU(self.keras_model, gpus=self.ngpus)
             
         self.startlearningrate=learningrate
         
@@ -335,8 +333,12 @@ class training_base(object):
                 self.optimizer = Adam(lr=self.startlearningrate)
             
             
-         
-        self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
+        
+        if self.dist_strat_scope is not None:
+            with self.dist_strat_scope.scope():
+                self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
+        else:
+            self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
         if print_models:
             print(self.keras_model.summary())
         self.compiled=True
