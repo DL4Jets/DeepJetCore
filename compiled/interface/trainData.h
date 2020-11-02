@@ -155,6 +155,11 @@ public:
 
     boost::python::list getTruthRaggedFlags()const;
 
+
+    boost::python::list  featureList();
+    boost::python::list  truthList();
+    boost::python::list  weightList();
+
     //has ragged support
     boost::python::list transferFeatureListToNumpy();
 
@@ -682,6 +687,29 @@ boost::python::list trainData<T>::getTruthRaggedFlags()const{
         else
             out.append(false);
     }
+    return out;
+}
+
+
+template<class T>
+boost::python::list  trainData<T>::featureList(){
+    boost::python::list out;
+    for(auto &a: feature_arrays_)
+        out.append(a);
+    return out;
+}
+template<class T>
+boost::python::list  trainData<T>::truthList(){
+    boost::python::list out;
+    for(auto &a: truth_arrays_)
+        out.append(a);
+    return out;
+}
+template<class T>
+boost::python::list  trainData<T>::weightList(){
+    boost::python::list out;
+    for(auto &a: weight_arrays_)
+        out.append(a);
     return out;
 }
 

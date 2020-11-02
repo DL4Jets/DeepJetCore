@@ -19,13 +19,15 @@ BOOST_PYTHON_MODULE(c_trainData) {
     np::initialize();
     p::class_<trainData<float> >("trainData")
 
+
+
        .def("storeFeatureArray", &trainData<float>::storeFeatureArray)
        .def("storeTruthArray", &trainData<float>::storeTruthArray)
        .def("storeWeightArray", &trainData<float>::storeWeightArray)
 
-     //  .def("featureArray", &trainData<float>::featureArray)
-     //  .def("truthArray", &trainData<float>::truthArray)
-     //  .def("weightArray", &trainData<float>::weightArray)
+       .def("featureList", &trainData<float>::featureList)
+       .def("truthList", &trainData<float>::truthList)
+       .def("weightList", &trainData<float>::weightList)
 
        .def("nFeatureArrays", &trainData<float>::nFeatureArrays)
        .def("nTruthArrays", &trainData<float>::nTruthArrays)
