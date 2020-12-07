@@ -115,7 +115,7 @@ class TrainData_example(TrainData):
         print('feature_array',feature_array.shape)
         
 
-        import uproot
+        import uproot3 as uproot
 
         urfile = uproot.open(filename)["tree"]
         truth = np.concatenate([np.expand_dims(urfile.array("isA"), axis=1) , 
