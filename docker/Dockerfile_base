@@ -57,7 +57,7 @@ RUN apt-get install -y libboost-all-dev
 ############  PIP packages
 
 RUN pip3 install --upgrade setuptools
-RUN pip3 install numpy root_numpy scikit-learn scikit-image h5py matplotlib uproot Pillow scipy seaborn 
+RUN pip3 install numpy root_numpy scikit-learn scikit-image h5py matplotlib uproot3 Pillow scipy seaborn 
 RUN pip3 install opencv-python easydict tqdm Cython numba
 
 RUN pip3 install gpustat setGPU
