@@ -42,6 +42,21 @@ The message about a missing user group can be safely ignored.
 
 **It is important** that your bashrc does not reset the ``LD_LIBRARY`` or ``PYTHONPATH`` environment variables. Also **remove any anaconda paths from your bashrc**, because they will reset ``LD_LIBRARY`` and ``PYTHONPATH``. THe system needs to be in a clean environment state within the container (as it should be).
 
+**Building with conda**
+In case of lack of access to singularity or docker, it's possible to build the environment using conda. This _should_ work anywhere since conda
+pulls tensorflow's CUDA dependencies.;
+```
+git clone https://github.com/DL4Jets/DeepJetCore.git
+cd DeepJetCore
+# This will take some time (includes ROOT, tensorflow-gpu, CUDA...)
+conda env create -f conda_env.yml  
+conda activate DJC2
+# Build compiled modules with a modified Makefile
+source docker_env.sh # sets up paths, never mind the name
+cd compiled 
+make -f Makefile_conda -j4 # conda needs slightly different lib names
+```
+
 
 Usage
 ==========
