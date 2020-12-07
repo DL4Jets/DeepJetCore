@@ -56,7 +56,8 @@ DJCSetGPUs(args.gpu)
 
 custom_objs = get_custom_objects()
 
-model=load_model(args.inputModel, custom_objects=custom_objs)
+print("X",args.inputModel, custom_objs )
+model=load_model(args.inputModel, custom_objects=custom_objs, compile=True)
 dc = None
 if args.inputSourceFileList[-6:] == ".djcdc" and not args.trainingDataCollection[-6:] == ".djcdc":
     dc = DataCollection(args.inputSourceFileList)

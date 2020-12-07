@@ -73,6 +73,7 @@ dependencies:
   - gsl=2.6=hf94e986_0
   - gxx_impl_linux-64=9.3.0=h53cdd4c_17
   - gxx_linux-64=9.3.0=h0d07fa4_29
+  - h5py=2.10.0=nompi_py36ha233d17_105
   - harfbuzz=2.7.2=ha5b49bf_1
   - hdf5=1.10.6=nompi_h6a2412b_1112
   - icu=67.1=he1b5a44_0
@@ -245,7 +246,6 @@ dependencies:
     - future==0.18.2
     - gensim==3.8.3
     - gpustat==0.6.0
-    - h5py==3.1.0
     - imageio==2.9.0
     - ipywidgets==7.5.1
     - joblib==0.17.0
@@ -278,4 +278,4 @@ dependencies:
     - uproot3==3.14.1
     - uproot3-methods==0.10.0
     - widgetsnbextension==3.5.1
-prefix: /beegfs/desy/user/anovak/miniconda3/envs/DLtest
+prefix: /beegfs/desy/user/anovak/miniconda3/envs/DJC2
