@@ -49,7 +49,7 @@ pulls tensorflow's CUDA dependencies.;
 git clone https://github.com/DL4Jets/DeepJetCore.git
 cd DeepJetCore
 # This will take some time (includes ROOT, tensorflow-gpu, CUDA...)
-conda env create -f conda_env.yml  
+conda env create -f conda_env.yml  # if that fails use conda_env_exact.yml with entirele fixed versions
 conda activate DJC2
 # Build compiled modules with a modified Makefile
 source docker_env.sh # sets up paths, never mind the name
