@@ -1,4 +1,4 @@
-name: DJC2alt
+name: DJC2
 channels:
   - conda-forge
   - defaults
