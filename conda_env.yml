@@ -278,4 +278,3 @@ dependencies:
     - uproot3==3.14.1
     - uproot3-methods==0.10.0
     - widgetsnbextension==3.5.1
-prefix: /beegfs/desy/user/anovak/miniconda3/envs/DJC2
