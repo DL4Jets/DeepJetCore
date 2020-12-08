@@ -45,6 +45,8 @@ jobs:
         conda env list
         conda info
         conda list
+        which python  
+        python -V
 
     - name: Set env vars 1
       run: | 
