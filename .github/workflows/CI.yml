@@ -33,13 +33,15 @@ jobs:
 
     - name:  'Setup conda env'
       uses: conda-incubator/setup-miniconda@v2
-      with:
-        activate-environment: DJC2
-        environment-file: conda_env.yml  
-        mamba-version: "*"  
+      with: 
         python-version: ${{ matrix.python-version }}
+        mamba-version: "*"    
+        channels: conda-forge,defaults
+        channel-priority: true
         auto-activate-base: false
-
+        environment-file: conda_env.yml 
+        activate-environment: DJC2
+        
     - name: "Check conda env"
       run: |
         conda env list
