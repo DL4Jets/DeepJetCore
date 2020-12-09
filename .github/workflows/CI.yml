@@ -1,0 +1,118 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - 'ci*'
+  pull_request:
+  # Run daily at 0:01 UTC
+  schedule:
+  - cron:  '1 0 * * *'
+
+jobs:
+  test:
+    name: "🐍 ${{ matrix.python-version }} • ${{ matrix.runs-on }}"
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        # just one for now
+        runs-on: [ubuntu-latest]
+        python-version: [3.6, 3.7]
+
+    defaults:
+      run:
+        shell: "bash -l {0}"
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name:  'Setup conda env'
+      uses: conda-incubator/setup-miniconda@v2
+      with: 
+        python-version: ${{ matrix.python-version }}
+        mamba-version: "*"    
+        channels: conda-forge,defaults
+        channel-priority: true
+        auto-activate-base: false
+        environment-file: conda_env.yml 
+        activate-environment: DJC2
+        
+    - name: "Check conda env"
+      run: |
+        conda env list
+        conda info
+        conda list
+        which python  
+        python -V
+
+    - name: Set env vars 1
+      run: | 
+        # normally one would `source docker_env.sh` but GHA can't do this
+        # It's not possible to chain these - an exported env var only becomes available in next step
+        echo "DEEPJETCORE=$( pwd -P)" >> $GITHUB_ENV
+        echo "PATH=$( pwd -P)/bin:$PATH" >> $GITHUB_ENV
+        echo "PYTHONPATH=$( pwd -P)/../:$PYTHONPATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$( pwd -P)/compiled/" >> $GITHUB_ENV
+        # just hardcode it
+        echo "PYTHONPATH=/home/runner/work/DeepJetCore/DeepJetCore/bin:/home/runner/work/DeepJetCore/DeepJetCore:/home/runner/work/DeepJetCore:$PYTHONPATH" >> $GITHUB_ENV
+
+    - name: Check env vars 1
+      run: |
+        echo "DEEPJETCORE"
+        echo $DEEPJETCORE
+        echo "PATH"
+        echo $PATH
+        echo "PYTHONPATH"
+        echo $PYTHONPATH 
+        echo "LD_LIBRARY_PATH"
+        echo $LD_LIBRARY_PATH
+        python -c "import DeepJetCore"
+
+    - name: Compile
+      run: |
+        cd $DEEPJETCORE/compiled
+        make -f Makefile_conda -j4
+
+    - name: Create subpackage
+      run: |
+        python bin/createSubpackage.py --data here
+
+    - name: Set env vars 2
+      run: |
+        # normally one would `source env.sh` but GHA can't do this
+        # It's not possible to chain these - an exported env var only becomes available in next step
+        echo "DEEPJETCORE_SUBPACKAGE=$DEEPJETCORE/here" >> $GITHUB_ENV    
+        echo "PATH=$HERE/scripts:$PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$HERE/modules/compiled:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        # just hardcode it
+        echo "PYTHONPATH=/home/runner/work/DeepJetCore/DeepJetCore/here/modules:/home/runner/work/DeepJetCore/DeepJetCore/here/modules/datastructures:/home/runner/work/DeepJetCore/DeepJetCore/here/modules/compiled:$PYTHONPATH" >> $GITHUB_ENV
+          
+    - name: Check env vars 2
+      run: |
+        echo "DEEPJETCORE_SUBPACKAGE"
+        echo $DEEPJETCORE_SUBPACKAGE
+        echo "PYTHONPATH"
+        echo $PYTHONPATH
+        echo "PATH"
+        echo $PATH 
+        echo "LD_LIBRARY_PATH"
+        echo $LD_LIBRARY_PATH
+
+    - name: Convert files
+      run: |   
+        cd $DEEPJETCORE
+        python bin/convertFromSource.py -i here/example_data/train_files.txt -o here/dctrain -c TrainData_example
+
+    - name: "Run training"
+      run: |
+        # cd $DEEPJETCORE
+        python here/Train/training_example.py here/dctrain/dataCollection.djcdc here/training
+
+    - name: "Run eval"
+      run: |
+        predict.py here/training/KERAS_model.h5 here/training/trainsamples.djcdc here/example_data/test_files.txt here/out_predict

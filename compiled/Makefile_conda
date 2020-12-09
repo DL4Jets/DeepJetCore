@@ -3,6 +3,9 @@
 PYTHON_INCLUDE = `python3-config --includes`
 PYTHON_LIB=`python3-config --libs`
 
+# as 36, 37 or 38 to get the right lboost
+PYTHON_VERSION=$(shell python -c 'import sys; print("%d%d"% sys.version_info[0:2])')
+
 
 LINUXADD= #-Wl --export-dynamic
 ROOTSTUFF=`root-config --libs --glibs --ldflags`
@@ -28,7 +31,7 @@ classdict.so: classdict.cxx
 
 
 %: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx
-	g++ $(CFLAGS) -I./interface $(LINUXADD) $(PYTHON_INCLUDE) $< -L. -ldeepjetcorehelpers -lquicklz  $(PYTHON_LIB) -lboost_python36 -lboost_numpy36 $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
+	g++ $(CFLAGS) -I./interface $(LINUXADD) $(PYTHON_INCLUDE) $< -L. -ldeepjetcorehelpers -lquicklz  $(PYTHON_LIB) -lboost_python$(PYTHON_VERSION) -lboost_numpy$(PYTHON_VERSION) $(ROOTCFLAGS) $(ROOTSTUFF)   -o  $@  
 	mv $@ ../bin/
 
 #helpers
@@ -40,10 +43,10 @@ obj/%.o: src/%.cpp
 
 #pack helpers in lib
 libdeepjetcorehelpers.so: $(OBJ_FILES) 
-	g++ -o $@ -shared -fPIC  $(LINUXADD) $(CFLAGS) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python36 -lboost_numpy36 
+	g++ -o $@ -shared -fPIC  $(LINUXADD) $(CFLAGS) -fPIC  obj/*.o $(ROOTSTUFF) $(PYTHON_LIB) -lboost_python$(PYTHON_VERSION) -lboost_numpy$(PYTHON_VERSION) 
 
 %.so: %.o libdeepjetcorehelpers.so libquicklz.so
-	g++  -o $(@) -shared -g -fPIC $(CFLAGS) $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python36 -lboost_numpy36 -L./ -ldeepjetcorehelpers 
+	g++  -o $(@) -shared -g -fPIC $(CFLAGS) $(LINUXADD) $<   $(ROOTSTUFF) -L./ -lquicklz  $(PYTHON_LIB) -lboost_python$(PYTHON_VERSION) -lboost_numpy$(PYTHON_VERSION) -L./ -ldeepjetcorehelpers 
 
 %.o: src/%.C 
 	g++   $(ROOTCFLAGS) -O2 -g -I./interface $(PYTHON_INCLUDE) -fPIC $(CFLAGS) -c -o $(@) $<
