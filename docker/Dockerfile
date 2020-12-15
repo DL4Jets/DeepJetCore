@@ -54,7 +54,7 @@ RUN apt-get install -y vim
 RUN git clone https://github.com/google/qkeras &&\
     cd qkeras &&\
     python3 setup.py build &&\
-    python3 setup.py install &&\
+    python3 setup.py install 
     
 
     
