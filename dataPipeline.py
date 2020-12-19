@@ -1,11 +1,12 @@
 
 from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
-
+import numpy as np
 
 class TrainDataGenerator(trainDataGenerator):
     
-    def __init__(self):
+    def __init__(self, extend_truth_list_by=0):
         trainDataGenerator.__init__(self)
+        self.extend_truth_list_by = extend_truth_list_by
         
     def feedNumpyData(self):
         
@@ -16,6 +17,10 @@ class TrainDataGenerator(trainDataGenerator):
                 xout = data.transferFeatureListToNumpy()
                 wout = data.transferWeightListToNumpy()
                 yout = data.transferTruthListToNumpy()
+                
+                if self.extend_truth_list_by > 0:
+                    tadd = [np.array([0],dtype='float32') for _ in range(self.extend_truth_list_by)]
+                    yout += tadd
                 
                 out = (xout,yout)
                 if len(wout)>0:

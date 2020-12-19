@@ -401,6 +401,7 @@ class training_base(object):
                    batchsize,
                    run_eagerly=False,
                    batchsize_use_sum_of_squares = False,
+                   extend_truth_list_by=0,#extend the truth list with dummies. Useful when adding more prediction outputs than truth inputs
                    stop_patience=-1, 
                    lr_factor=0.5,
                    lr_patience=-1, 
@@ -451,6 +452,8 @@ class training_base(object):
         
         print('starting training')
         if load_in_mem:
+            if match_truth_and_pred_list:
+                raise ValueError("match_truth_and_pred_list not available with load_in_mem")
             print('make features')
             X_train = self.train_data.getAllFeatures(nfiles=max_files)
             X_test = self.val_data.getAllFeatures(nfiles=max_files)
@@ -472,6 +475,8 @@ class training_base(object):
             traingen = self.train_data.invokeGenerator()
             valgen = self.val_data.invokeGenerator()
             #this is fixed
+            traingen.extend_truth_list_by = extend_truth_list_by
+            valgen.extend_truth_list_by = extend_truth_list_by
             
 
             while(self.trainedepoches < nepochs):
