@@ -78,6 +78,9 @@ RUN apt-get install -y vim
 
 #some tex things
 RUN apt install -y texlive ghostscript dvipng
+
+#cool plotting
+RUN pip3 install plotly dash
     
 
 
