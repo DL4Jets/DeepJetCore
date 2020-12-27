@@ -139,7 +139,7 @@ public:
 
     void clear();
 
-
+    trainData<T> copy()const {return *this;}
     //from python
     void skim(size_t batchelement);
 

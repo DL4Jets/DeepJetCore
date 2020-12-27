@@ -43,6 +43,8 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("readFromFileBuffered", &trainData<float>::readFromFileBuffered)
        .def("writeToFile", &trainData<float>::writeToFile)
 
+
+       .def("copy", &trainData<float>::copy)
        .def("clear", &trainData<float>::clear)
        .def("skim", &trainData<float>::skim)
 
