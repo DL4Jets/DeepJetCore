@@ -1,6 +1,5 @@
 '''
 Created on 26 Feb 2017
-
 @author: jkiesele
 '''
 
@@ -24,12 +23,16 @@ class Weighter(object):
         self.removeProbabilties=[]
         self.binweights=[]
         self.distributions=[]
+        self.red_distributions=[]
         self.xedges=[np.array([])]
         self.yedges=[np.array([])]
         self.classes=[]
+        self.red_classes=[]
+        self.class_weights=[] 
         self.refclassidx=0
         self.undefTruth=[]
-    
+        self.truth_red_fusion = []
+
     def __eq__(self, other):
         'A == B'
         def _all(x):
@@ -64,16 +67,22 @@ class Weighter(object):
         'A != B'
         return not (self == other)
         
-    def setBinningAndClasses(self,bins,nameX,nameY,classes):
+    def setBinningAndClasses(self,bins,nameX,nameY,classes, red_classes, truth_red_fusion, method='isB'):
         self.axisX= bins[0]
         self.axisY= bins[1]
         self.nameX=nameX
         self.nameY=nameY
         self.classes=classes
+        self.red_classes = red_classes
+        self.truth_red_fusion = truth_red_fusion
         if len(self.classes)<1:
             self.classes=['']
+        if len(self.red_classes)<1:
+            self.red_classes=['']
+        if len(self.truth_red_fusion)<1:
+            self.truth_red_fusion=['']
         
-    def addDistributions(self,Tuple):
+    def addDistributions(self,Tuple, norm_h = True):
         selidxs=[]
         
         ytuple=Tuple[self.nameY]
@@ -87,46 +96,55 @@ class Weighter(object):
                 selidxs.append(labeltuple[c]>0)
         else:
             selidxs=[np.zeros(len(xtuple),dtype='int')<1]
-            
-        
-        for i in range(len(self.classes)):
-            tmphist,xe,ye=np.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=True)
+                    
+        for i, label in enumerate(self.classes):
+            #print('axis-X binning :')
+            #print(self.axisX)
+            #print('axis-Y binning :')
+            #print(self.axisY)
+            tmphist,xe,ye=np.histogram2d(xtuple[selidxs[i]],ytuple[selidxs[i]],[self.axisX,self.axisY],normed=norm_h)
             self.xedges=xe
             self.yedges=ye
             if len(self.distributions)==len(self.classes):
                 self.distributions[i]=self.distributions[i]+tmphist
             else:
                 self.distributions.append(tmphist)
-            
+                        
     def printHistos(self,outdir):
-        def plotHist(hist,outname):
+        def plotHist(hist,outname, histname):
             import matplotlib.pyplot as plt
             H=hist.T
-            fig = plt.figure()
-            ax = fig.add_subplot(111)
+            fig, ax0 = plt.subplots()
             X, Y = np.meshgrid(self.xedges, self.yedges)
-            ax.pcolormesh(X, Y, H)
+            im = ax0.pcolormesh(X, Y, H)
+            #fig.colorbar(im, ax=ax)
             if self.axisX[0]>0:
-                ax.set_xscale("log", nonposx='clip')
+                ax0.set_xscale("log", nonposx='clip')
             else:
-                ax.set_xlim([self.axisX[1],self.axisX[-1]])
-                ax.set_xscale("log", nonposx='mask')
-            #plt.colorbar()
+                ax0.set_xlim([self.axisX[1],self.axisX[-1]])
+                ax0.set_xscale("log", nonposx='mask')
+            plt.colorbar(im, ax = ax0)
+            ax0.set_title(histname)
             fig.savefig(outname)
             plt.close()
             
-        for i in range(len(self.classes)):
-            if len(self.distributions):
-                plotHist(self.distributions[i],outdir+"/dist_"+self.classes[i]+".pdf")
-                plotHist(self.removeProbabilties[i] ,outdir+"/remprob_"+self.classes[i]+".pdf")
-                plotHist(self.binweights[i],outdir+"/weights_"+self.classes[i]+".pdf")
-                reshaped=self.distributions[i]*self.binweights[i]
-                plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
-            
+        for i in range(len(self.red_classes)):
+            if len(self.red_distributions):
+                plotHist(self.red_distributions[i],outdir+"/dist_"+self.red_classes[i]+".png",self.red_classes[i]+" distribution")
+                #plotHist(self.removeProbabilties[i] ,outdir+"/remprob_"+self.classes[i]+".pdf")
+                #plotHist(self.binweights[i],outdir+"/weights_"+self.classes[i]+".pdf")
+                #reshaped=self.distributions[i]*self.binweights[i]
+                #plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
+
+        print('Running the new Prob and Weights')
+        print('Num classes')
+        print(len(self.classes))
+        
         referenceidx=-1
-        if not referenceclass=='flatten':
+        
+        if referenceclass != 'flatten':
             try:
                 referenceidx=self.classes.index(referenceclass)
             except:
@@ -147,6 +165,26 @@ class Weighter(object):
             refhist=self.distributions[referenceidx]
             refhist=refhist/np.amax(refhist)
         
+        if referenceclass == 'flatten':
+            print('Using the reduced classes for the histograms')
+            temp = []
+            for k in range(len(self.red_classes)):
+                temp.append(0)
+                for i, label in enumerate(self.classes):
+                    if label in self.truth_red_fusion[k]:
+                        temp[k] = temp[k] + self.distributions[i]
+
+            for j in range(len(temp)):
+                threshold_ = np.median(temp[j][temp[j] > 0]) * 0.01
+                nonzero_vals = temp[j][temp[j] > threshold_]
+                ref_val = np.percentile(nonzero_vals, 25)
+                print('Analyse class ' + str(j))
+                print('Min : ' + str(np.amin(temp[j])))
+                print('Max : ' + str(np.amax(temp[j])))
+                print('Ratio : ' + str(np.amin(temp[j]) / np.amax(temp[j])))
+                print(ref_val)
+
+            self.red_distributions = temp
     
         def divideHistos(a,b):
             out=np.array(a)
@@ -158,38 +196,76 @@ class Weighter(object):
                         out[i][j]=-10
             return out
                 
+        reweight_threshold = 15
+        max_weight = 1
+        raw_hists = {}
+        class_events = {}
+        result = {}
+
         probhists=[]
         weighthists=[]
+
+        if referenceclass=='flatten':
+            for i, label in enumerate(self.red_classes):
+                raw_hists[label] = self.red_distributions[i].astype('float32')
+                result[label] = self.red_distributions[i].astype('float32')    
+            
+            for label, classwgt in zip(self.red_classes, self.class_weights):
+                hist = result[label]
+                threshold_ = np.median(hist[hist > 0]) * 0.01
+                nonzero_vals = hist[hist > threshold_]
+                ref_val = np.percentile(nonzero_vals, reweight_threshold)
+                # wgt: bins w/ 0 elements will get a weight of 0; bins w/ content<ref_val will get 1
+                wgt = np.clip(np.nan_to_num(ref_val / hist, posinf=0), 0, 1)
+                result[label] = wgt
+                # divide by classwgt here will effective increase the weight later
+                class_events[label] = np.sum(raw_hists[label] * wgt) / classwgt
+                
+            min_nevt = min(class_events.values()) * max_weight
+            for label in self.red_classes:
+                class_wgt = float(min_nevt) / class_events[label]
+                result[label] *= class_wgt
+                
+            for label in self.classes:
+                for i, red_label in enumerate(self.red_classes):
+                    if label in self.truth_red_fusion[i]:
+                        weighthists.append(result[red_label])
+                        probhists.append(1 - result[red_label])                        
+                    
+            self.removeProbabilties=probhists
+            self.binweights=weighthists
         
-        for i in range(len(self.classes)):
-            #print(self.classes[i])
-            tmphist=self.distributions[i]
-            #print(tmphist)
-            #print(refhist)
-            if np.amax(tmphist):
-                tmphist=tmphist/np.amax(tmphist)
-            else:
-                print('Warning: class '+self.classes[i]+' empty.')
-            ratio=divideHistos(refhist,tmphist)
-            ratio=ratio/np.amax(ratio)#norm to 1
-            #print(ratio)
-            ratio[ratio<0]=1
-            ratio[ratio==np.nan]=1
-            weighthists.append(ratio)
-            ratio=1-ratio#make it a remove probability
-            probhists.append(ratio)
-        
-        self.removeProbabilties=probhists
-        self.binweights=weighthists
-        
-        #make it an average 1
-        for i in range(len(self.binweights)):
-            self.binweights[i]=self.binweights[i]/np.average(self.binweights[i])
-    
-    
-        
-        
+        else:
+            for i in range(len(self.classes)):
+                #print(self.classes[i])
+                tmphist=self.distributions[i]
+                #print(tmphist)
+                #print(refhist)
+                if np.amax(tmphist):
+                    tmphist=tmphist/np.amax(tmphist)
+                else:
+                    print('Warning: class '+self.classes[i]+' empty.')
+                ratio=divideHistos(refhist,tmphist)
+                ratio=ratio/np.amax(ratio)#norm to 1
+                #print(ratio)
+                ratio[ratio<0]=1
+                ratio[ratio==np.nan]=1
+                ratio = ratio
+                weighthists.append(ratio)
+                ratio=1-ratio#make it a remove probability
+                probhists.append(ratio)
+
+            self.removeProbabilties=probhists
+            self.binweights=weighthists
+
+            #make it an average 1
+            for i in range(len(self.binweights)):
+                self.binweights[i]=self.binweights[i]/np.average(self.binweights[i])
+              
     def createNotRemoveIndices(self,Tuple):
+
+        print('Running the new Not-removeind')
+        
         if len(self.removeProbabilties) <1:
             print('removeProbabilties bins not initialised. Cannot create indices per jet')
             raise Exception('removeProbabilties bins not initialised. Cannot create indices per jet')
@@ -208,9 +284,7 @@ class Weighter(object):
             xaverage.append(0)
             norm.append(0)
             yaverage.append(0)
-            
         
-
         for jet in iter(Tuple[self.Axixandlabel]):
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
@@ -280,6 +354,3 @@ class Weighter(object):
                 return index-1            
         #print (' overflow ! ', value , ' out of range ' , bins)
         return bins.size-2
-
-        
-        
