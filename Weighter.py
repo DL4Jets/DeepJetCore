@@ -137,10 +137,6 @@ class Weighter(object):
                 #plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
-
-        print('Running the new Prob and Weights')
-        print('Num classes')
-        print(len(self.classes))
         
         referenceidx=-1
         
@@ -166,7 +162,7 @@ class Weighter(object):
             refhist=refhist/np.amax(refhist)
         
         if referenceclass == 'flatten':
-            print('Using the reduced classes for the histograms')
+            #print('Using the reduced classes for the histograms')
             temp = []
             for k in range(len(self.red_classes)):
                 temp.append(0)
@@ -178,11 +174,11 @@ class Weighter(object):
                 threshold_ = np.median(temp[j][temp[j] > 0]) * 0.01
                 nonzero_vals = temp[j][temp[j] > threshold_]
                 ref_val = np.percentile(nonzero_vals, 25)
-                print('Analyse class ' + str(j))
-                print('Min : ' + str(np.amin(temp[j])))
-                print('Max : ' + str(np.amax(temp[j])))
-                print('Ratio : ' + str(np.amin(temp[j]) / np.amax(temp[j])))
-                print(ref_val)
+                #print('Analyse class ' + str(j))
+                #print('Min : ' + str(np.amin(temp[j])))
+                #print('Max : ' + str(np.amax(temp[j])))
+                #print('Ratio : ' + str(np.amin(temp[j]) / np.amax(temp[j])))
+                #print(ref_val)
 
             self.red_distributions = temp
     
@@ -263,8 +259,6 @@ class Weighter(object):
                 self.binweights[i]=self.binweights[i]/np.average(self.binweights[i])
               
     def createNotRemoveIndices(self,Tuple):
-
-        print('Running the new Not-removeind')
         
         if len(self.removeProbabilties) <1:
             print('removeProbabilties bins not initialised. Cannot create indices per jet')
