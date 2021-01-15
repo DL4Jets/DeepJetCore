@@ -7,12 +7,10 @@ Created on 21 Feb 2017
 
 from DeepJetCore.TrainData import TrainData
 from DeepJetCore.dataPipeline import TrainDataGenerator
-import tensorflow as tf
 import tempfile
 import pickle
 import shutil
 import os
-import keras 
 import copy
 import time
 import logging
@@ -196,6 +194,7 @@ class DataCollection(object):
             pickle.dump(self.optionsdict, fd, protocol=0)
              
         shutil.move(fd.name, filename)
+        os.chmod(filename, 0o644)
         
     def readFromFile(self,filename):
         fd=open(filename,'rb')
