@@ -67,11 +67,11 @@ class Weighter(object):
         'A != B'
         return not (self == other)
         
-    def setBinningAndClasses(self,bins,nameX,nameY,classes, red_classes = -1, truth_red_fusion = -1, method='isB'):
+    def setBinningAndClasses(self,bins,nameX,nameY,classes, red_classes = [-1], truth_red_fusion = [-1], method='isB'):
 
-        if method == 'flatten' and red_classes == -1:
+        if method == 'flatten' and red_classes == [-1]:
             raise Exception('You didnt define the reduced classes for the flatten method correctly. Create a list with your reduced classes and call it in the setBinningAndClasses function with red_classes = ')
-        if method == 'flatten' and truth_red_fusion == -1:
+        if method == 'flatten' and truth_red_fusion == [-1]:
             raise Exception('You didnt define the fusion for the truth classes for the flatten method correctly. Create a list where each entry is also a list with all the truth classes to fusion into a reduced class. The entries of the reduced classes and fusion list must follow the same order, ie : the truth classes to fusion for the first reduced class is the first element of your fusion list. Then call it in the setBinningAndClasses function with thruth_red_fusion = ')
 
         self.axisX= bins[0]
