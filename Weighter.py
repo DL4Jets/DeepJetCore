@@ -67,7 +67,13 @@ class Weighter(object):
         'A != B'
         return not (self == other)
         
-    def setBinningAndClasses(self,bins,nameX,nameY,classes, red_classes, truth_red_fusion, method='isB'):
+    def setBinningAndClasses(self,bins,nameX,nameY,classes, red_classes = [-1], truth_red_fusion = [-1], method='isB'):
+
+        if method == 'flatten' and red_classes == [-1]:
+            raise Exception('You didnt define the reduced classes for the flatten method correctly. Create a list with your reduced classes and call it in the setBinningAndClasses function with red_classes = ')
+        if method == 'flatten' and truth_red_fusion == [-1]:
+            raise Exception('You didnt define the fusion for the truth classes for the flatten method correctly. Create a list where each entry is also a list with all the truth classes to fusion into a reduced class. The entries of the reduced classes and fusion list must follow the same order, ie : the truth classes to fusion for the first reduced class is the first element of your fusion list. Then call it in the setBinningAndClasses function with thruth_red_fusion = ')
+
         self.axisX= bins[0]
         self.axisY= bins[1]
         self.nameX=nameX
@@ -137,10 +143,6 @@ class Weighter(object):
                 #plotHist(reshaped,outdir+"/reshaped_"+self.classes[i]+".pdf")
         
     def createRemoveProbabilitiesAndWeights(self,referenceclass='isB'):
-
-        print('Running the new Prob and Weights')
-        print('Num classes')
-        print(len(self.classes))
         
         referenceidx=-1
         
@@ -166,7 +168,6 @@ class Weighter(object):
             refhist=refhist/np.amax(refhist)
         
         if referenceclass == 'flatten':
-            print('Using the reduced classes for the histograms')
             temp = []
             for k in range(len(self.red_classes)):
                 temp.append(0)
@@ -178,11 +179,6 @@ class Weighter(object):
                 threshold_ = np.median(temp[j][temp[j] > 0]) * 0.01
                 nonzero_vals = temp[j][temp[j] > threshold_]
                 ref_val = np.percentile(nonzero_vals, 25)
-                print('Analyse class ' + str(j))
-                print('Min : ' + str(np.amin(temp[j])))
-                print('Max : ' + str(np.amax(temp[j])))
-                print('Ratio : ' + str(np.amin(temp[j]) / np.amax(temp[j])))
-                print(ref_val)
 
             self.red_distributions = temp
     
@@ -263,11 +259,8 @@ class Weighter(object):
                 self.binweights[i]=self.binweights[i]/np.average(self.binweights[i])
               
     def createNotRemoveIndices(self,Tuple):
-
-        print('Running the new Not-removeind')
         
         if len(self.removeProbabilties) <1:
-            print('removeProbabilties bins not initialised. Cannot create indices per jet')
             raise Exception('removeProbabilties bins not initialised. Cannot create indices per jet')
         
         tuplelength=len(Tuple)
