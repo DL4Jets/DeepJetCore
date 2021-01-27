@@ -1,3 +1,7 @@
+Notes
+============
+Due to a recent update of uproot, please change ``import uproot`` to ``import uproot3`` in case you have issues with the import and the newest containers.
+
 
 
 DeepJetCore: Package for training and evaluation of deep neural networks for HEP
