@@ -16,7 +16,7 @@ MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
-#CFLAGS := -g
+CFLAGS := -g
 
 all: $(MODULES_SHARED_LIBS) $(patsubst to_bin/%.cpp, %, $(wildcard to_bin/*.cpp)) classdict.so
 

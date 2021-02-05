@@ -27,6 +27,14 @@
 namespace djc{
 
 /*
+ * use small helper class to store simpleArrayBase pointers
+ * and manage ownership where needed.
+ * just wrap around std::vector
+ */
+
+
+
+/*
  * The idea is to make this a fixed size array class, that is filled with data and then written out once full.
  * a truncate function will allow to  truncate arrays at a given position.
  * This is memory intense, but can be written out in small pieces and then merged
@@ -39,9 +47,20 @@ public:
 
 
     //takes ownership
+    //these need to be separated by input type because python does not allow for overload
+    //but then the py interface can be made generic  to accept differnt types
+    //
     int storeFeatureArray( simpleArray<T>&);
     int storeTruthArray( simpleArray<T>&);
     int storeWeightArray( simpleArray<T>&);
+
+    //these are not really used so much -->
+    /*
+     * This class actually doesn't really need data operations. so it can implement
+     * only simpleArrayBase calls
+     *
+     *
+     */
 
     const simpleArray<T> & featureArray(size_t idx) const {
         return feature_arrays_.at(idx);
@@ -66,6 +85,8 @@ public:
     simpleArray<T> & weightArray(size_t idx)  {
         return weight_arrays_.at(idx);
     }
+
+    //<---
 
     int nFeatureArrays()const{return feature_arrays_.size();}
     int nTruthArrays()const{return truth_arrays_.size();}
