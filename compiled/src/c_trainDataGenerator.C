@@ -29,32 +29,32 @@ using namespace djc;
 BOOST_PYTHON_MODULE(c_trainDataGenerator) {
     Py_Initialize();
     np::initialize();
-    p::class_<trainDataGenerator<float> >("trainDataGenerator")
+    p::class_<trainDataGenerator >("trainDataGenerator")
 
-            .def("setBatchSize", &trainDataGenerator<float>::setBatchSize)
+            .def("setBatchSize", &trainDataGenerator::setBatchSize)
 
-            .def("setFileList", &trainDataGenerator<float>::setFileListP)
-            .def("shuffleFilelist", &trainDataGenerator<float>::shuffleFilelist)
+            .def("setFileList", &trainDataGenerator::setFileListPy)
+            .def("shuffleFilelist", &trainDataGenerator::shuffleFilelist)
 
-            .def("setBuffer", &trainDataGenerator<float>::setBuffer)
+            .def("setBuffer", &trainDataGenerator::setBuffer)
 
 
-            .def("setFileTimeout", &trainDataGenerator<float>::setFileTimeout)
-            .def("setSquaredElementsLimit", &trainDataGenerator<float>::setSquaredElementsLimit)
-            .def("setSkipTooLargeBatches", &trainDataGenerator<float>::setSkipTooLargeBatches)
+            .def("setFileTimeout", &trainDataGenerator::setFileTimeout)
+            .def("setSquaredElementsLimit", &trainDataGenerator::setSquaredElementsLimit)
+            .def("setSkipTooLargeBatches", &trainDataGenerator::setSkipTooLargeBatches)
 
-            .def("clear", &trainDataGenerator<float>::clear)
-            .def("getNBatches", &trainDataGenerator<float>::getNBatches)
+            .def("clear", &trainDataGenerator::clear)
+            .def("getNBatches", &trainDataGenerator::getNBatches)
 
-            .def("lastBatch", &trainDataGenerator<float>::lastBatch)
-            .def("isEmpty", &trainDataGenerator<float>::isEmpty)
+            .def("lastBatch", &trainDataGenerator::lastBatch)
+            .def("isEmpty", &trainDataGenerator::isEmpty)
 
-            .def("prepareNextEpoch", &trainDataGenerator<float>::prepareNextEpoch)
-            .def("getBatch", &trainDataGenerator<float>::getBatch)
+            .def("prepareNextEpoch", &trainDataGenerator::prepareNextEpoch)
+            .def("getBatch", &trainDataGenerator::getBatch)
 
-            .def("getNTotal", &trainDataGenerator<float>::getNTotal)
+            .def("getNTotal", &trainDataGenerator::getNTotal)
 
-            .def_readwrite("debuglevel", &trainDataGenerator<float>::debuglevel);
+            .def_readwrite("debuglevel", &trainDataGenerator::debuglevel);
         ;
 }
 

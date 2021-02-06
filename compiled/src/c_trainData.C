@@ -17,49 +17,49 @@ using namespace djc;
 BOOST_PYTHON_MODULE(c_trainData) {
     Py_Initialize();
     np::initialize();
-    p::class_<trainData<float> >("trainData")
+    p::class_<trainData >("trainData")
 
 
 
-       .def("storeFeatureArray", &trainData<float>::storeFeatureArray)
-       .def("storeTruthArray", &trainData<float>::storeTruthArray)
-       .def("storeWeightArray", &trainData<float>::storeWeightArray)
+       .def("storeFeatureArray", &trainData::storeFeatureArray)
+       .def("storeTruthArray", &trainData::storeTruthArray)
+       .def("storeWeightArray", &trainData::storeWeightArray)
 
-       .def("featureList", &trainData<float>::featureList)
-       .def("truthList", &trainData<float>::truthList)
-       .def("weightList", &trainData<float>::weightList)
+     //  .def("featureList", &trainData::featureList)
+     //  .def("truthList", &trainData::truthList)
+     //  .def("weightList", &trainData::weightList)
 
-       .def("nFeatureArrays", &trainData<float>::nFeatureArrays)
-       .def("nTruthArrays", &trainData<float>::nTruthArrays)
-       .def("nWeightArrays", &trainData<float>::nWeightArrays)
+       .def("nFeatureArrays", &trainData::nFeatureArrays)
+       .def("nTruthArrays", &trainData::nTruthArrays)
+       .def("nWeightArrays", &trainData::nWeightArrays)
 
-       .def("truncate", &trainData<float>::truncate)
-       .def("append", &trainData<float>::append)
-       .def("split", &trainData<float>::split)
-       .def("nElements", &trainData<float>::nElements)
-       .def("readShapesFromFile", &trainData<float>::readShapesFromFile)
+       .def("truncate", &trainData::truncate)
+       .def("append", &trainData::append)
+       .def("split", &trainData::split)
+       .def("nElements", &trainData::nElements)
+       .def("readShapesFromFile", &trainData::readShapesFromFile)
 
-       .def("readFromFile", &trainData<float>::readFromFile)
-       .def("readFromFileBuffered", &trainData<float>::readFromFileBuffered)
-       .def("writeToFile", &trainData<float>::writeToFile)
-
-
-       .def("copy", &trainData<float>::copy)
-       .def("clear", &trainData<float>::clear)
-       .def("skim", &trainData<float>::skim)
-
-       .def("getKerasFeatureShapes", &trainData<float>::getKerasFeatureShapes)
-       .def("getKerasFeatureDTypes", &trainData<float>::getKerasFeatureDTypes)
-
-       .def("getTruthRaggedFlags", &trainData<float>::getTruthRaggedFlags)
-       .def("transferFeatureListToNumpy", &trainData<float>::transferFeatureListToNumpy)
-       .def("transferTruthListToNumpy", &trainData<float>::transferTruthListToNumpy)
-       .def("transferWeightListToNumpy", &trainData<float>::transferWeightListToNumpy)
+       .def("readFromFile", &trainData::readFromFile)
+       .def("readFromFileBuffered", &trainData::readFromFileBuffered)
+       .def("writeToFile", &trainData::writeToFile)
 
 
-       .def("copyFeatureListToNumpy", &trainData<float>::copyFeatureListToNumpy)
-       .def("copyTruthListToNumpy", &trainData<float>::copyTruthListToNumpy)
-       .def("copyWeightListToNumpy", &trainData<float>::copyWeightListToNumpy)
+       .def("copy", &trainData::copy)
+       .def("clear", &trainData::clear)
+       .def("skim", &trainData::skim)
+
+       .def("getKerasFeatureShapes", &trainData::getKerasFeatureShapes)
+       .def("getKerasFeatureDTypes", &trainData::getKerasFeatureDTypes)
+
+       .def("getTruthRaggedFlags", &trainData::getTruthRaggedFlags)
+       .def("transferFeatureListToNumpy", &trainData::transferFeatureListToNumpy)
+       .def("transferTruthListToNumpy", &trainData::transferTruthListToNumpy)
+       .def("transferWeightListToNumpy", &trainData::transferWeightListToNumpy)
+
+
+       .def("copyFeatureListToNumpy", &trainData::copyFeatureListToNumpy)
+       .def("copyTruthListToNumpy", &trainData::copyTruthListToNumpy)
+       .def("copyWeightListToNumpy", &trainData::copyWeightListToNumpy)
 
 ;
     ;

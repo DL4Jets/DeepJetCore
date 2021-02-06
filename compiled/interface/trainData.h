@@ -31,7 +31,38 @@ namespace djc{
  * and manage ownership where needed.
  * just wrap around std::vector
  */
+class typeContainer{
+public:
 
+    void push_back(simpleArrayBase& a);
+    void move_back(simpleArrayBase& a);
+
+    simpleArrayBase& at(size_t idx);
+    const simpleArrayBase& at(size_t idx)const;
+
+    simpleArrayBase::dtypes dtype(size_t idx)const{return at(idx).dtype();}
+
+    simpleArray_float32& at_asfloat32(size_t idx);
+    const simpleArray_float32& at_asfloat32(size_t idx)const;
+    simpleArray_int32& at_asint32(size_t idx);
+    const simpleArray_int32& at_asint32(size_t idx)const;
+
+    void clear();
+
+    size_t size()const{return sorting_.size();}
+
+
+    void writeToFile(FILE *&) const;
+    void readFromFile(FILE *&);
+
+private:
+    std::vector<simpleArray_float32> farrs_;
+    std::vector<simpleArray_int32> iarrs_;
+
+    enum typesorting{isfloat,isint};
+    std::vector<std::pair<typesorting,size_t> > sorting_;
+
+};
 
 
 /*
@@ -41,7 +72,7 @@ namespace djc{
  *
  * No checks on the first dimension because of possibly ragged arrays
  */
-template<class T>
+
 class trainData{
 public:
 
@@ -49,10 +80,12 @@ public:
     //takes ownership
     //these need to be separated by input type because python does not allow for overload
     //but then the py interface can be made generic  to accept differnt types
+
+    //make this a base reference and then check for dtype and cast
     //
-    int storeFeatureArray( simpleArray<T>&);
-    int storeTruthArray( simpleArray<T>&);
-    int storeWeightArray( simpleArray<T>&);
+    int storeFeatureArray( simpleArrayBase&);
+    int storeTruthArray( simpleArrayBase&);
+    int storeWeightArray( simpleArrayBase&);
 
     //these are not really used so much -->
     /*
@@ -62,27 +95,27 @@ public:
      *
      */
 
-    const simpleArray<T> & featureArray(size_t idx) const {
+    const simpleArrayBase & featureArray(size_t idx) const {
         return feature_arrays_.at(idx);
     }
 
-    const simpleArray<T> & truthArray(size_t idx) const {
+    const simpleArrayBase & truthArray(size_t idx) const {
         return truth_arrays_.at(idx);
     }
 
-    const simpleArray<T> & weightArray(size_t idx) const {
+    const simpleArrayBase & weightArray(size_t idx) const {
         return weight_arrays_.at(idx);
     }
 
-    simpleArray<T> & featureArray(size_t idx)  {
+    simpleArrayBase & featureArray(size_t idx)  {
         return feature_arrays_.at(idx);
     }
 
-    simpleArray<T> & truthArray(size_t idx)  {
+    simpleArrayBase & truthArray(size_t idx)  {
         return truth_arrays_.at(idx);
     }
 
-    simpleArray<T> & weightArray(size_t idx)  {
+    simpleArrayBase & weightArray(size_t idx)  {
         return weight_arrays_.at(idx);
     }
 
@@ -100,16 +133,16 @@ public:
     /*
      * append along first axis
      */
-    void append(const trainData<T>& );
+    void append(const trainData& );
 
     /*
      * split along first axis
      * Returns the second part, leaves the first.
      */
-    trainData<T> split(size_t splitindex);
-    trainData<T> getSlice(size_t splitindex_begin, size_t splitindex_end)const;
+    trainData split(size_t splitindex);
+    trainData getSlice(size_t splitindex_begin, size_t splitindex_end)const;
 
-    trainData<T> shuffle(const std::vector<size_t>& shuffle_idxs)const;
+    trainData shuffle(const std::vector<size_t>& shuffle_idxs)const;
 
     bool validSlice(size_t splitindex_begin, size_t splitindex_end)const ;
 
@@ -160,7 +193,7 @@ public:
 
     void clear();
 
-    trainData<T> copy()const {return *this;}
+    trainData copy()const {return *this;}
     //from python
     void skim(size_t batchelement);
 
@@ -176,19 +209,14 @@ public:
 
     boost::python::list getTruthRaggedFlags()const;
 
-
-    boost::python::list  featureList();
-    boost::python::list  truthList();
-    boost::python::list  weightList();
+    //has ragged support
+    boost::python::list transferFeatureListToNumpy(bool padrowsplits=false);
 
     //has ragged support
-    boost::python::list transferFeatureListToNumpy();
-
-    //has ragged support
-    boost::python::list transferTruthListToNumpy();
+    boost::python::list transferTruthListToNumpy(bool padrowsplits=false);
 
     //no ragged support
-    boost::python::list transferWeightListToNumpy();
+    boost::python::list transferWeightListToNumpy(bool padrowsplits=false);
 
 
     /*
@@ -197,21 +225,21 @@ public:
 
 
     //has ragged support
-    boost::python::list copyFeatureListToNumpy(){
+    boost::python::list copyFeatureListToNumpy(bool padrowsplits=false){
         auto td = *this;
-        return td.transferFeatureListToNumpy(); //fast hack
+        return td.transferFeatureListToNumpy(padrowsplits); //fast hack
     }
 
     //has ragged support
-    boost::python::list copyTruthListToNumpy(){
+    boost::python::list copyTruthListToNumpy(bool padrowsplits=false){
         auto td = *this;
-        return td.transferTruthListToNumpy(); //fast hack
+        return td.transferTruthListToNumpy(padrowsplits); //fast hack
     }
 
     //no ragged support
-    boost::python::list copyWeightListToNumpy(){
+    boost::python::list copyWeightListToNumpy(bool padrowsplits=false){
         auto td = *this;
-        return td.transferWeightListToNumpy(); //fast hack
+        return td.transferWeightListToNumpy(padrowsplits); //fast hack
     }
 
 #endif
@@ -222,10 +250,11 @@ private:
 
     void checkFile(FILE *& f, const std::string& filename="")const;
 
-    void writeArrayVector(const std::vector<simpleArray<T> >&, FILE *&) const;
-    std::vector<simpleArray<T> > readArrayVector(FILE *&) const;
+
     void readRowSplitArray(FILE *&, std::vector<int64_t> &rs, bool check)const;
-    std::vector<std::vector<int> > getShapes(const std::vector<simpleArray<T> >& a)const;
+
+    std::vector<std::vector<int> > getShapes(const typeContainer& a)const;
+
     template <class U>
     void writeNested(const std::vector<std::vector<U> >& v, FILE *&)const;
     template <class U>
@@ -233,84 +262,28 @@ private:
 
     void updateShapes();
 
-    std::vector<simpleArray<T> > feature_arrays_;
-    std::vector<simpleArray<T> > truth_arrays_;
-    std::vector<simpleArray<T> > weight_arrays_;
+
+    typeContainer feature_arrays_;
+    typeContainer truth_arrays_;
+    typeContainer weight_arrays_;
 
     std::vector<std::vector<int> > feature_shapes_;
     std::vector<std::vector<int> > truth_shapes_;
     std::vector<std::vector<int> > weight_shapes_;
 
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+    boost::python::list transferToNumpyList(typeContainer& , bool pad_rowsplits);
+#endif
+
 };
 
 
-template<class T>
-int trainData<T>::storeFeatureArray(simpleArray<T> & a){
-    size_t idx = feature_arrays_.size();
-    feature_arrays_.push_back(std::move(a));
-    a.clear();
-    updateShapes();
-    return idx;
-}
 
-
-template<class T>
-int trainData<T>::storeTruthArray(simpleArray<T>& a){
-    size_t idx = truth_arrays_.size();
-    truth_arrays_.push_back(std::move(a));
-    a.clear();
-    updateShapes();
-    return idx;
-}
-
-template<class T>
-int trainData<T>::storeWeightArray(simpleArray<T> & a){
-    size_t idx = weight_arrays_.size();
-    weight_arrays_.push_back(std::move(a));
-    a.clear();
-    updateShapes();
-    return idx;
-}
-
-/*
- * truncate all along first axis
- */
-template<class T>
-void trainData<T>::truncate(size_t position){
-    *this = split(position);
-}
 
 /*
  * append along first axis
  */
-template<class T>
-void trainData<T>::append(const trainData<T>& td) {
-    //allow empty append
-    if (!feature_arrays_.size() && !truth_arrays_.size()
-            && !weight_arrays_.size()) {
-        *this = td;
-        return;
-    }
-    if(!td.feature_arrays_.size() && !td.truth_arrays_.size()
-            && !td.weight_arrays_.size()){
-        return ; //nothing to do
-    }
-    if (feature_arrays_.size() != td.feature_arrays_.size()
-            || truth_arrays_.size() != td.truth_arrays_.size()
-            || weight_arrays_.size() != td.weight_arrays_.size()) {
-        std::cout << "nfeat " << feature_arrays_.size() << "-" << td.feature_arrays_.size() <<'\n'
-                << "ntruth " << truth_arrays_.size() << "-" << td.truth_arrays_.size()<<'\n'
-                << "nweights " << weight_arrays_.size() << "-" <<  td.weight_arrays_.size() <<std::endl;
-        throw std::out_of_range("trainData<T>::append: format not compatible.");
-    }
-    for(size_t i=0;i<feature_arrays_.size();i++)
-        feature_arrays_.at(i).append(td.feature_arrays_.at(i));
-    for(size_t i=0;i<truth_arrays_.size();i++)
-        truth_arrays_.at(i).append(td.truth_arrays_.at(i));
-    for(size_t i=0;i<weight_arrays_.size();i++)
-        weight_arrays_.at(i).append(td.weight_arrays_.at(i));
-    updateShapes();
-}
 
 /*
  * split along first axis
@@ -318,250 +291,19 @@ void trainData<T>::append(const trainData<T>& td) {
  *
  * Can use some performance improvements
  */
-template<class T>
-trainData<T> trainData<T>::split(size_t splitindex) {
-    trainData<T> out;
-    for (auto& a : feature_arrays_)
-        out.feature_arrays_.push_back(a.split(splitindex));
-    for (auto& a : truth_arrays_)
-        out.truth_arrays_.push_back(a.split(splitindex));
-    for (auto& a : weight_arrays_)
-        out.weight_arrays_.push_back(a.split(splitindex));
 
-    updateShapes();
-    out.updateShapes();
-    return out;
-}
-template<class T>
-trainData<T> trainData<T>::getSlice(size_t splitindex_begin, size_t splitindex_end)const{
-    trainData<T> out;
 
-    for (const auto& a : feature_arrays_)
-        out.feature_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
-    for (const auto& a : truth_arrays_)
-        out.truth_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
-    for (const auto& a : weight_arrays_)
-        out.weight_arrays_.push_back(a.getSlice(splitindex_begin,splitindex_end));
 
-    out.updateShapes();
-    return out;
-}
 
-template<class T>
-trainData<T> trainData<T>::shuffle(const std::vector<size_t>& shuffle_idxs)const{
-    trainData<T> out;
 
-    for (const auto& a : feature_arrays_)
-        out.feature_arrays_.push_back(a.shuffle(shuffle_idxs));
-    for (const auto& a : truth_arrays_)
-        out.truth_arrays_.push_back(a.shuffle(shuffle_idxs));
-    for (const auto& a : weight_arrays_)
-        out.weight_arrays_.push_back(a.shuffle(shuffle_idxs));
 
-    out.updateShapes();
-    return out;
 
-}
 
-template<class T>
-bool trainData<T>::validSlice(size_t splitindex_begin, size_t splitindex_end)const{
-    for (const auto& a : feature_arrays_)
-        if(! a.validSlice(splitindex_begin,splitindex_end))
-            return false;
-    for (const auto& a : truth_arrays_)
-        if(! a.validSlice(splitindex_begin,splitindex_end))
-            return false;
-    for (const auto& a : weight_arrays_)
-        if(! a.validSlice(splitindex_begin,splitindex_end))
-            return false;
-    return true;
-}
 
-template<class T>
-void trainData<T>::writeToFile(std::string filename)const{
 
-    FILE *ofile = fopen(filename.data(), "wb");
-    float version = DJCDATAVERSION;
-    io::writeToFile(&version, ofile);
 
-    //shape infos only
-    writeNested(getShapes(feature_arrays_), ofile);
-    writeNested(getShapes(truth_arrays_), ofile);
-    writeNested(getShapes(weight_arrays_), ofile);
-
-    //data
-    writeArrayVector(feature_arrays_, ofile);
-    writeArrayVector(truth_arrays_, ofile);
-    writeArrayVector(weight_arrays_, ofile);
-    fclose(ofile);
-
-}
-
-template<class T>
-void trainData<T>::priv_readFromFile(std::string filename, bool memcp){
-    clear();
-    FILE *ifile = fopen(filename.data(), "rb");
-    char *buf = 0;
-    if(memcp){
-        FILE *diskfile = ifile;
-        //check if exists before trying to memcp.
-        checkFile(ifile, filename); //not set at start but won't be used
-
-        fseek(diskfile, 0, SEEK_END);
-        size_t fsize = ftell(diskfile);
-        fseek(diskfile, 0, SEEK_SET);  /* same as rewind(f); */
-
-        buf = new char[fsize];
-        int ret = fread(buf, 1, fsize, diskfile);
-        if(!ret){
-            delete buf;
-            throw std::runtime_error("trainData<T>::readFromFile: could not read file in memcp mode");
-        }
-        fclose(diskfile);
-
-        ifile = fmemopen(buf,fsize,"r");
-    }
-
-    checkFile(ifile, filename);
-    readNested(feature_shapes_, ifile);
-    readNested(truth_shapes_, ifile);
-    readNested(weight_shapes_, ifile);
-
-    feature_arrays_ = readArrayVector(ifile);
-    truth_arrays_ = readArrayVector(ifile);
-    weight_arrays_ = readArrayVector(ifile);
-
-    fclose(ifile);
-    //std::cout << "read done, free"<<std::endl;
-    if(buf){
-        delete buf;
-    }
-
-}
-
-template<class T>
-void trainData<T>::readShapesFromFile(const std::string& filename){
-
-    FILE *ifile = fopen(filename.data(), "rb");
-    checkFile(ifile,filename);
-
-    readNested(feature_shapes_, ifile);
-    readNested(truth_shapes_, ifile);
-    readNested(weight_shapes_, ifile);
-
-    fclose(ifile);
-
-}
-
-template<class T>
-std::vector<int64_t> trainData<T>::getFirstRowsplits()const{
-    for (auto& a : feature_arrays_)
-        if(a.rowsplits().size())
-            return a.rowsplits();
-    for (auto& a : truth_arrays_)
-        if(a.rowsplits().size())
-            return a.rowsplits();
-    return std::vector<int64_t>();
-}
-
-template<class T>
-std::vector<int64_t> trainData<T>::readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency){
-    std::vector<int64_t> rowsplits;
-
-    FILE *ifile = fopen(filename.data(), "rb");
-    checkFile(ifile,filename);
-
-    //shapes
-    std::vector<std::vector<int> > dummy;
-    readNested(feature_shapes_, ifile);
-    readNested(truth_shapes_, ifile);
-    readNested(weight_shapes_, ifile);
-
-    //features
-    readRowSplitArray(ifile,rowsplits,checkConsistency);
-    if(!checkConsistency && rowsplits.size()){
-        fclose(ifile);
-        return rowsplits;
-    }
-    //truth
-    readRowSplitArray(ifile,rowsplits,checkConsistency);
-    if(!checkConsistency && rowsplits.size()){
-        fclose(ifile);
-        return rowsplits;
-    }
-    //weights
-    readRowSplitArray(ifile,rowsplits,checkConsistency);
-
-    fclose(ifile);
-    return rowsplits;
-
-}
-
-template<class T>
-void trainData<T>::clear() {
-    feature_arrays_.clear();
-    truth_arrays_.clear();
-    weight_arrays_.clear();
-    updateShapes();
-}
-
-template<class T>
-void trainData<T>::checkFile(FILE *& ifile, const std::string& filename)const{
-    if(!ifile)
-        throw std::runtime_error("trainData<T>::readFromFile: file "+filename+" could not be opened.");
-    float version = 0;
-    io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
-        throw std::runtime_error("trainData<T>::readFromFile: wrong format version");
-
-}
-
-template<class T>
-void trainData<T>::writeArrayVector(const std::vector<simpleArray<T> >& v, FILE *& ofile) const{
-
-    size_t size = v.size();
-    io::writeToFile(&size, ofile);
-    for(const auto& a: v)
-        a.addToFileP(ofile);
-
-}
-template<class T>
-std::vector<simpleArray<T> > trainData<T>::readArrayVector(FILE *& ifile) const{
-    std::vector<simpleArray<T> >  out;
-    size_t size = 0;
-    io::readFromFile(&size, ifile);
-    for(size_t i=0;i<size;i++)
-        out.push_back(simpleArray<T> (ifile));
-    return out;
-}
-
-template<class T>
-void trainData<T>::readRowSplitArray(FILE *& ifile, std::vector<int64_t> &rowsplits, bool check)const{
-    size_t size = 0;
-    io::readFromFile(&size, ifile);
-    for(size_t i=0;i<size;i++){
-        auto frs = simpleArray<T>::readRowSplitsFromFileP(ifile, true);
-        if(frs.size()){
-            if(check){
-                if(rowsplits.size() && rowsplits != frs)
-                    throw std::runtime_error("trainData<T>::readShapesAndRowSplitsFromFile: row splits inconsistent");
-            }
-            rowsplits=frs;
-        }
-    }
-}
-
-template<class T>
-std::vector<std::vector<int> > trainData<T>::getShapes(const std::vector<simpleArray<T> >& a)const{
-    std::vector<std::vector<int> > out;
-    for(const auto& arr: a)
-        out.push_back(arr.shape());
-    return out;
-}
-
-template<class T>
 template <class U>
-void trainData<T>::writeNested(const std::vector<std::vector<U> >& v, FILE *& ofile)const{
+void trainData::writeNested(const std::vector<std::vector<U> >& v, FILE *& ofile)const{
 
     size_t size = v.size();
     io::writeToFile(&size, ofile);
@@ -575,9 +317,8 @@ void trainData<T>::writeNested(const std::vector<std::vector<U> >& v, FILE *& of
 
 }
 
-template<class T>
 template <class U>
-void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)const{
+void trainData::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)const{
 
     size_t size = 0;
     io::readFromFile(&size, ifile);
@@ -592,201 +333,6 @@ void trainData<T>::readNested(std::vector<std::vector<U> >& v, FILE *& ifile)con
     }
 
 }
-
-template<class T>
-void trainData<T>::updateShapes(){
-
-    feature_shapes_ = getShapes(feature_arrays_);
-    truth_shapes_ = getShapes(truth_arrays_);
-    weight_shapes_ = getShapes(weight_arrays_);
-
-}
-
-template<class T>
-void trainData<T>::skim(size_t batchelement){
-    if(batchelement > nElements())
-        throw std::out_of_range("trainData<T>::skim: batch element out of range");
-    for(auto & a : feature_arrays_){
-        a.split(batchelement);
-        a=a.split(1);
-    }
-    for(auto & a : truth_arrays_){
-        a.split(batchelement);
-        a=a.split(1);
-    }
-    for(auto & a : weight_arrays_){
-        a.split(batchelement);
-        a=a.split(1);
-    }
-    updateShapes();
-}
-
-
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
-
-template<class T>
-boost::python::list trainData<T>::getKerasFeatureShapes()const{
-    boost::python::list out;
-    for(const auto& a: feature_shapes_){
-        boost::python::list nlist;
-        bool wasragged=false;
-        for(size_t i=1;i<a.size();i++){
-            if(a.at(i)<0){
-                nlist = boost::python::list();//ignore everything before
-                wasragged=true;
-            }
-            else
-                nlist.append(std::abs(a.at(i)));
-        }
-        out.append(nlist);
-        if(wasragged){
-            boost::python::list rslist;
-            rslist.append(1);
-            out.append(rslist);
-        }
-    }
-    return out;
-}
-
-template<class T>
-boost::python::list trainData<T>::getKerasFeatureDTypes()const{
-    boost::python::list out;
-    for(const auto& a: feature_shapes_){
-        bool isragged=false;
-        for(size_t i=0;i<a.size();i++){
-            if(a.at(i)<0){
-                isragged=true;
-                break;
-            }
-        }
-        out.append("float32");//FIXME for real templated types!
-        if(isragged)
-            out.append("int64");
-    }
-    return out;
-}
-
-//template<class T>
-//boost::python::list trainData<T>::getKerasTruthShapes()const{
-//    boost::python::list out;
-//    for(const auto& a: truth_arrays_){
-//        size_t start=1;
-//        if(a.isRagged())
-//            start=2;
-//        for(size_t i=start;i<a.shape().size();i++)
-//            out.append(std::abs(a.shape().at(i)));
-//    }
-//    return out;
-//}
-//template<class T>
-//boost::python::list trainData<T>::getKerasWeightShapes()const{
-//    boost::python::list out;
-//    for(const auto& a: weight_shapes_){
-//        for(size_t i=1;i<a.size();i++){
-//            if(a.at(i)<0){
-//                out = boost::python::list();//igonre everything before
-//            }
-//            out.append(std::abs(a.at(i)));
-//        }
-//    }
-//    return out;
-//}
-
-
-template<class T>
-boost::python::list trainData<T>::getTruthRaggedFlags()const{
-    boost::python::list out;
-    for(const auto& a: truth_shapes_){
-        bool isragged = false;
-        for(const auto & s: a)
-            if(s<0){
-                isragged=true;
-                break;
-            }
-        if(isragged)
-            out.append(true);
-        else
-            out.append(false);
-    }
-    return out;
-}
-
-
-template<class T>
-boost::python::list  trainData<T>::featureList(){
-    boost::python::list out;
-    for(auto &a: feature_arrays_)
-        out.append(a);
-    return out;
-}
-template<class T>
-boost::python::list  trainData<T>::truthList(){
-    boost::python::list out;
-    for(auto &a: truth_arrays_)
-        out.append(a);
-    return out;
-}
-template<class T>
-boost::python::list  trainData<T>::weightList(){
-    boost::python::list out;
-    for(auto &a: weight_arrays_)
-        out.append(a);
-    return out;
-}
-
-template<class T>
-boost::python::list trainData<T>::transferFeatureListToNumpy(){
-    namespace p = boost::python;
-    namespace np = boost::python::numpy;
-    p::list out;
-    for( auto& a: feature_arrays_){
-        if(a.isRagged()){
-            auto arrt = a.transferToNumpy(true);//pad row splits
-            out.append(arrt[0]);//data
-            np::ndarray rs = boost::python::extract<np::ndarray>(arrt[1]);
-            out.append(rs.reshape(p::make_tuple(-1,1)));//row splits
-        }
-        else
-            out.append(a.transferToNumpy(true)[0]);
-    }
-    return out;
-}
-
-template<class T>
-boost::python::list trainData<T>::transferTruthListToNumpy(){
-    namespace p = boost::python;
-    namespace np = boost::python::numpy;
-
-    boost::python::list out;
-        for( auto& a: truth_arrays_){
-            if(a.isRagged()){
-                //auto arrt = a.transferToNumpy(false);
-                //boost::python::list subl;
-                //subl.append(arrt[0]);
-                //subl.append(arrt[1]);
-                //out.append(subl);
-                auto arrt = a.transferToNumpy(true);//pad row splits
-                out.append(arrt[0]);//data
-                np::ndarray rs = boost::python::extract<np::ndarray>(arrt[1]);
-                out.append(rs.reshape(p::make_tuple(-1,1)));//row splits
-            }
-            else{
-                out.append(a.transferToNumpy(false)[0]);}
-        }
-        return out;
-}
-
-template<class T>
-boost::python::list trainData<T>::transferWeightListToNumpy(){
-    boost::python::list out;
-    for( auto& a: weight_arrays_){
-        out.append(a.transferToNumpy()[0]);
-    }
-    return out;
-}
-
-
-#endif
 
 
 /*

@@ -45,6 +45,9 @@ public:
 
     simpleArrayBase(std::vector<int> shape,const std::vector<int64_t>& rowsplits = {});
 
+
+  //  virtual simpleArrayBase& operator=(simpleArrayBase &&)=0;
+
     virtual void clear()=0;
 
     virtual void setShape(std::vector<int> shape,const std::vector<int64_t>& rowsplits = {})=0;
@@ -59,6 +62,8 @@ public:
     std::string name()const{return name_;}
     void setFeatureNames(const std::vector<std::string>& names){featnames_=names;}
     const std::vector<std::string>& featureNames()const{return featnames_;}
+
+
 
     static std::string dtypeToString(dtypes t);
     static dtypes stringToDtype(const std::string& s);
@@ -109,6 +114,13 @@ public:
 
     virtual void cout()const=0;
 
+
+    /*
+     * appends along first axis
+     * Cann append to an empty array (same as copy)
+     */
+    virtual void append(const simpleArrayBase& a)=0;
+
     /**
      * Split indices can directly be used with the split() function.
      * Returns elements e.g. {2,5,3,2}, which corresponds to DataSplitIndices of {2,7,10,12}
@@ -140,6 +152,31 @@ public:
 
     static std::vector<int64_t> splitRowSplits(std::vector<int64_t> & rowsplits, const size_t& splitpoint);
 
+
+#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+    int isize() const {
+        return (int)size_;
+    }
+    //does not transfer data ownership! only for quick writing etc.
+    virtual void assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
+            const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
+                    boost::python::make_tuple(0), boost::python::numpy::dtype::get_builtin<size_t>()))=0;
+
+    //copy data
+    virtual void createFromNumpy(const boost::python::numpy::ndarray& ndarr,
+            const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
+                    boost::python::make_tuple(0), boost::python::numpy::dtype::get_builtin<size_t>()))=0;
+
+    //transfers data ownership and cleans simpleArray instance
+    virtual boost::python::tuple transferToNumpy(bool pad_rowsplits=false)=0;
+
+    //copy data
+    virtual boost::python::tuple copyToNumpy(bool pad_rowsplits=false)const=0;
+
+    virtual void setFeatureNamesPy(boost::python::list l)=0;
+    virtual boost::python::list featureNamesPy()=0;
+
+#endif
 
 protected:
     std::vector<int> shape_;
@@ -262,8 +299,7 @@ public:
      * appends along first axis
      * Cann append to an empty array (same as copy)
      */
-    void append(const simpleArray<T>& a);
-
+    void append(const simpleArrayBase& a);
 
 
     /* file IO here
@@ -309,9 +345,6 @@ public:
 
 
 #ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
-    int isize() const {
-        return (int)size_;
-    }
     //does not transfer data ownership! only for quick writing etc.
     void assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
             const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
@@ -346,6 +379,8 @@ private:
 
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
+
+    void append_priv(const simpleArray<T>& a);
 
 
 
@@ -707,7 +742,7 @@ simpleArray<T> simpleArray<T>::shuffle(const std::vector<size_t>& shuffle_idxs)c
  * Merges along first axis
  */
 template<class T>
-void simpleArray<T>::append(const simpleArray<T>& a) {
+void simpleArray<T>::append_priv(const simpleArray<T>& a) {
 
     if (!data_ && size_ == 0) {
         *this = a;
@@ -763,6 +798,13 @@ void simpleArray<T>::append(const simpleArray<T>& a) {
 
         shape_ = shapeFromRowsplits();//last
     }
+}
+
+template<class T>
+void simpleArray<T>::append(const simpleArrayBase& a){
+    if(a.dtype() != dtype_)
+        throw std::runtime_error("simpleArray<T>::append: must have same dtype");
+    append(dynamic_cast<const simpleArray<T> &>(a));
 }
 
 template<class T>
@@ -1240,10 +1282,6 @@ boost::python::list simpleArray<T>::featureNamesPy(){
 typedef simpleArray<float> simpleArray_float32;
 typedef simpleArray<int32_t> simpleArray_int32;
 
-template<>
-simpleArrayBase::dtypes simpleArray_float32::dtype()const{return float32;}
-template<>
-simpleArrayBase::dtypes simpleArray_int32::dtype()const{return int32;}
 
 
 }//namespace
