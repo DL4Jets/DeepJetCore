@@ -39,7 +39,6 @@ public:
     enum dtypes{float32,int32,undef};
 
     simpleArrayBase():size_(0),assigned_(false) {
-        dtype_= dtype();
     }
     virtual ~simpleArrayBase(){}
 
@@ -114,12 +113,7 @@ public:
 
     virtual void cout()const=0;
 
-
-    /*
-     * appends along first axis
-     * Cann append to an empty array (same as copy)
-     */
-    virtual void append(const simpleArrayBase& a)=0;
+    virtual void append(const simpleArrayBase& )=0;
 
     /**
      * Split indices can directly be used with the split() function.
@@ -186,7 +180,6 @@ protected:
     std::vector<int64_t> rowsplits_;
     size_t size_;
     bool assigned_;
-    dtypes dtype_;
 
 
     size_t sizeFromShape(const std::vector<int>& shape) const;
@@ -233,7 +226,7 @@ public:
     simpleArray(simpleArray<T> &&);
     simpleArray<T>& operator=(simpleArray<T> &&);
 
-    dtypes dtype()const{return undef;}
+    dtypes dtype()const;
 
     bool operator==(const simpleArray<T>& rhs)const;
     bool operator!=(const simpleArray<T>& rhs)const { return !(*this == rhs); }
@@ -299,7 +292,9 @@ public:
      * appends along first axis
      * Cann append to an empty array (same as copy)
      */
-    void append(const simpleArrayBase& a);
+    void append(const simpleArray<T>& a);
+    void append(const simpleArrayBase& );
+
 
 
     /* file IO here
@@ -380,7 +375,6 @@ private:
     void copyFrom(const simpleArray<T>& a);
     void moveFrom(simpleArray<T> && a);
 
-    void append_priv(const simpleArray<T>& a);
 
 
 
@@ -401,20 +395,17 @@ template<class T>
 simpleArray<T>::simpleArray() :
 simpleArrayBase(),
         data_(0) {
-    dtype_= dtype();
 }
 
 template<class T>
 simpleArray<T>::simpleArray(std::vector<int> shape,const std::vector<int64_t>& rowsplits) :
 simpleArrayBase(shape,rowsplits) {
     data_ = new T[size_];
-    dtype_= dtype();
 }
 
 template<class T>
 simpleArray<T>::simpleArray(FILE *& ifile):simpleArray<T>(){
     data_=0;
-    dtype_= dtype();
     readFromFileP(ifile);
     assigned_=false;
 }
@@ -444,7 +435,6 @@ simpleArray<T>::simpleArray(simpleArray<T> && a) :
         return;}
     if (data_&& !assigned_)
         delete data_;
-    dtype_=a.dtype_;
     name_=a.name_;
     featnames_=a.featnames_;
     data_ = a.data_;
@@ -466,7 +456,6 @@ simpleArray<T>& simpleArray<T>::operator=(simpleArray<T> && a) {
         return *this;
     if (data_ && !assigned_)
         delete data_;
-    dtype_=a.dtype_;
     name_=a.name_;
     featnames_=a.featnames_;
     data_ = a.data_;
@@ -485,7 +474,7 @@ template<class T>
 bool simpleArray<T>::operator==(const simpleArray<T>& rhs)const{
     if(this == &rhs)
         return true;
-    if(dtype_!=rhs.dtype_)
+    if(dtype() !=rhs.dtype())
         return false;
     if(name_!=rhs.name_)
         return false;
@@ -742,7 +731,7 @@ simpleArray<T> simpleArray<T>::shuffle(const std::vector<size_t>& shuffle_idxs)c
  * Merges along first axis
  */
 template<class T>
-void simpleArray<T>::append_priv(const simpleArray<T>& a) {
+void simpleArray<T>::append(const simpleArray<T>& a) {
 
     if (!data_ && size_ == 0) {
         *this = a;
@@ -801,20 +790,20 @@ void simpleArray<T>::append_priv(const simpleArray<T>& a) {
 }
 
 template<class T>
-void simpleArray<T>::append(const simpleArrayBase& a){
-    if(a.dtype() != dtype_)
-        throw std::runtime_error("simpleArray<T>::append: must have same dtype");
-    append(dynamic_cast<const simpleArray<T> &>(a));
+void simpleArray<T>::append(const simpleArrayBase& arr){
+    if(dtype() != arr.dtype())
+        throw std::runtime_error("simpleArray<T>::append: needs to be same dtype");
+    append(dynamic_cast<const simpleArray<T> &>(arr));
 }
+
 
 template<class T>
 void simpleArray<T>::addToFileP(FILE *& ofile) const {
 
-
-
     float version = DJCDATAVERSION;
     io::writeToFile(&version, ofile);
-    io::writeToFile(&dtype_, ofile);
+    auto tdtype = dtype();
+    io::writeToFile(&tdtype, ofile);
     io::writeToFile(&name_, ofile);
     io::writeToFile(&featnames_, ofile);
     io::writeToFile(&size_, ofile);
@@ -850,7 +839,7 @@ void simpleArray<T>::readFromFileP(FILE *& ifile) {
         io::readFromFile(&name_, ifile);
         io::readFromFile(&featnames_, ifile);
     }
-    if(rdtype!=dtype_)
+    if(rdtype!=dtype())
         throw std::runtime_error("simpleArray<T>::readFromFileP: wrong dtype");
 
     io::readFromFile(&size_, ifile);
@@ -933,7 +922,6 @@ void simpleArray<T>::copyFrom(const simpleArray<T>& a) {
     }
     if (data_&& !assigned_)
         delete data_;
-    dtype_= a.dtype_;
     name_=a.name_;
     featnames_=a.featnames_;
     data_ = new T[a.size_];

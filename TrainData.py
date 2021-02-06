@@ -57,7 +57,7 @@ class TrainData(trainData):
     
     
     def _maybeConvertToSimpleArray(self,a):
-        if str(type(a)) == "<class 'DeepJetCore.compiled.c_simpleArray.simpleArray'>":
+        if str(type(a)) == "<class 'DeepJetCore.SimpleArray.SimpleArray'>":
             return a
         elif str(type(a)) == "<type 'numpy.ndarray'>" or str(type(a)) == "<class 'numpy.ndarray'>":
             rs = np.array([])

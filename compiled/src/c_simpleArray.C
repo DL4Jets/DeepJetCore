@@ -48,7 +48,7 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
        .def("isRagged", &simpleArray_float32::isRagged)
        .def("split", &simpleArray_float32::split)
        .def("getSlice", &simpleArray_float32::getSlice)
-       .def("append", &simpleArray_float32::append)
+       .def<void (simpleArray_float32::*)(const simpleArray_float32&)>("append", &simpleArray_float32::append) //just use the explicit one here
        .def("cout", &simpleArray_float32::cout)
        .def("size", &simpleArray_float32::isize);
     ;
@@ -73,7 +73,7 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
        .def("isRagged", &simpleArray_int32::isRagged)
        .def("split", &simpleArray_int32::split)
        .def("getSlice", &simpleArray_int32::getSlice)
-       .def("append", &simpleArray_int32::append)
+       .def<void (simpleArray_int32::*)(const simpleArray_int32&)>("append", &simpleArray_int32::append) //just use the explicit one here
        .def("cout", &simpleArray_int32::cout)
        .def("size", &simpleArray_int32::isize);
     ;
