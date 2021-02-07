@@ -13,7 +13,7 @@ import numpy as np
 import logging
 
 from DeepJetCore.compiled.c_trainData import trainData
-from DeepJetCore.compiled.c_simpleArray import simpleArray
+from DeepJetCore.SimpleArray import SimpleArray
 import time
 
 def fileTimeOut(fileName, timeOut):
@@ -56,26 +56,25 @@ class TrainData(trainData):
         self.readFromFile(fileprefix,shapesOnly)
     
     
-    def _maybeConvertToSimpleArray(self,a):
+    def _convertToCppType(self,a):
         if str(type(a)) == "<class 'DeepJetCore.SimpleArray.SimpleArray'>":
-            return a
+            return a.sa
         elif str(type(a)) == "<type 'numpy.ndarray'>" or str(type(a)) == "<class 'numpy.ndarray'>":
             rs = np.array([])
-            arr = simpleArray()
-            arr.createFromNumpy(a, rs)
-            return arr
+            a = SimpleArray(a,rs)
+            return a.sa
         else:
-            raise ValueError("TrainData: convertFromSourceFile MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays!")
+            raise ValueError("TrainData._convertToCppType MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays!")
             
     def _store(self, x, y, w):
         for xa in x:
-            self.storeFeatureArray(self._maybeConvertToSimpleArray(xa))
+            self.storeFeatureArray(self._convertToCppType(xa))
         x = [] #collect garbage
         for ya in y:
-            self.storeTruthArray(self._maybeConvertToSimpleArray(ya))
+            self.storeTruthArray(self._convertToCppType(ya))
         y = []
         for wa in w:
-            self.storeWeightArray(self._maybeConvertToSimpleArray(wa))
+            self.storeWeightArray(self._convertToCppType(wa))
         w = []    
         
     def readFromSourceFile(self,filename, weighterobjects={}, istraining=False, **kwargs):

@@ -13,7 +13,6 @@
 #include "boost/python/str.hpp"
 #include <boost/python/exception_translator.hpp>
 
-#define DJC_DATASTRUCTURE_PYTHON_BINDINGS
 
 #include "../interface/trainDataGenerator.h"
 

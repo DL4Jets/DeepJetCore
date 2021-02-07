@@ -103,7 +103,7 @@ void typeContainer::readFromFile(FILE *& ifile){
     io::readFromFile(&isize,ifile);
     for(size_t i=0;i<isize;i++){
         simpleArray_float32 tmp;//type doesn't matter
-        auto dtype = tmp.readDtypeFromFileP(ifile);
+        auto dtype = tmp.readDtypeTypeFromFileP(ifile);
         if(dtype == simpleArrayBase::float32){
             simpleArray_float32 farr;
             farr.readFromFileP(ifile);
@@ -444,7 +444,7 @@ void trainData::skim(size_t batchelement){
 }
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+
 
 boost::python::list trainData::getKerasFeatureShapes()const{
     boost::python::list out;
@@ -505,8 +505,7 @@ boost::python::list trainData::getTruthRaggedFlags()const{
     return out;
 }
 
-
-boost::python::list transferToNumpyList(typeContainer& c, bool pad_rowsplits){
+boost::python::list trainData::transferToNumpyList(typeContainer& c, bool pad_rowsplits){
     namespace p = boost::python;
     namespace np = boost::python::numpy;
     p::list out;
@@ -536,6 +535,5 @@ boost::python::list trainData::transferTruthListToNumpy(bool padrowsplits){
 boost::python::list trainData::transferWeightListToNumpy(bool padrowsplits){
     return transferToNumpyList(weight_arrays_,padrowsplits);
 }
-#endif //python bindings
 
 }//ns

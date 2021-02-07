@@ -17,11 +17,9 @@ trainDataGenerator::~trainDataGenerator(){
 
 }
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 void trainDataGenerator::setFileListPy(boost::python::list files){
     trainDataGenerator::setFileList(toSTLVector<std::string>(files));
 }
-#endif
 
 void trainDataGenerator::shuffleFilelist(){
     std::random_device rd;

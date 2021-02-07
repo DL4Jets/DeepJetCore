@@ -86,30 +86,38 @@ simpleArrayBase::dtypes simpleArrayBase::stringToDtype(const std::string& s){
 }
 
 std::string simpleArrayBase::readDtypeFromFileP(FILE *& ifile)const{
+    return dtypeToString(readDtypeTypeFromFileP(ifile));
+}
+
+std::string simpleArrayBase::readDtypeFromFile(const std::string& f)const{
+    return dtypeToString(readDtypeTypeFromFile(f));
+}
+
+simpleArrayBase::dtypes simpleArrayBase::readDtypeTypeFromFileP(FILE *& ifile)const{
     long pos = ftell(ifile);
 
     float version = 0;
     io::readFromFile(&version, ifile);
     if(version != DJCDATAVERSION){
         if(version != 2.0f)//compat
-            throw std::runtime_error("simpleArrayBase::readDtypeFromFileP: wrong format version");
+            throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFileP: wrong format version");
     }
     dtypes dt=float32;
     if(version != 2.0f)
         io::readFromFile(&dt, ifile);
     fseek(ifile,pos-ftell(ifile),SEEK_CUR);//go back
-    return dtypeToString(dt);
+    return dt;
 }
 
-std::string simpleArrayBase::readDtypeFromFile(const std::string& f)const{
+simpleArrayBase::dtypes simpleArrayBase::readDtypeTypeFromFile(const std::string& f)const{
     FILE *ifile = fopen(f.data(), "rb");
     if(!ifile)
-        throw std::runtime_error("simpleArrayBase::readDtypeFromFileP: file "+f+" could not be opened.");
+        throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFile: file "+f+" could not be opened.");
     float version = 0;
     io::readFromFile(&version, ifile);
     if(version != DJCDATAVERSION && version != 2.0f)
-        throw std::runtime_error("simpleArrayBase::readDtypeFromFileP: wrong format version");
-    auto type = readDtypeFromFileP(ifile);
+        throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFile: wrong format version");
+    auto type = readDtypeTypeFromFileP(ifile);
     fclose(ifile);
     return type;
 }

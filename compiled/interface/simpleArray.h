@@ -8,14 +8,12 @@
 #ifndef DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 #define DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_SIMPLEARRAY_H_
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include <boost/python/exception_translator.hpp>
 #include "helper.h"
 #include "pythonToSTL.h"
-#endif
 
 #include "c_helper.h"
 #include <cmath>
@@ -111,6 +109,9 @@ public:
     std::string readDtypeFromFileP(FILE *& ofile)const;
     std::string readDtypeFromFile(const std::string& f)const;
 
+    dtypes readDtypeTypeFromFileP(FILE *& ofile)const;
+    dtypes readDtypeTypeFromFile(const std::string& f)const;
+
     virtual void cout()const=0;
 
     virtual void append(const simpleArrayBase& )=0;
@@ -147,7 +148,6 @@ public:
     static std::vector<int64_t> splitRowSplits(std::vector<int64_t> & rowsplits, const size_t& splitpoint);
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     int isize() const {
         return (int)size_;
     }
@@ -170,7 +170,6 @@ public:
     virtual void setFeatureNamesPy(boost::python::list l)=0;
     virtual boost::python::list featureNamesPy()=0;
 
-#endif
 
 protected:
     std::vector<int> shape_;
@@ -339,7 +338,6 @@ public:
 
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     //does not transfer data ownership! only for quick writing etc.
     void assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
             const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(
@@ -359,7 +357,6 @@ public:
     void setFeatureNamesPy(boost::python::list l);
     boost::python::list featureNamesPy();
 
-#endif
 
 
 private:
@@ -378,7 +375,6 @@ private:
 
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     std::vector<int> makeNumpyShape()const;
     void checkArray(const boost::python::numpy::ndarray& ndarr,
             boost::python::numpy::dtype dt=boost::python::numpy::dtype::get_builtin<T>())const;
@@ -386,7 +382,6 @@ private:
                 const boost::python::numpy::ndarray& rowsplits,
                 bool copy);
 
-#endif
 
     T * data_;
 };
@@ -829,6 +824,7 @@ void simpleArray<T>::readFromFileP(FILE *& ifile) {
 
     float version = 0;
     io::readFromFile(&version, ifile);
+
     if(version != DJCDATAVERSION){
         if(version != 2.0f)//compat
             throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version");
@@ -1099,7 +1095,6 @@ const T & simpleArray<T>::at(size_t i, size_t j, size_t k, size_t l, size_t m, s
 }
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 /*
  * PYTHON / NUMPY Interface below
  *
@@ -1264,7 +1259,6 @@ boost::python::list simpleArray<T>::featureNamesPy(){
     return l;
 }
 
-#endif
 
 
 typedef simpleArray<float> simpleArray_float32;

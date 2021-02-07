@@ -8,14 +8,12 @@
 #ifndef DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_TRAINDATAGENERATOR_H_
 #define DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_TRAINDATAGENERATOR_H_
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include <boost/python/exception_translator.hpp>
 #include "helper.h"
 #include "pythonToSTL.h"
-#endif
 
 #include <string>
 #include <vector>
@@ -63,9 +61,9 @@ public:
         readInfo();
     }
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
+
     void setFileListPy(boost::python::list files);
-#endif
+
     void setBuffer(const trainData&);
 
     void setBatchSize(size_t nelements){

@@ -10,13 +10,11 @@
 
 //#define DJC_DATASTRUCTURE_PYTHON_BINDINGS//DEBUG
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include <boost/python.hpp>
 #include "boost/python/numpy.hpp"
 #include "boost/python/list.hpp"
 #include <boost/python/exception_translator.hpp>
 #include "helper.h"
-#endif
 
 #include "simpleArray.h"
 #include <stdio.h>
@@ -86,6 +84,27 @@ public:
     int storeFeatureArray( simpleArrayBase&);
     int storeTruthArray( simpleArrayBase&);
     int storeWeightArray( simpleArrayBase&);
+
+    //for python, no implicit cast
+    inline int storeFeatureArray( simpleArray_float32& a){
+        return storeFeatureArray(dynamic_cast<simpleArrayBase&> (a));
+    }
+    inline int storeTruthArray( simpleArray_float32& a){
+        return storeTruthArray(dynamic_cast<simpleArrayBase&> (a));
+    }
+    inline int storeWeightArray( simpleArray_float32& a){
+        return storeWeightArray(dynamic_cast<simpleArrayBase&> (a));
+    }
+
+    inline int storeFeatureArray( simpleArray_int32&a){
+        return storeFeatureArray(dynamic_cast<simpleArrayBase&> (a));
+    }
+    inline int storeTruthArray( simpleArray_int32& a){
+        return storeTruthArray(dynamic_cast<simpleArrayBase&> (a));
+    }
+    inline int storeWeightArray( simpleArray_int32& a){
+        return storeWeightArray(dynamic_cast<simpleArrayBase&> (a));
+    }
 
     //these are not really used so much -->
     /*
@@ -198,7 +217,6 @@ public:
     void skim(size_t batchelement);
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
 
     boost::python::list getKerasFeatureShapes()const;
     boost::python::list getKerasFeatureDTypes()const;
@@ -242,7 +260,6 @@ public:
         return td.transferWeightListToNumpy(padrowsplits); //fast hack
     }
 
-#endif
 
 private:
 
@@ -272,9 +289,8 @@ private:
     std::vector<std::vector<int> > weight_shapes_;
 
 
-#ifdef DJC_DATASTRUCTURE_PYTHON_BINDINGS
     boost::python::list transferToNumpyList(typeContainer& , bool pad_rowsplits);
-#endif
+
 
 };
 

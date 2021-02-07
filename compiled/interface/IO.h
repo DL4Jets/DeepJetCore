@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <string>
 #include <vector>
-
+#include <iostream>
 /*
  * Very simple template wrapper around fread and fwrite with error checks
  * The number of datatypes written is NOT given in bytes.
@@ -93,7 +93,11 @@ void readFromFile<std::string>(std::string * p, FILE* ifile, size_t N, size_t Nb
 template <class T>
 void readFromFile(std::vector<T> * p, FILE* ifile, size_t N=1, size_t Nbytes=0){
     readFromFile<size_t>(&N,ifile);
-    *p=std::vector<T>(N);
+    if(!N){
+        p->resize(0);
+        return;
+    }
+    p->resize(N);
     for(auto& v: *p)
         readFromFile<T>(&v,ifile);
 }

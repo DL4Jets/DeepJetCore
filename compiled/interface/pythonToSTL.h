@@ -25,7 +25,7 @@ std::vector<T> toSTLVector(const boost::python::list lin){
 }
 
 template<>
-std::vector<TString> toSTLVector(const boost::python::list lin){
+inline std::vector<TString> toSTLVector(const boost::python::list lin){
 	std::vector<TString>  out(boost::python::len(lin));
 	for(size_t i=0;i<boost::python::len(lin);i++){
 		std::string stdstr=boost::python::extract<std::string>(lin[i]);
@@ -48,7 +48,7 @@ std::vector<std::vector<T> > toSTL2DVector(const boost::python::list lin){
 
 
 template<>
-std::vector<std::vector<TString> > toSTL2DVector(const boost::python::list lin){
+inline std::vector<std::vector<TString> > toSTL2DVector(const boost::python::list lin){
 	std::vector<std::vector<TString> > out;
 	for(size_t i=0;i<boost::python::len(lin);i++){
 		std::vector<TString> tmp(boost::python::len(lin[i]));

@@ -16,7 +16,7 @@ MODULES := $(wildcard src/*.C)
 MODULES_OBJ_FILES := $(addprefix ./,$(notdir $(MODULES:.C=.o)))
 MODULES_SHARED_LIBS := $(addprefix ./,$(notdir $(MODULES:.C=.so)))
 
-CFLAGS := -g
+#CFLAGS := -g
 
 all: $(MODULES_SHARED_LIBS) $(patsubst to_bin/%.cpp, %, $(wildcard to_bin/*.cpp)) classdict.so
 
@@ -24,7 +24,7 @@ classdict.cxx: src/LinkDef.h
 	rootcling -v4 -f $@  -rmf classdict.rootmap -rml classdict.so  $^
 
 classdict.so: classdict.cxx
-	g++ $(ROOTCFLAGS) $(ROOTSTUFF) -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
+	g++ $(CFLAGS) $(ROOTCFLAGS) $(ROOTSTUFF) -std=c++11 -fPIC -shared -o classdict.so classdict.cxx 	
 
 
 %: to_bin/%.cpp libdeepjetcorehelpers.so classdict.cxx

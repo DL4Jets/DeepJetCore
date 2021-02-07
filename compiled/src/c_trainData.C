@@ -5,7 +5,6 @@
  *      Author: jkiesele
  */
 
-#define DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include "../interface/trainData.h"
 
 
@@ -20,10 +19,15 @@ BOOST_PYTHON_MODULE(c_trainData) {
     p::class_<trainData >("trainData")
 
 
+        //excplicit overloading
+       .def<int (trainData::*)(simpleArray_float32&)>("storeFeatureArray", &trainData::storeFeatureArray)
+       .def<int (trainData::*)(simpleArray_int32&)>("storeFeatureArray", &trainData::storeFeatureArray)
 
-       .def("storeFeatureArray", &trainData::storeFeatureArray)
-       .def("storeTruthArray", &trainData::storeTruthArray)
-       .def("storeWeightArray", &trainData::storeWeightArray)
+       .def<int (trainData::*)(simpleArray_float32&)>("storeTruthArray", &trainData::storeTruthArray)
+       .def<int (trainData::*)(simpleArray_int32&)>("storeTruthArray", &trainData::storeTruthArray)
+
+       .def<int (trainData::*)(simpleArray_float32&)>("storeWeightArray", &trainData::storeWeightArray)
+       .def<int (trainData::*)(simpleArray_int32&)>("storeWeightArray", &trainData::storeWeightArray)
 
      //  .def("featureList", &trainData::featureList)
      //  .def("truthList", &trainData::truthList)

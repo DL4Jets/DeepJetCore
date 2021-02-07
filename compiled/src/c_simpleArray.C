@@ -11,8 +11,6 @@
  *   just a wrapper module
  */
 
-//switches on python / numpy interfaces in the templates included below
-#define DJC_DATASTRUCTURE_PYTHON_BINDINGS
 #include "../interface/helper.h"
 #include "../interface/simpleArray.h"
 #include <cstdint>
@@ -48,7 +46,7 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
        .def("isRagged", &simpleArray_float32::isRagged)
        .def("split", &simpleArray_float32::split)
        .def("getSlice", &simpleArray_float32::getSlice)
-       .def<void (simpleArray_float32::*)(const simpleArray_float32&)>("append", &simpleArray_float32::append) //just use the explicit one here
+       .def<void (simpleArray_float32::*)(const simpleArray_float32&)>("append", &simpleArray_float32::append)
        .def("cout", &simpleArray_float32::cout)
        .def("size", &simpleArray_float32::isize);
     ;
