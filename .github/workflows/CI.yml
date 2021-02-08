@@ -71,7 +71,6 @@ jobs:
         echo $PYTHONPATH 
         echo "LD_LIBRARY_PATH"
         echo $LD_LIBRARY_PATH
-        python -c "import DeepJetCore"
 
     - name: Compile
       run: |
