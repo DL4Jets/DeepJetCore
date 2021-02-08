@@ -11,9 +11,7 @@
 #define DJCDATAVERSION (2.1f)
 #define DJCDATAVERSION_COMPAT (2.0f)
 
-inline bool checkVersionCompatible(const float& version){
-    return version == DJCDATAVERSION || version == DJCDATAVERSION_COMPAT;
-}
+bool checkVersionCompatible(const float& version);
 
 inline bool checkVersionStrict(float version){
     return version == DJCDATAVERSION;
