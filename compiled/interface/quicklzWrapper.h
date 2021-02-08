@@ -155,6 +155,7 @@ size_t quicklz<T>::skipBlock(FILE *& ifile){
     for(const auto& c:chunksizes_)
         totalbytescompressed+=c;
     fseek(ifile,totalbytescompressed,SEEK_CUR);
+    return totalbytescompressed;
 }
 
 template<class T>
