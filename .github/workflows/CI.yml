@@ -103,6 +103,11 @@ jobs:
         echo "LD_LIBRARY_PATH"
         echo $LD_LIBRARY_PATH
 
+    - name: "Unit tests"
+      run: |
+        cd $DEEPJETCORE/testing/unit
+        python test.py
+        
     - name: Convert files
       run: |   
         cd $DEEPJETCORE
@@ -116,3 +121,5 @@ jobs:
     - name: "Run eval"
       run: |
         predict.py here/training/KERAS_model.h5 here/training/trainsamples.djcdc here/example_data/test_files.txt here/out_predict
+        
+    

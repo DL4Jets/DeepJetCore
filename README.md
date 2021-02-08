@@ -8,7 +8,7 @@ DeepJetCore: Package for training and evaluation of deep neural networks for HEP
 ===============================================================================
 
 
-(For upgrading from DeepJetCore 1.X to 2.0, please scroll to the bottom)
+(For upgrading from DeepJetCore 1.X to 2.X/3.X, please scroll to the bottom)
 
 This package provides the basic functions for out-of-memory training, resampling, and basic evaluation. 
 For simple use cases, only two files need to be adapted: the actual training data structures, describing how to fill numpy arrays from root trees, and the DNN model itself. Both must be defined in an additional user package. 
@@ -94,7 +94,7 @@ The general pipeline for inference/prediction is depicted in the following sketc
 More information on the three function of TrainData that need to be defined by the user (in addition to the training script) is given in the next Section.
 For the training script, please refer to the example provided with ``createSubpackage.py``. 
 
-TrainData definition and notes on upgrading (from 1.X to 2.X)
+TrainData definition and notes on upgrading (from 1.X to 2.X/3.X)
 =========================
 
 There has been substantial format changes from 1.X to 2.X, including low-level support preparations for ragged tensors. Therefore, all data from 1.X needs to be converted or newly created. Also, the interface changed slightly.
@@ -123,7 +123,7 @@ Ragged Tensors
 
 Ragged data structures supported to some extent with workarounds for places where either keras or tensorflow are still missing support.
 Only tensors ragged in the first dimension are supported so far, meaning, e.g. a different number of inputs per event, but each input having the same feature length (or more dimensions with fixed sizes). This should cover most usecases already.
-To create a ragged data structure, the function ``convertFromSourceFile(self, filename, weighterobjects, istraining, **kwargs)`` must not return a list of numpy arrays, but a list of ``simpleArray``, which is a DeepJetCore class supporting ragged structures. This array can be constructed from two numpy arrays: one describing the row splits (as int, in the same format as tensorflow ragged array row splits) and one containing the data, where the 0th and 1st dimensions are flattened. Then the array can be filled by invoking ``createFromNumpy(data, row_splits``.
+To create a ragged data structure, the function ``convertFromSourceFile(self, filename, weighterobjects, istraining, **kwargs)`` must not return a list of numpy arrays, but a list of ``DeepJetCore.SimpleArray``, which is a DeepJetCore class supporting ragged structures. This array can be constructed from two numpy arrays: one describing the row splits (as int, in the same format as tensorflow ragged array row splits) and one containing the data, where the 0th and 1st dimensions are flattened. Then the array can be filled by invoking ``createFromNumpy(data, row_splits``.
 For training, the model will receive a list of tensors, where the first one will be the data and the second the row splits. The same applies to the truth. This circumvents incomplete keras support for the moment.
 
 
