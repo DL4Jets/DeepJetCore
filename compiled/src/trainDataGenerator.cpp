@@ -100,7 +100,7 @@ void trainDataGenerator::readInfo(){
     for(const auto& f: orig_infiles_){
         trainData td;
 
-        td.readShapesFromFile(f);
+        td.readMetaDataFromFile(f);
         //first dimension is always Nelements. At least features are filled
         if(td.featureShapes().size()<1 || td.featureShapes().at(0).size()<1)
             throw std::runtime_error("trainDataGenerator<T>::readNTotal: no features filled in trainData object "+f);

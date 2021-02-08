@@ -97,7 +97,7 @@ void typeContainer::writeToFile(FILE *& ofile) const{
     }
 }
 
-void typeContainer::readFromFile(FILE *& ifile){
+void typeContainer::readFromFile_priv(FILE *& ifile, bool justmetadata){
     clear();
     size_t isize = 0;
     io::readFromFile(&isize,ifile);
@@ -106,12 +106,12 @@ void typeContainer::readFromFile(FILE *& ifile){
         auto dtype = tmp.readDtypeTypeFromFileP(ifile);
         if(dtype == simpleArrayBase::float32){
             simpleArray_float32 farr;
-            farr.readFromFileP(ifile);
+            farr.readFromFileP(ifile,justmetadata);
             move_back(farr);
         }
         else{ //if(dtype==simpleArrayBase::int32){
             simpleArray_int32 iarr;
-            iarr.readFromFileP(ifile);
+            iarr.readFromFileP(ifile,justmetadata);
             move_back(iarr);
         }
     }
@@ -323,7 +323,7 @@ void trainData::priv_readFromFile(std::string filename, bool memcp){
 
 }
 
-void trainData::readShapesFromFile(const std::string& filename){
+void trainData::readMetaDataFromFile(const std::string& filename){
 
     FILE *ifile = fopen(filename.data(), "rb");
     checkFile(ifile,filename);
@@ -331,6 +331,12 @@ void trainData::readShapesFromFile(const std::string& filename){
     readNested(feature_shapes_, ifile);
     readNested(truth_shapes_, ifile);
     readNested(weight_shapes_, ifile);
+
+    //read dtypes
+
+    feature_arrays_ .readMetaDataFromFile(ifile);
+    truth_arrays_.readMetaDataFromFile(ifile);
+    weight_arrays_.readMetaDataFromFile(ifile);
 
     fclose(ifile);
 

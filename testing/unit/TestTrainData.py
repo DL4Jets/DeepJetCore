@@ -6,9 +6,9 @@ import os
 
 class TestTrainData(unittest.TestCase):
     
-    def createSimpleArray(self, dtype):
-        arr = np.array(np.random.rand(500,3,5,6)*100., dtype=dtype)
-        rs = np.array([0,100,230,500],dtype='int64')
+    def createSimpleArray(self, dtype, length=500):
+        arr = np.array(np.random.rand(length,3,5,6)*100., dtype=dtype)
+        rs = np.array([0,100,230,length],dtype='int64')
         return SimpleArray(arr, rs)
     
     def sub_test_store(self, readWrite):
@@ -55,7 +55,38 @@ class TestTrainData(unittest.TestCase):
         print('TestTrainData: readWrite')
         self.sub_test_store(True)  
         
+    def test_split(self):
+        print('TestTrainData: split')
+        a = self.createSimpleArray('int32')
+        b = self.createSimpleArray('float32',600)
+        c = self.createSimpleArray('int32')
+        d = self.createSimpleArray('float32',400)
+        all_orig = [a.copy(),b.copy(),c.copy(),d.copy()]
+        all_splitorig = [sa.split(2) for sa in all_orig]
+        
+        td = TrainData()
+        td._store([a,b], [c,d], [])
         
         
-    
+        tdb = td.split(2)
+        f = tdb.transferFeatureListToNumpy(False)
+        t = tdb.transferTruthListToNumpy(False)
+        _ = tdb.transferWeightListToNumpy(False)
+        all_split = [SimpleArray(f[0],f[1]), SimpleArray(f[2],f[3]),
+                     SimpleArray(t[0],t[1]), SimpleArray(t[2],t[3])]
+        
+        self.assertEqual(all_splitorig,all_split)
+        
+    def test_KerasDTypes(self):
+        print('TestTrainData: split')
+        a = self.createSimpleArray('int32')
+        b = self.createSimpleArray('float32',600)
+        c = self.createSimpleArray('int32')
+        d = self.createSimpleArray('float32',400)
+        
+        td = TrainData()
+        td._store([a,b], [c,d], [])
+        
+        #data, rs, data, rs
+        self.assertEqual(td.getKerasFeatureDTypes(), ['int32','int64','float32','int64'])
         

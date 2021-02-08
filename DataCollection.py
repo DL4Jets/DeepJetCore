@@ -101,7 +101,7 @@ class DataCollection(object):
         if self.dataclass_instance is None:
             self.dataclass_instance = self.dataclass()
         if self.dataclass_instance.nElements() < 1:
-            self.dataclass_instance.readShapesFromFile(self.getSamplePath(self.samples[0]))
+            self.dataclass_instance.readMetaDataFromFile(self.getSamplePath(self.samples[0]))
         
     def _readNTotal(self):
         if not len(self.samples):

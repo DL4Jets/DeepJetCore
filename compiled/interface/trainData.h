@@ -51,9 +51,17 @@ public:
 
 
     void writeToFile(FILE *&) const;
-    void readFromFile(FILE *&);
+    inline void readFromFile(FILE *&f){
+        readFromFile_priv(f,false);
+    }
+
+    inline void readMetaDataFromFile(FILE *&f){//produces size 0 arrays with correct dtypes and shapes otherwise
+        readFromFile_priv(f,true);
+    }
 
 private:
+    void readFromFile_priv(FILE *& f, bool justmetadata);
+
     std::vector<simpleArray_float32> farrs_;
     std::vector<simpleArray_int32> iarrs_;
 
@@ -205,7 +213,7 @@ public:
     }
 
     //could use a readshape or something!
-    void readShapesFromFile(const std::string& filename);
+    void readMetaDataFromFile(const std::string& filename);
 
     std::vector<int64_t> getFirstRowsplits()const;
     std::vector<int64_t> readShapesAndRowSplitsFromFile(const std::string& filename, bool checkConsistency=true);

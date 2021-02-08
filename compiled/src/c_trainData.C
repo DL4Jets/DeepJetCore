@@ -41,7 +41,7 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("append", &trainData::append)
        .def("split", &trainData::split)
        .def("nElements", &trainData::nElements)
-       .def("readShapesFromFile", &trainData::readShapesFromFile)
+       .def("readMetaDataFromFile", &trainData::readMetaDataFromFile)
 
        .def("readFromFile", &trainData::readFromFile)
        .def("readFromFileBuffered", &trainData::readFromFileBuffered)

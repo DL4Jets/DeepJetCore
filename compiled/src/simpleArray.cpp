@@ -163,6 +163,11 @@ std::vector<int64_t> simpleArrayBase::readRowSplitsFromFileP(FILE *& ifile, bool
 }
 
 
+void simpleArrayBase::skipToNextArray(FILE *& ofile)const{
+    readRowSplitsFromFileP(ofile,true);
+}
+
+
 std::vector<int64_t> simpleArrayBase::mergeRowSplits(const std::vector<int64_t> & rowsplitsa, const std::vector<int64_t> & rowsplitsb){
     if(rowsplitsb.size()<1)
         return rowsplitsa;

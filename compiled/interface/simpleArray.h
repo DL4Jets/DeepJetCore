@@ -99,10 +99,11 @@ public:
     virtual bool validSlice(size_t splitindex_begin, size_t splitindex_end)const=0;
 
     virtual void addToFileP(FILE *& ofile) const=0;
-    virtual void readFromFileP(FILE *& ifile)=0;
+    virtual void readFromFileP(FILE *& ifile,bool skip_data=false)=0;
     virtual void writeToFile(const std::string& f)const=0;
     virtual void readFromFile(const std::string& f)=0;
 
+    void skipToNextArray(FILE *& ofile)const;
     /**
      * this goes back to the start of the header!
      */
@@ -302,10 +303,11 @@ public:
      *
      */
     void addToFileP(FILE *& ofile) const;
-    void readFromFileP(FILE *& ifile);
+    void readFromFileP(FILE *& ifile,bool skip_data=false);
 
     void writeToFile(const std::string& f)const;
     void readFromFile(const std::string& f);
+
 
     void cout()const;
 
@@ -819,7 +821,7 @@ void simpleArray<T>::addToFileP(FILE *& ofile) const {
 }
 
 template<class T>
-void simpleArray<T>::readFromFileP(FILE *& ifile) {
+void simpleArray<T>::readFromFileP(FILE *& ifile, bool skip_data) {
     clear();
 
     float version = 0;
@@ -852,7 +854,17 @@ void simpleArray<T>::readFromFileP(FILE *& ifile) {
         quicklz<int64_t> iqlz;
         iqlz.readAll(ifile, &rowsplits_[0]);
     }
+
     quicklz<T> qlz;
+    if(skip_data){
+        rowsplits_.clear();
+        data_=0;
+        size_=0;
+        shape_.at(0)=0;
+        qlz.skipBlock(ifile);
+        return;
+    }
+
     data_ = new T[size_];
     size_t nread = qlz.readAll(ifile, data_);
     if (nread != size_)
