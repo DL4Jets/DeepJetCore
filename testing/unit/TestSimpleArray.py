@@ -64,9 +64,10 @@ class TestSimpleArray(unittest.TestCase):
         a = SimpleArray(arr,rs)
         a.setName("myname")
         a.setFeatureNames(["a","b","c","d","e","f"])
-        a.writeToFile("testfile")
+        a.writeToFile("testfile.djcsa")
         b = SimpleArray()
-        b.readFromFile("testfile")
+        b.readFromFile("testfile.djcsa")
+        os.system('rm -f testfile.djcsa')
         #os.system("rf -f testfile")
         
         ad, ars = a.copyToNumpy()

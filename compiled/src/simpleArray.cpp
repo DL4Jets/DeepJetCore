@@ -98,12 +98,11 @@ simpleArrayBase::dtypes simpleArrayBase::readDtypeTypeFromFileP(FILE *& ifile)co
 
     float version = 0;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION){
-        if(version != 2.0f)//compat
+    if(!checkVersionCompatible(version)){//compat
             throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFileP: wrong format version");
     }
     dtypes dt=float32;
-    if(version != 2.0f)
+    if(checkVersionStrict(version))
         io::readFromFile(&dt, ifile);
     fseek(ifile,pos-ftell(ifile),SEEK_CUR);//go back
     return dt;
@@ -115,7 +114,7 @@ simpleArrayBase::dtypes simpleArrayBase::readDtypeTypeFromFile(const std::string
         throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFile: file "+f+" could not be opened.");
     float version = 0;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION && version != 2.0f)
+    if(!checkVersionCompatible(version))
         throw std::runtime_error("simpleArrayBase::readDtypeTypeFromFile: wrong format version");
     auto type = readDtypeTypeFromFileP(ifile);
     fclose(ifile);
@@ -130,8 +129,16 @@ std::vector<int64_t> simpleArrayBase::readRowSplitsFromFileP(FILE *& ifile, bool
     std::vector<int> shape;
     std::vector<int64_t> rowsplits;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
+    if(!checkVersionCompatible(version))
         throw std::runtime_error("simpleArrayBase::readRowSplitsFromFileP: wrong format version");
+    if(checkVersionStrict(version)){
+        dtypes rdtype;
+        std::string namedummy;
+        std::vector<std::string> featnamedummy;
+        io::readFromFile(&rdtype, ifile);
+        io::readFromFile(&namedummy, ifile);
+        io::readFromFile(&featnamedummy, ifile);
+    }
 
     io::readFromFile(&size, ifile);
 

@@ -8,8 +8,16 @@
 #ifndef DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_VERSION_H_
 #define DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_VERSION_H_
 
-#define DJCDATAVERSION ((float)2.1)
+#define DJCDATAVERSION (2.1f)
+#define DJCDATAVERSION_COMPAT (2.0f)
 
+inline bool checkVersionCompatible(const float& version){
+    return version == DJCDATAVERSION || version == DJCDATAVERSION_COMPAT;
+}
+
+inline bool checkVersionStrict(float version){
+    return version == DJCDATAVERSION;
+}
 
 
 #endif /* DJCDEV_DEEPJETCORE_COMPILED_INTERFACE_VERSION_H_ */

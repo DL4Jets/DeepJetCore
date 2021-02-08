@@ -1,5 +1,7 @@
-from TestSimpleArray import *
-from TestTrainData import *
+from TestSimpleArray import TestSimpleArray
+from TestTrainData import TestTrainData
+from TestCompatibility import TestCompatibility
+from TestTrainDataGenerator import TestTrainDataGenerator
 import unittest
 
 unittest.main()

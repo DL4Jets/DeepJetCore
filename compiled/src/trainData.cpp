@@ -391,9 +391,8 @@ void trainData::checkFile(FILE *& ifile, const std::string& filename)const{
         throw std::runtime_error("trainData::readFromFile: file "+filename+" could not be opened.");
     float version = 0;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
-        if(version !=2.0f)
-            throw std::runtime_error("trainData::readFromFile: wrong format version");
+    if(!checkVersionCompatible(version))
+        throw std::runtime_error("trainData::readFromFile: wrong format version");
 
 }
 

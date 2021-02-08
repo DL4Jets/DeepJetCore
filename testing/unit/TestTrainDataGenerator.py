@@ -1,7 +1,7 @@
 import numpy as np
-from DeepJetCore.TrainData import TrainData
-from DeepJetCore.DataCollection import DataCollection
+from DeepJetCore import TrainData, DataCollection
 import shutil
+import unittest
 
 class RaggedTester(object):
     def __init__(self, auto_create=0):
@@ -81,49 +81,44 @@ class TrainData_test(TrainData):
     def convertFromSourceFile(self, filename, weighterobjects, istraining):
         global raggedtester
         import hashlib      
-        from DeepJetCore.compiled.c_simpleArray import simpleArray
+        from DeepJetCore import SimpleArray
         
         seed = int(hashlib.sha1(filename.encode('utf-8')).hexdigest(), 16) % (10 ** 8)
         np.random.seed(seed)
         nsamples = np.random.randint(12,5415,size=1)
         data,rs = raggedtester.createData(nsamples)
         
-        farr = simpleArray()
+        farr = SimpleArray()
         farr.createFromNumpy(data, rs)
         
         return [farr],[],[]
     
 
 
-class RaggedGeneratorTester(object):
-    def __init__(self,
-                 n_files=5,
-                 n_per_batch=2078,
-                 ):
+class TestTrainDataGenerator(unittest.TestCase):
         
-        self.files = TempFileList(n_files)
-        self.dcoutdir = TempDirName()
-        self.n_per_batch=n_per_batch
-        
-    def __del__(self):
-        shutil.rmtree(self.dcoutdir.path)
-        
-    
-    def test(self):
+    def test_fullGenerator(self):
+        print("TestTrainDataGenerator full generator")
         
         passed = True
         
+        n_files=11
+        n_per_batch=2078
+        files = TempFileList(n_files)
+        dcoutdir = TempDirName()
+    
+        n_per_batch=n_per_batch
+        
         dc = DataCollection()
         dc.dataclass = TrainData_test
-        dc.sourceList = [f for f in self.files.filenames]
-        dc.createDataFromRoot(TrainData_test, outputDir=self.dcoutdir.path)
+        dc.sourceList = [f for f in files.filenames]
+        dc.createDataFromRoot(TrainData_test, outputDir=dcoutdir.path)
         
         gen = dc.invokeGenerator()
-        gen.setBatchSize(self.n_per_batch)
+        gen.setBatchSize(n_per_batch)
         
         for epoch in range(10):
             gen.prepareNextEpoch()
-            print("epoch",epoch,'batches',gen.getNBatches())
             for b in range(gen.getNBatches()):
                 d,_ = next(gen.feedNumpyData())
                 data,rs = d[0],d[1]
@@ -135,20 +130,14 @@ class RaggedGeneratorTester(object):
                     print('epoch',epoch, 'batch',b,'broken')
                     passed=False
                     break
-                if rs[-1] > self.n_per_batch:
+                if rs[-1] > n_per_batch:
                     print('maximum batch size exceeded for batch ',b, 'epoch', epoch)
+                    passed = False
+                    break
                 
-            print('shuffling')
             gen.shuffleFilelist()
             
-        return passed
+        shutil.rmtree(dcoutdir.path)
+        self.assertTrue(passed)
         
         
-tester = RaggedGeneratorTester()
-tester.test()
-
-
-
-
-
-

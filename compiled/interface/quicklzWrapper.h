@@ -95,7 +95,7 @@ void quicklz<T>::readHeader(FILE *& ifile) {
     totalbytes_ = 0;
     float version = 0;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
+    if(!checkVersionCompatible(version))
         throw std::runtime_error("quicklz<T>::readHeader: incompatible version");
     io::readFromFile(&nchunks_,  ifile);
     chunksizes_ = std::vector<size_t>(nchunks_, 0);

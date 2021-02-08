@@ -825,12 +825,11 @@ void simpleArray<T>::readFromFileP(FILE *& ifile) {
     float version = 0;
     io::readFromFile(&version, ifile);
 
-    if(version != DJCDATAVERSION){
-        if(version != 2.0f)//compat
-            throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version");
+    if(!checkVersionCompatible(version)){
+        throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version");
     }
     dtypes rdtype=dtype();
-    if(version != 2.0f){
+    if(checkVersionStrict(version)){
         io::readFromFile(&rdtype, ifile);
         io::readFromFile(&name_, ifile);
         io::readFromFile(&featnames_, ifile);
@@ -881,8 +880,8 @@ void simpleArray<T>::readFromFile(const std::string& f){
         throw std::runtime_error("simpleArray<T>::readFromFile: file "+f+" could not be opened.");
     float version = 0;
     io::readFromFile(&version, ifile);
-    if(version != DJCDATAVERSION)
-        throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version");
+    if(!checkVersionCompatible(version))
+        throw std::runtime_error("simpleArray<T>::readFromFile: wrong format version: "+std::to_string(version));
     readFromFileP(ifile);
     fclose(ifile);
 }
