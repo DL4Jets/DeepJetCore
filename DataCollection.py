@@ -548,11 +548,11 @@ class DataCollection(object):
             #make this generic
             thislist=[]
             if selector == 'x':
-                thislist=td.transferFeatureListToNumpy()
+                thislist=td.transferFeatureListToNumpy(False)
             if selector == 'y':
-                thislist=td.transferTruthListToNumpy()
+                thislist=td.transferTruthListToNumpy(False)
             if selector == 'w':
-                thislist=td.transferWeightListToNumpy()
+                thislist=td.transferWeightListToNumpy(False)
             if firstcall:
                 out=thislist
                 firstcall=False
