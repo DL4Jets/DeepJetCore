@@ -415,8 +415,8 @@ class PredictCallback(Callback):
         if not isinstance(predicted, list):
             predicted=[predicted]
         
-        self.function_to_apply(self.call_counter,self.td.copyFeatureListToNumpy(),
-                               predicted,self.td.copyTruthListToNumpy())
+        self.function_to_apply(self.call_counter,self.td.copyFeatureListToNumpy(False),
+                               predicted,self.td.copyTruthListToNumpy(False))
         self.call_counter+=1
     
     def on_epoch_end(self, epoch, logs=None):
