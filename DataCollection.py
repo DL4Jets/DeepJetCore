@@ -95,7 +95,7 @@ class DataCollection(object):
     def __len__(self):
         return len(self.samples)
     
-    def _readShapesIfNeeded(self):
+    def _readMetaInfoIfNeeded(self):
         if len(self.samples)<1:
             return
         if self.dataclass_instance is None:
@@ -120,16 +120,23 @@ class DataCollection(object):
         if len(self.samples)<1:
             raise Exception("DataCollection.getKerasFeatureShapes: no files")
             return []
-        self._readShapesIfNeeded()
+        self._readMetaInfoIfNeeded()
         return self.dataclass_instance.getKerasFeatureShapes()
     
     def getKerasFeatureDTypes(self):
         if len(self.samples)<1:
             raise Exception("DataCollection.getKerasFeatureDTypes: no files")
             return []
-        self._readShapesIfNeeded()
+        self._readMetaInfoIfNeeded()
         return self.dataclass_instance.getKerasFeatureDTypes()
         
+    
+    def getKerasFeatureArrayNames(self):
+        if len(self.samples)<1:
+            raise Exception("DataCollection.getKerasFeatureNames: no files")
+            return []
+        self._readMetaInfoIfNeeded()
+        return self.dataclass_instance.getKerasFeatureArrayNames()
     
     def getInputShapes(self):
         print('DataCollection:getInputShapes deprecated, use getKerasFeatureShapes ')

@@ -61,6 +61,7 @@ mkdir -p {subpackage_dir}/modules/compiled/interface
 datastructure_template='''
 
 from DeepJetCore.TrainData import TrainData, fileTimeOut
+from DeepJetCore import SimpleArray
 import numpy as np
 
 class TrainData_example(TrainData):
@@ -127,7 +128,7 @@ class TrainData_example(TrainData):
         self.nsamples=len(feature_array)
         
         #returns a list of feature arrays, a list of truth arrays and a list of weight arrays
-        return [feature_array], [truth], []
+        return [SimpleArray(feature_array,name="features0")], [SimpleArray(truth,name="truth0")], []
     
     ## defines how to write out the prediction
     def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):

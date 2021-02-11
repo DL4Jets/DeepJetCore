@@ -1,5 +1,6 @@
 from DeepJetCore.TrainData import TrainData
 from DeepJetCore.TrainData import fileTimeOut 
+from DeepJetCore import SimpleArray
 import numpy
 
 
@@ -127,16 +128,19 @@ class TrainData_testBatch(base_traindata_batchex):
         
         alltruth=self.reduceTruth(truthtuple)
         
-        print(x_global.shape,x_global[0:10])
-        print(alltruth.shape,alltruth[0:10])
-        print(alltruth.flags)
+        #print(x_global.shape,x_global[0:10])
+        #print(alltruth.shape,alltruth[0:10])
+        #print(alltruth.flags)
         
         newnsamp=x_global.shape[0]
         self.nsamples = newnsamp
         
         print(x_global.shape, alltruth.shape, self.nsamples)
+        
+        truth = SimpleArray(alltruth,name="truth")
+        feat = SimpleArray(x_global,name="features0")
 
-        return [x_global], [alltruth], []
+        return [feat], [truth], []
         
         
         

@@ -228,6 +228,9 @@ public:
 
     boost::python::list getKerasFeatureShapes()const;
     boost::python::list getKerasFeatureDTypes()const;
+
+    boost::python::list getKerasFeatureArrayNames()const;
+
     // not needed boost::python::list getKerasTruthShapes()const;
     // not needed boost::python::list getKerasWeightShapes()const;
 

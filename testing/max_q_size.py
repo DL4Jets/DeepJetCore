@@ -13,8 +13,7 @@ if newtraining:
     #train.keras_model=fixLayersContaining(train.keras_model, 'regression', invert=False)
     
     train.compileModel(learningrate=0.001,
-                       loss=['categorical_crossentropy'],
-                       metrics=['accuracy'])
+                       loss=['categorical_crossentropy'])
 
 
     train.train_data.maxFilesOpen=5

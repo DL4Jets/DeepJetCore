@@ -493,6 +493,18 @@ boost::python::list trainData::getKerasFeatureDTypes()const{
     return out;
 }
 
+
+boost::python::list trainData::getKerasFeatureArrayNames()const{
+    boost::python::list out;
+    for(size_t i=0;i<feature_arrays_.size();i++){
+        auto name = feature_arrays_.at(i).name();
+        out.append(name);
+        if(feature_arrays_.at(i).isRagged())
+            out.append(name+"_rowsplits");
+    }
+    return out;
+}
+
 boost::python::list trainData::getTruthRaggedFlags()const{
     boost::python::list out;
     for(const auto& a: truth_shapes_){

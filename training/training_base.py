@@ -208,11 +208,11 @@ class training_base(object):
 
         shapes = self.train_data.getKerasFeatureShapes()
         inputdtypes = self.train_data.getKerasFeatureDTypes()
-        inputnames=['input_'+str(i+1) for i in range(len(shapes))]
+        inputnames= self.train_data.getKerasFeatureArrayNames()
+        for i in range(len(inputnames)):
+            if inputnames[i]=="":
+                inputnames[i]="input_"+str(i)
 
-        dataclass_instance = self.train_data.dataclass()
-        if hasattr(dataclass_instance, 'input_names'):
-            inputnames=dataclass_instance.input_names
 
         print("shapes", shapes)
         print("inputdtypes", inputdtypes)
