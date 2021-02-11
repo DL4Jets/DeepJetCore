@@ -56,10 +56,21 @@ class TestSimpleArray(unittest.TestCase):
         diff += np.max(np.abs(nrs-rs))
         self.assertTrue(diff< 0.000001)
         
+    def test_dynamicTypeChange(self):
+        print('TestSimpleArray: dynamicTypeChange')
+        arr,rs = self.createNumpy('int32')
+        name = "lala"
+        a = SimpleArray(dtype='float32',name=name)
+        fnames = ["a","b","c","d","e","f"]
+        a.setFeatureNames(fnames)
+        a.createFromNumpy(arr,rs)
+        self.assertTrue(a.featureNames() == fnames)
+        self.assertTrue(a.name() == name)
+        
+        
     def test_writeRead(self):
         print('TestSimpleArray: writeRead')
         arr,rs = self.createNumpy('float32')
-        
         
         a = SimpleArray(arr,rs)
         a.setName("myname")

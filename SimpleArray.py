@@ -54,10 +54,15 @@ class SimpleArray(object):
         return self.sa.assignFromNumpy(*args)
         
     def createFromNumpy(self, nparr, nprs=np.array([],dtype='int64')):
+        name = self.name()
+        fnames = self.featureNames()
+        self._setDtype(str(nparr.dtype))
         if nprs.dtype == 'int32':
-            return self.sa.createFromNumpy(nparr, nprs.as_type('int64')) 
-        return self.sa.createFromNumpy(nparr, nprs) 
-        
+            self.sa.createFromNumpy(nparr, nprs.as_type('int64')) 
+        else:
+            self.sa.createFromNumpy(nparr, nprs) 
+        self.setName(name)
+        self.setFeatureNames(fnames)
     
     def copyToNumpy(self, pad_rowsplits=False):
         return self.sa.copyToNumpy(pad_rowsplits) 
