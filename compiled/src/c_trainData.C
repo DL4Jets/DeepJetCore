@@ -16,8 +16,11 @@ using namespace djc;
 BOOST_PYTHON_MODULE(c_trainData) {
     Py_Initialize();
     np::initialize();
+    using namespace p;
     p::class_<trainData >("trainData")
 
+               .def(self==self)
+               .def(self!=self)
 
         //excplicit overloading
        .def<int (trainData::*)(simpleArray_float32&)>("storeFeatureArray", &trainData::storeFeatureArray)
@@ -28,6 +31,7 @@ BOOST_PYTHON_MODULE(c_trainData) {
 
        .def<int (trainData::*)(simpleArray_float32&)>("storeWeightArray", &trainData::storeWeightArray)
        .def<int (trainData::*)(simpleArray_int32&)>("storeWeightArray", &trainData::storeWeightArray)
+
 
      //  .def("featureList", &trainData::featureList)
      //  .def("truthList", &trainData::truthList)
@@ -46,6 +50,7 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("readFromFile", &trainData::readFromFile)
        .def("readFromFileBuffered", &trainData::readFromFileBuffered)
        .def("writeToFile", &trainData::writeToFile)
+       .def("addToFile", &trainData::addToFile)
 
 
        .def("copy", &trainData::copy)

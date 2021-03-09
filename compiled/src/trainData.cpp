@@ -32,6 +32,25 @@ void typeContainer::move_back(simpleArrayBase& a){
         sorting_.push_back({isint,iarrs_.size()-1});
     }
 }
+bool typeContainer::operator==(const typeContainer& rhs)const{
+    if(size() != rhs.size())
+        return false;
+    if(farrs_.size() != rhs.farrs_.size())
+        return false;
+
+    if(sorting_ != rhs.sorting_)
+        return false;
+
+    for(size_t i=0;i<farrs_.size();i++){
+        if(farrs_.at(i) != rhs.farrs_.at(i))
+            return false;
+    }
+    for(size_t i=0;i<iarrs_.size();i++){
+        if(iarrs_.at(i) != rhs.iarrs_.at(i))
+            return false;
+    }
+    return true;
+}
 simpleArrayBase& typeContainer::at(size_t idx){
     if(idx>=sorting_.size())
         throw std::out_of_range("typeContainer::at: requested "+std::to_string(idx)+" of "+std::to_string(sorting_.size()));
@@ -119,6 +138,22 @@ void typeContainer::readFromFile_priv(FILE *& ifile, bool justmetadata){
 
 ////////////////// trainData //////////////////////
 
+bool trainData::operator==(const trainData& rhs)const{
+
+    if(feature_arrays_ != rhs.feature_arrays_)
+        return false;
+    if(truth_arrays_ != rhs.truth_arrays_)
+        return false;
+    if(weight_arrays_ != rhs.weight_arrays_)
+        return false;
+    if(feature_shapes_ != rhs.feature_shapes_)
+        return false;
+    if(truth_shapes_ != rhs.truth_shapes_)
+        return false;
+    if(weight_shapes_ != rhs. weight_shapes_)
+        return false;
+    return true;
+}
 
 
 int trainData::storeFeatureArray(simpleArrayBase & a){
@@ -267,6 +302,19 @@ bool trainData::validSlice(size_t splitindex_begin, size_t splitindex_end)const{
 void trainData::writeToFile(std::string filename)const{
 
     FILE *ofile = fopen(filename.data(), "wb");
+    addToFileP(ofile);
+    fclose(ofile);
+
+}
+
+void trainData::addToFile(std::string filename)const{
+
+    FILE *ofile = fopen(filename.data(), "ab");
+    addToFileP(ofile);
+    fclose(ofile);
+}
+
+void trainData::addToFileP(FILE *& ofile)const{
     float version = DJCDATAVERSION;
     io::writeToFile(&version, ofile);
 
@@ -279,15 +327,13 @@ void trainData::writeToFile(std::string filename)const{
     feature_arrays_.writeToFile(ofile);
     truth_arrays_.writeToFile(ofile);
     weight_arrays_.writeToFile(ofile);
-    fclose(ofile);
-
 }
 
 void trainData::priv_readFromFile(std::string filename, bool memcp){
     clear();
     FILE *ifile = fopen(filename.data(), "rb");
     char *buf = 0;
-    if(memcp){
+    if(false && memcp){
         FILE *diskfile = ifile;
         //check if exists before trying to memcp.
         checkFile(ifile, filename); //not set at start but won't be used
@@ -307,6 +353,37 @@ void trainData::priv_readFromFile(std::string filename, bool memcp){
         ifile = fmemopen(buf,fsize,"r");
     }
 
+    priv_readSelfFromFileP(ifile,filename);
+    //check for eof and add until done. the append step can be heavily optimized! FIXME
+    //read one more byte
+    int ch = getc(ifile);
+    while(! feof(ifile)){
+        fseek(ifile,-1,SEEK_CUR);
+        append(priv_readFromFileP(ifile,filename));
+        ch = getc(ifile);
+    }
+
+    fclose(ifile);
+    if(buf){
+        delete buf;
+    }
+}
+
+trainData trainData::priv_readFromFileP(FILE *& ifile, const std::string& filename)const{
+    //include file version check
+    trainData out;
+    out.checkFile(ifile, filename);
+    out.readNested(out.feature_shapes_, ifile);
+    out.readNested(out.truth_shapes_, ifile);
+    out.readNested(out.weight_shapes_, ifile);
+
+    out.feature_arrays_ .readFromFile(ifile);
+    out.truth_arrays_.readFromFile(ifile);
+    out.weight_arrays_.readFromFile(ifile);
+    return out;
+}
+
+void trainData::priv_readSelfFromFileP(FILE *& ifile, const std::string& filename){
     checkFile(ifile, filename);
     readNested(feature_shapes_, ifile);
     readNested(truth_shapes_, ifile);
@@ -315,12 +392,6 @@ void trainData::priv_readFromFile(std::string filename, bool memcp){
     feature_arrays_ .readFromFile(ifile);
     truth_arrays_.readFromFile(ifile);
     weight_arrays_.readFromFile(ifile);
-
-    fclose(ifile);
-    if(buf){
-        delete buf;
-    }
-
 }
 
 void trainData::readMetaDataFromFile(const std::string& filename){

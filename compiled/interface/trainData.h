@@ -35,6 +35,12 @@ public:
     void push_back(simpleArrayBase& a);
     void move_back(simpleArrayBase& a);
 
+    bool operator==(const typeContainer& rhs)const;
+    bool operator!=(const typeContainer& rhs)const{
+        return !(*this==rhs);
+    }
+
+
     simpleArrayBase& at(size_t idx);
     const simpleArrayBase& at(size_t idx)const;
 
@@ -83,6 +89,11 @@ class trainData{
 public:
 
 
+
+    bool operator==(const trainData& rhs)const;
+    bool operator!=(const trainData& rhs)const{
+        return !(*this==rhs);
+    }
     //takes ownership
     //these need to be separated by input type because python does not allow for overload
     //but then the py interface can be made generic  to accept differnt types
@@ -204,6 +215,9 @@ public:
     const std::vector<std::vector<int> > & weightShapes()const{return  weight_shapes_;}
 
     void writeToFile(std::string filename)const;
+    void addToFile(std::string filename)const;
+
+    void addToFileP(FILE *& f)const;
 
     void readFromFile(std::string filename){
         priv_readFromFile(filename,false);
@@ -275,6 +289,9 @@ public:
 private:
 
     void priv_readFromFile(std::string filename, bool memcp);
+
+    trainData priv_readFromFileP(FILE *& f, const std::string& filename)const;
+    void priv_readSelfFromFileP(FILE *& f, const std::string& filename);
 
     void checkFile(FILE *& f, const std::string& filename="")const;
 

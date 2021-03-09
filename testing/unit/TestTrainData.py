@@ -53,7 +53,37 @@ class TestTrainData(unittest.TestCase):
         
     def test_readWrite(self):
         print('TestTrainData: readWrite')
-        self.sub_test_store(True)  
+        self.sub_test_store(True) 
+        
+    def nestedEqual(self,l,l2):
+        for a,b in zip(l,l2):
+            if not np.all(a==b):
+                return False
+        return True
+    
+    def test_AddToFile(self):
+        print('TestTrainData: AddToFile')
+        
+        td = TrainData()
+        x,y,w = self.createSimpleArray('int32'), self.createSimpleArray('float32'), self.createSimpleArray('int32')
+        xo,yo,wo = x.copy(),y.copy(),w.copy()
+        x2,y2,_ = self.createSimpleArray('float32'), self.createSimpleArray('float32'), self.createSimpleArray('int32')
+        x2o,y2o = x2.copy(),y2.copy()
+        td._store([x,x2], [y,y2], [w])
+        
+        td.writeToFile("testfile.tdjctd")
+        td.addToFile("testfile.tdjctd")
+        
+        
+        td2 = TrainData()
+        td2._store([xo,x2o], [yo,y2o], [wo])
+        td2.append(td)
+        
+        td.readFromFile("testfile.tdjctd")
+        os.system('rm -f testfile.tdjctd')
+        
+        
+        self.assertEqual(td,td2)
         
     def test_split(self):
         print('TestTrainData: split')
