@@ -113,10 +113,10 @@ private:
  *
  *    trainDataFileStreamer fs("outfile.djctd");
  *    auto features = fs.add("myfeatures",                      // just a name, can also be left blank
- *                           {3},
+ *                           {3},                               // the shape, here just 3 features
  *                           simpleArrayBase::float32,          // the data type
  *                           simpleArrayStreamer::feature_data, // what it's used for
- *                           {"jetpt","jeteta","jetphi"});        // optional feature names
+ *                           {"jetpt","jeteta","jetphi"});      // optional feature names
  *
  *    auto truth = fs.add("isSignal",{1},simpleArrayBase::int32,simpleArrayStreamer::truth_data);
  *
@@ -124,8 +124,8 @@ private:
  *
  *        for(jet: jets){
  *            features.arr().set(0, jet->pt());
- *            features.arr().set(0, jet->eta());
- *            features.arr().set(0, jet->phi());
+ *            features.arr().set(1, jet->eta());
+ *            features.arr().set(2, jet->phi());
  *            features.fill()
  *        }
  *
