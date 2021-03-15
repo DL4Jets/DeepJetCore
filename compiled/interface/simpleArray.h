@@ -60,7 +60,17 @@ public:
     void setFeatureNames(const std::vector<std::string>& names){featnames_=names;}
     const std::vector<std::string>& featureNames()const{return featnames_;}
 
+    virtual void set(const size_t i, float val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, float val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, float val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, const size_t l, float val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, const size_t l, const size_t m, float val){throwWrongTypeSet();}
 
+    virtual void set(const size_t i, int val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, int val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, int val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, const size_t l, int val){throwWrongTypeSet();}
+    virtual void set(const size_t i, const size_t j, const size_t k, const size_t l, const size_t m, int val){throwWrongTypeSet();}
 
     static std::string dtypeToString(dtypes t);
     static dtypes stringToDtype(const std::string& s);
@@ -193,6 +203,7 @@ protected:
 
 private:
 
+    void throwWrongTypeSet()const{throw std::invalid_argument("simpleArrayBase::set: wrong data format");}
 
     static std::vector<size_t>  priv_getSplitIndices(bool datasplit, const std::vector<int64_t> & rowsplits, size_t nelements_limit,
                 bool sqelementslimit, std::vector<bool>& size_ok, std::vector<size_t>& nelemtns_per_split, bool strict_limit);
@@ -336,6 +347,12 @@ public:
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m)const;
     T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n);
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
+
+    void set(const size_t i, T val){at(i)=val;}
+    void set(const size_t i, const size_t j, T val){at(i,j)=val;}
+    void set(const size_t i, const size_t j, const size_t k, T val){at(i,j,k)=val;}
+    void set(const size_t i, const size_t j, const size_t k, const size_t l, T val){at(i,j,k,l)=val;}
+    void set(const size_t i, const size_t j, const size_t k, const size_t l, const size_t m, T val){at(i,j,k,l,m)=val;}
 
 
 

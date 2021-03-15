@@ -20,6 +20,8 @@ namespace np = boost::python::numpy;
 
 using namespace djc;
 
+//BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(simpleArray_float32_set_overloads, simpleArray_float32::set, 2, 6);
+
 
 BOOST_PYTHON_MODULE(c_simpleArray) {
     Py_Initialize();
@@ -36,6 +38,8 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
             .def("name", &simpleArray_float32::name)
             .def("setFeatureNames", &simpleArray_float32::setFeatureNamesPy)
             .def("featureNames", &simpleArray_float32::featureNamesPy)
+
+       //.def("set", &simpleArray_float32::set, simpleArray_float32_set_overloads())
 
        .def("readFromFile", &simpleArray_float32::readFromFile)
        .def("writeToFile", &simpleArray_float32::writeToFile)
