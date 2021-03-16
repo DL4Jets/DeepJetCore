@@ -58,7 +58,7 @@ simpleArrayBase::simpleArrayBase(std::vector<int> shape,const std::vector<int64_
     shape_ = shape;
     if(rowsplits.size()){
         if(rowsplits.size() != shape_.at(0)+1)
-            throw std::runtime_error("simpleArrayBase::simpleArray: rowsplits.size() must equal shape[0] + 1");
+            throw std::runtime_error("simpleArrayBase::simpleArrayBase: rowsplits.size() must equal shape[0] + 1");
 
         rowsplits_=rowsplits;
         shape_ = shapeFromRowsplits();
@@ -321,7 +321,8 @@ std::vector<int> simpleArrayBase::shapeFromRowsplits()const{
 void simpleArrayBase::checkShape(size_t ndims)const{
     //rowsplit ready due to definiton of shape
     if(ndims != shape_.size()){
-        throw std::out_of_range("simpleArrayBase::checkShape: shape does not match dimensions accessed");
+        throw std::out_of_range("simpleArrayBase::checkShape: shape does not match dimensions accessed ("+
+                std::to_string(ndims)+"/"+std::to_string(shape_.size())+") "+name_);
     }
 }
 

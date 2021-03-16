@@ -62,12 +62,18 @@ private:
     simpleArrayBase * priv_copyToFullArray()const{
         std::vector<int> newshape;
         if(isragged_)
-            newshape = {(int)rowsplits_.size(),-1}; //second dimension is the variable one
+            newshape = {(int)rowsplits_.size()-1,-1}; //second dimension is the variable one
         else
             newshape = {(int)arrays_.size()};
         //add the actual 'per event' shape
         newshape.insert(newshape.end(), prototype_->shape().begin(),prototype_->shape().end());
-        T * outp = new T(newshape,rowsplits_);
+        T * outp = 0;
+        if(isragged_)
+            outp = new T(newshape,rowsplits_);
+        else
+            outp = new T(newshape);
+        outp->setName(prototype_->name());
+        outp->setFeatureNames(prototype_->featureNames());
         size_t counter=0;
         for(const auto& a:arrays_){
             for(size_t i=0;i<a->size();i++){

@@ -11,7 +11,7 @@
 #include "simpleArray.h"
 #include "simpleArrayFiller.h"
 #include <string>
-
+#include <initializer_list>
 /*
  * general idea: just manage access to simpleArrays.
  * Once buffer full, create trainData and write out
@@ -46,7 +46,7 @@ namespace djc{
  *    auto features = fs.add("myfeatures",                      // just a name, can also be left blank
  *                           {3},                               // the shape, here just 3 features
  *                           simpleArrayBase::float32,          // the data type
- *                           simpleArrayStreamer::feature_data, // what it's used for
+ *                           simpleArrayFiller::feature_data, // what it's used for
  *                           true,                              // data is ragged (variable 1st dimension)
  *                           {"jetpt","jeteta","jetphi"});      // optional feature names
  *
@@ -54,12 +54,12 @@ namespace djc{
  *    auto zeropadded = fs.add("myzeropadded_lepton_features",// just a name, can also be left blank
  *                           {5,3},                             // 3 features each for the first 5 leptons
  *                           simpleArrayBase::float32,          // the data type
- *                           simpleArrayStreamer::feature_data, // what it's used for
+ *                           simpleArrayFiller::feature_data, // what it's used for
  *                           false,                             // data is not ragged
  *                           {"pt","eta","phi"});               // optional feature names
  *
  *    //add a non ragged per-event variable
- *    auto truth = fs.add("isSignal",{1},simpleArrayBase::int32,simpleArrayStreamer::truth_data, false);
+ *    auto truth = fs.add("isSignal",{1},simpleArrayBase::int32,simpleArrayFiller::truth_data, false);
  *
  *    for(event: events){
  *
@@ -95,7 +95,7 @@ public:
 
     trainDataFileStreamer(
             const std::string & filename,
-            size_t bufferInMB=20);
+            float bufferInMB=20);
 
     ~trainDataFileStreamer(){
         writeBuffer(true);//write remaining items
@@ -105,8 +105,7 @@ public:
             delete a;
     }
 
-    template<class T>
-    simpleArrayFiller* add(const std::string name,
+    simpleArrayFiller* add(const std::string& name,
             const std::vector<int>& shape,
             simpleArrayBase::dtypes type,
             simpleArrayFiller::dataUsage dusage,
@@ -116,6 +115,7 @@ public:
         activestreamers_->push_back(as);
         return as;
     }
+
 
 
     inline void fillEvent(){
@@ -138,9 +138,16 @@ private:
     std::vector<simpleArrayFiller*> * activestreamers_;
     std::vector<simpleArrayFiller*> * writingstreamers_;
     std::string filename_;
-    size_t buffermb_;
+    float buffermb_;
 
 };
+
+
+namespace test{
+
+void testTrainDataFileStreamer();
+
+}
 
 
 /*

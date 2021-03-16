@@ -26,7 +26,8 @@ simpleArrayFiller::simpleArrayFiller(
     prototype_->setName(name);
 
     current_=0;
-    rowsplits_.push_back(0);
+    if(isragged_)
+        rowsplits_.push_back(0);
     newCurrentArray();
 
 }
@@ -43,6 +44,8 @@ void simpleArrayFiller::clearData(){//keep prototype
         delete a;
     arrays_.clear();
     rowsplits_.clear();
+    if(isragged_)
+        rowsplits_.push_back(0);
     if(current_)
         delete current_;
     current_=0;

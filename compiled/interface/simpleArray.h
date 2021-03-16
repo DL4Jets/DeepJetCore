@@ -777,7 +777,12 @@ template<class T>
 void simpleArray<T>::append(const simpleArray<T>& a) {
 
     if (!data_ && size_ == 0) {
+        //just save feature names and name
+        auto namesv = name_;
+        auto fnamesv = featnames_;
         *this = a;
+        name_=namesv;
+        featnames_ = fnamesv;
         return;
     }
     if (shape_.size() != a.shape_.size())
@@ -947,7 +952,6 @@ void simpleArray<T>::readFromFile(const std::string& f){
 template<class T>
 void simpleArray<T>::cout()const{
     std::cout << "name: " << name_ << std::endl;
-    std::cout << "data size "<< size() <<std::endl;
     for(int i=0;i<size();i++){
         std::cout << data()[i] << ", ";
     }
@@ -961,6 +965,8 @@ void simpleArray<T>::cout()const{
                 std::cout << s << ", ";
         }
     }
+    std::cout << "data size "<< size() <<std::endl;
+    std::cout << "feature names "<< featureNames() <<std::endl;
     std::cout << std::endl;
 }
 
