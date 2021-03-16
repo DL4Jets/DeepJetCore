@@ -40,7 +40,9 @@ namespace djc{
  * - finish the event synchronously for all arrays calling fillEvent
  *
  *
- * Example:
+ * Example pseudo code:
+ *
+ *
  *
  *    trainDataFileStreamer fs("outfile.djctd");
  *    auto features = fs.add("myfeatures",                      // just a name, can also be left blank
@@ -64,25 +66,25 @@ namespace djc{
  *    for(event: events){
  *
  *        for(jet: jets){
- *            features.arr().set(0, jet->pt());
- *            features.arr().set(1, jet->eta());
- *            features.arr().set(2, jet->phi());
- *            features.fill()
+ *            features->arr().set(0, jet->pt());
+ *            features->arr().set(1, jet->eta());
+ *            features->arr().set(2, jet->phi());
+ *            features->fill()
  *        }
  *
  *
- *        zeropadded.arr().fillZero(); //make sure everything is initialized with zeros
+ *        zeropadded->arr().fillZero(); //make sure everything is initialized with zeros
  *        for(size_t i=0;i<leptons.size();i++){
- *            zeropadded.arr().set(i,0,leptons.at(i).pt());
- *            zeropadded.arr().set(i,1,leptons.at(i).eta());
- *            zeropadded.arr().set(i,2,leptons.at(i).phi());
+ *            zeropadded->arr().set(i,0,leptons.at(i).pt());
+ *            zeropadded->arr().set(i,1,leptons.at(i).eta());
+ *            zeropadded->arr().set(i,2,leptons.at(i).phi());
  *            if(i>3)
  *               break;
  *        }
- *        zeropadded.fill();
+ *        zeropadded->fill();
  *
- *        truth.arr().set(0, isSUSYevent);
- *        truth.fill()
+ *        truth->arr().set(0, isSUSYevent);
+ *        truth->fill()
  *
  *        fs.fillEvent();
  *    }

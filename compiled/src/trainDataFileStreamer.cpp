@@ -66,17 +66,17 @@ std::vector<std::vector<float> > createRandomVector(size_t i,size_t j){
 
 void testTrainDataFileStreamer(){
 
-    std::string testfilename = "outfile.djctd";
+    std::string testfilename = "test_testTrainDataFileStreamer_outfile.djctd";
 
-    simpleArray_float32 myfeatures_all;
-    myfeatures_all.setFeatureNames({"jetpt","jeteta","jetphi"});
-    myfeatures_all.setName("myfeatures");
+    simpleArray_float32 reference_myfeatures_all;
+    reference_myfeatures_all.setFeatureNames({"jetpt","jeteta","jetphi"});
+    reference_myfeatures_all.setName("myfeatures");
 
-    simpleArray_float32 myzeropadded_lepton_features_all;
-    myzeropadded_lepton_features_all.setFeatureNames({"pt","eta","phi"});
-    myzeropadded_lepton_features_all.setName("myzeropadded_lepton_features");
-    simpleArray_int32 isSignal_all;
-    isSignal_all.setName("isSignal");
+    simpleArray_float32 reference_myzeropadded_lepton_features_all;
+    reference_myzeropadded_lepton_features_all.setFeatureNames({"pt","eta","phi"});
+    reference_myzeropadded_lepton_features_all.setName("myzeropadded_lepton_features");
+    simpleArray_int32 reference_isSignal_all;
+    reference_isSignal_all.setName("isSignal");
 
     { //file streamer scope
         trainDataFileStreamer fs(testfilename,0.07);//small buffer for testing
@@ -110,8 +110,8 @@ void testTrainDataFileStreamer(){
 
             std::vector<int64_t> jetrs={0,nfirst};
 
-            simpleArray_float32 jetarr({1,-1,3},jetrs);
-            jetarr.setName("jetarr");
+            simpleArray_float32 reference_jetarr({1,-1,3},jetrs);
+            reference_jetarr.setName("jetarr");
 
             for(size_t i=0;i<nfirst;i++){
                 features->arr().set(0, jetprop[i][0]);
@@ -119,43 +119,44 @@ void testTrainDataFileStreamer(){
                 features->arr().set(2, jetprop[i][2]);
                 features->fill();
 
-                jetarr.set(0,i,0, jetprop[i][0]);
-                jetarr.set(0,i,1, jetprop[i][1]);
-                jetarr.set(0,i,2, jetprop[i][2]);
+                reference_jetarr.set(0,i,0, jetprop[i][0]);
+                reference_jetarr.set(0,i,1, jetprop[i][1]);
+                reference_jetarr.set(0,i,2, jetprop[i][2]);
             }
 
-            myfeatures_all.append(jetarr);
+            //this should not be done excessively in a real setting, needs mem copy every call!
+            reference_myfeatures_all.append(reference_jetarr);
 
             auto lepprop = createRandomVector(5,3);
             zeropadded->arr().fillZeros(); //make sure everything is initialized with zeros
 
-            simpleArray_float32 leparr({1,5,3});
-            leparr.setName("leparr");
-            leparr.fillZeros();
+            simpleArray_float32 reference_leparr({1,5,3});
+            reference_leparr.setName("leparr");
+            reference_leparr.fillZeros();
 
             for(size_t i=0;i<lepprop.size();i++){
                 zeropadded->arr().set(i,0,lepprop.at(i)[0]);
                 zeropadded->arr().set(i,1,lepprop.at(i)[1]);
                 zeropadded->arr().set(i,2,lepprop.at(i)[2]);
 
-                leparr.set(0,i,0,lepprop.at(i)[0]);
-                leparr.set(0,i,1,lepprop.at(i)[1]);
-                leparr.set(0,i,2,lepprop.at(i)[2]);
+                reference_leparr.set(0,i,0,lepprop.at(i)[0]);
+                reference_leparr.set(0,i,1,lepprop.at(i)[1]);
+                reference_leparr.set(0,i,2,lepprop.at(i)[2]);
                 if(i>3)
                     break;
             }
             zeropadded->fill();
 
-            myzeropadded_lepton_features_all.append(leparr);
+            reference_myzeropadded_lepton_features_all.append(reference_leparr);
 
             int issignal = i%2;
             truth->arr().set(0, issignal);
             truth->fill();
 
-            simpleArray_int32 issig({1,1});
-            issig.setName("issig");
-            issig.set(0,0,issignal);
-            isSignal_all.append(issig);
+            simpleArray_int32 reference_issig({1,1});
+            reference_issig.setName("issig");
+            reference_issig.set(0,0,issignal);
+            reference_isSignal_all.append(reference_issig);
 
             fs.fillEvent();
 
@@ -167,22 +168,26 @@ void testTrainDataFileStreamer(){
     trainData td;
     td.readFromFile(testfilename);
     td.nFeatureArrays();
-    auto tdfeat0 = dynamic_cast<simpleArray_float32&>(td.featureArray(0));
-    auto tdfeat1 = dynamic_cast<simpleArray_float32&>(td.featureArray(1));
-    auto tdtruth = dynamic_cast<simpleArray_int32&>(td.truthArray(0));
 
-    if(tdfeat0 != myfeatures_all){
+    //a bit quick and dirty casts. We know the type (otherwise would need type check first)
+    auto reopened_myfeatures = dynamic_cast<simpleArray_float32&>(td.featureArray(0));
+    auto reopened_lepton_features = dynamic_cast<simpleArray_float32&>(td.featureArray(1));
+    auto reopened_issignal = dynamic_cast<simpleArray_int32&>(td.truthArray(0));
+
+    if(reopened_myfeatures != reference_myfeatures_all){
        // tdfeat0.cout();myfeatures_all.cout();
         throw std::logic_error("testTrainDataFileStreamer: simpleArray_float32 ragged inconsistent");
     }
-    if(tdfeat1 != myzeropadded_lepton_features_all){
+    if(reopened_lepton_features != reference_myzeropadded_lepton_features_all){
        // tdfeat1.cout();
         throw std::logic_error("testTrainDataFileStreamer: simpleArray_float32 not ragged inconsistent");
     }
-    if(tdtruth != isSignal_all){
+    if(reopened_issignal != reference_isSignal_all){
        // tdtruth.cout();
         throw std::logic_error("testTrainDataFileStreamer: simpleArray_float32 ragged inconsistent");
     }
+
+    system(("rm -f "+testfilename).data());
 
 }
 
