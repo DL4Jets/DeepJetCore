@@ -30,6 +30,7 @@
 
 namespace djc{
 
+
 //has all non-data operations
 class simpleArrayBase {
 public:
@@ -59,6 +60,8 @@ public:
     std::string name()const{return name_;}
     void setFeatureNames(const std::vector<std::string>& names){featnames_=names;}
     const std::vector<std::string>& featureNames()const{return featnames_;}
+
+    virtual void fillZeros()=0;
 
     virtual void set(const size_t i, float val){throwWrongTypeSet();}
     virtual void set(const size_t i, const size_t j, float val){throwWrongTypeSet();}
@@ -348,6 +351,8 @@ public:
     T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n);
     const T & at(size_t i, size_t j, size_t k, size_t l, size_t m, size_t n)const;
 
+    void fillZeros();
+
     void set(const size_t i, T val){at(i)=val;}
     void set(const size_t i, const size_t j, T val){at(i,j)=val;}
     void set(const size_t i, const size_t j, const size_t k, T val){at(i,j,k)=val;}
@@ -404,6 +409,30 @@ private:
 
     T * data_;
 };
+
+/* for later
+template<class T>
+class simpleArrayIndex {
+public:
+    simpleArrayIndex(simpleArray<T>& a, const int i):arr_(a){
+
+    }
+    simpleArrayIndex(const T&){
+    //set value
+    }
+
+    operator T&() { return val; }
+    operator T() const { return val; }
+
+    simpleArrayIndex operator[](const int i){
+        return simpleArrayIndex(arr_,i);
+    }
+
+private:
+    simpleArray<T>& arr_;
+    //some indexing
+};
+*/
 
 template<class T>
 simpleArray<T>::simpleArray() :
@@ -1120,6 +1149,13 @@ const T & simpleArray<T>::at(size_t i, size_t j, size_t k, size_t l, size_t m, s
     size_t flat = flatindex(i,j,k,l,m,n);
     checkSize(flat);
     return data_[flat];
+}
+
+
+template<class T>
+void simpleArray<T>::fillZeros(){
+    for(size_t i=0;i<size();i++)
+        data_[i]=0;
 }
 
 

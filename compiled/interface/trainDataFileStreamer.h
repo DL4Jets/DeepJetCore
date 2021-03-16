@@ -9,6 +9,7 @@
 #define DEEPJETCORE_COMPILED_INTERFACE_TRAINDATAFILESTREAMER_H_
 
 #include "simpleArray.h"
+#include "simpleArrayFiller.h"
 #include <string>
 
 /*
@@ -28,76 +29,6 @@
  */
 namespace djc{
 
-class trainDataFileStreamer;
-
-class simpleArrayStreamer{
-    friend class trainDataFileStreamer;
-public:
-
-    enum dataUsage {feature_data, truth_data, weight_data};
-
-    ~simpleArrayStreamer(){
-        clear();
-    }
-
-    /**
-     * the shape does not include the 'event' dimension
-     */
-    simpleArrayStreamer(
-            const std::string name,
-            const std::vector<int>& shape,
-            simpleArrayBase::dtypes dtype,
-            dataUsage dusage,
-            const std::vector<std::string>& featurenames=std::vector<std::string>());
-
-    //maybe replace that with direct 'set' access. TBI
-    inline simpleArrayBase & arr(){if(current_) return *current_; else throw std::logic_error("simpleArrayStreamer::arr: no array initialized.");}
-    inline const simpleArrayBase & arr()const{if(current_) return *current_; else throw std::logic_error("simpleArrayStreamer::arr: no array initialized.");}
-
-    void fill(){
-        arrays_.push_back(current_);
-        newCurrentArray();
-    }
-
-
-    simpleArrayBase * copyToFullArray()const;
-
-private:
-
-    void fillEvent();
-    void clear();
-    void clearData();
-
-    simpleArrayStreamer(){}
-
-    template<class T>
-    simpleArrayBase * priv_copyToFullArray()const{
-        std::vector<int> newshape = {(int)rowsplits_.size(),-1};//second dimension is the variable one
-        //add the actual 'per event' shape
-        newshape.insert(newshape.end(), prototype_->shape().begin(),prototype_->shape().end());
-        T * outp = new T(newshape,rowsplits_);
-        size_t counter=0;
-        for(const auto& a:arrays_){
-            for(size_t i=0;i<a->size();i++){
-                outp->data()[counter] = dynamic_cast<T*>(a)->data()[i];
-                counter++;
-            }
-        }
-        return outp;
-    }
-
-    //this is not exact but good enough for approx buffering
-    size_t memSizeKB()const;
-
-    void newCurrentArray();
-
-    //needs to be pointers because of types
-    std::vector<simpleArrayBase* > arrays_;
-    std::vector<int64_t> rowsplits_;
-    simpleArrayBase* current_;
-    simpleArrayBase* prototype_;
-    dataUsage dusage_;
-};
 
 
 /**
@@ -116,9 +47,19 @@ private:
  *                           {3},                               // the shape, here just 3 features
  *                           simpleArrayBase::float32,          // the data type
  *                           simpleArrayStreamer::feature_data, // what it's used for
+ *                           true,                              // data is ragged (variable 1st dimension)
  *                           {"jetpt","jeteta","jetphi"});      // optional feature names
  *
- *    auto truth = fs.add("isSignal",{1},simpleArrayBase::int32,simpleArrayStreamer::truth_data);
+ *
+ *    auto zeropadded = fs.add("myzeropadded_lepton_features",// just a name, can also be left blank
+ *                           {5,3},                             // 3 features each for the first 5 leptons
+ *                           simpleArrayBase::float32,          // the data type
+ *                           simpleArrayStreamer::feature_data, // what it's used for
+ *                           false,                             // data is not ragged
+ *                           {"pt","eta","phi"});               // optional feature names
+ *
+ *    //add a non ragged per-event variable
+ *    auto truth = fs.add("isSignal",{1},simpleArrayBase::int32,simpleArrayStreamer::truth_data, false);
  *
  *    for(event: events){
  *
@@ -128,6 +69,17 @@ private:
  *            features.arr().set(2, jet->phi());
  *            features.fill()
  *        }
+ *
+ *
+ *        zeropadded.arr().fillZero(); //make sure everything is initialized with zeros
+ *        for(size_t i=0;i<leptons.size();i++){
+ *            zeropadded.arr().set(i,0,leptons.at(i).pt());
+ *            zeropadded.arr().set(i,1,leptons.at(i).eta());
+ *            zeropadded.arr().set(i,2,leptons.at(i).phi());
+ *            if(i>3)
+ *               break;
+ *        }
+ *        zeropadded.fill();
  *
  *        truth.arr().set(0, isSUSYevent);
  *        truth.fill()
@@ -154,12 +106,13 @@ public:
     }
 
     template<class T>
-    simpleArrayStreamer* add(const std::string name,
+    simpleArrayFiller* add(const std::string name,
             const std::vector<int>& shape,
             simpleArrayBase::dtypes type,
-            simpleArrayStreamer::dataUsage dusage,
+            simpleArrayFiller::dataUsage dusage,
+            bool isragged,
             const std::vector<std::string>& featurenames=std::vector<std::string>()){
-        simpleArrayStreamer* as = new simpleArrayStreamer(name,shape,type,dusage,featurenames);
+        simpleArrayFiller* as = new simpleArrayFiller(name,shape,type,dusage,isragged,featurenames);
         activestreamers_->push_back(as);
         return as;
     }
@@ -180,10 +133,10 @@ private:
     bool bufferFull();
 
 
-    std::vector<simpleArrayStreamer*> arraystreamers_a_;
-    std::vector<simpleArrayStreamer*> arraystreamers_b_;
-    std::vector<simpleArrayStreamer*> * activestreamers_;
-    std::vector<simpleArrayStreamer*> * writingstreamers_;
+    std::vector<simpleArrayFiller*> arraystreamers_a_;
+    std::vector<simpleArrayFiller*> arraystreamers_b_;
+    std::vector<simpleArrayFiller*> * activestreamers_;
+    std::vector<simpleArrayFiller*> * writingstreamers_;
     std::string filename_;
     size_t buffermb_;
 

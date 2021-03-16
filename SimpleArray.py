@@ -30,6 +30,9 @@ class SimpleArray(object):
             
     #now pass through all the other member functions transparently
     
+    def set(self,*args):
+        self.sa.set(*args)
+        
     def setName(self, namestr: str):
         self.sa.setName(namestr)
         
