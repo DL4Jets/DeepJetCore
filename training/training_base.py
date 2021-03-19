@@ -17,7 +17,6 @@ from DeepJetCore.DJCLayers import *
 from pdb import set_trace
 import tensorflow as tf
 import tensorflow.keras as keras
-from keras.utils import multi_gpu_model
 import copy
 from .gpuTools import DJCSetGPUs
 
