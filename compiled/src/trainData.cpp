@@ -231,6 +231,9 @@ trainData trainData::split(size_t splitindex) {
                 auto split = a.first->at_asint32(i).split(splitindex);
                 a.second->push_back(split);
             }
+            else{
+                throw std::runtime_error("trainData::split: do not understand dtype");
+            }
         }
     }
 
@@ -279,6 +282,9 @@ trainData trainData::shuffle(const std::vector<size_t>& shuffle_idxs)const{
             else if(a.first->dtype(i) == simpleArrayBase::int32){
                 auto split = a.first->at_asint32(i).shuffle(shuffle_idxs);
                 a.second->push_back(split);
+            }
+            else{
+                throw std::runtime_error("trainData::shuffle: do not understnad dtype");
             }
         }
     }
@@ -506,17 +512,7 @@ void trainData::updateShapes(){
 void trainData::skim(size_t batchelement){
     if(batchelement > nElements())
         throw std::out_of_range("trainData<T>::skim: batch element out of range");
-
-    std::vector< typeContainer* > vv = {&feature_arrays_, &truth_arrays_, &weight_arrays_};
-    for(const auto& a: vv)
-        for (size_t i=0;i<a->size();i++){
-            if(a->dtype(i) == simpleArrayBase::float32){
-                a->at_asfloat32(i).split(batchelement);
-                a->at(i)=a->at_asfloat32(i).split(1);
-            }
-        }
-
-    updateShapes();
+    *this = getSlice(batchelement,batchelement+1);
 }
 
 

@@ -56,6 +56,7 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("copy", &trainData::copy)
        .def("clear", &trainData::clear)
        .def("skim", &trainData::skim)
+       .def("getSlice", &trainData::getSlice)
 
        .def("getKerasFeatureShapes", &trainData::getKerasFeatureShapes)
        .def("getKerasFeatureDTypes", &trainData::getKerasFeatureDTypes)

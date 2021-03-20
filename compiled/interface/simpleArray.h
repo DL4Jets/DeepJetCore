@@ -82,6 +82,8 @@ public:
         return shape_;
     }
 
+    boost::python::list shapePy()const;
+
     const size_t& size() const {
         return size_;
     }
@@ -165,6 +167,10 @@ public:
     int isize() const {
         return (int)size_;
     }
+
+
+
+
     //does not transfer data ownership! only for quick writing etc.
     virtual void assignFromNumpy(const boost::python::numpy::ndarray& ndarr,
             const boost::python::numpy::ndarray& rowsplits=boost::python::numpy::empty(

@@ -33,7 +33,7 @@ void readFromFile<std::string>(std::string * p, FILE* ifile, size_t N, size_t Nb
     Nbytes = N* sizeof(char);
     size_t ret = fread(c, 1, Nbytes, ifile);
     *p = std::string(c,N);
-    delete c;
+    delete[] c;
 
     if(ret != Nbytes){
         std::string fname = followFileName(ifile);

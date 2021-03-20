@@ -58,7 +58,8 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
         .def("getSlice", &simpleArray_float32::getSlice)
         .def<void (simpleArray_float32::*)(const simpleArray_float32&)>("append", &simpleArray_float32::append)
         .def("cout", &simpleArray_float32::cout)
-        .def("size", &simpleArray_float32::isize);
+        .def("size", &simpleArray_float32::isize)
+        .def("shape", &simpleArray_float32::shapePy);
     ;
     p::class_<simpleArray_int32 >("simpleArrayI")
         .def("readDtypeFromFile", &simpleArray_int32::readDtypeFromFile)
@@ -90,7 +91,8 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
         .def("getSlice", &simpleArray_int32::getSlice)
         .def<void (simpleArray_int32::*)(const simpleArray_int32&)>("append", &simpleArray_int32::append) //just use the explicit one here
         .def("cout", &simpleArray_int32::cout)
-        .def("size", &simpleArray_int32::isize);
+        .def("size", &simpleArray_int32::isize)
+        .def("shape", &simpleArray_int32::shapePy);
     ;
 
 }

@@ -44,6 +44,9 @@ class SimpleArray(object):
     
     def featureNames(self):
         return self.sa.featureNames()
+    
+    def shape(self):
+        return self.sa.shape()
 
     def readFromFile(self,filename):
         dt = self.sa.readDtypeFromFile(filename)
@@ -83,7 +86,10 @@ class SimpleArray(object):
         return spl
     
     def getSlice(self,*args):
-        return self.sa.getSlice(*args)
+        spl = SimpleArray()
+        spl._setDtype(self.dtype)
+        spl.sa = self.sa.getSlice(*args)
+        return spl
     
     def append(self,other):
         assert self.sa.dtypeI() == other.sa.dtypeI()

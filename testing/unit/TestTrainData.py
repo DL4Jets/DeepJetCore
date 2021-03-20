@@ -6,7 +6,7 @@ import os
 
 class TestTrainData(unittest.TestCase):
     
-    def createSimpleArray(self, dtype, length=500):
+    def createSimpleArray(self, dtype, length=500, shape=None):
         arr = np.array(np.random.rand(length,3,5,6)*100., dtype=dtype)
         rs = np.array([0,100,230,length],dtype='int64')
         return SimpleArray(arr, rs)
@@ -84,6 +84,44 @@ class TestTrainData(unittest.TestCase):
         
         
         self.assertEqual(td,td2)
+        
+    def test_slice(self):
+        print('TestTrainData: skim')
+        a = self.createSimpleArray('int32',600)
+        b = self.createSimpleArray('float32',600)
+        d = self.createSimpleArray('float32',600)
+
+        a_slice = a.getSlice(2,3)
+        b_slice = b.getSlice(2,3)
+        d_slice = d.getSlice(2,3)
+
+        td = TrainData()
+        td._store([a,b], [d], [])
+        td_slice = td.getSlice(2,3)
+        
+        fl = td_slice.transferFeatureListToNumpy(False)
+        tl = td_slice.transferTruthListToNumpy(False)
+        a_tdslice = SimpleArray(fl[0],fl[1])
+        b_tdslice = SimpleArray(fl[2],fl[3])
+        d_tdslice = SimpleArray(tl[0],tl[1])
+
+        self.assertEqual(a_slice, a_tdslice)
+        self.assertEqual(b_slice, b_tdslice)
+        self.assertEqual(d_slice, d_tdslice)
+        
+        #test skim
+        td.skim(2)
+        fl = td.transferFeatureListToNumpy(False)
+        tl = td.transferTruthListToNumpy(False)
+        a_tdslice = SimpleArray(fl[0],fl[1])
+        b_tdslice = SimpleArray(fl[2],fl[3])
+        d_tdslice = SimpleArray(tl[0],tl[1])
+        
+        self.assertEqual(a_slice, a_tdslice)
+        self.assertEqual(b_slice, b_tdslice)
+        self.assertEqual(d_slice, d_tdslice)
+        
+            
         
     def test_split(self):
         print('TestTrainData: split')
