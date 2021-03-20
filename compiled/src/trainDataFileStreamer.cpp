@@ -186,8 +186,8 @@ void testTrainDataFileStreamer(){
        // tdtruth.cout();
         throw std::logic_error("testTrainDataFileStreamer: simpleArray_float32 ragged inconsistent");
     }
-
-    system(("rm -f "+testfilename).data());
+    //avoid warning
+    int res = system(("rm -f "+testfilename).data());
 
 }
 

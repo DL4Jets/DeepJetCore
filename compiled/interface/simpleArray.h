@@ -908,7 +908,10 @@ void simpleArray<T>::readFromFileP(FILE *& ifile, bool skip_data) {
 
     quicklz<T> qlz;
     if(skip_data){
-        rowsplits_.clear();
+        if(rowsplits_.size())
+            rowsplits_={(int64_t)0};
+        else
+            rowsplits_.clear();
         data_=0;
         size_=0;
         shape_.at(0)=0;

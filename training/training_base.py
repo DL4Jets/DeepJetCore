@@ -209,8 +209,8 @@ class training_base(object):
         inputdtypes = self.train_data.getKerasFeatureDTypes()
         inputnames= self.train_data.getKerasFeatureArrayNames()
         for i in range(len(inputnames)):
-            if inputnames[i]=="":
-                inputnames[i]="input_"+str(i)
+            if inputnames[i]=="" or inputnames[i]=="_rowsplits":
+                inputnames[i]="input_"+str(i)+inputnames[i]
 
 
         print("shapes", shapes)

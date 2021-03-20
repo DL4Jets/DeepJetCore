@@ -4,23 +4,17 @@ import shutil
 import unittest
 
 class RaggedTester(object):
-    def __init__(self, auto_create=0):
-        self.max_per_rs=534
-        self.fill_freq=11
-        self.fill_content=11
-        self.data=np.zeros((0,1),dtype='float32')
-        self.rs=np.array([],dtype='int64')
-        if auto_create > 0:
-            self.data,self.rs = self.createData(auto_create)
+    def __init__(self, max_per_rs=543):
+        self.max_per_rs=max_per_rs
 
-    def createEvent(self,length: int):
-        a = np.arange(length,dtype='float32')
+    def createEvent(self,length: int,dtype='float32'):
+        a = np.arange(length,dtype=dtype)
         a = np.expand_dims(a,axis=1)
         return a
     
-    def checkEvent(self,a):
-        checkarr = self.createEvent(len(a))
-        return np.all(checkarr==a)
+    def checkEvent(self,a,dtype='float32'):
+        checkarr = self.createEvent(len(a),dtype)
+        return np.all(checkarr==a) and checkarr.dtype == a.dtype
         
     
     
@@ -34,10 +28,10 @@ class RaggedTester(object):
         
         return np.concatenate(data), np.array(row_splits,dtype='int64')
 
-    def checkData(self,data,rs):
+    def checkData(self,data,rs,dtype='float32'):
         for i in range(len(rs)-1):
             ea=data[rs[i]:rs[i+1]]
-            if not self.checkEvent(ea):
+            if not self.checkEvent(ea,dtype):
                 return False
         return True
  
@@ -85,13 +79,15 @@ class TrainData_test(TrainData):
         
         seed = int(hashlib.sha1(filename.encode('utf-8')).hexdigest(), 16) % (10 ** 8)
         np.random.seed(seed)
-        nsamples = np.random.randint(12,5415,size=1)
+        nsamples = np.random.randint(12,101,size=1)
         data,rs = raggedtester.createData(nsamples)
         
-        farr = SimpleArray()
-        farr.createFromNumpy(data, rs)
+        farr = SimpleArray(data, rs)
+        true_arr = SimpleArray(data, rs)
+        farrint = SimpleArray(np.array(data,dtype='int32'), rs)
+        #farr.createFromNumpy()
         
-        return [farr],[],[]
+        return [farr,farrint],[true_arr],[]
     
 
 
@@ -120,13 +116,16 @@ class TestTrainDataGenerator(unittest.TestCase):
         for epoch in range(10):
             gen.prepareNextEpoch()
             for b in range(gen.getNBatches()):
-                d,_ = next(gen.feedNumpyData())
-                data,rs = d[0],d[1]
-                rs = np.array(rs[:,0],dtype='int')
-                rs = rs[:rs[-1]]
-                #print(data)
-                #print(rs[-1])
-                if not raggedtester.checkData(data, rs):
+                d,t = next(gen.feedNumpyData())
+                data,rs, dint, _ = d[0],d[1],d[2],d[3]
+                truth = t[0]
+                rs = rs[:,0]#remove last 1 dim
+                
+                datagood = raggedtester.checkData(data, rs)
+                datagood = datagood and raggedtester.checkData(dint, rs, 'int32')
+                datagood = datagood and raggedtester.checkData(truth, rs)
+                
+                if not datagood:
                     print('epoch',epoch, 'batch',b,'broken')
                     passed=False
                     break
