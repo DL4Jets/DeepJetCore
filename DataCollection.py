@@ -168,6 +168,9 @@ class DataCollection(object):
             print('reading '+fullpath, str(i), '/', str(len(self.samples)))
             try:
                 td.readFromFile(fullpath)
+                if hasattr(td, "isValid"):
+                    if not td.isValid():
+                        raise Exception("data validation failed for "+fullpath)
                 if td.nElements() < 1:
                     print("warning, no data in file "+fullpath)
                 del td
