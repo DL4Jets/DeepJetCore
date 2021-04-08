@@ -27,6 +27,7 @@
 #include <iostream>
 #include <cstdint>
 #include <sstream>
+#include <cmath>
 
 namespace djc{
 
@@ -81,6 +82,8 @@ public:
     const std::vector<int>& shape() const {
         return shape_;
     }
+
+    virtual bool hasNanOrInf()const=0;
 
     boost::python::list shapePy()const;
 
@@ -252,6 +255,8 @@ public:
     bool operator!=(const simpleArray<T>& rhs)const { return !(*this == rhs); }
 
     void clear();
+
+    bool hasNanOrInf()const;
 
     //reshapes if possible, creates new else
     void setShape(std::vector<int> shape,const std::vector<int64_t>& rowsplits = {});
@@ -554,6 +559,15 @@ void simpleArray<T>::clear() {
     size_ = 0;
     name_="";
     featnames_.clear();
+}
+
+template<class T>
+bool simpleArray<T>::hasNanOrInf()const{
+    for(size_t i=0;i<size_;i++){
+        if(std::isinf(data_[i]) || std::isnan(data_[i]))
+            return true;
+    }
+    return false;
 }
 
 template<class T>

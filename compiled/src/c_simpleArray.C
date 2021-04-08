@@ -39,6 +39,8 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
         .def("setFeatureNames", &simpleArray_float32::setFeatureNamesPy)
         .def("featureNames", &simpleArray_float32::featureNamesPy)
 
+        .def("hasNanOrInf", &simpleArray_float32::hasNanOrInf)
+
         //explicit overloads necessary
         .def<void (simpleArray_float32::*)(const size_t i, float val)>("set", &simpleArray_float32::set)
         .def<void (simpleArray_float32::*)(const size_t i, const size_t j, float val)>("set", &simpleArray_float32::set)
@@ -72,6 +74,8 @@ BOOST_PYTHON_MODULE(c_simpleArray) {
         .def("name", &simpleArray_int32::name)
         .def("setFeatureNames", &simpleArray_int32::setFeatureNamesPy)
         .def("featureNames", &simpleArray_int32::featureNamesPy)
+
+        .def("hasNanOrInf", &simpleArray_int32::hasNanOrInf)
 
         .def<void (simpleArray_int32::*)(const size_t i, int val)>("set", &simpleArray_int32::set)
         .def<void (simpleArray_int32::*)(const size_t i, const size_t j, int val)>("set", &simpleArray_int32::set)

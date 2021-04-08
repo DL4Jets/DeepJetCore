@@ -56,25 +56,30 @@ class TrainData(trainData):
         self.readFromFile(fileprefix,shapesOnly)
     
     
-    def _convertToCppType(self,a):
+    def _convertToCppType(self,a,helptext):
+        saout=None
         if str(type(a)) == "<class 'DeepJetCore.SimpleArray.SimpleArray'>":
-            return a.sa
+            saout = a.sa
         elif str(type(a)) == "<type 'numpy.ndarray'>" or str(type(a)) == "<class 'numpy.ndarray'>":
             rs = np.array([])
             a = SimpleArray(a,rs)
-            return a.sa
+            saout = a.sa
         else:
             raise ValueError("TrainData._convertToCppType MUST produce either a list of numpy arrays or a list of DeepJetCore simpleArrays!")
+        
+        if saout.hasNanOrInf():
+            raise ValueError("TrainData._convertToCppType: the "+helptext+" array "+saout.name()+" has NaN or inf entries")
+        return saout
             
     def _store(self, x, y, w):
         for xa in x:
-            self.storeFeatureArray(self._convertToCppType(xa))
+            self.storeFeatureArray(self._convertToCppType(xa, "feature"))
         x = [] #collect garbage
         for ya in y:
-            self.storeTruthArray(self._convertToCppType(ya))
+            self.storeTruthArray(self._convertToCppType(ya, "truth"))
         y = []
         for wa in w:
-            self.storeWeightArray(self._convertToCppType(wa))
+            self.storeWeightArray(self._convertToCppType(wa, "weight"))
         w = []    
         
     def readFromSourceFile(self,filename, weighterobjects={}, istraining=False, **kwargs):

@@ -47,6 +47,9 @@ class SimpleArray(object):
     
     def shape(self):
         return self.sa.shape()
+    
+    def hasNanOrInf(self):
+        return self.sa.hasNanOrInf()
 
     def readFromFile(self,filename):
         dt = self.sa.readDtypeFromFile(filename)
