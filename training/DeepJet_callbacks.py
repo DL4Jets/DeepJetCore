@@ -305,7 +305,6 @@ class DeepJet_callbacks(object):
                  batch_loss = False):
         
 
-        
         self.nl_begin=newline_callbacks_begin(outputDir,plotLossEachEpoch)
         self.nl_end=newline_callbacks_end()
         
@@ -351,10 +350,8 @@ class DeepJet_callbacks(object):
             self.callbacks.append(self.additionalplots)
             
         self.history=History()
-        self.timer = Losstimer()
-        
   
-        self.callbacks.extend([ self.nl_end, self.history,self.timer])
+        self.callbacks.extend([ self.nl_end, self.history])
         
         
         
