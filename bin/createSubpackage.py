@@ -429,7 +429,7 @@ print('to convert to example TrainData format use:')
 print('convertFromSource.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
 
 print('\nAn example to run the training can be found in '+subpackage_dir+'/Train/training_example.py')
-print('It can be run with: \npython '+subpackage_dir+'/Train/training_example.py <train output dir>/dataCollection.djcdc <train output dir>')
+print('It can be run with: \npython3 '+subpackage_dir+'/Train/training_example.py <train output dir>/dataCollection.djcdc <train output dir>')
 
 
 
