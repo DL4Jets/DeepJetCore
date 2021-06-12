@@ -117,6 +117,7 @@ class TrainData(trainData):
     
     ## defines how to write out the prediction
     # must not use any of the stored arrays, only the inputs
+    # optionally it can return the output file name to be added to a list of output files
     def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):
-        pass
+        return None
 

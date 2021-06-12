@@ -116,8 +116,9 @@ for inputfile in inputdatafiles:
     
     if not type(predicted) == list: #circumvent that keras return only an array if there is just one list item
         predicted = [predicted]   
-    td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, use_inputdir+"/"+inputfile)
-    
+    overwrite_outname = td.writeOutPrediction(predicted, x, y, w, args.outputDir + "/" + outfilename, use_inputdir+"/"+inputfile)
+    if overwrite_outname is not None:
+        outfilename = overwrite_outname
     outputs.append(outfilename)
     
     
