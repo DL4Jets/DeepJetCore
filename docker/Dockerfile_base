@@ -1,5 +1,7 @@
 
-FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04 
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04 
+
+#11.2 not yet with torch support
 
 
 SHELL ["/bin/bash", "-c"]
@@ -19,21 +21,20 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     htop
 RUN apt-get update --fix-missing
 
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y krb5-user && \
-    sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
-RUN apt-get update --fix-missing
+#doesn't work anyway
+#RUN export DEBIAN_FRONTEND=noninteractive && \
+#    apt-get install -y krb5-user && \
+#    sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
+#RUN apt-get update --fix-missing
 
 
 ############  root part
 RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev
-RUN apt-get install -y cmake
+RUN apt-get install -y cmake openssl
 
 RUN mkdir /temproot && \
     cd /temproot && \
-    git clone http://github.com/root-project/root.git && \
-    cd root && \
-    git checkout -b v6-18-04 v6-18-04 
+    git clone --branch v6-20-00-patches http://github.com/root-project/root.git 
 RUN cd /temproot && \
     mkdir build && \
     cd build && \
@@ -63,13 +64,13 @@ RUN pip3 install opencv-python easydict tqdm Cython numba
 RUN pip3 install gpustat setGPU
 
 ## torch/jupyter stuff 
-RUN pip3 install future gensim jupyter prompt-toolkit 
-RUN pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.7.0+cu101.html  && \
-    pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.7.0+cu101.html  && \
-    pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.7.0+cu101.html  && \
-    pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.7.0+cu101.html  && \
-    pip3 install torch-geometric    
-    
+RUN pip3 install future gensim jupyter prompt-toolkit                                           
+RUN pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
+    pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html       &&\
+    pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
+    pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html  &&\
+    pip3 install torch-geometric 
+        
 EXPOSE 8888
 
 #for singularity panic

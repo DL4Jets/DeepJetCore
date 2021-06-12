@@ -1,5 +1,6 @@
 
-FROM cernml4reco/djcbase:latest
+FROM cernml4reco/djcbase:cu11.1
+
 
 
 
@@ -7,7 +8,7 @@ FROM cernml4reco/djcbase:latest
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.3.0 tensorflow_probability
+    pip3 --no-cache-dir install tensorflow-gpu==2.4.0 tensorflow_probability
     
 
 
@@ -31,7 +32,6 @@ RUN ldconfig && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
     cd DeepJetCore && \
-#    git checkout 2.2_tf1.15 &&\
     source docker_env.sh && \
     cd compiled && \
     make -j4
