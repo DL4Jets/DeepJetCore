@@ -17,6 +17,8 @@ RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && 
     cd gpus && \
     ln -s /usr/local/cuda cuda    
     
+RUN ln -s /usr/local/cuda-11.1/lib64/libcusolver.so.11 /usr/local/cuda-11.1/lib64/libcusolver.so.10
+    
     
 ################################################################################
 # the actual DeepJetCore. Make sure this gets built every time
