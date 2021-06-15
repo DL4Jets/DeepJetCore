@@ -59,4 +59,10 @@ RUN git clone https://github.com/google/qkeras &&\
     python3 setup.py install 
     
 
+#some more useful packages
+RUN pip3 install bayesian-optimization mgzip
+
+
+
+
     
