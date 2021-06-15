@@ -218,7 +218,7 @@ class DataCollection(object):
             self.optionsdict = pickle.load(fd)
         except Exception as e:
             print(e)
-            print("WARNING: wrong dataCollection format. Can still be used for training(!), but it is advised to recreate it: this is possible without converting the original data again using the script createDataCollectionFromTD.py (takes a few seconds)")
+            print("WARNING: wrong dataCollection format. Can still be used for training, but it is advised to recreate it: this is possible without converting the original data again using the script createDataCollectionFromTD.py (takes a few seconds)\nBookkeeping (e.g. for predict) will be broken unless data collection is updated to new format.")
         finally:
             fd.close()
 
