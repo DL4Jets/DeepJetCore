@@ -60,7 +60,7 @@ RUN git clone https://github.com/google/qkeras &&\
     
 
 #some more useful packages
-RUN pip3 install bayesian-optimization mgzip
+RUN pip3 install bayesian-optimization mgzip mysql-connector-python
 
 
 
