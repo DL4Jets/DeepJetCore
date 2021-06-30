@@ -24,14 +24,8 @@ Setup
 
 The package comes with a docker file in the subdirectory docker, which will set up a container with the needed environment.
 
-**Building / using the container** 
-For every release, there is a container on dockerhub, the latest release is tagged. The ``latest`` tag refers to the developing master branch.
-``cernml4reco/deepjetcore3:latest``
-It can be pulled using docker, or pulled from singularity. For details, please see the corresponding docker or singularity documentation.
-To build the container, the files can be found in the ``docker`` subdirectory. It is a two-stage process. First the container ``Dockerfile_base`` needs to be built, containing the basic system packages. This will take a while, because root is being compiled within. The output container name must be ``cernml4reco/djcbase:cu11.1``. In the next step, the actual DeepJetCore container should be built on top. **Please make sure to use a release, not the developing master branch!**
 
-
-**Users with access to cvmfs** (e.g. on lxplus or other CERN machines) will find a working singularity container here:
+**Users with access to cvmfs** (e.g. on lxplus or other CERN machines) will find a pre-built singularity container here:
 ``/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cernml4reco/deepjetcore3:latest``
 
 A good way to enter the container interactively, mounting for example the standard directories on lxplus or similar machines would be:
@@ -64,7 +58,15 @@ export SINGULARITY_CACHEDIR="/tmp/$(whoami)/singularity"
 Sometimes you need to try a few times - singularity is a bit weird. But once the container is launched, everything works smoothly.
 The message about a missing user group can be safely ignored.
 
-**It is important** that your bashrc does not change or reset the ``LD_LIBRARY`` or ``PYTHONPATH`` environment variables. Also **remove any anaconda paths from your bashrc**, because they will reset ``LD_LIBRARY`` and ``PYTHONPATH``. THe system needs to be in a clean environment state within the container (as it should be).
+**It is important** that your bashrc does not change or reset the ``LD_LIBRARY`` or ``PYTHONPATH`` environment variables. Also **remove any anaconda paths from your bashrc**, because they will reset ``LD_LIBRARY`` and ``PYTHONPATH``. The system needs to be in a clean environment state within the container (as it should be).
+
+
+**Building / using the container** 
+For users without access to cvmfs, the container can be built manually or pulled from dockerhub. For every release, there is a container on dockerhub, the latest release is tagged. The ``latest`` tag refers to the developing master branch.
+``cernml4reco/deepjetcore3:latest``
+It can be pulled using docker, or pulled from singularity. For details, please see the corresponding docker or singularity documentation.
+To build the container, the files can be found in the ``docker`` subdirectory. It is a two-stage process. First the container ``Dockerfile_base`` needs to be built, containing the basic system packages. This will take a while, because root is being compiled within. The output container name must be ``cernml4reco/djcbase:cu11.1``. In the next step, the actual DeepJetCore container should be built on top. **Please make sure to use a release, not the developing master branch!**
+
 
 **Building with conda**
 In case of lack of access to singularity or docker, it's possible to build the environment using conda. This _should_ work anywhere since conda
