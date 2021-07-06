@@ -187,7 +187,7 @@ model,history = train.trainModel(nepochs=10,
                                  checkperiod=1, # saves a checkpoint model every N epochs
                                  verbose=1)
                                  
-print('Since the training is done, use the predict.py script to predict the model output on your test sample, e.g.: predict.py <training output>/KERAS_model.h5 <training output>/trainsamples.djcdc <path to data>/test.txt <output dir>')
+print('Since the training is done, use the predict.py script to predict the model output on your test sample, e.g.: predict.py <training output>/KERAS_model.h5 <training output>/trainsamples.djcdc <your subpackage>/example_data/test_data.txt <output dir>')
 '''
         
 datastructures_init = '''
@@ -426,10 +426,10 @@ if args.data:
     
 print('Before using the subpackage, source the "env.sh" file in the subpackage directory (not in DeepJetCore).')
 print('to convert to example TrainData format use:')
-print('convertFromSource.py -i '+subpackage_dir+'/example_data/train_files.txt -o <train output dir> -c TrainData_example')
+print('convertFromSource.py -i '+subpackage_dir+'/example_data/train_files.txt -o <output: training data dir> -c TrainData_example')
 
 print('\nAn example to run the training can be found in '+subpackage_dir+'/Train/training_example.py')
-print('It can be run with: \npython3 '+subpackage_dir+'/Train/training_example.py <train output dir>/dataCollection.djcdc <train output dir>')
+print('It can be run with: \npython3 '+subpackage_dir+'/Train/training_example.py <training data dir>/dataCollection.djcdc <output: training dir>')
 
 
 

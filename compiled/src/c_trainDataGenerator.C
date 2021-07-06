@@ -33,7 +33,7 @@ BOOST_PYTHON_MODULE(c_trainDataGenerator) {
             .def("setBatchSize", &trainDataGenerator::setBatchSize)
 
             .def("setFileList", &trainDataGenerator::setFileListPy)
-            .def("shuffleFilelist", &trainDataGenerator::shuffleFilelist)
+            .def("shuffleFileList", &trainDataGenerator::shuffleFileList)
 
             .def("setBuffer", &trainDataGenerator::setBuffer)
 

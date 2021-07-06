@@ -174,7 +174,7 @@ gen = train_data.invokeGenerator()
 
 # loop over epochs here ...
 
-gen.shuffleFilelist()
+gen.shuffleFileList()
 gen.prepareNextEpoch()
 
 # this number can differ from epoch to epoch for ragged data!

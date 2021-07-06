@@ -21,7 +21,7 @@ void trainDataGenerator::setFileListPy(boost::python::list files){
     trainDataGenerator::setFileList(toSTLVector<std::string>(files));
 }
 
-void trainDataGenerator::shuffleFilelist(){
+void trainDataGenerator::shuffleFileList(){
     std::random_device rd;
     std::mt19937 g(rd());
     g.seed(randomcount_);

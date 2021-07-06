@@ -134,7 +134,7 @@ class TestTrainDataGenerator(unittest.TestCase):
                     passed = False
                     break
                 
-            gen.shuffleFilelist()
+            gen.shuffleFileList()
             
         shutil.rmtree(dcoutdir.path)
         self.assertTrue(passed)

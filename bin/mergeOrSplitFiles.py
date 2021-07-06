@@ -16,7 +16,7 @@ args=parser.parse_args()
 
 
 from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.compiled.c_trainDataGenerator import trainDataGenerator
+from DeepJetCore.dataPipeline import TrainDataGenerator
 
 infile=args.infile
 nbatch=int(args.nelementsperfile)
@@ -31,7 +31,7 @@ if len(dir)<1:
     dir='.'
 insamples = [dir+'/'+s for s in samples]
 
-gen = trainDataGenerator()
+gen = TrainDataGenerator()
 gen.setBatchSize(nbatch)
 gen.setSkipTooLargeBatches(False)
 gen.setFileList(insamples)
