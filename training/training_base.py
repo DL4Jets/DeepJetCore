@@ -107,15 +107,13 @@ class training_base(object):
             import tensorflow as tf
             gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpufraction)
             sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-            import keras
-            from keras import backend as K
+            from tensorflow.keras import backend as K
             K.set_session(sess)
             print('using gpu memory fraction: '+str(args.gpufraction))
         
             
             
         
-        import keras
                 
         self.ngpus=1
         self.dist_strat_scope=None
@@ -298,7 +296,7 @@ class training_base(object):
            
         
     def loadModel(self,filename):
-        from keras.models import load_model
+        from tensorflow.keras.models import load_model
         self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
@@ -325,7 +323,7 @@ class training_base(object):
         self.startlearningrate=learningrate
         
         if not self.custom_optimizer:
-            from keras.optimizers import Adam
+            from tensorflow.keras.optimizers import Adam
             if clipnorm:
                 self.optimizer = Adam(lr=self.startlearningrate,clipnorm=clipnorm)
             else:
@@ -451,8 +449,6 @@ class training_base(object):
         
         print('starting training')
         if load_in_mem:
-            if match_truth_and_pred_list:
-                raise ValueError("match_truth_and_pred_list not available with load_in_mem")
             print('make features')
             X_train = self.train_data.getAllFeatures(nfiles=max_files)
             X_test = self.val_data.getAllFeatures(nfiles=max_files)
@@ -516,7 +512,7 @@ class training_base(object):
     
        
     def change_learning_rate(self, new_lr):
-        import keras.backend as K
+        import tensorflow.keras.backend as K
         if self.GAN_mode:
             K.set_value(self.discriminator.optimizer.lr, new_lr)
             K.set_value(self.gan.optimizer.lr, new_lr)
