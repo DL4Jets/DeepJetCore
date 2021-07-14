@@ -57,11 +57,15 @@ RUN git clone https://github.com/google/qkeras &&\
     cd qkeras &&\
     python3 setup.py build &&\
     python3 setup.py install 
-    
+      
 
 #some more useful packages
 RUN pip3 install bayesian-optimization mgzip mysql-connector-python
 
+
+# HLS4ML
+RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4ml[profiling]  
+RUN pip3 install git+https://github.com/thesps/conifer.git
 
 
 

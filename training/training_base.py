@@ -203,10 +203,10 @@ class training_base(object):
         
 
 
-        shapes = self.train_data.getKerasFeatureShapes()
-        inputdtypes = self.train_data.getKerasFeatureDTypes()
-        inputnames= self.train_data.getKerasFeatureArrayNames()
-        for i in range(len(inputnames)):
+        shapes = self.train_data.getNumpyFeatureShapes()
+        inputdtypes = self.train_data.getNumpyFeatureDTypes()
+        inputnames= self.train_data.getNumpyFeatureArrayNames()
+        for i in range(len(inputnames)): #in case they are not named
             if inputnames[i]=="" or inputnames[i]=="_rowsplits":
                 inputnames[i]="input_"+str(i)+inputnames[i]
 

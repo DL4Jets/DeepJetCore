@@ -47,8 +47,8 @@ class TrainData(trainData):
         
     
     def getInputShapes(self):
-        print('TrainData:getInputShapes: Deprecated, use getKerasFeatureShapes instead')
-        return self.getKerasFeatureShapes()
+        print('TrainData:getInputShapes: Deprecated, use getNumpyFeatureShapes instead')
+        return self.getNumpyFeatureShapes()
         
     
     def readIn(self,fileprefix,shapesOnly=False):

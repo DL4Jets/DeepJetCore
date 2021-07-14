@@ -27,7 +27,7 @@ class TestTrainData(unittest.TestCase):
             td.readFromFile("testfile.tdjctd")
             os.system('rm -f testfile.tdjctd')
         
-        shapes = td.getKerasFeatureShapes()
+        shapes = td.getNumpyFeatureShapes()
         self.assertEqual([[3, 5, 6], [1], [3, 5, 6], [1]], shapes,"shapes")
         
         self.assertEqual(2, td.nFeatureArrays())
@@ -156,5 +156,5 @@ class TestTrainData(unittest.TestCase):
         td._store([a,b], [c,d], [])
         
         #data, rs, data, rs
-        self.assertEqual(td.getKerasFeatureDTypes(), ['int32','int64','float32','int64'])
+        self.assertEqual(td.getNumpyFeatureDTypes(), ['int32','int64','float32','int64'])
         

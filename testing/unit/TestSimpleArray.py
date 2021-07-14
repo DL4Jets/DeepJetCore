@@ -131,10 +131,10 @@ class TestSimpleArray(unittest.TestCase):
         print('TestSimpleArray: split')
         
         arr,rs = self.createNumpy('float32')
-        a = SimpleArray(arr,rs)
+        a = SimpleArray(arr,rs,name="myarray")
         
         arrs, rss = arr[:rs[2]], rs[:3]
-        b = SimpleArray(arrs,rss)
+        b = SimpleArray(arrs,rss,name="myarray")
         
         asplit = a.split(2)
         self.assertEqual(asplit, b)

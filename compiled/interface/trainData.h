@@ -240,17 +240,35 @@ public:
 
 
 
-    boost::python::list getKerasFeatureShapes()const;
-    boost::python::list getKerasFeatureDTypes()const;
+    inline boost::python::list getNumpyFeatureShapes()const{
+        return transferShapesToPyList(feature_shapes_);
+    }
+    inline boost::python::list getNumpyTruthShapes()const{
+        return transferShapesToPyList(truth_shapes_);
+    }
+    inline boost::python::list getNumpyWeightShapes()const{
+        return transferShapesToPyList(weight_shapes_);
+    }
 
-    boost::python::list getKerasFeatureArrayNames()const;
+    inline boost::python::list getNumpyFeatureDTypes()const{
+        return transferDTypesToPyList(feature_arrays_);
+    }
+    inline boost::python::list getNumpyTruthDTypes()const{
+        return transferDTypesToPyList(truth_arrays_);
+    }
+    inline boost::python::list getNumpyWeightDTypes()const{
+        return transferDTypesToPyList(weight_arrays_);
+    }
 
-    // not needed boost::python::list getKerasTruthShapes()const;
-    // not needed boost::python::list getKerasWeightShapes()const;
-
-    //data generator interface get back numpy arrays / tf.tensors here for keras feeding!
-
-    boost::python::list getTruthRaggedFlags()const;
+    inline boost::python::list getNumpyFeatureArrayNames()const{
+        return transferNamesToPyList(feature_arrays_);
+    }
+    inline boost::python::list getNumpyTruthArrayNames()const{
+        return transferNamesToPyList(truth_arrays_);
+    }
+    inline boost::python::list getNumpyWeightArrayNames()const{
+        return transferNamesToPyList(weight_arrays_);
+    }
 
     //has ragged support
     boost::python::list transferFeatureListToNumpy(bool padrowsplits=false);
@@ -261,6 +279,8 @@ public:
     //no ragged support
     boost::python::list transferWeightListToNumpy(bool padrowsplits=false);
 
+
+    boost::python::list getTruthRaggedFlags()const;
 
     /*
      * the following ones can be improved w.r.t. performance
@@ -306,6 +326,10 @@ private:
     void readNested( std::vector<std::vector<U> >& v, FILE *&)const;
 
     void updateShapes();
+
+    boost::python::list transferNamesToPyList(const typeContainer&)const;
+    boost::python::list transferShapesToPyList(const std::vector<std::vector<int> >&)const;
+    boost::python::list transferDTypesToPyList(const typeContainer&)const;
 
 
     typeContainer feature_arrays_;

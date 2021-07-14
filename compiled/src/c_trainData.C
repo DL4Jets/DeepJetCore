@@ -58,11 +58,17 @@ BOOST_PYTHON_MODULE(c_trainData) {
        .def("skim", &trainData::skim)
        .def("getSlice", &trainData::getSlice)
 
-       .def("getKerasFeatureShapes", &trainData::getKerasFeatureShapes)
-       .def("getKerasFeatureDTypes", &trainData::getKerasFeatureDTypes)
-       .def("getKerasFeatureArrayNames", &trainData::getKerasFeatureArrayNames)
+       .def("getNumpyFeatureShapes", &trainData::getNumpyFeatureShapes)
+       .def("getNumpyTruthShapes", &trainData::getNumpyTruthShapes)
+       .def("getNumpyWeightShapes", &trainData::getNumpyWeightShapes)
 
+       .def("getNumpyFeatureDTypes", &trainData::getNumpyFeatureDTypes)
+       .def("getNumpyTruthDTypes", &trainData::getNumpyTruthDTypes)
+       .def("getNumpyWeightDTypes", &trainData::getNumpyWeightDTypes)
 
+       .def("getNumpyFeatureArrayNames", &trainData::getNumpyFeatureArrayNames)
+       .def("getNumpyTruthArrayNames", &trainData::getNumpyTruthArrayNames)
+       .def("getNumpyWeightArrayNames", &trainData::getNumpyWeightArrayNames)
 
        .def("getTruthRaggedFlags", &trainData::getTruthRaggedFlags)
        .def("transferFeatureListToNumpy", &trainData::transferFeatureListToNumpy)

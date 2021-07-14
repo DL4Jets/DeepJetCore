@@ -516,11 +516,23 @@ void trainData::skim(size_t batchelement){
 }
 
 
-
-
-boost::python::list trainData::getKerasFeatureShapes()const{
+boost::python::list trainData::transferNamesToPyList(const typeContainer& tc)const{
     boost::python::list out;
-    for(const auto& a: feature_shapes_){
+    for(size_t i=0;i<tc.size();i++){
+        auto name = tc.at(i).name();
+        if(! name.length()){
+            name = std::to_string(i);//set a default name
+        }
+        out.append(name);
+        if(tc.at(i).isRagged())
+            out.append(name+"_rowsplits");
+    }
+    return out;
+}
+
+boost::python::list trainData::transferShapesToPyList(const std::vector<std::vector<int> >& vs)const{
+    boost::python::list out;
+    for(const auto& a: vs){
         boost::python::list nlist;
         bool wasragged=false;
         for(size_t i=1;i<a.size();i++){
@@ -541,10 +553,10 @@ boost::python::list trainData::getKerasFeatureShapes()const{
     return out;
 }
 
-boost::python::list trainData::getKerasFeatureDTypes()const{
+boost::python::list trainData::transferDTypesToPyList(const typeContainer& tc)const{
     boost::python::list out;
-    for(size_t k=0;k<feature_shapes_.size();k++){
-        const auto& a = feature_shapes_.at(k);
+    for(size_t k=0;k<tc.size();k++){
+        const auto& a = tc.at(k).shape();
 
         bool isragged=false;
         for(size_t i=0;i<a.size();i++){
@@ -553,24 +565,13 @@ boost::python::list trainData::getKerasFeatureDTypes()const{
                 break;
             }
         }
-        out.append(feature_arrays_.at(k).dtypeString());
+        out.append(tc.at(k).dtypeString());
         if(isragged)
             out.append("int64");
     }
     return out;
 }
 
-
-boost::python::list trainData::getKerasFeatureArrayNames()const{
-    boost::python::list out;
-    for(size_t i=0;i<feature_arrays_.size();i++){
-        auto name = feature_arrays_.at(i).name();
-        out.append(name);
-        if(feature_arrays_.at(i).isRagged())
-            out.append(name+"_rowsplits");
-    }
-    return out;
-}
 
 boost::python::list trainData::getTruthRaggedFlags()const{
     boost::python::list out;

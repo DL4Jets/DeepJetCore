@@ -82,9 +82,9 @@ class TrainData_test(TrainData):
         nsamples = np.random.randint(12,101,size=1)
         data,rs = raggedtester.createData(nsamples)
         
-        farr = SimpleArray(data, rs)
-        true_arr = SimpleArray(data, rs)
-        farrint = SimpleArray(np.array(data,dtype='int32'), rs)
+        farr = SimpleArray(data, rs,name="features_ragged")
+        true_arr = SimpleArray(data, rs,name="truth_ragged")
+        farrint = SimpleArray(np.array(data,dtype='int32'), rs, name="features_int_ragged")
         #farr.createFromNumpy()
         
         return [farr,farrint],[true_arr],[]
@@ -139,4 +139,49 @@ class TestTrainDataGenerator(unittest.TestCase):
         shutil.rmtree(dcoutdir.path)
         self.assertTrue(passed)
         
+    def test_fullGeneratorDict(self):
+        print("TestTrainDataGenerator full generator with dictionary")
         
+        passed = True
+        
+        n_files=11
+        n_per_batch=2078
+        files = TempFileList(n_files)
+        dcoutdir = TempDirName()
+    
+        n_per_batch=n_per_batch
+        
+        dc = DataCollection()
+        dc.dataclass = TrainData_test
+        dc.sourceList = [f for f in files.filenames]
+        dc.createDataFromRoot(TrainData_test, outputDir=dcoutdir.path)
+        
+        gen = dc.invokeGenerator()
+        gen.setBatchSize(n_per_batch)
+        gen.dict_output = True
+        
+        for epoch in range(10):
+            gen.prepareNextEpoch()
+            for b in range(gen.getNBatches()):
+                d,t = next(gen.feedNumpyData())
+                data,rs, dint = d['features_ragged'],d['features_ragged_rowsplits'],d['features_int_ragged']
+                truth = t['truth_ragged']
+                rs = rs[:,0]#remove last 1 dim
+                
+                datagood = raggedtester.checkData(data, rs)
+                datagood = datagood and raggedtester.checkData(dint, rs, 'int32')
+                datagood = datagood and raggedtester.checkData(truth, rs)
+                
+                if not datagood:
+                    print('epoch',epoch, 'batch',b,'broken')
+                    passed=False
+                    break
+                if rs[-1] > n_per_batch:
+                    print('maximum batch size exceeded for batch ',b, 'epoch', epoch)
+                    passed = False
+                    break
+                
+            gen.shuffleFileList()
+            
+        shutil.rmtree(dcoutdir.path)
+        self.assertTrue(passed)

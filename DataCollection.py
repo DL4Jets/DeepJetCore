@@ -116,31 +116,44 @@ class DataCollection(object):
         self.sourceList.pop()
         
         
-    def getKerasFeatureShapes(self):
+    def getNumpyFeatureShapes(self):
         if len(self.samples)<1:
-            raise Exception("DataCollection.getKerasFeatureShapes: no files")
+            raise Exception("DataCollection.getNumpyFeatureShapes: no files")
             return []
         self._readMetaInfoIfNeeded()
-        return self.dataclass_instance.getKerasFeatureShapes()
+        return self.dataclass_instance.getNumpyFeatureShapes()
     
-    def getKerasFeatureDTypes(self):
+    def getNumpyFeatureDTypes(self):
         if len(self.samples)<1:
-            raise Exception("DataCollection.getKerasFeatureDTypes: no files")
+            raise Exception("DataCollection.getNumpyFeatureDTypes: no files")
             return []
         self._readMetaInfoIfNeeded()
-        return self.dataclass_instance.getKerasFeatureDTypes()
+        return self.dataclass_instance.getNumpyFeatureDTypes()
         
     
-    def getKerasFeatureArrayNames(self):
+    def getNumpyFeatureArrayNames(self):
         if len(self.samples)<1:
-            raise Exception("DataCollection.getKerasFeatureNames: no files")
+            raise Exception("DataCollection.getNumpyFeatureNames: no files")
             return []
         self._readMetaInfoIfNeeded()
-        return self.dataclass_instance.getKerasFeatureArrayNames()
+        return self.dataclass_instance.getNumpyFeatureArrayNames()
     
+    
+    def getKerasFeatureDTypes(self):
+        print('DataCollection.getKerasFeatureDTypes: deprecation warning, use getNumpyFeatureArrayNames')
+        return self.getNumpyFeatureDTypes()
+   
+    def getKerasFeatureShapes(self):
+        print('DataCollection.getKerasFeatureShapes: deprecation warning, use getNumpyFeatureArrayNames')
+        return self.getNumpyFeatureShapes()
+        
+    def getKerasFeatureArrayNames(self):
+        print('DataCollection.getKerasFeatureArrayNames: deprecation warning, use getNumpyFeatureArrayNames')
+        return self.getNumpyFeatureArrayNames()
+        
     def getInputShapes(self):
-        print('DataCollection:getInputShapes deprecated, use getKerasFeatureShapes ')
-        return self.getKerasFeatureShapes()
+        print('DataCollection:getInputShapes deprecated, use getNumpyFeatureShapes ')
+        return self.getNumpyFeatureShapes()
     
        
     def setBatchSize(self,bsize):
