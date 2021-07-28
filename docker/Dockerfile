@@ -8,7 +8,7 @@ FROM cernml4reco/djcbase:cu11.1
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.4.0 tensorflow_probability
+    pip3 --no-cache-dir install tensorflow-gpu==2.4.0 tensorflow_probability 
     
 
 
@@ -18,7 +18,7 @@ RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && 
     ln -s /usr/local/cuda cuda    
     
 RUN ln -s /usr/local/cuda-11.1/lib64/libcusolver.so.11 /usr/local/cuda-11.1/lib64/libcusolver.so.10
-    
+ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
     
 ################################################################################
 # the actual DeepJetCore. Make sure this gets built every time
@@ -64,7 +64,7 @@ RUN pip3 install bayesian-optimization mgzip mysql-connector-python
 
 
 # HLS4ML
-RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4ml[profiling]  
+RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4ml[profiling]  tensorflow_datasets
 RUN pip3 install git+https://github.com/thesps/conifer.git
 
 
