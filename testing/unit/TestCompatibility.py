@@ -16,6 +16,8 @@ class TestCompatibility(unittest.TestCase):
         a.readFromFile("simpleArray_previous.djcsa")
         
         arr = np.load("np_arr.npy")
+        #FIXME: this array was actually wrong
+        arr = arr[:100]
         rs = np.load("np_rs.npy")
         
         b = SimpleArray(arr,rs)
@@ -30,6 +32,8 @@ class TestCompatibility(unittest.TestCase):
         self.assertEqual(td.nFeatureArrays(), 1)
         
         arr = np.load("np_arr.npy")
+        #FIXME: this array was actually wrong
+        arr = arr[:100]
         rs = np.load("np_rs.npy")
         
         b = SimpleArray(arr,rs)

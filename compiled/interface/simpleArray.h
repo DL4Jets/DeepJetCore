@@ -1247,6 +1247,10 @@ void simpleArray<T>::fromNumpy(const boost::python::numpy::ndarray& ndarr,
         checkArray(rowsplits, np::dtype::get_builtin<int64_t>());
         rowsplits_.resize(len(rowsplits));
         memcpy(&(rowsplits_.at(0)),(int64_t*)(void*) rowsplits.get_data(), rowsplits_.size() * sizeof(int64_t));
+        //check if row splits make sense
+        if(shape.at(0) != rowsplits_.at(rowsplits_.size()-1)){
+            throw std::out_of_range("simpleArray<T>::fromNumpy: row splits and input array incompatible. rowsplits[-1] != arr.shape[0].");
+        }
         shape.insert(shape.begin(),len(rowsplits)-1);
         shape_ = shape;
         shape_ = shapeFromRowsplits();
