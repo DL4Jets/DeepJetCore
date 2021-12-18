@@ -222,6 +222,10 @@ class training_base(object):
             self.keras_inputs.append(keras.layers.Input(shape=s, dtype=dt, name=n))
             self.keras_inputsshapes.append(s)
             
+        #bookkeeping
+        self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc')
+        self.val_data.writeToFile(self.outputDir+'valsamples.djcdc')
+            
         if not isNewTraining:
             kfile = self.outputDir+'/KERAS_check_model_last.h5' \
 							 if os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5') else \
@@ -277,9 +281,11 @@ class training_base(object):
             self.keras_model.build(None)
             
         if len(self.keras_weight_model_path):
-            from DeepJetCore.modeltools import apply_weights_where_possible, load_model
+            from DeepJetCore.modeltools import apply_weights_where_possible
+            tbcopy = self
+            tbcopy.loadModel(self.keras_weight_model_path)
             self.keras_model = apply_weights_where_possible(self.keras_model, 
-                                         load_model(self.keras_weight_model_path))
+                                         tbcopy.keras_model)
         #try:
         #    self.keras_model=model(self.keras_inputs,**modelargs)
         #except BaseException as e:
@@ -294,11 +300,15 @@ class training_base(object):
         self.checkpointcounter=self.checkpointcounter+1 
         self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring +".h5")    
            
-        
-    def loadModel(self,filename):
+    
+    def _loadModel(self,filename):
         from tensorflow.keras.models import load_model
-        self.keras_model=load_model(filename, custom_objects=custom_objects_list)
-        self.optimizer=self.keras_model.optimizer
+        keras_model=load_model(filename, custom_objects=custom_objects_list)
+        optimizer=self.keras_model.optimizer
+        return keras_model, optimizer
+                
+    def loadModel(self,filename):
+        self.keras_model, self.optimizer = self._loadModel(filename)
         self.compiled=True
         if self.ngpus>1:
             self.compiled=False
@@ -377,8 +387,6 @@ class training_base(object):
         self.train_data.batch_uses_sum_of_squares=use_sum_of_squares
         self.val_data.batch_uses_sum_of_squares=use_sum_of_squares
         
-        self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc')
-        self.val_data.writeToFile(self.outputDir+'valsamples.djcdc')
         
         #make sure tokens don't expire
         from .tokenTools import checkTokens, renew_token_process
@@ -398,7 +406,7 @@ class training_base(object):
                    batchsize,
                    run_eagerly=False,
                    batchsize_use_sum_of_squares = False,
-                   extend_truth_list_by=0,#extend the truth list with dummies. Useful when adding more prediction outputs than truth inputs
+                   fake_truth=False,#extend the truth list with dummies. Useful when adding more prediction outputs than truth inputs
                    stop_patience=-1, 
                    lr_factor=0.5,
                    lr_patience=-1, 
@@ -467,12 +475,16 @@ class training_base(object):
             #prepare generator 
         
             print("setting up generator... can take a while")
-            traingen = self.train_data.invokeGenerator()
-            valgen = self.val_data.invokeGenerator()
-            #this is fixed
-            traingen.extend_truth_list_by = extend_truth_list_by
-            valgen.extend_truth_list_by = extend_truth_list_by
-            
+            use_fake_truth=None
+            if fake_truth:
+                if isinstance(self.keras_model.output,dict):
+                    use_fake_truth = [k for k in self.keras_model.output.keys()]
+                elif isinstance(self.keras_model.output,list):
+                    use_fake_truth = len(self.keras_model.output)
+                    
+            traingen = self.train_data.invokeGenerator(fake_truth = use_fake_truth)
+            valgen = self.val_data.invokeGenerator(fake_truth = use_fake_truth)
+
 
             while(self.trainedepoches < nepochs):
            

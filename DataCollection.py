@@ -600,8 +600,8 @@ class DataCollection(object):
             td.append(td2)
         return td
     
-    def invokeGenerator(self):
-        generator = TrainDataGenerator()
+    def invokeGenerator(self, *args, **kwargs):
+        generator = TrainDataGenerator( *args, **kwargs)
         generator.setBatchSize(self.__batchsize)
         generator.setSquaredElementsLimit(self.batch_uses_sum_of_squares)
         generator.setFileList([self.dataDir+ "/" + s for s in self.samples])

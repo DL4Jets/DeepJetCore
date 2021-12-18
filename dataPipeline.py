@@ -6,14 +6,26 @@ class TrainDataGenerator(trainDataGenerator):
     
     def __init__(self, 
                  pad_rowsplits=False, 
-                 extend_truth_list_by=0,
+                 fake_truth=None,
                  dict_output=False):
         
         trainDataGenerator.__init__(self)
-        self.extend_truth_list_by = extend_truth_list_by
+        #self.extend_truth_list_by = extend_truth_list_by
         self.pad_rowsplits=pad_rowsplits
         self.dict_output = dict_output
-        
+        self.fake_truth = None
+        if fake_truth is not None:
+            if isinstance(fake_truth, int):
+                self.fake_truth = [np.array([0],dtype='float32') 
+                                             for _ in range(fake_truth)]
+            elif isinstance(fake_truth, list):
+                etl={}
+                for e in fake_truth:
+                    if isinstance(e,str):
+                        etl[e]=np.array([0],dtype='float32') 
+                    else:
+                        raise ValueError("TrainDataGenerator: only accepts an int or list of strings to extend truth list")
+                self.fake_truth = etl
         
     def feedNumpyData(self):
         
@@ -42,13 +54,8 @@ class TrainDataGenerator(trainDataGenerator):
                     yout = {k:v for k,v in zip(tnames,yout)}
                     wout = {k:v for k,v in zip(wnames,wout)}
                 
-                if self.extend_truth_list_by > 0:
-                    tadd = [np.array([0],dtype='float32') for _ in range(self.extend_truth_list_by)]
-                    if self.dict_output:
-                        keyadd = ["_truth_extended_"+str(i) for i in range(self.extend_truth_list_by)]
-                        yout.update({k:v for k,v in zip(keyadd,tadd)})
-                    else:
-                        yout += tadd
+                if self.fake_truth is not None:
+                    yout=self.fake_truth
                 
                 out = (xout,yout)
                 if len(wout)>0:

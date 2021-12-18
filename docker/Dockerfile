@@ -67,6 +67,12 @@ RUN pip3 install bayesian-optimization mgzip mysql-connector-python
 RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4ml[profiling]  tensorflow_datasets
 RUN pip3 install git+https://github.com/thesps/conifer.git
 
+#add some kerberos for convenience
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y krb5-user && \
+    sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
+RUN apt-get update --fix-missing
+
 
 
     
