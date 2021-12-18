@@ -2,6 +2,7 @@
 FROM cernml4reco/djcbase:cu11.1
 
 
+RUN apt-get update --fix-missing
 
 
 ################################################################################
@@ -72,6 +73,12 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y krb5-user && \
     sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
 RUN apt-get update --fix-missing
+
+#run tests
+RUN testEnvironment.py
+
+RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
+    python3 test.py
 
 
 
