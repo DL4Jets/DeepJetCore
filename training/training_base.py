@@ -304,7 +304,7 @@ class training_base(object):
     def _loadModel(self,filename):
         from tensorflow.keras.models import load_model
         keras_model=load_model(filename, custom_objects=custom_objects_list)
-        optimizer=self.keras_model.optimizer
+        optimizer=keras_model.optimizer
         return keras_model, optimizer
                 
     def loadModel(self,filename):
