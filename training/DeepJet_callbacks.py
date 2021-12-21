@@ -14,8 +14,9 @@ from ..evaluation import plotBatchLoss
 
 import matplotlib.pyplot as plt
 import numpy as np
+from multiprocessing import Process
 
-from keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
+from tensorflow.keras.callbacks import Callback, EarlyStopping,History,ModelCheckpoint #, ReduceLROnPlateau # , TensorBoard
 # loss per epoch
 from time import time
 from pdb import set_trace
@@ -25,7 +26,143 @@ import matplotlib
 import os
 matplotlib.use('Agg') 
 
+class simpleMetricsCallback(Callback):
 
+    def __init__(self,
+                 output_file,
+                 select_metrics=None,
+                 call_on_epoch=False,
+                 record_frequency= 10,
+                 plot_frequency = 20,
+                 smoothen=None,
+                 dtype='float16'):
+        '''
+        Requires plotly
+        
+        select_metrics: select which metrics to plot.
+                        - a list of explicit names, e.g. ["accuracy","recall"]
+                        - an individual name
+                        - a (list of) names with wildcards, e.g. "accuracy_*"
+        
+        call_on_epoch: calls the data recording and plotting at the end of each epoch
+        
+        record_frequency: (only if call_on_epoch=False) 
+                           records data every N batches (to keep memory consumption low)
+        plot_frequency: (only if call_on_epoch=False) 
+                        make the plot every N RECORDS 
+                        (so a plot will be made every record_frequency*plot_frequency batches)
+                        
+        dtype: data type for data to be stored to keep memory consuption within reason (be careful)
+        
+        '''
+        
+        if select_metrics is not None:
+            assert isinstance(select_metrics,str) or isinstance(select_metrics,list)
+            if isinstance(select_metrics,str):
+                select_metrics=[select_metrics]
+        
+        assert dtype == 'float16' or dtype == 'float32' or dtype == 'int32' 
+        self.dtype = dtype
+        
+        if smoothen is None:
+            if call_on_epoch:
+                smoothen = -1
+            else:
+                smoothen = 51
+        smoothen=int(smoothen)
+        if smoothen>0 and not smoothen%2:
+            smoothen+=1
+
+        self.smoothen = smoothen        
+        self.output_file=output_file
+        self.select_metrics=select_metrics
+        self.record_frequency = record_frequency
+        self.plot_frequency = plot_frequency
+        self.record_counter=0
+        self.plot_counter=0
+        self._thread=None
+        self.call_on_epoch = call_on_epoch
+        self.data={}
+        
+    def _record_data(self,logs):
+        #log is dict with simple scalars
+        
+        if len(self.data) == 0: #build the dict at first call
+            
+            for k in logs.keys():
+                if self.select_metrics is None:
+                    self.data[k]=np.array([logs[k]],dtype=self.dtype)#enough, keep memory consumption ok
+                else:
+                    if k in self.select_metrics:
+                        self.data[k]=np.array([logs[k]],dtype=self.dtype)
+                    else:
+                        import fnmatch
+                        for sm in self.select_metrics:
+                            if fnmatch.fnmatch(k,sm):
+                                self.data[k]=np.array([logs[k]],dtype=self.dtype)
+        else:
+            for k in self.data.keys(): #already determined
+                self.data[k] = np.concatenate([self.data[k],np.array([logs[k]],dtype=self.dtype)],axis=0)
+    
+    def _make_plot_worker(self):
+        datacp = {}
+        if self.smoothen > 3:
+            from scipy.signal import savgol_filter
+            for k in self.data.keys():
+                if len(self.data[k]) > self.smoothen+1:
+                    datacp[k] = savgol_filter(self.data[k], 
+                                              window_length = self.smoothen, 
+                                              polyorder = 3)
+                    datacp[k] = datacp[k][:-self.smoothen//2]#make sure to remove smoothing effects at the end
+                else:
+                    datacp[k] = self.data[k]
+        else:
+            datacp=self.data   
+
+        import pandas as pd
+        pd.options.plotting.backend = "plotly"
+        df = pd.DataFrame().from_dict(datacp)
+        if len(df)<1:
+            return
+        fig = df.plot(#x='date', 
+                template = 'plotly_dark',
+                #xlabel='record number',
+                y=[str(k) for k in datacp.keys()])
+        fig.write_html(self.output_file)
+    
+    def _make_plot(self):
+        #to be multi-processed
+        if self._thread is not None:
+            self._thread.join(120)#wait two minutes
+        
+        self._thread = Process(target=self._make_plot_worker)
+        self._thread.start()
+        
+        
+    def on_batch_end(self,batch,logs={}):
+        if self.call_on_epoch:
+            return
+        if self.record_counter < self.record_frequency-1:
+            self.record_counter+=1
+            return
+        self.record_counter=0
+        #record data
+        self._record_data(logs)
+        
+        if self.plot_counter < self.plot_frequency-1:
+            self.plot_counter+=1
+            return
+        self.plot_counter=0
+        #make plot
+        self._make_plot()
+        
+    def on_epoch_end(self,epoch,logs={}):
+        if not self.call_on_epoch:
+            return
+        self._record_data(logs)
+        self._make_plot()
+       
+       
 class plot_loss_or_metric(Callback):
     def __init__(self,outputDir,metrics):
         self.metrics=metrics
