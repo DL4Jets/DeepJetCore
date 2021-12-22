@@ -35,6 +35,7 @@ class simpleMetricsCallback(Callback):
                  record_frequency= 10,
                  plot_frequency = 20,
                  smoothen=None,
+                 smooth_more_at=None,
                  dtype='float16'):
         '''
         Requires plotly
@@ -72,8 +73,14 @@ class simpleMetricsCallback(Callback):
         smoothen=int(smoothen)
         if smoothen>0 and not smoothen%2:
             smoothen+=1
-
-        self.smoothen = smoothen        
+        
+        if smooth_more_at is None:
+            smooth_more_at = 500
+        else:
+            assert isinstance(smooth_more_at,int) and smooth_more_at >= 0
+            
+        self.smoothen = smoothen    
+        self.smooth_more_at = smooth_more_at    
         self.output_file=output_file
         self.select_metrics=select_metrics
         self.record_frequency = record_frequency
@@ -83,6 +90,18 @@ class simpleMetricsCallback(Callback):
         self._thread=None
         self.call_on_epoch = call_on_epoch
         self.data={}
+        self.len=0
+        
+        #check if pre-recorded data exists, in case a training is resumed
+        recordsfile = self.output_file+'.df.pkl'
+        if os.path.isfile(recordsfile):
+            import pandas as pd
+            df = pd.read_pickle(recordsfile)
+            self.data=df.to_dict('list')
+            for k in self.data.keys():
+                self.len = len(self.data[k])
+                break
+            
         
     def _record_data(self,logs):
         #log is dict with simple scalars
@@ -100,27 +119,38 @@ class simpleMetricsCallback(Callback):
                         for sm in self.select_metrics:
                             if fnmatch.fnmatch(k,sm):
                                 self.data[k]=np.array([logs[k]],dtype=self.dtype)
+            if len(self.data) == 0:
+                print('could not find metrics',self.select_metrics,'in',logs.keys())
         else:
             for k in self.data.keys(): #already determined
                 self.data[k] = np.concatenate([self.data[k],np.array([logs[k]],dtype=self.dtype)],axis=0)
+                self.len = len(self.data[k])
     
     def _make_plot_worker(self):
+        if self.len < 2:
+            return
+        import pandas as pd
+        pd.options.plotting.backend = "plotly"
+        #save original data
+        
+        dfs = pd.DataFrame().from_dict(self.data)
+        dfs.to_pickle(self.output_file+'.df.pkl')#save snapshot
+        
         datacp = {}
-        if self.smoothen > 3:
+        if self.smoothen > 3 and self.len > self.smoothen+1:
             from scipy.signal import savgol_filter
             for k in self.data.keys():
-                if len(self.data[k]) > self.smoothen+1:
-                    datacp[k] = savgol_filter(self.data[k], 
-                                              window_length = self.smoothen, 
-                                              polyorder = 3)
-                    datacp[k] = datacp[k][:-self.smoothen//2]#make sure to remove smoothing effects at the end
-                else:
-                    datacp[k] = self.data[k]
+                window = self.smoothen
+                if self.smooth_more_at and len(self.data[k]) > self.smoothen*self.smooth_more_at:#smoothen more for large data sets
+                    window = len(self.data[k])//self.smooth_more_at 
+                datacp[k] = savgol_filter(self.data[k], 
+                                          window_length = window, 
+                                          polyorder = 3)
+                datacp[k] = datacp[k][:-window//2]#make sure to remove smoothing effects at the end  
         else:
             datacp=self.data   
 
-        import pandas as pd
-        pd.options.plotting.backend = "plotly"
+        
         df = pd.DataFrame().from_dict(datacp)
         if len(df)<1:
             return
