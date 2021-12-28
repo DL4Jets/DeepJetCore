@@ -21,30 +21,7 @@ RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && 
 RUN ln -s /usr/local/cuda-11.1/lib64/libcusolver.so.11 /usr/local/cuda-11.1/lib64/libcusolver.so.10
 ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
     
-################################################################################
-# the actual DeepJetCore. Make sure this gets built every time
 
-ARG BUILD_DATE
-LABEL org.label-schema.build-date=$BUILD_DATE
-
-ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
-
-RUN ldconfig && \
-    cd /usr/share && \
-    mkdir DJC && \
-    cd DJC && \
-    git clone https://github.com/DL4Jets/DeepJetCore && \
-    cd DeepJetCore && \
-    source docker_env.sh && \
-    cd compiled && \
-    make -j4
-
-
-ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
-
-#/usr/local/lib is for root
-ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
-ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 
 
 # helpers for ragged and cuda compilation
@@ -69,12 +46,6 @@ RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4m
 RUN pip3 install git+https://github.com/thesps/conifer.git
 
 
-#run tests
-RUN testEnvironment.py
-
-RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
-    python3 test.py
-    
 #add some kerberos for convenience
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y krb5-user 
@@ -84,6 +55,35 @@ COPY krb5.conf /etc/krb5.conf
 
 RUN apt-get update --fix-missing
 
+################################################################################
+# the actual DeepJetCore. Make sure this gets built every time
+
+ARG BUILD_DATE
+LABEL org.label-schema.build-date=$BUILD_DATE
+
+ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
+
+RUN ldconfig && \
+    cd /usr/share && \
+    mkdir DJC && \
+    cd DJC && \
+    git clone https://github.com/DL4Jets/DeepJetCore && \
+    cd DeepJetCore && \
+    source docker_env.sh && \
+    cd compiled && \
+    make -j4
+
+
+ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
+ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
+ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
+
+#run tests
+RUN testEnvironment.py
+
+RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
+    python3 test.py
+    
 
 
 
