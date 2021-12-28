@@ -26,6 +26,15 @@ import matplotlib
 import os
 matplotlib.use('Agg') 
 
+#helper
+def publish(file_to_publish, publish_to_path):
+    cpstring = 'cp -f '
+    if "@" in publish_to_path:
+        cpstring = 'scp '
+    basefilename = os.path.basename(file_to_publish)
+    os.system(cpstring + file_to_publish + ' ' + publish_to_path +'_'+basefilename+ ' 2>&1 > /dev/null') 
+
+
 class simpleMetricsCallback(Callback):
 
     def __init__(self,
@@ -36,6 +45,7 @@ class simpleMetricsCallback(Callback):
                  plot_frequency = 20,
                  smoothen=None,
                  smooth_more_at=None,
+                 publish=None,
                  dtype='float16'):
         '''
         Requires plotly
@@ -52,6 +62,10 @@ class simpleMetricsCallback(Callback):
         plot_frequency: (only if call_on_epoch=False) 
                         make the plot every N RECORDS 
                         (so a plot will be made every record_frequency*plot_frequency batches)
+                        
+        publish: uses scp or cp to copy the output file to another location (e.g. from a cluster to a website server).
+                 if the path contains and "@", it will use scp. This only works with configured key pairs or tokens.
+                 The path needs to also contain the output file name
                         
         dtype: data type for data to be stored to keep memory consuption within reason (be careful)
         
@@ -89,6 +103,7 @@ class simpleMetricsCallback(Callback):
         self.plot_counter=0
         self._thread=None
         self.call_on_epoch = call_on_epoch
+        self.publish = publish
         self.data={}
         self.len=0
         
@@ -159,6 +174,9 @@ class simpleMetricsCallback(Callback):
                 #xlabel='record number',
                 y=[str(k) for k in datacp.keys()])
         fig.write_html(self.output_file)
+        
+        if self.publish is not None:
+            publish(self.output_file, self.publish)
     
     def _make_plot(self):
         #to be multi-processed
