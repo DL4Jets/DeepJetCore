@@ -48,7 +48,7 @@ class simpleMetricsCallback(Callback):
                  publish=None,
                  dtype='float16'):
         '''
-        Requires plotly
+        Requires plotly. If metrics cannot be found, the callback will give up on the 100th try.
         
         select_metrics: select which metrics to plot.
                         - a list of explicit names, e.g. ["accuracy","recall"]
@@ -106,6 +106,7 @@ class simpleMetricsCallback(Callback):
         self.publish = publish
         self.data={}
         self.len=0
+        self.give_up_counter=0
         
         #check if pre-recorded data exists, in case a training is resumed
         recordsfile = self.output_file+'.df.pkl'
@@ -120,6 +121,8 @@ class simpleMetricsCallback(Callback):
         
     def _record_data(self,logs):
         #log is dict with simple scalars
+        if self.give_up_counter > 100:#just give up
+            return
         
         if len(self.data) == 0: #build the dict at first call
             
@@ -136,6 +139,7 @@ class simpleMetricsCallback(Callback):
                                 self.data[k]=np.array([logs[k]],dtype=self.dtype)
             if len(self.data) == 0:
                 print('could not find metrics',self.select_metrics,'in',logs.keys())
+                self.give_up_counter += 1
         else:
             for k in self.data.keys(): #already determined
                 self.data[k] = np.concatenate([self.data[k],np.array([logs[k]],dtype=self.dtype)],axis=0)
@@ -158,6 +162,8 @@ class simpleMetricsCallback(Callback):
                 window = self.smoothen
                 if self.smooth_more_at and len(self.data[k]) > self.smoothen*self.smooth_more_at:#smoothen more for large data sets
                     window = len(self.data[k])//self.smooth_more_at 
+                    if not window%2:
+                        window +=1
                 datacp[k] = savgol_filter(self.data[k], 
                                           window_length = window, 
                                           polyorder = 3)
