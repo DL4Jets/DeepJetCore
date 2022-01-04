@@ -122,7 +122,11 @@ class simpleMetricsCallback(Callback):
         
     def _record_data(self,logs):
         #log is dict with simple scalars
-        if self.give_up_counter > 100:#just give up
+        if self.give_up_counter == 99:#just give up
+            print('Giving up trying to find metrics',self.select_metrics)
+            self.give_up_counter+=1
+            return
+        if self.give_up_counter > 99:
             return
         
         if len(self.data) == 0: #build the dict at first call
