@@ -223,8 +223,8 @@ class training_base(object):
             self.keras_inputsshapes.append(s)
             
         #bookkeeping
-        self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc')
-        self.val_data.writeToFile(self.outputDir+'valsamples.djcdc')
+        self.train_data.writeToFile(self.outputDir+'trainsamples.djcdc',abspath=True)
+        self.val_data.writeToFile(self.outputDir+'valsamples.djcdc',abspath=True)
             
         if not isNewTraining:
             kfile = self.outputDir+'/KERAS_check_model_last.h5' \

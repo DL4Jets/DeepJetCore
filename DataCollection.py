@@ -206,9 +206,12 @@ class DataCollection(object):
                 break
                  
         
-    def writeToFile(self,filename):
+    def writeToFile(self,filename,abspath=False):
         with tempfile.NamedTemporaryFile(mode='wb', delete=False) as fd:
-            pickle.dump(self.samples, fd,protocol=0 )
+            if not abspath:
+                pickle.dump(self.samples, fd,protocol=0 )
+            else:
+                pickle.dump([self.getSamplePath(s) for s in self.samples], fd,protocol=0 )
             pickle.dump(self.sourceList, fd,protocol=0 )
             pickle.dump(self.dataclass, fd,protocol=0 )
             pickle.dump(self.weighterobjects, fd, protocol=0)

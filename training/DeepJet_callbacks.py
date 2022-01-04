@@ -62,6 +62,7 @@ class simpleMetricsCallback(Callback):
         plot_frequency: (only if call_on_epoch=False) 
                         make the plot every N RECORDS 
                         (so a plot will be made every record_frequency*plot_frequency batches)
+                        Also triggers saving a pandas dataframe with the raw data
                         
         publish: uses scp or cp to copy the output file to another location (e.g. from a cluster to a website server).
                  if the path contains and "@", it will use scp. This only works with configured key pairs or tokens.
