@@ -100,7 +100,7 @@ class simpleMetricsCallback(Callback):
         self.select_metrics=select_metrics
         self.record_frequency = record_frequency
         self.plot_frequency = plot_frequency
-        self.record_counter=0
+        self.record_counter=-1
         self.plot_counter=0
         self._thread=None
         self.call_on_epoch = call_on_epoch
@@ -199,6 +199,12 @@ class simpleMetricsCallback(Callback):
         
         
     def on_batch_end(self,batch,logs={}):
+        
+        if self.record_counter<0: #always record first
+            self.record_counter=0
+            self._record_data(logs)
+            return
+            
         if self.call_on_epoch:
             return
         if self.record_counter < self.record_frequency-1:
