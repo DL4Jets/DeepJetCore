@@ -34,6 +34,30 @@ def publish(file_to_publish, publish_to_path):
     basefilename = os.path.basename(file_to_publish)
     os.system(cpstring + file_to_publish + ' ' + publish_to_path +'_'+basefilename+ ' 2>&1 > /dev/null') 
 
+def hampel(vals_orig, k=7, t0=3):
+    '''
+    Hampel, Frank R. “The Influence Curve and Its Role in Robust Estimation.” 
+    Journal of the American Statistical Association 69, no. 346 (1974): 383–93. 
+    https://doi.org/10.2307/2285666.
+    
+    vals: pandas series of values from which to remove outliers
+    k: size of window (including the sample; 7 is equal to 3 on either side of value)
+    
+    Implementation adapted from
+    https://newbedev.com/filtering-outliers-how-to-make-median-based-hampel-function-faster
+    '''
+    #Make copy so original not edited
+    vals=vals_orig.copy()
+    #Hampel Filter
+    L= 1.4826
+    rolling_median=vals.rolling(k).median()
+    signed_difference = vals-rolling_median
+    difference=np.abs(signed_difference)
+    median_abs_deviation=difference.rolling(k).median()
+    threshold= t0 *L * median_abs_deviation
+    outlier_idx=difference>threshold
+    vals[outlier_idx]=vals-signed_difference
+    return vals
 
 class simpleMetricsCallback(Callback):
 
@@ -45,6 +69,7 @@ class simpleMetricsCallback(Callback):
                  plot_frequency = 20,
                  smoothen=None,
                  smooth_more_at=None,
+                 suppress_outliers=True,
                  publish=None,
                  dtype='float16'):
         '''
@@ -64,11 +89,28 @@ class simpleMetricsCallback(Callback):
                         (so a plot will be made every record_frequency*plot_frequency batches)
                         Also triggers saving a pandas dataframe with the raw data
                         
+        smoothen: smoothen the plot. Window size for the Savitzky-Golay filter. For batch-wise recording values around
+                  50 are usually a good choice. 
+                  The raw data saved as pandas dataframe will not be affected.
+        
+        smooth_more_at: Start to smoothen more when more than <smooth_more_at> points are collected
+                        such that plot remains readable. 
+                        The raw data saved as pandas dataframe will not be affected.
+        
+        suppress_outliers: suppresses outliers before smoothing using a hampel filter.
+                           The raw data saved as pandas dataframe will not be affected.
+                        
         publish: uses scp or cp to copy the output file to another location (e.g. from a cluster to a website server).
                  if the path contains and "@", it will use scp. This only works with configured key pairs or tokens.
                  The path needs to also contain the output file name
                         
         dtype: data type for data to be stored to keep memory consuption within reason (be careful)
+        
+        
+        Savitzy-Golay:
+        (base): Whittaker, E.T; Robinson, G (1924). The Calculus Of Observations
+                Guest, P.G. (2012) [1961]. "Ch. 7: Estimation of Polynomial Coefficients"
+        (coefficients):  Savitzky, A.; Golay, M.J.E. (1964). "Smoothing and Differentiation of Data by Simplified Least Squares Procedures"
         
         '''
         
@@ -82,7 +124,7 @@ class simpleMetricsCallback(Callback):
         
         if smoothen is None:
             if call_on_epoch:
-                smoothen = -1
+                smoothen = 5
             else:
                 smoothen = 51
         smoothen=int(smoothen)
@@ -95,7 +137,8 @@ class simpleMetricsCallback(Callback):
             assert isinstance(smooth_more_at,int) and smooth_more_at >= 0
             
         self.smoothen = smoothen    
-        self.smooth_more_at = smooth_more_at    
+        self.smooth_more_at = smooth_more_at  
+        self.suppress_outliers = suppress_outliers  
         self.output_file=output_file
         self.select_metrics=select_metrics
         self.record_frequency = record_frequency
@@ -157,33 +200,53 @@ class simpleMetricsCallback(Callback):
         pd.options.plotting.backend = "plotly"
         #save original data
         
-        dfs = pd.DataFrame().from_dict(self.data)
-        dfs.to_pickle(self.output_file+'.df.pkl')#save snapshot
+        df = pd.DataFrame().from_dict(self.data)
+        df.to_pickle(self.output_file+'.df.pkl')#save snapshot
         
-        datacp = {}
-        if self.smoothen > 3 and self.len > self.smoothen+1:
-            from scipy.signal import savgol_filter
-            for k in self.data.keys():
-                window = self.smoothen
-                if self.smooth_more_at and len(self.data[k]) > self.smoothen*self.smooth_more_at:#smoothen more for large data sets
-                    window = len(self.data[k])//self.smooth_more_at 
-                    if not window%2:
-                        window +=1
-                datacp[k] = savgol_filter(self.data[k], 
-                                          window_length = window, 
-                                          polyorder = 3)
-                datacp[k] = datacp[k][:-window//2]#make sure to remove smoothing effects at the end  
-        else:
-            datacp=self.data   
-
+        print_smoothed = self.smoothen > 3 and self.len > self.smoothen+1
+        allkeys = self.data.keys()
         
-        df = pd.DataFrame().from_dict(datacp)
-        if len(df)<1:
-            return
-        fig = df.plot(#x='date', 
-                template = 'plotly_dark',
-                #xlabel='record number',
-                y=[str(k) for k in datacp.keys()])
+        #determine smoothing parameters
+        window = self.smoothen
+        if self.smooth_more_at and self.len > self.smooth_more_at:#smoothen more for large data sets
+            window = self.smoothen+self.len//self.smooth_more_at 
+            if not window%2:
+                window +=1
+                
+        for c in allkeys:
+            df[c+'_raw']=df[c].copy()
+            if print_smoothed:
+                from scipy.signal import savgol_filter
+                if self.suppress_outliers:
+                    df[c] = hampel(df[c])
+                df[c] = savgol_filter(df[c], window_length = window, polyorder = 3)
+                
+        
+        fig = df.plot(template = 'plotly_dark',y=[k for k in allkeys])
+        
+        if print_smoothed:
+            fig.update_layout(
+                    updatemenus=[
+                        dict(type="buttons",direction="right",x=0.5,y=1.2,
+                            showactive=False,
+                            buttons=list(
+                                [
+                                    dict(
+                                        label="Smooth",
+                                        method="update",
+                                        args=[{"y": [df[k] for k in allkeys]}],
+                                    ),
+                                    dict(
+                                        label="Raw",
+                                        method="update",
+                                        args=[{"y": [df[k+'_raw'] for k in allkeys]}],
+                                    ),
+                                ]
+                            ),
+                        )
+                    ]
+                )
+        
         fig.write_html(self.output_file)
         
         if self.publish is not None:
@@ -200,7 +263,7 @@ class simpleMetricsCallback(Callback):
         
     def on_batch_end(self,batch,logs={}):
         
-        if self.record_counter<0: #always record first
+        if self.record_counter<0 and not self.call_on_epoch: #always record first
             self.record_counter=0
             self._record_data(logs)
             return
@@ -611,7 +674,7 @@ class PredictCallback(Callback):
                                             use_multiprocessing=False,
                                             verbose=2)
         
-        if not isinstance(predicted, list):
+        if not (isinstance(predicted, list) or isinstance(predicted, dict)):
             predicted=[predicted]
         
         self.function_to_apply(self.call_counter,self.td.copyFeatureListToNumpy(False),

@@ -13,9 +13,9 @@ djc_base = os.environ.get('DEEPJETCORE')
 
 
 print('importing DJC masked tf.keras as keras...')
-import keras
+import tensorflow.keras as keras
 
-from keras import Input
+from tensorflow.keras import Input
 
 print('importing numpy...')
 

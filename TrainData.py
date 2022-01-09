@@ -6,8 +6,6 @@ Created on 20 Feb 2017
 New (post equals 2.1) version
 '''
 
-from __future__ import print_function
-
 import os
 import numpy as np
 import logging

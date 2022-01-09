@@ -145,10 +145,15 @@ class TrainData_example(TrainData):
 
 training_template='''
 
+#base class for tf based training
 from DeepJetCore.training.training_base import training_base
-import keras
-from keras.models import Model
-from keras.layers import Dense, Conv2D, Flatten, BatchNormalization #etc
+
+#tf.keras imports
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, BatchNormalization #etc
+
+#callbacks
+from DeepJetCore.training.DeepJet_callbacks import simpleMetricsCallback
 
 def my_model(Inputs,otheroption):
     
@@ -170,22 +175,41 @@ def my_model(Inputs,otheroption):
     return Model(inputs=Inputs, outputs=predictions)
 
 
-train=training_base(testrun=False,resumeSilently=False,renewtokens=False)
+train=training_base()
 
 if not train.modelSet(): # allows to resume a stopped/killed training. Only sets the model if it cannot be loaded from previous snapshot
 
     train.setModel(my_model,otheroption=1)
     
-    train.compileModel(learningrate=0.003,
+    train.compileModel(learningrate=0.0003,
                    loss='categorical_crossentropy') 
                    
 print(train.keras_model.summary())
 
+callbacks = [
+    simpleMetricsCallback(
+        # will be saved as interactive html plot
+        output_file=train.outputDir+'/metrics.html',
+        
+        # record all losses (val and train)
+        select_metrics='*loss*',
+        
+        # only call at the end of the epoch (when also val loss is available)
+        # can also be called after a certain amount of batches seen, please 
+        # check the documentation of the callback
+        call_on_epoch=True
+    )
+]
 
-model,history = train.trainModel(nepochs=10, 
-                                 batchsize=500,
-                                 checkperiod=1, # saves a checkpoint model every N epochs
-                                 verbose=1)
+train.trainModel(nepochs=50, 
+                 batchsize=500,
+                 checkperiod=10, # saves a checkpoint model every 10 epochs
+                 
+                 #register the additional callbacks
+                 additional_callbacks=callbacks,
+                 
+                 #other keyward arguments are passed to tf.keras.Model.fit
+                 verbose=1)
                                  
 print('Since the training is done, use the predict.py script to predict the model output on your test sample, e.g.: predict.py <training output>/KERAS_model.h5 <training output>/trainsamples.djcdc <your subpackage>/example_data/test_data.txt <output dir>')
 '''
