@@ -447,6 +447,7 @@ class training_base(object):
                                     checkperiodoffset=self.trainedepoches,
                                     additional_plots=additional_plots,
                                     batch_loss = plot_batch_loss,
+                                    print_summary_after_first_batch=run_eagerly,
                                     minTokenLifetime = minTokenLifetime)
         
         if additional_callbacks is not None:

@@ -290,7 +290,24 @@ class simpleMetricsCallback(Callback):
         self._record_data(logs)
         self._make_plot()
        
-       
+
+        
+class PrintSummary(Callback):
+    def __init__(self):
+        self.aimed=True
+        self.model=None
+        super(PrintSummary, self).__init__()
+        
+    def set_model(self,model):
+        self.model = model
+        
+    def on_batch_end(self, batch, logs={}):
+        if not self.aimed:
+            return
+        
+        self.aimed=False
+        print(self.model.summary())
+               
 class plot_loss_or_metric(Callback):
     def __init__(self,outputDir,metrics):
         self.metrics=metrics
@@ -567,7 +584,8 @@ class DeepJet_callbacks(object):
                  checkperiodoffset=0,
                  plotLossEachEpoch=True, 
                  additional_plots=None,
-                 batch_loss = False):
+                 batch_loss = False,
+                 print_summary_after_first_batch=False):
         
 
         self.nl_begin=newline_callbacks_begin(outputDir,plotLossEachEpoch)
@@ -617,6 +635,8 @@ class DeepJet_callbacks(object):
         self.history=History()
   
         self.callbacks.extend([ self.nl_end, self.history])
+        if print_summary_after_first_batch:
+            self.callbacks += [PrintSummary()]
         
         
         
