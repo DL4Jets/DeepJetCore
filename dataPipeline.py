@@ -7,13 +7,15 @@ class TrainDataGenerator(trainDataGenerator):
     def __init__(self, 
                  pad_rowsplits=False, 
                  fake_truth=None,
-                 dict_output=False):
+                 dict_output=False,
+                 cast_to = None):
         
         trainDataGenerator.__init__(self)
         #self.extend_truth_list_by = extend_truth_list_by
         self.pad_rowsplits=pad_rowsplits
         self.dict_output = dict_output
         self.fake_truth = None
+        self.cast_to = cast_to
         if fake_truth is not None:
             if isinstance(fake_truth, int):
                 self.fake_truth = [np.array([0],dtype='float32') 
@@ -26,6 +28,13 @@ class TrainDataGenerator(trainDataGenerator):
                     else:
                         raise ValueError("TrainDataGenerator: only accepts an int or list of strings to extend truth list")
                 self.fake_truth = etl
+    
+    def feedTrainData(self):
+        for _ in range(self.getNBatches()):
+            td = self.getBatch()
+            if self.cast_to is not None:
+                td.__class__ = self.cast_to
+            yield td
         
     def feedNumpyData(self):
         
