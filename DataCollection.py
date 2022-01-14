@@ -604,7 +604,9 @@ class DataCollection(object):
         return td
     
     def invokeGenerator(self, *args, **kwargs):
-        generator = TrainDataGenerator( *args, **kwargs)
+        generator = TrainDataGenerator( *args, 
+                                        cast_to=self.dataclass,
+                                        **kwargs)
         generator.setBatchSize(self.__batchsize)
         generator.setSquaredElementsLimit(self.batch_uses_sum_of_squares)
         generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
