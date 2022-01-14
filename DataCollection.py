@@ -612,6 +612,15 @@ class DataCollection(object):
         generator.setFileList([self.dataDir+ "/" + s for s in self.samples])
         return generator
     
+    def getExampleFeatureBatch(self):
+        if len(self.samples)<1:
+            raise RuntimeError("getExampleBatch: only works if there is at least one sample in the data collection.")
+        td = self.dataclass()
+        td.readFromFile(self.getSamplePath(self.samples[0]))
+        td.skim(0)
+        return td.transferFeatureListToNumpy(False)
+        
+    
             
         
         

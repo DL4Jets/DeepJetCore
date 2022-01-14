@@ -1,55 +1,22 @@
 
 
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-
 ## to call it from cammand lines
 import sys
 import os
 from argparse import ArgumentParser
 import shutil
-from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.DJCLosses import *
-from DeepJetCore.DJCLayers import *
-from pdb import set_trace
-import tensorflow as tf
+from DeepJetCore import DataCollection
 import tensorflow.keras as keras
+import tensorflow as tf
 import copy
 from .gpuTools import DJCSetGPUs
 
-import imp
-try:
-    imp.find_module('Losses')
-    from Losses import *
-except ImportError:
-    print('No Losses module found, ignoring at your own risk')
-    global_loss_list = {}
+from ..customObjects import get_custom_objects
+custom_objects_list = get_custom_objects()
 
-try:
-    imp.find_module('Layers')
-    from Layers import *
-except ImportError:
-    print('No Layers module found, ignoring at your own risk')
-    global_layers_list = {}
-
-try:
-    imp.find_module('Metrics')
-    from Metrics import *
-except ImportError:
-    print('No metrics module found, ignoring at your own risk')
-    global_metrics_list = {}
-custom_objects_list = {}
-custom_objects_list.update(djc_global_loss_list)
-custom_objects_list.update(djc_global_layers_list)
-custom_objects_list.update(global_loss_list)
-custom_objects_list.update(global_layers_list)
-custom_objects_list.update(global_metrics_list)
 
 ##helper
-import tensorflow as tf
 
 
 
@@ -68,7 +35,6 @@ class training_base(object):
                 recreate_silently=False
 				):
         
-        import sys
         scriptname=sys.argv[0]
         
         if parser is None: parser = ArgumentParser('Run the training')
@@ -86,7 +52,6 @@ class training_base(object):
         
         args = parser.parse_args()
         self.args = args
-        import sys
         self.argstring = sys.argv
         #sanity check
         if args.isbatchrun:
@@ -103,25 +68,18 @@ class training_base(object):
         DJCSetGPUs(args.gpu)
         
         if args.gpufraction>0 and args.gpufraction<1:
-            import sys
-            import tensorflow as tf
             gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpufraction)
             sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
             from tensorflow.keras import backend as K
             K.set_session(sess)
             print('using gpu memory fraction: '+str(args.gpufraction))
         
-            
-            
-        
-                
         self.ngpus=1
         self.dist_strat_scope=None
         if len(args.gpu):
             self.ngpus=len([i for i in args.gpu.split(',')])
             print('running on '+str(self.ngpus)+ ' gpus')
             if self.ngpus > 1:
-                import tensorflow as tf
                 self.dist_strat_scope = tf.distribute.MirroredStrategy()
             
         self.keras_inputs=[]
@@ -217,7 +175,7 @@ class training_base(object):
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
-        counter=0
+
         for s,dt,n in zip(shapes,inputdtypes,inputnames):
             self.keras_inputs.append(keras.layers.Input(shape=s, dtype=dt, name=n))
             self.keras_inputsshapes.append(s)
@@ -227,11 +185,13 @@ class training_base(object):
         self.val_data.writeToFile(self.outputDir+'valsamples.djcdc',abspath=True)
             
         if not isNewTraining:
-            kfile = self.outputDir+'/KERAS_check_model_last.h5' \
-							 if os.path.isfile(self.outputDir+'/KERAS_check_model_last.h5') else \
-							 self.outputDir+'/KERAS_model.h5'
-            if os.path.isfile(kfile):
-                print(kfile)
+            kfile = self.outputDir+'/KERAS_check_model_last.h5'
+            if not os.path.isfile(kfile):
+                kfile = self.outputDir+'/KERAS_check_model_last' #savedmodel format
+                if not os.path.isdir(kfile):
+                    kfile=''
+            if len(kfile):
+                print('loading model',kfile)
                 
                 if self.dist_strat_scope is not None:
                     with self.dist_strat_scope.scope():
@@ -298,7 +258,7 @@ class training_base(object):
     def saveCheckPoint(self,addstring=''):
         
         self.checkpointcounter=self.checkpointcounter+1 
-        self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring +".h5")    
+        self.saveModel("KERAS_model_checkpoint_"+str(self.checkpointcounter)+"_"+addstring)    
            
     
     def _loadModel(self,filename):
@@ -320,9 +280,9 @@ class training_base(object):
     def compileModel(self,
                      learningrate,
                      clipnorm=None,
-                     discriminator_loss=['binary_crossentropy'],
                      print_models=False,
                      metrics=None,
+                     is_eager=False,
                      **compileargs):
         if not self.keras_model and not self.GAN_mode:
             raise Exception('set model first') 
@@ -346,6 +306,11 @@ class training_base(object):
                 self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
         else:
             self.keras_model.compile(optimizer=self.optimizer,metrics=metrics,**compileargs)
+            
+        if is_eager:
+            #call on one batch to fully build it
+            self.keras_model(self.train_data.getExampleFeatureBatch())
+            
         if print_models:
             print(self.keras_model.summary())
         self.compiled=True
@@ -427,7 +392,10 @@ class training_base(object):
         # write only after the output classes have been added
         self._initTraining(nepochs,batchsize, batchsize_use_sum_of_squares)
         
-        self.keras_model.save(self.outputDir+'KERAS_untrained_model.h5')
+        try: #won't work for purely eager models
+            self.keras_model.save(self.outputDir+'KERAS_untrained_model')
+        except:
+            pass
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks
         minTokenLifetime = 5
@@ -517,7 +485,7 @@ class training_base(object):
                 traingen.shuffleFileList()
                 #
         
-            self.saveModel("KERAS_model.h5")
+            self.saveModel("KERAS_model")
 
         return self.keras_model, self.callbacks.history
     
