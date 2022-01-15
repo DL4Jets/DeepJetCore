@@ -27,12 +27,18 @@ import os
 matplotlib.use('Agg') 
 
 #helper
+
 def publish(file_to_publish, publish_to_path):
     cpstring = 'cp -f '
     if "@" in publish_to_path:
         cpstring = 'scp '
+        spl = publish_to_path.split(':')
+        path = spl[1]
+        user = spl[0].split('@')[0]
+        server = spl[0].split('@')[1]
+        os.system('ssh -o ConnectTimeout=20 '+user+'@'+server+' "mkdir -p '+path+'"')
     basefilename = os.path.basename(file_to_publish)
-    os.system(cpstring + file_to_publish + ' ' + publish_to_path +'_'+basefilename+ ' 2>&1 > /dev/null') 
+    os.system(cpstring + file_to_publish + ' ' + publish_to_path +'/'+basefilename+ ' 2>&1 > /dev/null') 
 
 def hampel(vals_orig, k=7, t0=3):
     '''
@@ -102,7 +108,7 @@ class simpleMetricsCallback(Callback):
                         
         publish: uses scp or cp to copy the output file to another location (e.g. from a cluster to a website server).
                  if the path contains and "@", it will use scp. This only works with configured key pairs or tokens.
-                 The path needs to also contain the output file name
+                 The path does not contain the output file name
                         
         dtype: data type for data to be stored to keep memory consuption within reason (be careful)
         
@@ -722,5 +728,4 @@ class PredictCallback(Callback):
         
         
         
-        
-
+ 
