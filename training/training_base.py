@@ -485,7 +485,7 @@ class training_base(object):
                 traingen.shuffleFileList()
                 #
         
-            self.saveModel("KERAS_model")
+            self.saveModel("KERAS_model.h5")
 
         return self.keras_model, self.callbacks.history
     
