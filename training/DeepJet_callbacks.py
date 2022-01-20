@@ -29,16 +29,19 @@ matplotlib.use('Agg')
 #helper
 
 def publish(file_to_publish, publish_to_path):
-    cpstring = 'cp -f '
-    if "@" in publish_to_path:
-        cpstring = 'scp '
-        spl = publish_to_path.split(':')
-        path = spl[1]
-        user = spl[0].split('@')[0]
-        server = spl[0].split('@')[1]
-        os.system('ssh -o ConnectTimeout=20 '+user+'@'+server+' "mkdir -p '+path+'"')
-    basefilename = os.path.basename(file_to_publish)
-    os.system(cpstring + file_to_publish + ' ' + publish_to_path +'/'+basefilename+ ' 2>&1 > /dev/null') 
+    try:
+        cpstring = 'cp -f '
+        if "@" in publish_to_path:
+            cpstring = 'scp -o ConnectTimeout=20 '
+            spl = publish_to_path.split(':')
+            path = spl[1]
+            user = spl[0].split('@')[0]
+            server = spl[0].split('@')[1]
+            os.system('ssh -o ConnectTimeout=20 '+user+'@'+server+' "mkdir -p '+path+'"')
+        basefilename = os.path.basename(file_to_publish)
+        os.system(cpstring + file_to_publish + ' ' + publish_to_path +'/'+basefilename+ ' 2>&1 > /dev/null') 
+    except Exception as e:
+        print('exception in publish', e, 'when trying to publish to',publish_to_path ,'. Training will ignore this exception and move on.')
 
 def hampel(vals_orig, k=7, t0=3):
     '''
