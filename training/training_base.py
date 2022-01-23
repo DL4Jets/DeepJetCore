@@ -29,7 +29,7 @@ class training_base(object):
 				useweights=False, testrun=False,
                 testrun_fraction=0.1,
 				resumeSilently=False, 
-				renewtokens=True,
+				renewtokens=False,
 				collection_class=DataCollection,
 				parser=None,
                 recreate_silently=False
@@ -241,11 +241,9 @@ class training_base(object):
             self.keras_model.build(None)
             
         if len(self.keras_weight_model_path):
-            from DeepJetCore.modeltools import apply_weights_where_possible
-            tbcopy = self
-            tbcopy.loadModel(self.keras_weight_model_path)
+            from DeepJetCore.modeltools import apply_weights_where_possible, load_model
             self.keras_model = apply_weights_where_possible(self.keras_model, 
-                                         tbcopy.keras_model)
+                                         load_model(self.keras_weight_model_path))
         #try:
         #    self.keras_model=model(self.keras_inputs,**modelargs)
         #except BaseException as e:
@@ -358,7 +356,7 @@ class training_base(object):
         from _thread import start_new_thread
         
         if self.renewtokens:
-            print('starting afs backgrounder')
+            print('afs backgrounder has proven to be unreliable, use with care')
             checkTokens()
             start_new_thread(renew_token_process,())
         
