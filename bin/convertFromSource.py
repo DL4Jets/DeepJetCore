@@ -16,13 +16,12 @@ import logging
 logging.basicConfig(format='%(asctime)s:%(levelname)s:%(name)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
-from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.conversion.conversion import class_options
 
 parser = ArgumentParser('program to convert source files to traindata format')
 parser.add_argument("-i", help="input file list (required)", metavar="FILE", default='')
 parser.add_argument("-o",  help="set output path (required)", metavar="PATH", default='')
-parser.add_argument("-c",  choices = class_options.keys(), help="set output class (required, options: %s)" % ', '.join(class_options.keys()), metavar="Class")
+parser.add_argument("-c",  help="set output class (required)", metavar="Class")
+parser.add_argument("--gpu", help="enable GPU usage for conversion", action='store_true', default=False)
 parser.add_argument("-r",  help="set path to snapshot that got interrupted", metavar="FILE", default='')
 parser.add_argument("--testdata", action='store_true', help='convert as test data')
 parser.add_argument("-n", default='', help="(optional) number of child processes")
@@ -42,6 +41,14 @@ parser.add_argument("-q", action='store_true', help='quiet')
 
 # process options
 args=parser.parse_args()
+
+#first GPU
+if args.gpu:
+    import setGPU
+    
+from DeepJetCore.DataCollection import DataCollection
+from DeepJetCore.conversion.conversion import class_options
+
 infile=args.i
 outPath=args.o
 if (len(infile)<1 or len(outPath)<1) and not len(args.r):
@@ -53,6 +60,10 @@ useweightersfrom=args.useweightersfrom
 nchilds=args.n
 dofilecheck=args.checkFiles
 testdata = args.testdata
+
+if args.gpu:
+    if (len(nchilds) and int(nchilds)>1) and (not args.nothreads):
+        print("WARNING: enabling gpu for conversion and processing multiple files in parallel could be an issue!")
 
 #fileIsValid
 

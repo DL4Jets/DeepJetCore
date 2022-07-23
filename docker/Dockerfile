@@ -84,6 +84,7 @@ RUN testEnvironment.py
 RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
     python3 test.py
     
+RUN pip3 install pyjet
 
 
 
