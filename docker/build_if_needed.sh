@@ -5,7 +5,7 @@ BASE_IMAGE_TAG=cu11.6
 
 if [ $1 ]
 then 
-FORCE=true
+FORCE=$1
 fi
 
 git fetch
@@ -20,7 +20,7 @@ then
   git pull
   NEW_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
   
-  if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE ]
+  if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE == "force_base" ]
   then
     echo "base image changed from ${OLD_BASE_ID} to ${NEW_BASE_ID}, rerunning base build"
     docker build --no-cache=true -t cernml4reco/djcbase:$BASE_IMAGE_TAG -f Dockerfile_base .  > base_build.log 2>&1
