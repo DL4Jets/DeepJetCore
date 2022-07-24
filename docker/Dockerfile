@@ -26,9 +26,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 RUN cd /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
-    ln -s /usr/local/cuda cuda    
-
-RUN ls -ltr /usr/local/cuda-11.2
+    ln -s /usr/local/cuda cuda   
+     
+#fix for TF 2.4.0
+RUN ln -s /usr/local/cuda-11.2/lib64/libcusolver.so.11 /usr/local/cuda-11.2/lib64/libcusolver.so.10
 ENV LD_LIBRARY_PATH="/usr/local/cuda-11.2/lib64:${LD_LIBRARY_PATH}"
     
 # QKeras
