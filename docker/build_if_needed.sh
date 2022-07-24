@@ -52,6 +52,8 @@ then
       echo "################# push log ##############" ; 
       echo "" ;
       cat base_push.log ; } | sendmail jkiesele@cern.ch;
+      
+     FORCE_NO_CACHE=" --no-cache=true "
     
   fi
   
@@ -60,7 +62,8 @@ then
      exit
   fi
   
-  docker build --no-cache=true -t cernml4reco/deepjetcore3:latest . \
+  # only force no cache if base image has been rebuilt
+  docker build $FORCE_NO_CACHE -t cernml4reco/deepjetcore3:latest . \
        --build-arg BUILD_DATE="$(date)" --build-arg BASE_IMAGE_TAG=$BASE_IMAGE_TAG \
        --build-arg COMMIT=$COMMIT   > build.log 2>&1
   if [ $? != 0 ]; 

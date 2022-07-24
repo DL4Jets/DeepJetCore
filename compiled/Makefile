@@ -1,7 +1,7 @@
 
 # location of the Boost Python include files and library
 PYTHON_INCLUDE = `python3-config --includes`
-PYTHON_LIB=`python3-config --libs`
+PYTHON_LIB=`python3-config --ldflags`
 
 
 LINUXADD= #-Wl --export-dynamic
