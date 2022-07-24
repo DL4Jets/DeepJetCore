@@ -6,6 +6,16 @@ FROM cernml4reco/djcbase:$BASE_IMAGE_TAG
 RUN pip3 install --upgrade pip
 RUN apt-get update  --fix-missing
 
+########### torch stuff: pretty slow so do that first
+
+#moved from base
+RUN pip3 install future gensim jupyter prompt-toolkit
+RUN pip3 install torch==1.12.0
+RUN pip3 install install torch-scatter torch-sparse torch-cluster \
+                         torch-spline-conv torch-geometric \
+                         -f https://data.pyg.org/whl/torch-1.12.0+cu112.html
+
+EXPOSE 8888  
 
 ################################################################################
 # Tensorflow
@@ -35,16 +45,7 @@ RUN apt-get install -y vim
 
 RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet
 
-########### torch stuff 
 
-#moved from base
-RUN pip3 install future gensim jupyter prompt-toolkit
-RUN pip3 install torch==1.12.0
-RUN pip3 install install torch-scatter torch-sparse torch-cluster \
-                         torch-spline-conv torch-geometric \
-                         -f https://data.pyg.org/whl/torch-1.12.0+cu112.html
-
-EXPOSE 8888  
 
 
 ################################################################################
