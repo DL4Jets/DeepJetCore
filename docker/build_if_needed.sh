@@ -23,12 +23,24 @@ then
   if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE ]
   then
     "base image changed from ${OLD_BASE_ID} to ${NEW_BASE_ID}, rerunning base build"
-    docker build --no-cache=true -t cernml4reco/djcbase:$BASE_IMAGE_TAG -f Dockerfile_base . > base_build.log
-    docker push --max-concurrent-uploads 3 cernml4reco/djcbase:$BASE_IMAGE_TAG  > base_push.log
+    echo docker build --no-cache=true -t cernml4reco/djcbase:$BASE_IMAGE_TAG -f Dockerfile_base . > base_build.log
+    echo docker push --max-concurrent-uploads 3 cernml4reco/djcbase:$BASE_IMAGE_TAG  > base_push.log
+    
+    { echo "Subject: base build finished" ; 
+      cat base_build.log ; 
+      echo "\n################# push log ##############\n" ; 
+      cat base_push.log ; } | sendmail jkiesele@cern.ch;
+    
   fi
   
-  docker build --no-cache=true -t cernml4reco/deepjetcore3:latest . \
+  echo docker build --no-cache=true -t cernml4reco/deepjetcore3:latest . \
        --build-arg BUILD_DATE="$(date)" --build-arg BASE_IMAGE_TAG=$BASE_IMAGE_TAG \
        --build-arg COMMIT=$COMMIT  > build.log
-  docker push --max-concurrent-uploads 3 cernml4reco/deepjetcore3:latest > push.log
+  echo docker push --max-concurrent-uploads 3 cernml4reco/deepjetcore3:latest > push.log
+  
+  { echo "Subject: DJC build finished" ; 
+    cat build.log ; 
+    echo "\n################# push log ##############\n" ; 
+    cat push.log ; } | sendmail jkiesele@cern.ch;
+      
 fi
