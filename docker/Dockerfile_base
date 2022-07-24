@@ -1,17 +1,14 @@
 
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04 
-
-#11.2 not yet with torch support
-
+FROM nvidia/cuda:11.6.2-cudnn8-devel-ubuntu20.04
 
 SHELL ["/bin/bash", "-c"]
 
-RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list &&  apt-get update --fix-missing 
+RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list 
+RUN apt-get update 
 
+RUN apt-get install -y python3 python3-pip && \
+    pip3 install --upgrade pip
 
-#base
-RUN apt-get install -y python3.6-dev python3-pip
-RUN pip3 install --upgrade pip
 RUN ldconfig
 
 #basic user tools
@@ -19,14 +16,13 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y git wget nano emacs \
     evince eog ffmpeg unzip zsh python3-tk locales \
     htop
-RUN apt-get update --fix-missing
 
-#doesn't work anyway
-#RUN export DEBIAN_FRONTEND=noninteractive && \
-#    apt-get install -y krb5-user && \
-#    sed -i 's/default_realm = ATHENA.MIT.EDU/default_realm = CERN.CH/g' /etc/krb5.conf 
-#RUN apt-get update --fix-missing
-
+#add some kerberos for convenience
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    apt-get install -y krb5-user 
+    
+#use the standard cern config
+COPY krb5.conf /etc/krb5.conf
 
 ############  root part
 RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev
@@ -63,15 +59,6 @@ RUN pip3 install opencv-python easydict tqdm Cython numba
 
 RUN pip3 install gpustat setGPU
 
-## torch/jupyter stuff 
-RUN pip3 install future gensim jupyter prompt-toolkit                                           
-RUN pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
-    pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html       &&\
-    pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
-    pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html  &&\
-    pip3 install torch-geometric 
-        
-EXPOSE 8888
 
 #for singularity panic
 RUN adduser  --disabled-password --gecos ""  dummyuser
@@ -86,8 +73,5 @@ RUN pip3 install plotly dash
 #new
 RUN pip3 install awkward
     
-
-
-
 
 

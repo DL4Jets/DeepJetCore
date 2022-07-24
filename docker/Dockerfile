@@ -1,59 +1,53 @@
 
-FROM cernml4reco/djcbase:cu11.1
+FROM cernml4reco/djcbase:$BASE_IMAGE_TAG
 
-
-RUN apt-get update --fix-missing
+#update if needed
+RUN pip3 install --upgrade pip
+RUN apt-get update  --fix-missing
 
 
 ################################################################################
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.4.0 tensorflow_probability 
+    pip3 --no-cache-dir install tensorflow-gpu==2.9.1 tensorflow_probability 
     
-
-
-RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
+RUN cd /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
     ln -s /usr/local/cuda cuda    
+
+RUN ls -ltr /usr/local/cuda-11.6
+ENV LD_LIBRARY_PATH="/usr/local/cuda-11.6/lib64:${LD_LIBRARY_PATH}"
     
-RUN ln -s /usr/local/cuda-11.1/lib64/libcusolver.so.11 /usr/local/cuda-11.1/lib64/libcusolver.so.10
-ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
-    
-
-
-
-# helpers for ragged and cuda compilation
-
-# for kenneth
-RUN apt-get install -y vim
-
 # QKeras
-
-RUN git clone https://github.com/google/qkeras &&\
-    cd qkeras &&\
-    python3 setup.py build &&\
-    python3 setup.py install 
+RUN pip3 install git+https://github.com/google/qkeras
       
-
-#some more useful packages
-RUN pip3 install bayesian-optimization mgzip mysql-connector-python
-
-
 # HLS4ML
 RUN pip3 install git+https://github.com/fastmachinelearning/hls4ml.git#egg=hls4ml[profiling]  tensorflow_datasets
 RUN pip3 install git+https://github.com/thesps/conifer.git
 
 
-#add some kerberos for convenience
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y krb5-user 
-    
-#use the standard cern config
-COPY krb5.conf /etc/krb5.conf
+############# some more useful packages, mostly requested by users
 
-RUN apt-get update --fix-missing
+RUN apt-get install -y vim
+
+RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet
+
+########### torch stuff 
+
+   
+RUN pip3 install 
+#moved from base
+RUN pip3 install future gensim jupyter prompt-toolkit
+RUN pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
+    pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html       &&\
+    pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
+    pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html  &&\
+    pip3 install torch-geometric
+
+EXPOSE 8888  
+
 
 ################################################################################
 # the actual DeepJetCore. Make sure this gets built every time
@@ -78,14 +72,10 @@ ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
 ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
-#run tests
+#### run tests
 RUN testEnvironment.py
 
 RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
     python3 test.py
-    
-RUN pip3 install pyjet
-
-
-
+   
     
