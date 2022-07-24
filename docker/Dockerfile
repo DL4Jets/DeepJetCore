@@ -11,15 +11,15 @@ RUN apt-get update  --fix-missing
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.9.1 tensorflow_probability 
+    pip3 --no-cache-dir install tensorflow-gpu==2.8 tensorflow_probability 
     
 RUN cd /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
     ln -s /usr/local/cuda cuda    
 
-RUN ls -ltr /usr/local/cuda-11.6
-ENV LD_LIBRARY_PATH="/usr/local/cuda-11.6/lib64:${LD_LIBRARY_PATH}"
+RUN ls -ltr /usr/local/cuda-11.2
+ENV LD_LIBRARY_PATH="/usr/local/cuda-11.2/lib64:${LD_LIBRARY_PATH}"
     
 # QKeras
 RUN pip3 install git+https://github.com/google/qkeras

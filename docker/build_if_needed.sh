@@ -1,7 +1,5 @@
 #!/bin/bash
 
-BASE_IMAGE_TAG=cu11.6
-
 FORCE="no"
 if [ $1 ]
 then 
@@ -20,6 +18,8 @@ then
   OLD_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
   git pull
   NEW_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
+  
+  source image_tags.sh #in case this was updated in the pull
   
   if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE == "force_base" ]
   then

@@ -1,0 +1,2 @@
+
+BASE_IMAGE_TAG=cu11.2
