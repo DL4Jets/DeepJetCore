@@ -24,21 +24,66 @@ then
   then
     echo "base image changed from ${OLD_BASE_ID} to ${NEW_BASE_ID}, rerunning base build"
     docker build --no-cache=true -t cernml4reco/djcbase:$BASE_IMAGE_TAG -f Dockerfile_base . > base_build.log
-    docker push --max-concurrent-uploads 3 cernml4reco/djcbase:$BASE_IMAGE_TAG  > base_push.log
     
-    { echo "Subject: base build finished" ; 
+    if [ $? != 0 ]; 
+    then 
+       BASE_FAIL=true
+    else
+       docker push --max-concurrent-uploads 3 cernml4reco/djcbase:$BASE_IMAGE_TAG  > base_push.log
+       if [ $? != 0 ]; 
+       then
+           BASE_PUSH_FAIL=true
+       fi
+    fi
+    
+    subject="Subject: base build finished"
+    if [ $BASE_FAIL ]
+    then
+       subject="Subject: !! base build FAILED"
+    fi
+    if [ $BASE_PUSH_FAIL ]
+    then
+       subject="Subject: !! base push FAILED"
+    fi
+    
+    { echo $subject ; 
       cat base_build.log ; 
       echo "\n################# push log ##############\n" ; 
       cat base_push.log ; } | sendmail jkiesele@cern.ch;
     
   fi
   
+  if [ $BASE_FAIL ] || [ $BASE_PUSH_FAIL ]
+  then
+     exit
+  fi
+  
   docker build --no-cache=true -t cernml4reco/deepjetcore3:latest . \
        --build-arg BUILD_DATE="$(date)" --build-arg BASE_IMAGE_TAG=$BASE_IMAGE_TAG \
        --build-arg COMMIT=$COMMIT  > build.log
-  docker push --max-concurrent-uploads 3 cernml4reco/deepjetcore3:latest > push.log
+  if [ $? != 0 ]; 
+  then 
+     FAIL=true
+  else
+     #only push if build was successful (e.g. the unit tests checked out)
+     docker push --max-concurrent-uploads 3 cernml4reco/deepjetcore3:latest > push.log
+     if [ $? != 0 ]; 
+     then
+         PUSH_FAIL=true
+     fi
+  fi
+    
+  subject="Subject: base build finished"
+  if [ $FAIL ]
+  then
+     subject="Subject: !! DJC build FAILED"
+  fi
+  if [ $PUSH_FAIL ]
+  then
+     subject="Subject: !! DJC push FAILED"
+  fi
   
-  { echo "Subject: DJC build finished" ; 
+  { echo $subject ; 
     cat build.log ; 
     echo "\n################# push log ##############\n" ; 
     cat push.log ; } | sendmail jkiesele@cern.ch;

@@ -41,11 +41,9 @@ RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet
 RUN pip3 install 
 #moved from base
 RUN pip3 install future gensim jupyter prompt-toolkit
-RUN pip3 install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
-    pip3 install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html       &&\
-    pip3 install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html      &&\
-    pip3 install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html  &&\
-    pip3 install torch-geometric
+RUN pip3 install install torch-scatter torch-sparse torch-cluster \
+                         torch-spline-conv torch-geometric \
+                         -f https://data.pyg.org/whl/torch-1.12.0+cu116.html
 
 EXPOSE 8888  
 
