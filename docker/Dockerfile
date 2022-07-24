@@ -37,8 +37,7 @@ RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet
 
 ########### torch stuff 
 
-   
-RUN pip3 install 
+
 #moved from base
 RUN pip3 install future gensim jupyter prompt-toolkit
 RUN pip3 install install torch-scatter torch-sparse torch-cluster \
