@@ -50,6 +50,12 @@ EXPOSE 8888
 ################################################################################
 # the actual DeepJetCore. Make sure this gets built every time
 
+# prepare the environment
+RUN cd /usr/lib/x86_64-linux-gnu &&\
+    ln -s libboost_numpy38.so libboost_numpy3.so && \
+    ln -s libboost_python38.so libboost_python3.so
+
+
 ARG BUILD_DATE
 LABEL org.label-schema.build-date=$BUILD_DATE
 ARG COMMIT
