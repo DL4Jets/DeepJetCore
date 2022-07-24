@@ -2,14 +2,14 @@
 
 BASE_IMAGE_TAG=cu11.6
 
-
+FORCE="no"
 if [ $1 ]
 then 
 FORCE=$1
 fi
 
 git fetch
-if [ $(git rev-parse HEAD) != $(git rev-parse @{u}) ] || [ $FORCE ]
+if [ $(git rev-parse HEAD) != $(git rev-parse @{u}) ] || [ $FORCE != "no" ]
 then
 
   COMMIT=$(git log -n 1 --pretty=format:"%H")
