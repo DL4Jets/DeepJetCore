@@ -55,6 +55,8 @@ EXPOSE 8888
 
 ARG BUILD_DATE
 LABEL org.label-schema.build-date=$BUILD_DATE
+ARG COMMIT
+LABEL djc.commit=$COMMIT
 
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 
