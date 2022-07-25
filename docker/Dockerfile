@@ -21,7 +21,7 @@ EXPOSE 8888
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.4.0 tensorflow_probability 
+    pip3 --no-cache-dir install tensorflow-gpu==2.4.0  
     
 RUN cd /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
