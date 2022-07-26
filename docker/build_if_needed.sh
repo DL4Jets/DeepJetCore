@@ -16,8 +16,10 @@ then
   echo "building container for commit ${COMMIT}"
   
   OLD_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
+  OLD_ID=$(git rev-parse HEAD:docker/Dockerfile) 
   git pull
   NEW_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
+  NEW_ID=$(git rev-parse HEAD:docker/Dockerfile) 
   
   source image_tags.sh #in case this was updated in the pull
   
@@ -63,16 +65,24 @@ then
      exit
   fi
   
+  #if the docker file changed, tag it as experimental and ask 
+  TAG=latest
+  if [ $OLD_ID != $NEW_ID ]
+  then
+      TAG=exp
+  fi
+  
   # only force no cache if base image has been rebuilt
-  docker build $FORCE_NO_CACHE -t cernml4reco/deepjetcore3:latest . \
+  docker build $FORCE_NO_CACHE -t cernml4reco/deepjetcore3:$TAG . \
        --build-arg BUILD_DATE="$(date)" --build-arg BASE_IMAGE_TAG=$BASE_IMAGE_TAG \
        --build-arg COMMIT=$COMMIT   > build.log 2>&1
   if [ $? != 0 ]; 
   then 
      FAIL=true
   else
-     #only push if build was successful (e.g. the unit tests checked out)
-     docker push cernml4reco/deepjetcore3:latest  > push.log 2>&1
+     
+     docker push cernml4reco/deepjetcore3:$TAG  > push.log 2>&1
+     
      if [ $? != 0 ]; 
      then
          PUSH_FAIL=true
@@ -87,6 +97,10 @@ then
   if [ $PUSH_FAIL ]
   then
      subject="Subject: !! DJC push FAILED"
+     if [ $OLD_ID != $NEW_ID ]
+     then
+         subject="Subject: DJC experimental push (${TAG})"
+     fi
   fi
   
   { echo $subject ; 

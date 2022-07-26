@@ -51,15 +51,6 @@ RUN ldconfig
 RUN apt-get install -y libboost-all-dev
 
 
-############  PIP packages
-
-RUN pip3 install --upgrade setuptools
-RUN pip3 install numpy root_numpy scikit-learn scikit-image h5py matplotlib uproot3 Pillow scipy seaborn 
-RUN pip3 install opencv-python easydict tqdm Cython numba
-
-RUN pip3 install gpustat setGPU
-
-
 #for singularity panic
 RUN adduser  --disabled-password --gecos ""  dummyuser
 RUN apt-get install -y vim
@@ -67,11 +58,17 @@ RUN apt-get install -y vim
 #some tex things
 RUN apt install -y texlive ghostscript dvipng
 
-#cool plotting
-RUN pip3 install plotly dash
+############  PIP packages
 
-#new
-RUN pip3 install awkward
-    
+RUN pip3 install --upgrade setuptools
+RUN pip3 install numpy scikit-learn scikit-image \
+                 h5py matplotlib uproot3 uproot Pillow \
+                 scipy seaborn opencv-python easydict tqdm Cython numba \
+                 gpustat setGPU plotly dash awkward
+                 
+# Add root_numpy warning
+RUN mkdir -p  /usr/local/lib/python3.8/dist-packages/root_numpy && \
+    echo "raise ImportError(\"WARNING: root_numpy was removed from the DeepJetCore container as it has not been maintained for a while and is not comaptible with python > 3.7. Please switch to uproot or similar.\")"  > /usr/local/lib/python3.8/dist-packages/root_numpy/__init__.py
+          
 
 

@@ -261,6 +261,7 @@ def makeEffPlots_async(intextfile, name_list, variables, cutsnum,cutsden, colour
 
 
 def make_association(txtfiles, input_branches=None, output_branches=None, limit=None):
+    raise ImportError("DeepJetCore.evaluation.make_association deprecated.")
     from root_numpy import root2array
     from pandas import DataFrame
     

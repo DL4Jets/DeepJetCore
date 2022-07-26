@@ -80,8 +80,6 @@ ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
 ENV LD_LIBRARY_PATH="/usr/share/DJC/DeepJetCore/compiled:${LD_LIBRARY_PATH}"
 ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
-#### run tests
-RUN testEnvironment.py
 
 RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
     python3 test.py

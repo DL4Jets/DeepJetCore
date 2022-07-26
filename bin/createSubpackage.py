@@ -132,13 +132,15 @@ class TrainData_example(TrainData):
     
     ## defines how to write out the prediction
     def writeOutPrediction(self, predicted, features, truth, weights, outfilename, inputfile):
-        # predicted will be a list
+        # predicted will be a list of numpy arrays
+        # save it as you like, the following way is not recommended as it is slow
+        # and not disk-space efficient.
+        # You can also use the fast and compressed TrainData format itself for saving
+        # or use uproot to write a tree to a TFile
         
-        from root_numpy import array2root
-        out = np.core.records.fromarrays(predicted[0].transpose(), 
-                                             names='prob_isA, prob_isB, prob_isC')
-        
-        array2root(out, outfilename, 'tree')
+        import pickle
+        with open(outfilename,'wb') as f:
+            pickle.dump(predicted,f)
         
 '''
 
