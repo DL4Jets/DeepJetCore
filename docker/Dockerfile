@@ -1,4 +1,3 @@
-
 ARG BASE_IMAGE_TAG
 FROM cernml4reco/djcbase:$BASE_IMAGE_TAG
 
