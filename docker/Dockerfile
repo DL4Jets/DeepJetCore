@@ -20,7 +20,7 @@ EXPOSE 8888
 # Tensorflow
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    pip3 --no-cache-dir install tensorflow-gpu==2.4.0  
+    pip3 --no-cache-dir install tensorflow-gpu==2.5.0  
     
 RUN cd /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
@@ -70,6 +70,7 @@ RUN ldconfig && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
     cd DeepJetCore && \
+    git checkout $COMMIT && \
     source docker_env.sh && \
     cd compiled && \
     make -j4
