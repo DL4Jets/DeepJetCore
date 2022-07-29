@@ -46,7 +46,7 @@ ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
 
 RUN apt-get install -y vim
 
-RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet yaml
+RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet pyyaml
 
 
 ################################################################################
