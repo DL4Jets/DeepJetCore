@@ -23,6 +23,8 @@ then
   
   source image_tags.sh #in case this was updated in the pull
   
+  BASE_IMAGE_TAG="${BASE_IMAGE_TAG}_latest" # as this is a bleeding edge build
+  
   if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE == "force_base" ]
   then
     echo "base image changed from ${OLD_BASE_ID} to ${NEW_BASE_ID}, rerunning base build"
@@ -39,7 +41,7 @@ then
        fi
     fi
     
-    subject="Subject: base build finished"
+    subject="Subject: base build ${BASE_IMAGE_TAG} finished"
     if [ $BASE_FAIL ]
     then
        subject="Subject: !! base build FAILED"
@@ -65,19 +67,20 @@ then
      exit
   fi
   
-  #if the docker file changed, tag it as experimental and ask 
+  # this is an auto build, so by definition, the build is not a release build
+  # if the docker file changed, tag it as experimental and ask 
   TAG=latest
   if [ $OLD_ID != $NEW_ID ]
   then
       TAG=exp
   fi
   
-  echo "Building with tag ${TAG}"
+  echo "Building with tag ${TAG}" > build.log
   
   # only force no cache if base image has been rebuilt
   docker build $FORCE_NO_CACHE -t cernml4reco/deepjetcore3:$TAG . \
        --build-arg BUILD_DATE="$(date)" --build-arg BASE_IMAGE_TAG=$BASE_IMAGE_TAG \
-       --build-arg COMMIT=$COMMIT   > build.log 2>&1
+       --build-arg COMMIT=$COMMIT   >> build.log 2>&1
   if [ $? != 0 ]; 
   then 
      FAIL=true
@@ -91,7 +94,7 @@ then
      fi
   fi
     
-  subject="Subject: base build finished"
+  subject="Subject: build ${TAG} finished"
   if [ $FAIL ]
   then
      subject="Subject: !! DJC build FAILED"
@@ -101,7 +104,7 @@ then
      subject="Subject: !! DJC push FAILED"
      if [ $OLD_ID != $NEW_ID ]
      then
-         subject="Subject: DJC experimental push (${TAG})"
+         subject="Subject: DJC experimental push failed (${TAG})"
      fi
   fi
   

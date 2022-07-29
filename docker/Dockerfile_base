@@ -1,13 +1,13 @@
-FROM nvidia/cuda:11.2.0-cudnn8-devel-ubuntu20.04
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04 
 
 SHELL ["/bin/bash", "-c"]
 
-RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list 
+RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
 RUN apt-get update 
 
-RUN apt-get install -y python3 python3-pip && \
-    pip3 install --upgrade pip
-
+RUN apt-get install -y python3.6-dev python3-pip
+RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade setuptools
 RUN ldconfig
 
 #basic user tools
@@ -27,22 +27,26 @@ COPY krb5.conf /etc/krb5.conf
 RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev
 RUN apt-get install -y cmake openssl
 
+# RUN mkdir /temproot && \
+#     cd /temproot && \
+#     git clone --branch v6-20-00-patches http://github.com/root-project/root.git 
+# RUN cd /temproot && \
+#     mkdir build && \
+#     cd build && \
+#     cmake ../root 
+# RUN cd /temproot/build && \
+#     make -j5 && \
+#     make install && \
+#     rm -rf /temproot
+
 RUN mkdir /temproot && \
     cd /temproot && \
-    git clone --branch v6-20-00-patches http://github.com/root-project/root.git 
+    wget https://cern.ch/amadio/root/root_6.22.00_ubuntu18_amd64.deb > /dev/null 2>&1
+    
 RUN cd /temproot && \
-    mkdir build && \
-    cd build && \
-    cmake ../root 
-RUN cd /temproot/build && \
-    make -j5 && \
-    make install && \
+    apt-get install -y ./root_6.22.00_ubuntu18_amd64.deb && \
     rm -rf /temproot
-
-
-#ensure import ROOT
-ENV PYTHONPATH="/usr/local/lib:${PYTHONPATH}"
-RUN ldconfig
+ 
 
 ############  END root part
 
@@ -59,15 +63,11 @@ RUN apt install -y texlive ghostscript dvipng
 
 ############  PIP packages
 
-RUN pip3 install --upgrade setuptools
 RUN pip3 install numpy scikit-learn scikit-image \
                  h5py matplotlib uproot3 uproot Pillow \
                  scipy seaborn opencv-python easydict tqdm Cython numba \
                  gpustat setGPU plotly dash awkward
                  
 # Add root_numpy warning
-RUN mkdir -p  /usr/local/lib/python3.8/dist-packages/root_numpy && \
-    echo "raise ImportError(\"WARNING: root_numpy was removed from the DeepJetCore container as it has not been maintained for a while and is not comaptible with python > 3.7. Please switch to uproot or similar.\")"  > /usr/local/lib/python3.8/dist-packages/root_numpy/__init__.py
-          
-
-
+RUN mkdir -p  /usr/local/lib/python3.6/dist-packages/root_numpy && \
+    echo "raise ImportError(\"WARNING: root_numpy was removed from the DeepJetCore container as it has not been maintained for a while and is not comaptible with python > 3.7. Please switch to uproot or similar.\")"  > /usr/local/lib/python3.6/dist-packages/root_numpy/__init__.py
