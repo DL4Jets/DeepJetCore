@@ -21,8 +21,8 @@ EXPOSE 8888
 
 # TF needs gcc7 for custom ops
 RUN apt-get install -y gcc-7 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 7
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 
+RUN g++ --version && gcc --version
     
 
 RUN export DEBIAN_FRONTEND=noninteractive && \

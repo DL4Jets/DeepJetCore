@@ -13,7 +13,7 @@ then
 
   COMMIT=$(git log -n 1 --pretty=format:"%H")
   
-  echo "building container for commit ${COMMIT}"
+  echo "building container  for commit ${COMMIT}"
   
   OLD_BASE_ID=$(git rev-parse HEAD:docker/Dockerfile_base) 
   OLD_ID=$(git rev-parse HEAD:docker/Dockerfile) 
@@ -71,6 +71,8 @@ then
   then
       TAG=exp
   fi
+  
+  echo "Building with tag ${TAG}"
   
   # only force no cache if base image has been rebuilt
   docker build $FORCE_NO_CACHE -t cernml4reco/deepjetcore3:$TAG . \
