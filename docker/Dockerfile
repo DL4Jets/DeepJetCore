@@ -20,8 +20,9 @@ EXPOSE 8888
 # Tensorflow
 
 # TF needs gcc7 for custom ops
-RUN apt-get install -y gcc-7 && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 
+RUN apt-get install -y gcc-7 g++-7 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 7
 RUN g++ --version && gcc --version
     
 
