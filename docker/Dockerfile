@@ -70,8 +70,8 @@ RUN ldconfig && \
     mkdir DJC && \
     cd DJC && \
     git clone https://github.com/DL4Jets/DeepJetCore && \
-    cd DeepJetCore 
-    #git checkout $COMMIT 
+    cd DeepJetCore  && git checkout $COMMIT 
+    
     
 RUN cd $DEEPJETCORE &&\
     source docker_env.sh && \
