@@ -35,8 +35,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 RUN cd /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party && \
     mkdir gpus && \
     cd gpus && \
-    ln -s /usr/local/cuda11.1 cuda   
-     
+    ln -s /usr/local/cuda-11.1 cuda   
+
 #fix for TF 2.4.0
 RUN ln -s /usr/local/cuda-11.1/lib64/libcusolver.so.11 /usr/local/cuda-11.1/lib64/libcusolver.so.10
 ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
