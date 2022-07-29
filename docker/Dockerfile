@@ -19,6 +19,12 @@ EXPOSE 8888
 ################################################################################
 # Tensorflow
 
+# TF needs gcc7 for custom ops
+RUN apt-get install gcc-7 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 7 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 7
+    
+
 RUN export DEBIAN_FRONTEND=noninteractive && \
     pip3 --no-cache-dir install tensorflow-gpu==2.5.3  
     
