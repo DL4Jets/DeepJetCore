@@ -23,7 +23,7 @@ then
   
   source image_tags.sh #in case this was updated in the pull
   
-  BASE_IMAGE_TAG="${BASE_IMAGE_TAG}_latest" # as this is a bleeding edge build
+  BASE_IMAGE_TAG="${BASE_IMAGE_TAG}" # as this is a bleeding edge build
   
   if [ $OLD_BASE_ID != $NEW_BASE_ID ] || [ $FORCE == "force_base" ]
   then
