@@ -405,7 +405,8 @@ class DataCollection(object):
                 
                 logger.info('convertFromSourceFile'+sample)
                 td.writeFromSourceFile(sample, self.weighterobjects, istraining = not self.istestdata, outname=newpath) 
-                
+                self.samples.append(newname)
+                self.writeToFile(outputDir+'/snapshot.djcdc')
                 td.clear()
             
             self.writeToFile(outputDir+'/dataCollection.djcdc')
