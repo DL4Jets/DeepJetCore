@@ -19,6 +19,10 @@ EXPOSE 8888
 # 
 
 
+RUN apt-get install -y vim
+
+RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet pyyaml
+
 ################################################################################
 # Tensorflow
 
@@ -44,9 +48,6 @@ ENV LD_LIBRARY_PATH="/usr/local/cuda-11.1/lib64:${LD_LIBRARY_PATH}"
 
 ############# some more useful packages, mostly requested by users
 
-RUN apt-get install -y vim
-
-RUN pip3 install bayesian-optimization mgzip mysql-connector-python pyjet pyyaml
 
 
 ################################################################################
