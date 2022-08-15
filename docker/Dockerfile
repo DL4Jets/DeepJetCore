@@ -87,5 +87,11 @@ ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
 RUN cd /usr/share/DJC/DeepJetCore/testing/unit && \
     python3 test.py
+    
+### ad hoc additions to be moved towards base image in the future
+RUN pip3 install hist
+
+
+
    
     
