@@ -5,22 +5,25 @@ import imp
 try:
     imp.find_module('Losses')
     from Losses import *
-except ImportError:
-    print ('No Losses module found, ignoring at your own risk')
+except ImportError as e:
+    print ('No Losses module found, ignoring at your own risk. The following error occured:')
+    print(e)
     global_loss_list = {}
 
 try:
     imp.find_module('Layers')
     from Layers import *
-except ImportError:
-    print ('No Layers module found, ignoring at your own risk')
+except ImportError as e:
+    print ('No Layers module found, ignoring at your own risk. The following error occured:')
+    print(e)
     global_layers_list = {}
 
 try:
     imp.find_module('Metrics')
     from Metrics import *
-except ImportError:
-    print ('No metrics module found, ignoring at your own risk')
+except ImportError as e:
+    print ('No metrics module found, ignoring at your own risk. The following error occured:')
+    print(e)
     global_metrics_list = {}    
 
 def get_custom_objects():
