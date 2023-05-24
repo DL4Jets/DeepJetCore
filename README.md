@@ -27,6 +27,7 @@ The package comes with a docker file in the subdirectory docker, which will set 
 
 **Users with access to cvmfs** (e.g. on lxplus or other CERN machines) will find a pre-built singularity container here:
 ``/cvmfs/unpacked.cern.ch/registry.hub.docker.com/cernml4reco/deepjetcore3:latest``
+In case of doubt, just check if this path exists on the machine you are working on.
 
 A good way to enter the container interactively, mounting for example the standard directories on lxplus or similar machines would be:
 ```
