@@ -1,4 +1,0 @@
-root_file0.root
-root_file1.root
-root_file2.root
-root_file3.root
