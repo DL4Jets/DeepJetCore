@@ -8,6 +8,9 @@ import matplotlib
 matplotlib.use('Agg') 
 
 
+from djcdata.TrainData import TrainData
+from djcdata.dataPipeline import TrainDataGenerator
+
 from .ReduceLROnPlateau import ReduceLROnPlateau
 from ..evaluation import plotLoss
 from ..evaluation import plotBatchLoss
@@ -649,8 +652,6 @@ class DeepJet_callbacks(object):
         
         
         
-from DeepJetCore.TrainData import TrainData
-from DeepJetCore.dataPipeline import TrainDataGenerator
 
 class PredictCallback(Callback):
     

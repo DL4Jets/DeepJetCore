@@ -19,8 +19,8 @@ batchsize = int(args.b)
 
 
 import imp
-from DeepJetCore.DataCollection import DataCollection
-from DeepJetCore.dataPipeline import TrainDataGenerator
+from djcdata.DataCollection import DataCollection
+from djcdata.dataPipeline import TrainDataGenerator
 import tempfile
 import atexit
 import os

@@ -1,15 +1,12 @@
 
 
         
-import sys
-import tensorflow as tf
-sys.modules["keras"] = tf.keras
 
-__version__ = '3.2'
+__version__ = '4.0'
 
 #shortcuts 
-from .TrainData import TrainData
-from .SimpleArray import SimpleArray
-from .DataCollection import DataCollection
+from djcdata import TrainData
+from djcdata import SimpleArray
+from djcdata import DataCollection
 from .Weighter import Weighter
 

@@ -1,11 +1,11 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu18.04 
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 SHELL ["/bin/bash", "-c"]
 
 RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
 RUN apt-get update 
 
-RUN apt-get install -y python3.6-dev python3-pip
+RUN apt-get install -y python3.10-dev python3-pip
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade setuptools
 RUN ldconfig
@@ -14,60 +14,60 @@ RUN ldconfig
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y git wget nano emacs \
     evince eog ffmpeg unzip zsh python3-tk locales \
-    htop
-
-#add some kerberos for convenience
-RUN export DEBIAN_FRONTEND=noninteractive && \
-    apt-get install -y krb5-user 
-    
-#use the standard cern config
-COPY krb5.conf /etc/krb5.conf
-
-############  root part
-RUN apt-get install -y libx11-dev libxpm-dev libxft-dev libxext-dev
-RUN apt-get install -y cmake openssl
-
-# RUN mkdir /temproot && \
-#     cd /temproot && \
-#     git clone --branch v6-20-00-patches http://github.com/root-project/root.git 
-# RUN cd /temproot && \
-#     mkdir build && \
-#     cd build && \
-#     cmake ../root 
-# RUN cd /temproot/build && \
-#     make -j5 && \
-#     make install && \
-#     rm -rf /temproot
-
-RUN mkdir /temproot && \
-    cd /temproot && \
-    wget https://cern.ch/amadio/root/root_6.22.00_ubuntu18_amd64.deb > /dev/null 2>&1
-    
-RUN cd /temproot && \
-    apt-get install -y ./root_6.22.00_ubuntu18_amd64.deb && \
-    rm -rf /temproot
- 
-
-############  END root part
-
-### boost
-RUN apt-get install -y libboost-all-dev
-
-
-#for singularity panic
-RUN adduser  --disabled-password --gecos ""  dummyuser
-RUN apt-get install -y vim
-
-#some tex things
-RUN apt install -y texlive ghostscript dvipng
-
-############  PIP packages
+    htop vim cmake
 
 RUN pip3 install numpy scikit-learn scikit-image \
                  h5py matplotlib uproot3 uproot Pillow \
                  scipy seaborn opencv-python easydict tqdm Cython numba \
-                 gpustat setGPU plotly dash awkward
-                 
-# Add root_numpy warning
-RUN mkdir -p  /usr/local/lib/python3.6/dist-packages/root_numpy && \
-    echo "raise ImportError(\"WARNING: root_numpy was removed from the DeepJetCore container as it has not been maintained for a while and is not comaptible with python > 3.7. Please switch to uproot or similar.\")"  > /usr/local/lib/python3.6/dist-packages/root_numpy/__init__.py
+                 gpustat setGPU plotly dash awkward hist
+
+
+# more specifics
+
+RUN pip3 install bayesian-optimization mgzip pyyaml wandb
+
+# 2.15 has a custom kernel compilation bug that is not being fixed before a patch or something, 2.14 cuda issues...
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    pip3 --no-cache-dir install tensorflow==2.13 
+
+
+#strict dependency
+RUN pip3 install git+https://github.com/jkiesele/djcdata 
+
+
+ARG LALA
+
+## DEV configuration
+RUN mkdir -p /usr/share/DJC/
+ADD DeepJetCore /usr/share/DJC/DeepJetCore
+ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
+ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
+
+
+ADD dotest.sh /dotest.sh
+
+
+# test stuff
+
+
+
+## DEEPJETCORE
+
+#ARG BUILD_DATE
+#LABEL org.label-schema.build-date=$BUILD_DATE
+##ARG COMMIT
+#LABEL djc.commit=dev
+##$COMMIT
+#
+#ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
+#
+#RUN ldconfig && \
+#    cd /usr/share && \
+#    mkdir DJC && \
+#    cd DJC && \
+#    git clone https://github.com/DL4Jets/DeepJetCore && \
+#    cd DeepJetCore  && git checkout dev 
+#    
+##$COMMIT 
+#
+#ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
