@@ -161,3 +161,52 @@ class ReduceSumEntirely(Layer):
     
 
 djc_global_layers_list['ReduceSumEntirely']=ReduceSumEntirely
+
+
+class StopGradient(Layer):
+    def __init__(self, **kwargs):
+        super(StopGradient, self).__init__(**kwargs)
+    
+    def compute_output_shape(self, input_shape):
+        return input_shape
+    
+    def call(self, inputs):
+        return tf.stop_gradient(inputs)
+
+djc_global_layers_list['StopGradient']=StopGradient  
+
+class LayerWithMetrics(Layer):
+    def __init__(self, 
+                 record_metrics=False,
+                 **kwargs):
+        '''
+        Base class that provides some access functions for wandb 
+        that can be turned off in a convenient fashion
+        '''       
+
+        super(LayerWithMetrics, self).__init__(**kwargs)
+        self.record_metrics = record_metrics
+        #transparent pass-through
+        from wandb_interface import wandb_wrapper
+        self.wandb = wandb_wrapper
+    
+    def get_config(self):
+        config = {'record_metrics': self.record_metrics}
+        base_config = super(LayerWithMetrics, self).get_config()
+        return dict(list(base_config.items()) + list(config.items())) 
+
+    def add_prompt_metric(self, x, name):
+        print(self.name,"uses add_prompt_metric. This function is deprecated, please use wandb_log (pass through to wandb.log).")
+        self.wandb_log({name: x})
+
+    def wandb_log(self,*args, **kwargs):
+        if self.record_metrics:
+            self.wandb.log(*args, **kwargs)
+
+    @staticmethod
+    def switch_off_metrics_layers(m : tf.keras.Model):
+        for l in m.layers:
+            if isinstance(l, LayerWithMetrics):
+                l.record_metrics=False
+
+djc_global_layers_list['LayerWithMetrics']=LayerWithMetrics  
