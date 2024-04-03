@@ -1,8 +1,8 @@
-from DeepJetCore.customObjects import *
+from .customObjects import *
 
 custom_objs = get_custom_objects()
     
-    
+
 def getLayer(model, name):
     for layer in model.layers:
         if layer.name == name:

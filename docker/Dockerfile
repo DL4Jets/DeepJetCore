@@ -26,21 +26,25 @@ RUN pip3 install numpy scikit-learn scikit-image \
 
 RUN pip3 install bayesian-optimization mgzip pyyaml wandb hdbscan
 
-#strict dependency
-RUN pip3 install git+https://github.com/jkiesele/djcdata 
 
 # 2.15 has a custom kernel compilation bug that is not being fixed before a patch or something, 2.14 cuda issues...
 RUN export DEBIAN_FRONTEND=noninteractive && \
     pip3 --no-cache-dir install tensorflow==2.13 
 
 
-ARG LALA
+ARG LALALALAALALAL1
+
+#strict dependency
+RUN python3 -m pip install git+https://github.com/jkiesele/djcdata 
+
+ARG LALALALA
 
 ## DEV configuration
 RUN mkdir -p /usr/share/DJC/
 ADD DeepJetCore /usr/share/DJC/DeepJetCore
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
+ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
 
 ADD dotest.sh /dotest.sh

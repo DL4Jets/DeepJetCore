@@ -187,7 +187,7 @@ class LayerWithMetrics(Layer):
         super(LayerWithMetrics, self).__init__(**kwargs)
         self.record_metrics = record_metrics
         #transparent pass-through
-        from wandb_interface import wandb_wrapper
+        from .wandb_interface import wandb_wrapper
         self.wandb = wandb_wrapper
     
     def get_config(self):
@@ -196,7 +196,7 @@ class LayerWithMetrics(Layer):
         return dict(list(base_config.items()) + list(config.items())) 
 
     def add_prompt_metric(self, x, name):
-        print(self.name,"uses add_prompt_metric. This function is deprecated, please use wandb_log (pass through to wandb.log).")
+        print(self.name,"uses add_prompt_metric. This function is deprecated, please change your code to use LayerWithMetrics.wandb_log instead (pass through to wandb.log(dict of name: value)).")
         self.wandb_log({name: x})
 
     def wandb_log(self,*args, **kwargs):
