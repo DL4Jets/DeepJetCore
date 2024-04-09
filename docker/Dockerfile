@@ -34,6 +34,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 #strict dependency
 RUN python3 -m pip install git+https://github.com/jkiesele/djcdata 
 
+# the upper part can be cached usually, this one needs to be updated
 ARG BUILD_DATE
 LABEL org.label-schema.build-date=$BUILD_DATE
 ARG COMMIT

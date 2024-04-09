@@ -19,6 +19,13 @@ else
     COMMIT=$1
 fi
 
+# check if the commit has been pushed to https://github.com/DL4Jets/DeepJetCore
+REMOTE_COMMIT=$(git ls-remote https://github.com/DL4Jets/DeepJetCore.git | grep $COMMIT)
+if [ -z "$REMOTE_COMMIT" ]; then
+       echo "ERROR: Commit $COMMIT not found in remote repository."
+       exit 1
+fi
+
 # check if no-cache is given as argument
 if [ "$2" == "--cache" ]; then
     FORCE_NO_CACHE=""
