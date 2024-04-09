@@ -41,10 +41,9 @@ ARG COMMIT
 
 RUN mkdir -p /usr/share/DJC/
 RUN cd /usr/share/DJC/ && git clone https://github.com/DL4Jets/DeepJetCore &&\
-    cd DeepJetCore && git checkout $COMMIT &&\
-    source docker_env.sh && \
-    cd compiled && \
-    make
+    cd DeepJetCore && git checkout $COMMIT 
+
+# nothing to be compiled anymore
     
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
