@@ -24,53 +24,29 @@ RUN pip3 install numpy scikit-learn scikit-image \
 
 # more specifics
 
-RUN pip3 install bayesian-optimization mgzip pyyaml wandb hdbscan
+RUN pip3 install bayesian-optimization mgzip pyyaml wandb hdbscan tables
 
 
 # 2.15 has a custom kernel compilation bug that is not being fixed before a patch or something, 2.14 cuda issues...
 RUN export DEBIAN_FRONTEND=noninteractive && \
     pip3 --no-cache-dir install tensorflow==2.13 
 
-
-ARG LALALALAALALAL1
-
 #strict dependency
 RUN python3 -m pip install git+https://github.com/jkiesele/djcdata 
 
-ARG LALALALA
+ARG BUILD_DATE
+LABEL org.label-schema.build-date=$BUILD_DATE
+ARG COMMIT
 
-## DEV configuration
 RUN mkdir -p /usr/share/DJC/
-ADD DeepJetCore /usr/share/DJC/DeepJetCore
+RUN cd /usr/share/DJC/ && git clone https://github.com/DL4Jets/DeepJetCore &&\
+    cd DeepJetCore && git checkout $COMMIT &&\
+    source docker_env.sh && \
+    cd compiled && \
+    make
+    
 ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
 ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"
 ENV PATH="/usr/share/DJC/DeepJetCore/bin:${PATH}"
 
 
-ADD dotest.sh /dotest.sh
-
-
-# test stuff
-
-
-
-## DEEPJETCORE
-
-#ARG BUILD_DATE
-#LABEL org.label-schema.build-date=$BUILD_DATE
-##ARG COMMIT
-#LABEL djc.commit=dev
-##$COMMIT
-#
-#ENV DEEPJETCORE /usr/share/DJC/DeepJetCore
-#
-#RUN ldconfig && \
-#    cd /usr/share && \
-#    mkdir DJC && \
-#    cd DJC && \
-#    git clone https://github.com/DL4Jets/DeepJetCore && \
-#    cd DeepJetCore  && git checkout dev 
-#    
-##$COMMIT 
-#
-#ENV PYTHONPATH="/usr/share/DJC/DeepJetCore/../:${PYTHONPATH}"

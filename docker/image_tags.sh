@@ -1,4 +1,0 @@
-
-BASE_IMAGE_TAG=cu11.1_djc3.3.X
-TAG=3.3.0
-#TAG=latest
