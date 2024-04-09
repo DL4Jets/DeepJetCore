@@ -3,6 +3,18 @@
 # check if commit is given as argument, if not use the latest commit
 if [ -z "$1" ]; then
     COMMIT=$(git rev-parse --short HEAD)
+    # if we use the latest commit, assume we want to run on something we just did on a local repo.
+    # check if we have uncommitted changes and if so warn the user.
+    if [ -n "$(git status --porcelain)" ]; then
+           echo "WARNING: You are building the latest commit, but you have uncommitted changes."
+           echo "         This means that the image will not be reproducible."
+           echo "         If you want to build the latest commit, please commit your changes first."
+           read -p "Do you want to continue anyway? [y/N] " -n 1 -r
+           echo
+           if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+           exit 1
+           fi
+    fi
 else
     COMMIT=$1
 fi
