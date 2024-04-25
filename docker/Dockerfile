@@ -3,6 +3,9 @@ FROM tensorflow/tensorflow:2.7.4-gpu
 
 SHELL ["/bin/bash", "-c"]
 
+# tf compile prep; needs to be adapted to the actual cuda version and the python version!
+RUN mkdir -p /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party/gpus/cuda/include && cp -r /usr/local/cuda/targets/x86_64-linux/include/* /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party/gpus/cuda/include/
+
 RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
 RUN apt-get update 
 
