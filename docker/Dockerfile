@@ -1,12 +1,12 @@
 #FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
-FROM tensorflow/tensorflow:2.16.1-gpu
+FROM tensorflow/tensorflow:2.7.4-gpu
 
 SHELL ["/bin/bash", "-c"]
 
 RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
 RUN apt-get update 
 
-RUN apt-get install -y python3.11-dev python3-pip
+RUN apt-get install -y python3-pip # python3.11-dev python3-pip
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade setuptools
 RUN ldconfig
