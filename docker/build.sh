@@ -30,7 +30,7 @@ fi
 if [ "$2" == "--cache" ]; then
     FORCE_NO_CACHE=""
 else
-    FORCE_NO_CACHE="--no-cache"
+    FORCE_NO_CACHE="" #FIX
 fi
 
 #switch to directory this script is located in
