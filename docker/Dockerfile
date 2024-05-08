@@ -1,15 +1,15 @@
 #FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 #this is the last version without memory leak afaik
-FROM tensorflow/tensorflow:2.4.3-gpu 
+FROM tensorflow/tensorflow:2.7.4-gpu 
 
 SHELL ["/bin/bash", "-c"]
 
 # tf compile prep; needs to be adapted to the actual cuda version and the python version!
-RUN mkdir -p /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party/gpus/cuda/include && cp -r /usr/local/cuda/targets/x86_64-linux/include/* /usr/local/lib/python3.6/dist-packages/tensorflow/include/third_party/gpus/cuda/include/
+RUN mkdir -p /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party/gpus/cuda/include && cp -r /usr/local/cuda/targets/x86_64-linux/include/* /usr/local/lib/python3.8/dist-packages/tensorflow/include/third_party/gpus/cuda/include/
 
 
 RUN sed -i "s,# deb http://archive.canonical.com/ubuntu,deb http://archive.canonical.com/ubuntu,g" /etc/apt/sources.list
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+#RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 RUN apt-get update 
 
 RUN apt-get install -y python3-pip # python3.11-dev python3-pip
@@ -34,9 +34,9 @@ RUN pip3 install plotly awkward hist Cython
 # more specifics
 
 RUN pip3 install bayesian-optimization mgzip pyyaml  tables
-RUN apt-get install -y libpython3.6-dev
-RUN pip3  install wandb==0.10.20 #python3.6
-#RUN pip3 install --no-binary :all: hdbscan
+#RUN apt-get install -y libpython3.6-dev
+RUN pip3  install wandb
+RUN pip3 install hdbscan
 
 # 2.15 has a custom kernel compilation bug that is not being fixed before a patch or something, 2.14 cuda issues...
 #RUN export DEBIAN_FRONTEND=noninteractive && \
