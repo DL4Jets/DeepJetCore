@@ -57,7 +57,7 @@ def setAllTrainable(m, val=True):
 
 def loadModelAndFixLayers(filename,fixOnlyContaining):
     #import keras
-    from keras.models import load_model
+    from tensorflow.keras.models import load_model
     
     m=load_model(filename, custom_objects=custom_objs)
     
@@ -66,7 +66,7 @@ def loadModelAndFixLayers(filename,fixOnlyContaining):
     return m
 
 def load_model(filename):
-    from keras.models import load_model
+    from tensorflow.keras.models import load_model
     
     model=load_model(filename, custom_objects=custom_objs)
     
