@@ -33,8 +33,9 @@ RUN pip3 install plotly awkward hist Cython
 
 # more specifics
 
-RUN pip3 install bayesian-optimization mgzip pyyaml wandb tables
+RUN pip3 install bayesian-optimization mgzip pyyaml  tables
 RUN apt-get install -y libpython3.6-dev
+RUN pip3  install wandb==0.10.20 #python3.6
 #RUN pip3 install --no-binary :all: hdbscan
 
 # 2.15 has a custom kernel compilation bug that is not being fixed before a patch or something, 2.14 cuda issues...
