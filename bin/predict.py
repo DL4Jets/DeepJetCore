@@ -24,8 +24,8 @@ from djcdata.dataPipeline import TrainDataGenerator
 import tempfile
 import atexit
 import os
-from keras.models import load_model
-from keras import backend as K
+from tensorflow.keras.models import load_model
+from tensorflow.keras import backend as K
 from DeepJetCore.customObjects import get_custom_objects
 from DeepJetCore.training.gpuTools import DJCSetGPUs
 

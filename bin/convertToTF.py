@@ -8,9 +8,9 @@ except ImportError:
     found = False
             
             
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from argparse import ArgumentParser
-from keras import backend as K
+from tensorflow.keras import backend as K
 from Losses import * #needed!
 import os
 

@@ -11,12 +11,12 @@ from __future__ import print_function
 import numpy as np
 import warnings
 
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 if K.backend() == 'tensorflow':
     import tensorflow as tf
 
-from keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback
 
 
 class ReduceLROnPlateau(Callback):
