@@ -54,15 +54,7 @@ class _WandbWrapper:
             self._wandb.log(self.log_cache)
             self.log_cache.clear()
 
-    def __getattr__(self, name):
-        if not self.active:
-            return self._dummy
-        if self._wandb is not None:
-            return getattr(self._wandb, name)
-                
-        raise AttributeError(f"WandB instance not initialized and set to active at the same time. Attribute '{name}' is not available.")
-
-
+    
 wandb_wrapper = _WandbWrapper()
 
 
@@ -70,7 +62,9 @@ wandb_wrapper = _WandbWrapper()
 if __name__ == '__main__':
     
 
-    #wandb_wrapper.init(project='test')
+    wandb_wrapper.init(project='test')
+    if hasattr(wandb_wrapper, 'flush'):
+        print('eyjhad')
 
     for i in range(10):
         wandb_wrapper.log({'test': i})
