@@ -57,20 +57,3 @@ class _WandbWrapper:
     
 wandb_wrapper = _WandbWrapper()
 
-
-# run a quick test
-if __name__ == '__main__':
-    
-
-    wandb_wrapper.init(project='test')
-    if hasattr(wandb_wrapper, 'flush'):
-        print('eyjhad')
-
-    for i in range(10):
-        wandb_wrapper.log({'test': i})
-        wandb_wrapper.log({'testB': 2+i})
-        wandb_wrapper.log({'testC': 3+i})
-        wandb_wrapper.flush()
-
-    
-    print("done")
